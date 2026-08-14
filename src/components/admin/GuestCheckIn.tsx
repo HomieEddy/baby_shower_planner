@@ -16,37 +16,24 @@ export const GuestCheckIn = () => {
   const [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState<string | null>(null);
 
-  const fetchData = useCallback(async () => {
+  const fetchData = useCallback(async (isActive: () => boolean = () => true) => {
     const [gRes, sRes] = await Promise.all([
       adminFetch('/api/guests'),
       adminFetch('/api/check-in/stats'),
     ]);
     const gData = await gRes.json();
     const sData = await sRes.json();
+    if (!isActive()) return;
     setGuests(gData.guests || []);
     setStats(sData.stats || { total: 0, checkedIn: 0, expected: 0 });
     setLoading(false);
   }, []);
 
-  // Initial load: setState happens inside the promise callbacks, not
-  // synchronously in the effect body.
   useEffect(() => {
     let cancelled = false;
-    Promise.all([
-      adminFetch('/api/guests'),
-      adminFetch('/api/check-in/stats'),
-    ])
-      .then(async ([gRes, sRes]) => {
-        const [gData, sData] = await Promise.all([gRes.json(), sRes.json()]);
-        if (cancelled) return;
-        setGuests(gData.guests || []);
-        setStats(sData.stats || { total: 0, checkedIn: 0, expected: 0 });
-      })
-      .finally(() => {
-        if (!cancelled) setLoading(false);
-      });
+    fetchData(() => !cancelled);
     return () => { cancelled = true; };
-  }, []);
+  }, [fetchData]);
 
   const runAction = async (
     guestId: string,
