@@ -8,11 +8,9 @@ import {
 import { adminFetch } from '../../lib/api';
 import { DayOfQrModal } from './DayOfQrModal';
 import { motion, AnimatePresence } from 'motion/react';
-import { useConfirm } from '../shared/ConfirmDialog';
 import { Modal } from '../shared/Modal';
 import { useSettingsStore } from '../../stores/settingsStore';
-import { EmptyState } from '../shared/EmptyState';
-import { Field, TextInput, TextArea, Select } from '../shared/ui';
+import { TextInput, Select } from '../shared/ui';
 import {
   Stage,
   Layer,
@@ -22,14 +20,11 @@ import {
   Group,
   Line,
   Transformer,
-  Arc,
-  Path,
 } from 'react-konva';
 import {
   Layout,
   Plus,
   Users,
-  Share2,
   Printer,
   Download,
   Search,
@@ -38,7 +33,6 @@ import {
   Utensils,
   UtensilsCrossed,
   Trash2,
-  RotateCw,
   Check,
   X,
   Mail,
@@ -53,15 +47,12 @@ import {
   Landmark,
   Tent,
   Save,
-  Edit3,
-  RotateCcw,
   CheckCircle2,
   UserX,
   Undo2,
   Redo2,
   Wand2,
   PieChart,
-  Filter,
 } from 'lucide-react';
 import { getGuestPartySize, getTableOccupiedSeats, getTableSeatedPersonNames, getSeatOccupantInfo, getTableStatus } from './floorPlanHelpers';
 import { renderCustomLandmarkShape } from './renderCustomLandmarkShape';
@@ -73,9 +64,6 @@ export const FloorPlanPage = () => {
   const language = useAppStore((s) => s.language);
   const settings = useSettingsStore((s) => s.settings);
   const t = useT();
-  const confirm = useConfirm();
-
-  // Active View: admin canvas editor only (guest finder moved to /find-my-table)
 
   // Floor Map Data State
   const [floorMap, setFloorMap] = useState<FloorMapData | null>(null);
@@ -217,13 +205,6 @@ export const FloorPlanPage = () => {
   const [tableStatusFilter, setTableStatusFilter] = useState<
     'all' | 'full' | 'partial' | 'empty'
   >('all');
-
-  const getTableStatus = (table: TableElement, guestsList: Guest[]): 'full' | 'partial' | 'empty' => {
-    const occupied = getTableOccupiedSeats(table, guestsList);
-    if (occupied >= table.capacity) return 'full';
-    if (occupied > 0) return 'partial';
-    return 'empty';
-  };
 
   // ---------------------------------------------------------
   // FEATURE 3: SMART SEATING SUGGESTION
@@ -728,21 +709,6 @@ export const FloorPlanPage = () => {
     setIsDirty(true);
   };
 
-  const handleUpdateMainRoomSize = async (width: number, height: number) => {
-    if (!floorMap) return;
-    const clampedW = Math.max(500, Math.min(3000, width));
-    const clampedH = Math.max(400, Math.min(2500, height));
-    const updatedMap = {
-      ...floorMap,
-      canvasWidth: clampedW,
-      canvasHeight: clampedH,
-    };
-    setFloorMap(updatedMap);
-    await saveFloorMap(updatedMap);
-    setNotification(t.fpRoomSizeToast.replace('{{width}}', String(clampedW)).replace('{{height}}', String(clampedH)));
-    setTimeout(() => setNotification(null), 2500);
-  };
-
   // --- DRAFT HANDLERS FOR FULL SCREEN EDITOR MODAL ---
   const handleDraftAddTable = (shape: 'circle' | 'rectangle') => {
     if (!draftFloorMap) return;
@@ -960,250 +926,6 @@ export const FloorPlanPage = () => {
   };
 
   // Add Table Helper
-  const handleAddTable = (shape: 'circle' | 'rectangle') => {
-    if (!floorMap) return;
-    const tableCount = floorMap.tables.length + 1;
-    const newTable: TableElement = {
-      id: `tbl-${Date.now()}`,
-      name: `Table ${tableCount}`,
-      shape,
-      x: 200 + (tableCount * 20) % 200,
-      y: 200 + (tableCount * 20) % 150,
-      width: shape === 'circle' ? 120 : 180,
-      height: shape === 'circle' ? 120 : 95,
-      capacity: 8,
-      assignedGuestIds: [],
-      color: '#8B735B',
-    };
-
-    const updated = {
-      ...floorMap,
-      tables: [...floorMap.tables, newTable],
-    };
-    setFloorMap(updated);
-    setSelectedId(newTable.id);
-    setSelectedType('table');
-    saveFloorMap(updated);
-
-    setNotification(t.fpTableAddedToast.replace('{{name}}', newTable.name));
-    setTimeout(() => setNotification(null), 2500);
-  };
-
-  // Add Landmark Helper
-  const handleAddLandmark = (
-    type: 'entrance' | 'stage' | 'gifts' | 'photobooth' | 'bar' | 'dessert' | 'dj',
-    name: string
-  ) => {
-    if (!floorMap) return;
-    const newLandmark: LandmarkElement = {
-      id: `lm-${Date.now()}`,
-      name,
-      type,
-      x: 100,
-      y: 100,
-      width: 150,
-      height: 60,
-    };
-
-    const updated = {
-      ...floorMap,
-      landmarks: [...floorMap.landmarks, newLandmark],
-    };
-    setFloorMap(updated);
-    setSelectedId(newLandmark.id);
-    setSelectedType('landmark');
-    saveFloorMap(updated);
-
-    setNotification(t.fpLandmarkAddedToast.replace('{{name}}', name));
-    setTimeout(() => setNotification(null), 2500);
-  };
-
-  // Handle Drag End for Table
-  const handleTableDragEnd = (id: string, e: any) => {
-    if (!floorMap) return;
-    const updatedTables = floorMap.tables.map((t) => {
-      if (t.id === id) {
-        return {
-          ...t,
-          x: Math.round(e.target.x()),
-          y: Math.round(e.target.y()),
-        };
-      }
-      return t;
-    });
-
-    const updatedMap = { ...floorMap, tables: updatedTables };
-    setFloorMap(updatedMap);
-    saveFloorMap(updatedMap);
-  };
-
-  // Handle Drag End for Landmark
-  const handleLandmarkDragEnd = (id: string, e: any) => {
-    if (!floorMap) return;
-    const updatedLandmarks = floorMap.landmarks.map((l) => {
-      if (l.id === id) {
-        return {
-          ...l,
-          x: Math.round(e.target.x()),
-          y: Math.round(e.target.y()),
-        };
-      }
-      return l;
-    });
-
-    const updatedMap = { ...floorMap, landmarks: updatedLandmarks };
-    setFloorMap(updatedMap);
-    saveFloorMap(updatedMap);
-  };
-
-  // Handle Transform End (Resize/Rotate)
-  const handleTransformEnd = () => {
-    if (!selectedId || !floorMap) return;
-    const node = stageRef.current?.findOne('#' + selectedId);
-    if (!node) return;
-
-    const scaleX = node.scaleX();
-    const scaleY = node.scaleY();
-    const rotation = Math.round(node.rotation());
-
-    // Reset scale to 1 on node and apply to width/height
-    node.scaleX(1);
-    node.scaleY(1);
-
-    if (selectedType === 'table') {
-      const updatedTables = floorMap.tables.map((t) => {
-        if (t.id === selectedId) {
-          return {
-            ...t,
-            x: Math.round(node.x()),
-            y: Math.round(node.y()),
-            width: Math.max(50, Math.round(t.width * scaleX)),
-            height: Math.max(50, Math.round(t.height * scaleY)),
-            rotation,
-          };
-        }
-        return t;
-      });
-      const updatedMap = { ...floorMap, tables: updatedTables };
-      setFloorMap(updatedMap);
-      saveFloorMap(updatedMap);
-    } else if (selectedType === 'landmark') {
-      const updatedLandmarks = floorMap.landmarks.map((l) => {
-        if (l.id === selectedId) {
-          return {
-            ...l,
-            x: Math.round(node.x()),
-            y: Math.round(node.y()),
-            width: Math.max(60, Math.round(l.width * scaleX)),
-            height: Math.max(30, Math.round(l.height * scaleY)),
-            rotation,
-          };
-        }
-        return l;
-      });
-      const updatedMap = { ...floorMap, landmarks: updatedLandmarks };
-      setFloorMap(updatedMap);
-      saveFloorMap(updatedMap);
-    }
-  };
-
-  // Delete Selected Element
-  const handleDeleteSelected = async () => {
-    if (!selectedId || !floorMap) return;
-    const target =
-      selectedType === 'table'
-        ? floorMap.tables.find((t) => t.id === selectedId)
-        : floorMap.landmarks.find((l) => l.id === selectedId);
-    const ok = await confirm({
-      title: selectedType === 'table' ? `${t.deleteTableBtn}?` : `${t.deleteLandmarkBtn}?`,
-      message: selectedType === 'table'
-        ? `Remove "${target?.name || 'this table'}" from the floor map? Assigned guests will need to be re-seated.`
-        : `Remove "${target?.name || 'this landmark'}" from the floor map?`,
-      confirmText: 'Delete',
-    });
-    if (!ok) return;
-    if (selectedType === 'table') {
-      const updatedTables = floorMap.tables.filter((t) => t.id !== selectedId);
-      const updatedMap = { ...floorMap, tables: updatedTables };
-      setFloorMap(updatedMap);
-      saveFloorMap(updatedMap);
-    } else if (selectedType === 'landmark') {
-      const updatedLandmarks = floorMap.landmarks.filter((l) => l.id !== selectedId);
-      const updatedMap = { ...floorMap, landmarks: updatedLandmarks };
-      setFloorMap(updatedMap);
-      saveFloorMap(updatedMap);
-    }
-    setSelectedId(null);
-    setSelectedType(null);
-    setNotification(t.fpElementRemovedToast);
-    setTimeout(() => setNotification(null), 2500);
-  };
-
-  // Assign or Unassign Guest to Table
-  const handleAssignGuest = async (guestId: string, tableId: string | null) => {
-    const guest = guests.find((g) => g.id === guestId);
-    if (!guest) return;
-
-    const partySize = getGuestPartySize(guest);
-
-    if (tableId && floorMap) {
-      const targetTable = floorMap.tables.find((t) => t.id === tableId);
-      if (targetTable) {
-        const occupiedWithoutThisGuest = targetTable.assignedGuestIds
-          .filter((id) => id !== guestId)
-          .reduce((sum, id) => {
-            const g = guests.find((x) => x.id === id);
-            return sum + (g ? getGuestPartySize(g) : 1);
-          }, 0);
-
-        const available = targetTable.capacity - occupiedWithoutThisGuest;
-
-        if (partySize > available) {
-          setNotification(
-            t.fpCannotSeatToast.replace('{{guest}}', guest.name).replace('{{size}}', String(partySize)).replace('{{table}}', targetTable.name).replace('{{available}}', String(available))
-          );
-          setTimeout(() => setNotification(null), 4000);
-          return;
-        }
-      }
-    }
-
-    try {
-      const res = await adminFetch('/api/floorplan/assign', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ guestId, tableId }),
-      });
-      const data = await res.json();
-      if (data.error) {
-        setNotification(`${data.error}`);
-        setTimeout(() => setNotification(null), 4000);
-        return;
-      }
-      if (data.floorMap) {
-        setFloorMap(data.floorMap);
-      }
-      // Refresh guests
-      const gRes = await adminFetch('/api/guests');
-      const gData = await gRes.json();
-      if (gData.guests) {
-        setGuests(gData.guests);
-      }
-
-      if (tableId && floorMap) {
-        const targetTbl = floorMap.tables.find((t) => t.id === tableId);
-        setNotification(t.fpSeatedToast.replace('{{guest}}', guest.name).replace('{{size}}', String(partySize)).replace('{{table}}', targetTbl?.name || ''));
-        setTimeout(() => setNotification(null), 3000);
-      } else {
-        setNotification(t.fpUnseatedToast.replace('{{guest}}', guest.name));
-        setTimeout(() => setNotification(null), 2500);
-      }
-    } catch (err: any) {
-      console.error('Error assigning guest:', err);
-      setNotification(`${err.message || t.fpAssignFailedToast}`);
-      setTimeout(() => setNotification(null), 4000);
-    }
-  };
 
   // Handle Share Seating Plan Email
   const handleShareEmailSubmit = async (e: React.FormEvent) => {
@@ -1240,12 +962,7 @@ export const FloorPlanPage = () => {
     document.body.removeChild(link);
   };
 
-  // Selected Table helper
-  const selectedTable = floorMap?.tables.find((t) => t.id === selectedId);
-  const selectedLandmark = floorMap?.landmarks.find((l) => l.id === selectedId);
-
   const draftSelectedTable = draftFloorMap?.tables.find((t) => t.id === selectedId);
-  const draftSelectedLandmark = draftFloorMap?.landmarks.find((l) => l.id === selectedId);
 
   return (
     <div className="space-y-6 pb-12">
@@ -1270,10 +987,9 @@ export const FloorPlanPage = () => {
           </p>
         </div>
 
-        {/* Mode Toggle & Undo/Redo Controls */}
+        {/* Undo/Redo Controls */}
         <div className="flex flex-wrap items-center gap-3 self-start md:self-auto">
-          {(
-            <div className="flex items-center gap-1 bg-[#EFE6DC]/80 p-1 rounded-2xl border border-[#CBAE94]/60">
+          <div className="flex items-center gap-1 bg-[#EFE6DC]/80 p-1 rounded-2xl border border-[#CBAE94]/60">
               <button
                 type="button"
                 onClick={handleUndo}
@@ -1296,7 +1012,6 @@ export const FloorPlanPage = () => {
                 <span className="hidden sm:inline">{t.redoBtn}</span>
               </button>
             </div>
-          )}
         </div>
       </div>
 
