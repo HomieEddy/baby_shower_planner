@@ -1,0 +1,292 @@
+@import "tailwindcss";
+
+@layer base {
+  :root {
+    --bg: #F8F5F0;
+    --ink: #4A3F35;
+    --accent: #D4A373;
+    --surface: #FFFFFF;
+    --input-bg: #FFFFFF;
+    --heading-font: 'Gaegu', cursive;
+    --ink-faint: rgba(74, 63, 53, 0.1);
+  }
+
+  ::selection {
+    background-color: var(--accent);
+    color: #ffffff;
+  }
+
+  body {
+    background-color: var(--bg) !important;
+    color: var(--ink) !important;
+    font-family: 'Inter', sans-serif;
+    min-height: 100vh;
+    transition: background-color 0.25s ease, color 0.25s ease;
+  }
+
+  /* Teddy Bear Texture */
+  body::before {
+    content: "";
+    position: fixed;
+    inset: 0;
+    background-image: radial-gradient(var(--ink-faint) 1px, transparent 0);
+    background-size: 32px 32px;
+    pointer-events: none;
+    z-index: -1;
+  }
+
+  h1, h2, h3, h4 {
+    color: var(--ink);
+    font-family: var(--heading-font, 'Gaegu', cursive) !important;
+  }
+}
+
+/* Card paper classes */
+.card-paper {
+  background-color: var(--surface) !important;
+  color: var(--ink) !important;
+  border: 2px solid var(--accent);
+  border-radius: 32px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+}
+
+.card-paper-sm {
+  background-color: var(--surface) !important;
+  color: var(--ink) !important;
+  border: 1px solid var(--accent);
+  border-radius: 20px;
+}
+
+/* Form input, select, textarea styling */
+input, select, textarea {
+  background-color: var(--input-bg) !important;
+  color: var(--ink) !important;
+  border-color: var(--accent) !important;
+}
+
+select option {
+  background-color: var(--surface) !important;
+  color: var(--ink) !important;
+}
+
+/* Dark mode specific rules for high visibility */
+.dark body {
+  background-color: var(--bg) !important;
+  color: var(--ink) !important;
+}
+
+.dark .card-paper,
+.dark .card-paper-sm {
+  background-color: var(--surface) !important;
+  color: var(--ink) !important;
+  border-color: var(--accent) !important;
+}
+
+.dark [class*="bg-white"],
+.dark [class*="bg-[#FFFDF9]"],
+.dark [class*="bg-[#FAF6F0]"],
+.dark [class*="bg-[#F8F5F0]"] {
+  background-color: var(--surface) !important;
+  color: var(--ink) !important;
+}
+
+.dark [class*="bg-[#EFE6DC]"],
+.dark [class*="bg-[#F4EBE1]"] {
+  background-color: rgba(255, 255, 255, 0.08) !important;
+  color: var(--ink) !important;
+}
+
+.dark [class*="text-[#4A3F35]"],
+.dark [class*="text-[#33281E]"],
+.dark [class*="text-[#3D3126]"] {
+  color: var(--ink) !important;
+}
+
+.dark [class*="text-[#8B735B]"],
+.dark [class*="text-[#5D5449]"] {
+  color: var(--ink) !important;
+  opacity: 0.85;
+}
+
+.dark [class*="bg-[#4A3F35]"],
+.dark [class*="bg-[#382F27]"] {
+  background-color: var(--accent) !important;
+  color: #0F172A !important;
+}
+
+.dark [class*="border-[#CBAE94]"],
+.dark [class*="border-[#4A3F35]"] {
+  border-color: var(--accent) !important;
+}
+
+.dark input,
+.dark select,
+.dark textarea {
+  background-color: var(--input-bg) !important;
+  color: var(--ink) !important;
+  border-color: var(--accent) !important;
+}
+
+.dark select option {
+  background-color: #0F172A !important;
+  color: #F8FAFC !important;
+}
+
+/* Light mode accent overrides */
+:root:not(.dark) [class*="text-[#4A3F35]"] {
+  color: var(--ink);
+}
+
+:root:not(.dark) [class*="bg-[#4A3F35]"] {
+  background-color: var(--ink);
+  color: var(--bg);
+}
+
+:root:not(.dark) [class*="border-[#CBAE94]"] {
+  border-color: var(--accent);
+}
+
+.font-gaegu {
+  font-family: var(--heading-font, 'Gaegu', cursive) !important;
+}
+
+.font-newsreader {
+  font-family: 'Newsreader', serif;
+}
+
+.font-sans {
+  font-family: 'Inter', sans-serif;
+}
+
+.font-mono {
+  font-family: 'Space Mono', monospace;
+}
+
+.label-mono {
+  font-family: 'Space Mono', monospace;
+  font-size: 0.65rem;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: var(--ink);
+  opacity: 0.8;
+  font-weight: 700;
+}
+
+.btn-accent {
+  background-color: var(--ink);
+  color: var(--bg);
+  padding: 0.65rem 1.35rem;
+  border-radius: 99px;
+  font-weight: 600;
+  font-size: 0.85rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--ink);
+  transition: all 0.2s ease;
+}
+
+.btn-accent:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  opacity: 0.95;
+}
+
+.btn-outline-accent {
+  background-color: var(--surface);
+  color: var(--ink);
+  border: 1px solid var(--ink);
+  padding: 0.65rem 1.35rem;
+  border-radius: 99px;
+  font-weight: 600;
+  font-size: 0.85rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+}
+
+/* Print Media Query Styles for Table QR Cards & Standees */
+@media print {
+  /* Force exact color printing (backgrounds, borders, badges) */
+  * {
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+
+  /* Hide non-essential layout UI when printing */
+  header,
+  footer,
+  nav,
+  aside,
+  .print\:hidden,
+  button,
+  input,
+  select,
+  .no-print {
+    display: none !important;
+  }
+
+  /* Reset body and canvas for clean paper rendering */
+  body, html {
+    background: #ffffff !important;
+    color: #000000 !important;
+    margin: 0 !important;
+    padding: 0 !important;
+    box-shadow: none !important;
+  }
+
+  /* Prevent modal backdrop dimming or overflow clipping during print */
+  .fixed, .absolute {
+    position: static !important;
+  }
+
+  [class*="bg-black"],
+  [class*="backdrop-blur"] {
+    background: transparent !important;
+    backdrop-filter: none !important;
+  }
+
+  /* Printable Standee Card Styling */
+  .printable-qr-card {
+    page-break-inside: avoid;
+    break-inside: avoid;
+    border: 3px dashed #8B735B !important;
+    background-color: #FAF6F0 !important;
+    color: #4A3F35 !important;
+    padding: 2.5rem 2rem !important;
+    margin: 1.5rem auto !important;
+    max-width: 500px !important;
+    border-radius: 28px !important;
+    box-shadow: none !important;
+    text-align: center !important;
+    display: block !important;
+  }
+
+  .printable-qr-card img {
+    max-width: 240px !important;
+    height: auto !important;
+    margin: 1rem auto !important;
+    display: block !important;
+    border-radius: 16px !important;
+    border: 2px solid #CBAE94 !important;
+    background: #ffffff !important;
+    padding: 8px !important;
+  }
+
+  /* Force clean page breaks when batch printing multiple table standees */
+  .page-break-after {
+    page-break-after: always !important;
+    break-after: page !important;
+  }
+
+  /* Sheet margin optimization */
+  @page {
+    size: auto;
+    margin: 15mm;
+  }
+}
+
+/* Hide scrollbars on horizontally scrolling nav rows (mobile header) */
+.no-scrollbar::-webkit-scrollbar { display: none; }
+.no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }

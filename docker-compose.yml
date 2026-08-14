@@ -1,0 +1,44 @@
+services:
+  app:
+    build:
+      context: .
+      target: dev
+    ports:
+      - "3025:3025"
+    volumes:
+      - .:/app
+      - /app/node_modules
+    environment:
+      - CHOKIDAR_USEPOLLING=1
+      - NODE_ENV=development
+      - POCKETBASE_URL=http://pocketbase:8090
+      - VITE_POCKETBASE_URL=http://pocketbase:8090
+      - PB_ADMIN_EMAIL=admin@babyshower.com
+      - PB_ADMIN_PASSWORD=changeme123
+      - ADMIN_TOKEN=${ADMIN_TOKEN:-babyshower-admin-2026}
+      - APP_URL=${APP_URL:-http://localhost:3025}
+      - RESEND_API_KEY=${RESEND_API_KEY:-}
+      - EMAIL_FROM=${EMAIL_FROM:-"Baby Shower <onboarding@resend.dev>"}
+      - TWILIO_ACCOUNT_SID=${TWILIO_ACCOUNT_SID:-}
+      - TWILIO_AUTH_TOKEN=${TWILIO_AUTH_TOKEN:-}
+      - TWILIO_PHONE_NUMBER=${TWILIO_PHONE_NUMBER:-}
+      - THANKYOU_AI_API_KEY=${THANKYOU_AI_API_KEY:-}
+      - THANKYOU_AI_BASE_URL=${THANKYOU_AI_BASE_URL:-https://opencode.ai/zen/go/v1}
+      - THANKYOU_MODEL=${THANKYOU_MODEL:-deepseek-v4-flash}
+    depends_on:
+      - pocketbase
+    restart: unless-stopped
+
+  pocketbase:
+    image: ghcr.io/muchobien/pocketbase:latest
+    ports:
+      - "3026:8090"
+    environment:
+      - PB_ADMIN_EMAIL=admin@babyshower.com
+      - PB_ADMIN_PASSWORD=changeme123
+    volumes:
+      - pb_data:/pb_data
+    restart: unless-stopped
+
+volumes:
+  pb_data:

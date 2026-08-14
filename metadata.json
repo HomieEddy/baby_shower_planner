@@ -1,0 +1,6 @@
+{
+  "name": "Bébé - Baby Shower Planner & Digital Guestbook",
+  "description": "Bilingual (English/French) Baby Shower planning app with magic link RSVPs, event details, registry redirect, QR digital guestbook, and co-host dashboard.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
