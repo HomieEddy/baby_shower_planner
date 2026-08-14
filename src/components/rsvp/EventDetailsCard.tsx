@@ -22,18 +22,16 @@ export const EventDetailsCard = () => {
   }
 
   const mapsUrl = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(
-    `${settings.venueName} ${settings.venueAddress}`
+    settings.venueAddress
   )}`;
 
   return (
     <div className="card-paper p-8 sm:p-12 text-center mb-8 relative overflow-hidden">
 
-      {/* Parents watermark badge */}
-      {settings.parentsNames ? (
-        <div className="inline-block font-mono text-[11px] uppercase tracking-widest px-4 py-1.5 bg-[#E9E0D2] text-[#4A3F35] rounded-full font-bold mb-6 border border-[#4A3F35]/10">
-          Celebrating {settings.parentsNames}
-        </div>
-      ) : null}
+      {/* Badge */}
+      <div className="inline-block font-mono text-[11px] uppercase tracking-widest px-4 py-1.5 bg-[#E9E0D2] text-[#4A3F35] rounded-full font-bold mb-6 border border-[#4A3F35]/10">
+        {language === 'EN' ? "Celebrating our baby's arrival" : "Célébrons l'arrivée de notre bébé"}
+      </div>
 
       {/* Main Title */}
       <h1 className="font-newsreader text-4xl sm:text-5xl lg:text-6xl font-bold text-[#4A3F35] tracking-tight leading-tight mb-4">
