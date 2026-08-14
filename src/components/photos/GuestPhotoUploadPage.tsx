@@ -9,9 +9,6 @@ import {
   AlertCircle,
   X,
   Image as ImageIcon,
-  Sparkles,
-  Heart,
-  QrCode,
   ArrowRight,
   ShieldCheck,
   Building2,
@@ -211,7 +208,6 @@ export const GuestPhotoUploadPage = () => {
     }
 
     setIsUploading(true);
-    setUploadProgress(20);
 
     try {
       setUploadProgress(20);

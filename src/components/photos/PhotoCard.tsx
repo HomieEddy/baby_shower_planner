@@ -22,6 +22,7 @@ export const PhotoCard: React.FC<PhotoCardProps> = ({
   onLike,
   onClick,
 }) => {
+  const t = useT();
   return (
     <div
       onClick={() => onClick(photo)}
@@ -73,7 +74,7 @@ export const PhotoCard: React.FC<PhotoCardProps> = ({
           type="button"
           onClick={(e) => { e.stopPropagation(); onDelete(photo.id); }}
           className="absolute top-2.5 right-2.5 p-1.5 rounded-xl bg-black/60 text-white hover:bg-rose-600 transition-colors opacity-0 group-hover:opacity-100 shadow-sm"
-          title="{t.deletePhotoBtn}"
+          title={t.deletePhotoBtn}
         >
           <Trash2 className="w-3.5 h-3.5" />
         </button>

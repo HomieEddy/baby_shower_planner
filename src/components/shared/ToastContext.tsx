@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useState, useCallback } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
-import { CheckCircle2, AlertCircle, Info, X, Sparkles, Heart } from 'lucide-react';
+import { AlertCircle, Info, X, Sparkles, Heart } from 'lucide-react';
 import { useT } from './i18n';
 
 export type ToastType = 'success' | 'error' | 'info' | 'love';
