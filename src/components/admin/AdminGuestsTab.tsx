@@ -272,47 +272,6 @@ export const AdminGuestsTab: React.FC<AdminGuestsTabProps> = ({ language, t, gue
     toast.love(t.exportedToast);
   };
 
-  const handleCopyAllLinks = () => {
-    if (guests.length === 0) return;
-    const linksFormatted = guests.map((g) => {
-      const url = `${window.location.origin}/rsvp/${g.magic_token}`;
-      return `${g.name}: ${url}`;
-    }).join('\n');
-    navigator.clipboard.writeText(linksFormatted);
-    toast.love(t.linksCopiedToast.replace('{{count}}', String(guests.length)));
-  };
-
-  const handleSendInvitations = async () => {
-    const ok = await confirm({
-      title: 'Send Invitations?',
-      message: `This will send invitation messages to all ${guests.length} invited guests on their preferred channel (email/SMS).`,
-      confirmText: 'Send Invitations',
-    });
-    if (!ok) return;
-    try {
-      const res = await adminFetch('/api/send-invitations', { method: 'POST' });
-      const data = await res.json();
-      if (data.sent > 0) toast.love(t.invitesSentMsg.replace('{{count}}', String(data.sent)) + (data.failed > 0 ? t.invitesFailedSuffix.replace('{{count}}', String(data.failed)) : ''));
-      else toast.error(t.invitesNoneToast);
-    } catch { toast.error(t.invitesErrorToast); }
-  };
-
-  const handleSendReminders = async () => {
-    const pendingCount = guests.filter((g) => g.rsvp_status === 'Pending').length;
-    const ok = await confirm({
-      title: 'Send Reminders?',
-      message: `This will send reminder messages to the ${pendingCount} guest(s) who have not responded yet.`,
-      confirmText: 'Send Reminders',
-    });
-    if (!ok) return;
-    try {
-      const res = await adminFetch('/api/send-reminders', { method: 'POST' });
-      const data = await res.json();
-      if (data.sent > 0) toast.info(t.remindersSentMsg.replace('{{count}}', String(data.sent)) + (data.failed > 0 ? t.invitesFailedSuffix.replace('{{count}}', String(data.failed)) : ''));
-      else toast.error(t.remindersNoneToast);
-    } catch { toast.error(t.remindersErrorToast); }
-  };
-
   const handleProcessCsvImport = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!rawCsvText.trim()) {
@@ -611,18 +570,6 @@ export const AdminGuestsTab: React.FC<AdminGuestsTabProps> = ({ language, t, gue
               <button type="button" onClick={() => setShowCsvImportModal(true)}
                 className="px-3 py-1.5 rounded-full bg-white border border-[#CBAE94] text-[#8B735B] font-bold text-xs hover:bg-[#EFE6DC] transition-all flex items-center gap-1 shadow-2xs" title={t.importCsvTitle}>
                 <Upload className="w-3.5 h-3.5" /><span className="hidden md:inline">{t.importCsvBtn}</span>
-              </button>
-              <button type="button" onClick={handleCopyAllLinks}
-                className="px-3 py-1.5 rounded-full bg-white border border-[#CBAE94] text-[#8B735B] font-bold text-xs hover:bg-[#EFE6DC] transition-all flex items-center gap-1 shadow-2xs" title={t.copyAllLinksTitle}>
-                <Copy className="w-3.5 h-3.5" /><span className="hidden md:inline">{t.copyAllLinksBtn}</span>
-              </button>
-              <button type="button" onClick={handleSendInvitations}
-                className="px-3 py-1.5 rounded-full bg-[#8B735B] text-white font-bold text-xs hover:bg-[#4A3F35] transition-all flex items-center gap-1 shadow-2xs" title={t.sendInvitesTitle}>
-                <Send className="w-3.5 h-3.5" /><span className="hidden md:inline">{t.sendInvitesBtn}</span>
-              </button>
-              <button type="button" onClick={handleSendReminders}
-                className="px-3 py-1.5 rounded-full bg-amber-600 text-white font-bold text-xs hover:bg-amber-700 transition-all flex items-center gap-1 shadow-2xs" title={t.remindTitle}>
-                <Clock className="w-3.5 h-3.5" /><span className="hidden md:inline">{t.remindBtn}</span>
               </button>
             </div>
 

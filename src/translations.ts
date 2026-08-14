@@ -714,6 +714,7 @@ export interface Translations {
   viewRsvpTitle: string;
   widthLabel: string;
   willNotifyLabel: string;
+  willNotifyOfLabel: string;
   wipeDbBtn: string;
   wipeDbConfirm: string;
   wrongPasswordMsg: string;
@@ -1438,6 +1439,7 @@ export const translations: Record<Language, Translations> = {
     viewRsvpTitle: "Test / View RSVP Form",
     widthLabel: "Width",
     willNotifyLabel: "Will notify",
+    willNotifyOfLabel: "of",
     wipeDbBtn: "Clear All Data",
     wipeDbConfirm: "All event data cleared. Ready to start fresh.",
     wrongPasswordMsg: "Wrong password",
@@ -2160,6 +2162,7 @@ export const translations: Record<Language, Translations> = {
     viewRsvpTitle: "Tester / Voir le formulaire RSVP",
     widthLabel: "Largeur",
     willNotifyLabel: "Notifiera",
+    willNotifyOfLabel: "sur",
     wipeDbBtn: "Effacer toutes les données",
     wipeDbConfirm: "Toutes les données de l'événement ont été effacées.",
     wrongPasswordMsg: "Mot de passe incorrect",

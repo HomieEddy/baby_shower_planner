@@ -579,7 +579,16 @@ export async function createAlert(payload: { type: AlertType; title: string; mes
     if (target === 'ATTENDING') return g.rsvp_status === 'Attending';
     return true;
   });
-  const notified = recipientGuests.length;
+  const emailGuests = recipientGuests.filter(g => !!g.email);
+  let settings: EventSettings | null = null;
+  try { settings = await getSettings(); } catch { /* settings missing — skip send */ }
+  for (const g of emailGuests) {
+    if (settings) {
+      const { sendAlertEmail } = await import('../lib/email');
+      await sendAlertEmail(g, settings, payload.title, payload.message);
+    }
+  }
+  const notified = emailGuests.length;
   await pb.collection('alerts').update(r.id, { notified_guests_count: notified });
   return { alert: fromRecord<EventAlert>({ ...r, notified_guests_count: notified }), notified_count: notified };
 }

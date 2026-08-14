@@ -203,6 +203,13 @@ export const AdminAlertsTab: React.FC<AdminAlertsTabProps> = ({ language, t, gue
                   if (targetAudience === 'PENDING') return g.rsvp_status === 'Pending';
                   if (targetAudience === 'ATTENDING') return g.rsvp_status === 'Attending';
                   return true;
+                }).filter((g) => !!g.email).length
+              }</strong> {t.willNotifyOfLabel} <strong>{
+                guests.filter((g) => {
+                  if (g.rsvp_status === 'Declined') return false;
+                  if (targetAudience === 'PENDING') return g.rsvp_status === 'Pending';
+                  if (targetAudience === 'ATTENDING') return g.rsvp_status === 'Attending';
+                  return true;
                 }).length
               }</strong> {t.guestEmailsLabel}</span>
             </span>

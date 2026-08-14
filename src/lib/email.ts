@@ -109,6 +109,44 @@ export async function sendReminderEmail(guest: Guest, settings: EventSettings): 
   }
 }
 
+export async function sendAlertEmail(guest: Guest, settings: EventSettings, title: string, message: string): Promise<boolean> {
+  const link = `${process.env.APP_URL || 'http://localhost:3025'}/rsvp/${guest.magic_token}`;
+  const subject = `📢 ${title}`;
+  const html = `
+    <div style="font-family: Georgia, serif; max-width: 560px; margin: 0 auto; padding: 32px 24px; background: #FDFBF7; color: #4A3F35;">
+      <div style="text-align: center; margin-bottom: 20px;">
+        <div style="font-size: 20px; font-weight: bold; color: #8B735B;">${title}</div>
+      </div>
+      <div style="background: white; border-radius: 16px; padding: 24px; border: 1px solid #E8E0D4;">
+        <p style="font-size: 15px; margin: 0 0 12px;">Hi ${guest.name.split(' ')[0]},</p>
+        <p style="font-size: 13px; line-height: 1.6; color: #5D5449;">${message}</p>
+        <div style="text-align: center; margin: 20px 0;">
+          <a href="${link}" style="display: inline-block; padding: 11px 28px; background: #8B735B; color: white; text-decoration: none; border-radius: 40px; font-size: 14px; font-weight: bold;">View RSVP</a>
+        </div>
+        <p style="font-size: 11px; color: #A09080; text-align: center;">Code: <strong>${guest.code}</strong></p>
+      </div>
+    </div>`;
+
+  const client = getClient();
+  if (!client) {
+    console.log(`[MOCK ALERT EMAIL] To: ${guest.email} | Subject: ${subject}`);
+    return true;
+  }
+  try {
+    await client.emails.send({
+      from: process.env.EMAIL_FROM || 'Baby Shower <onboarding@resend.dev>',
+      to: guest.email,
+      subject,
+      html,
+    });
+    console.log(`[RESEND] Alert sent to ${guest.email}`);
+    return true;
+  } catch (err) {
+    console.error(`[RESEND] Alert failed for ${guest.email}:`, err);
+    return false;
+  }
+}
+
 // Free-form thank-you note (used by the gift tracker; delivered as plain HTML paragraphs)
 export async function sendThankYouEmail(guest: Guest, text: string): Promise<boolean> {
   const client = getClient();
