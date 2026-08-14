@@ -399,6 +399,7 @@ export interface Translations {
   inviteSentLinkOnlyToast: string;
   inviteSentModalMsg: string;
   inviteSentModalTitle: string;
+  inviteTabLabel: string;
   invitedByBadge: string;
   invitedByHostBadge: string;
   invitedGuestLabel: string;
@@ -627,6 +628,7 @@ export interface Translations {
   statusPendingWord: string;
   step1of2Label: string;
   step2of2Label: string;
+  step3of3Label: string;
   submitRsvpBtn: string;
   submittingRsvpBtn: string;
   suggestMatchBadge: string;
@@ -1121,6 +1123,7 @@ export const translations: Record<Language, Translations> = {
     inviteSentLinkOnlyToast: "Invitation ready — share the link with {{name}}",
     inviteSentModalMsg: "The magic link below has been logged to the system console and ready to share:",
     inviteSentModalTitle: "Invitation Created & Sent!",
+    inviteTabLabel: "3. Invite a Guest",
     invitedByBadge: "Invited by {{name}}",
     invitedByHostBadge: "Host",
     inviteeContactLabel: "Email or phone (optional)",
@@ -1349,6 +1352,7 @@ export const translations: Record<Language, Translations> = {
     statusPendingWord: "Pending",
     step1of2Label: "Step 1 of 2: Guest Confirmation",
     step2of2Label: "Step 2 of 2: Event Information",
+    step3of3Label: "Step 3 of 3: Invite Guests",
     submitRsvpBtn: "Confirm RSVP",
     submittingRsvpBtn: "Submitting...",
     suggestMatchBadge: "Best Fit",
@@ -1841,6 +1845,7 @@ export const translations: Record<Language, Translations> = {
     inviteSentLinkOnlyToast: "Invitation prête — partagez le lien avec {{name}}",
     inviteSentModalMsg: "Le lien magique ci-dessous a été enregistré dans la console et est prêt à être partagé :",
     inviteSentModalTitle: "Invitation créée et envoyée !",
+    inviteTabLabel: "3. Inviter un invité",
     invitedByBadge: "Invité par {{name}}",
     invitedByHostBadge: "Hôte",
     invitedGuestLabel: "Invité :",
@@ -2069,6 +2074,7 @@ export const translations: Record<Language, Translations> = {
     statusPendingWord: "En attente",
     step1of2Label: "Étape 1 sur 2 : Confirmation de l'invité",
     step2of2Label: "Étape 2 sur 2 : Informations sur l'événement",
+    step3of3Label: "Étape 3 sur 3 : Inviter des invités",
     submitRsvpBtn: "Confirmer mon RSVP",
     submittingRsvpBtn: "Envoi en cours...",
     suggestMatchBadge: "Meilleure correspondance",

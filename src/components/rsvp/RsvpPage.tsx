@@ -55,9 +55,9 @@ export const RsvpPage = () => {
   const [loading, setLoading] = useState(true);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
-  // Carousel Tab State ('rsvp' = Page 1 | 'event' = Page 2)
-  const [activeTab, setActiveTab] = useState<'rsvp' | 'event'>('rsvp');
-  const [direction, setDirection] = useState<number>(1);
+  // Carousel Tab State ('rsvp' = Page 1 | 'event' = Page 2 | 'invite' = Page 3)
+  const [activeTab, setActiveTab] = useState<'rsvp' | 'event' | 'invite'>('rsvp');
+  const TAB_ORDER = ['rsvp', 'event', 'invite'] as const;
 
   // System Alerts state
   const [alerts, setAlerts] = useState<EventAlert[]>([]);
@@ -85,9 +85,8 @@ export const RsvpPage = () => {
   const [isEditing, setIsEditing] = useState(false);
 
   // Handle Tab Switching with Direction
-  const handleTabChange = (newTab: 'rsvp' | 'event') => {
+  const handleTabChange = (newTab: 'rsvp' | 'event' | 'invite') => {
     if (newTab === activeTab) return;
-    setDirection(newTab === 'event' ? 1 : -1);
     setActiveTab(newTab);
   };
 
@@ -364,21 +363,6 @@ export const RsvpPage = () => {
     }
   };
 
-  const slideVariants = {
-    enter: (dir: number) => ({
-      x: dir > 0 ? '100%' : '-100%',
-      opacity: 0,
-    }),
-    center: {
-      x: '0%',
-      opacity: 1,
-    },
-    exit: (dir: number) => ({
-      x: dir < 0 ? '100%' : '-100%',
-      opacity: 0,
-    }),
-  };
-
   // Filter alerts for the current guest:
   // 1. Guests who have DECLINED will NEVER see any broadcast alerts.
   // 2. Filter by target_audience (PENDING vs ATTENDING vs ALL).
@@ -443,10 +427,10 @@ export const RsvpPage = () => {
         </>
       ) : (
       <>
-      {/* 2-Tab Carousel Header Navigation Control */}
+      {/* 3-Tab Carousel Header Navigation Control */}
       <div className="bg-white border-2 border-[#4A3F35] p-1.5 rounded-full flex items-center justify-between max-w-lg mx-auto shadow-sm">
         <button
-          onClick={() => handleTabChange(activeTab === 'event' ? 'rsvp' : 'event')}
+          onClick={() => handleTabChange(TAB_ORDER[(TAB_ORDER.indexOf(activeTab) + 2) % 3])}
           className="p-2.5 rounded-full hover:bg-[#E9E0D2]/50 text-[#4A3F35] transition-colors"
           title={t.prevSlideBtn}
         >
@@ -491,10 +475,29 @@ export const RsvpPage = () => {
             <Calendar className="w-3.5 h-3.5" />
             <span>{t.eventTabLabel}</span>
           </button>
+
+          <button
+            onClick={() => handleTabChange('invite')}
+            className={`relative px-4 py-2 rounded-full text-xs font-bold font-mono transition-all flex items-center space-x-2 z-10 ${
+              activeTab === 'invite'
+                ? 'text-[#F8F5F0]'
+                : 'text-[#4A3F35]/70 hover:text-[#4A3F35]'
+            }`}
+          >
+            {activeTab === 'invite' && (
+              <motion.div
+                layoutId="activeCarouselTab"
+                className="absolute inset-0 bg-[#4A3F35] rounded-full -z-10"
+                transition={{ type: 'spring', stiffness: 350, damping: 30 }}
+              />
+            )}
+            <Users className="w-3.5 h-3.5" />
+            <span>{t.inviteTabLabel}</span>
+          </button>
         </div>
 
         <button
-          onClick={() => handleTabChange(activeTab === 'rsvp' ? 'event' : 'rsvp')}
+          onClick={() => handleTabChange(TAB_ORDER[(TAB_ORDER.indexOf(activeTab) + 1) % 3])}
           className="p-2.5 rounded-full hover:bg-[#E9E0D2]/50 text-[#4A3F35] transition-colors"
           title={t.nextSlideBtn}
         >
@@ -502,21 +505,26 @@ export const RsvpPage = () => {
         </button>
       </div>
 
-      {/* Carousel Container with Smooth Sliding Animation */}
+      {/* Carousel Container with Smooth Sliding Animation. All tabs stay mounted
+          and slide via CSS transitions — no enter/exit lifecycle to get stuck. */}
       <div className="relative overflow-hidden min-h-[450px]">
-        <AnimatePresence mode="wait" custom={direction}>
-          
-          {/* Tab 1: RSVP Form / Confirmation */}
-          {activeTab === 'rsvp' && (
-            <motion.div
-              key="rsvpTab"
-              custom={direction}
-              variants={slideVariants}
-              initial="enter"
-              animate="center"
-              exit="exit"
-              transition={{ type: 'spring', stiffness: 260, damping: 28 }}
+        <div className="grid">
+          {TAB_ORDER.map((tab, i) => {
+            const isActive = activeTab === tab;
+            const activeIndex = TAB_ORDER.indexOf(activeTab);
+            return (
+            <div
+              key={tab}
+              inert={!isActive}
+              className={`[grid-area:1/1] transition-all duration-500 ease-out ${
+                isActive
+                  ? 'translate-x-0 opacity-100'
+                  : i < activeIndex
+                  ? '-translate-x-full opacity-0'
+                  : 'translate-x-full opacity-0'
+              }`}
             >
+            {tab === 'rsvp' && (
               <div className="card-paper p-6 sm:p-10">
                 
                 {/* Link to Event Details */}
@@ -902,21 +910,9 @@ export const RsvpPage = () => {
                 )}
 
               </div>
-            </motion.div>
-          )}
-
-          {/* Tab 2: Event Details & Schedule */}
-          {activeTab === 'event' && (
-            <motion.div
-              key="eventTab"
-              custom={direction}
-              variants={slideVariants}
-              initial="enter"
-              animate="center"
-              exit="exit"
-              transition={{ type: 'spring', stiffness: 260, damping: 28 }}
-              className="space-y-4"
-            >
+            )}
+            {tab === 'event' && (
+              <div className="space-y-4">
               {/* Back to RSVP Form header bar */}
               <div className="bg-white border border-[#4A3F35]/15 p-3.5 rounded-2xl flex items-center justify-between">
                 <button
@@ -943,10 +939,171 @@ export const RsvpPage = () => {
                   <span>{t.returnToConfirmationBtn}</span>
                 </button>
               </div>
-            </motion.div>
-          )}
+              </div>
+            )}
+            {tab === 'invite' && (
+              <div className="space-y-4">
+              {/* Back to RSVP Form header bar */}
+              <div className="bg-white border border-[#4A3F35]/15 p-3.5 rounded-2xl flex items-center justify-between">
+                <button
+                  onClick={() => handleTabChange('rsvp')}
+                  className="text-xs font-bold text-[#4A3F35] hover:text-[#D4A373] inline-flex items-center space-x-1 font-mono transition-colors"
+                >
+                  <ChevronLeft className="w-4 h-4" />
+                  <span>{t.returnToRsvpBtn}</span>
+                </button>
+                <span className="text-[11px] font-mono text-[#4A3F35]/60 font-bold">
+                  {t.step3of3Label}
+                </span>
+              </div>
 
-        </AnimatePresence>
+              {/* Invite a guest */}
+              <div className="card-paper p-5 sm:p-6 space-y-4">
+                <div className="flex items-center gap-2.5">
+                  <div className="p-2 bg-[#EFE6DC] text-[#8B735B] rounded-xl border border-[#CBAE94]">
+                    <Users className="w-4 h-4" />
+                  </div>
+                  <div>
+                    <h3 className="font-sans text-base font-bold text-[#8B735B]">{t.inviteGuestTitle}</h3>
+                    <p className="text-[11px] text-[#5D5449]">{t.inviteGuestHint}</p>
+                  </div>
+                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  <div>
+                    <label className="label-mono block mb-1">{t.inviteeNameLabel} *</label>
+                    <input
+                      type="text"
+                      value={inviteName}
+                      onChange={(e) => setInviteName(e.target.value)}
+                      placeholder={t.inviteeNamePh}
+                      className="w-full px-3 py-2 rounded-lg border border-[#4A3F35]/20 bg-white text-xs text-[#4A3F35] focus:outline-none focus:ring-2 focus:ring-[#4A3F35]"
+                    />
+                  </div>
+                  <div>
+                    <label className="label-mono block mb-1">{t.inviteeContactLabel}</label>
+                    <input
+                      type="text"
+                      value={inviteContact}
+                      onChange={(e) => setInviteContact(e.target.value)}
+                      placeholder={t.inviteeContactPh}
+                      className="w-full px-3 py-2 rounded-lg border border-[#4A3F35]/20 bg-white text-xs text-[#4A3F35] focus:outline-none focus:ring-2 focus:ring-[#4A3F35]"
+                    />
+                  </div>
+                </div>
+                <div>
+                  <label className="label-mono block mb-1">{t.inviteChannelLabel}</label>
+                  <select
+                    value={inviteChannel}
+                    onChange={(e) => setInviteChannel(e.target.value as 'link-only' | 'email' | 'text' | 'both')}
+                    className="w-full px-3 py-2 rounded-lg border border-[#4A3F35]/20 bg-white text-xs font-bold text-[#4A3F35] focus:outline-none focus:ring-2 focus:ring-[#4A3F35]"
+                  >
+                    {inviteChannels.map((c) => (
+                      <option key={c} value={c}>{channelLabel(c)}</option>
+                    ))}
+                  </select>
+                  {inviteChannel === 'link-only' && (
+                    <p className="text-[11px] text-[#8B735B] font-medium mt-1 flex items-center gap-1">
+                      <Link2 className="w-3 h-3 shrink-0" />
+                      {t.linkOnlyHint}
+                    </p>
+                  )}
+                </div>
+                <div>
+                  <label className="label-mono block mb-1">{t.inviteeNoteLabel}</label>
+                  <input
+                    type="text"
+                    value={inviteNote}
+                    onChange={(e) => setInviteNote(e.target.value)}
+                    placeholder={t.inviteeNotePh}
+                    className="w-full px-3 py-2 rounded-lg border border-[#4A3F35]/20 bg-white text-xs text-[#4A3F35] focus:outline-none focus:ring-2 focus:ring-[#4A3F35]"
+                  />
+                </div>
+                <button
+                  onClick={handleInvite}
+                  disabled={inviting}
+                  className="btn-accent w-full py-3 text-sm font-bold disabled:opacity-50"
+                >
+                  <Send className="w-4 h-4 mr-2" />
+                  <span>{inviting ? t.sendingInviteBtn : t.createInviteBtn}</span>
+                </button>
+              </div>
+
+              {/* Your invitations */}
+              <div className="card-paper p-5 sm:p-6 space-y-3">
+                <div className="label-mono">{t.yourInvitesTitle}</div>
+                {myInvites.length === 0 ? (
+                  <p className="text-xs text-[#5D5449]/70 italic py-2">{t.noInvitesYet}</p>
+                ) : (
+                  <div className="space-y-2.5">
+                    {myInvites.map((invitee) => (
+                      <div key={invitee.id} className="p-3 bg-white rounded-xl border border-[#4A3F35]/15 space-y-2">
+                        <div className="flex items-center justify-between gap-2">
+                          <div className="min-w-0">
+                            <p className="text-xs font-bold text-[#4A3F35] truncate">{invitee.name}</p>
+                            <p className="text-[10px] font-mono text-[#8B735B] truncate">
+                              {invitee.email || invitee.phone || t.channelNone}
+                            </p>
+                            {invitee.guest_note && (
+                              <p className="text-[10px] text-[#5D5449] italic truncate">{invitee.guest_note}</p>
+                            )}
+                          </div>
+                          <span
+                            className={`px-2 py-0.5 rounded-full text-[10px] font-bold border shrink-0 ${
+                              invitee.rsvp_status === 'Attending'
+                                ? 'bg-emerald-50 text-emerald-800 border-emerald-300'
+                                : invitee.rsvp_status === 'Declined'
+                                ? 'bg-rose-50 text-rose-800 border-rose-300'
+                                : 'bg-[#E9E0D2] text-[#8B735B] border-[#CBAE94]'
+                            }`}
+                          >
+                            {statusWord(invitee.rsvp_status)}
+                          </span>
+                        </div>
+                        <div className="flex flex-wrap items-center gap-2">
+                          <button
+                            onClick={() => copyText(`${window.location.origin}/rsvp/${invitee.magic_token}`, `link-${invitee.id}`)}
+                            className="px-2.5 py-1.5 rounded-lg bg-[#E9E0D2] hover:bg-[#CBAE94] hover:text-white text-[#8B735B] text-[10px] font-bold font-mono transition-colors border border-[#CBAE94] inline-flex items-center gap-1"
+                          >
+                            {copiedKey === `link-${invitee.id}` ? <Check className="w-3 h-3 text-emerald-600" /> : <Copy className="w-3 h-3" />}
+                            <span>{copiedKey === `link-${invitee.id}` ? t.linkCopied : t.copyLink}</span>
+                          </button>
+                          <button
+                            onClick={() => copyText((invitee as Guest & { invite_message?: string }).invite_message || '', `msg-${invitee.id}`)}
+                            className="px-2.5 py-1.5 rounded-lg bg-white hover:bg-[#EFE6DC] text-[#5D5449] text-[10px] font-bold font-mono transition-colors border border-[#CBAE94] inline-flex items-center gap-1"
+                          >
+                            {copiedKey === `msg-${invitee.id}` ? <Check className="w-3 h-3 text-emerald-600" /> : <MessageSquare className="w-3 h-3" />}
+                            <span>{copiedKey === `msg-${invitee.id}` ? t.linkCopied : t.copyMessageBtn}</span>
+                          </button>
+                          <button
+                            onClick={() => handleRemoveInvite(invitee)}
+                            className="ml-auto px-2.5 py-1.5 rounded-lg bg-rose-50 hover:bg-rose-100 text-rose-700 text-[10px] font-bold font-mono transition-colors border border-rose-300 inline-flex items-center gap-1"
+                          >
+                            <Trash2 className="w-3 h-3" />
+                            <span>{t.removeInviteBtn}</span>
+                          </button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+
+              {/* Bottom Carousel Action */}
+              <div className="text-center pt-2">
+                <button
+                  onClick={() => handleTabChange('rsvp')}
+                  className="btn-accent px-6 py-3.5 text-sm font-bold shadow-md hover:scale-105 inline-flex items-center space-x-2"
+                >
+                  <ChevronLeft className="w-4 h-4 mr-1" />
+                  <span>{t.returnToConfirmationBtn}</span>
+                </button>
+              </div>
+              </div>
+            )}
+            </div>
+            );
+          })}
+        </div>
       </div>
 
       {/* Contact & notifications (self-service) */}
@@ -1004,137 +1161,6 @@ export const RsvpPage = () => {
                 <span>{savingContact ? t.sendingInviteBtn : t.contactSaveBtn}</span>
               </button>
             </div>
-          </div>
-
-          {/* Invite a guest */}
-          <div className="card-paper p-5 sm:p-6 space-y-4">
-            <div className="flex items-center gap-2.5">
-              <div className="p-2 bg-[#EFE6DC] text-[#8B735B] rounded-xl border border-[#CBAE94]">
-                <Users className="w-4 h-4" />
-              </div>
-              <div>
-                <h3 className="font-sans text-base font-bold text-[#8B735B]">{t.inviteGuestTitle}</h3>
-                <p className="text-[11px] text-[#5D5449]">{t.inviteGuestHint}</p>
-              </div>
-            </div>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              <div>
-                <label className="label-mono block mb-1">{t.inviteeNameLabel} *</label>
-                <input
-                  type="text"
-                  value={inviteName}
-                  onChange={(e) => setInviteName(e.target.value)}
-                  placeholder={t.inviteeNamePh}
-                  className="w-full px-3 py-2 rounded-lg border border-[#4A3F35]/20 bg-white text-xs text-[#4A3F35] focus:outline-none focus:ring-2 focus:ring-[#4A3F35]"
-                />
-              </div>
-              <div>
-                <label className="label-mono block mb-1">{t.inviteeContactLabel}</label>
-                <input
-                  type="text"
-                  value={inviteContact}
-                  onChange={(e) => setInviteContact(e.target.value)}
-                  placeholder={t.inviteeContactPh}
-                  className="w-full px-3 py-2 rounded-lg border border-[#4A3F35]/20 bg-white text-xs text-[#4A3F35] focus:outline-none focus:ring-2 focus:ring-[#4A3F35]"
-                />
-              </div>
-            </div>
-            <div>
-              <label className="label-mono block mb-1">{t.inviteChannelLabel}</label>
-              <select
-                value={inviteChannel}
-                onChange={(e) => setInviteChannel(e.target.value as 'link-only' | 'email' | 'text' | 'both')}
-                className="w-full px-3 py-2 rounded-lg border border-[#4A3F35]/20 bg-white text-xs font-bold text-[#4A3F35] focus:outline-none focus:ring-2 focus:ring-[#4A3F35]"
-              >
-                {inviteChannels.map((c) => (
-                  <option key={c} value={c}>{channelLabel(c)}</option>
-                ))}
-              </select>
-              {inviteChannel === 'link-only' && (
-                <p className="text-[11px] text-[#8B735B] font-medium mt-1 flex items-center gap-1">
-                  <Link2 className="w-3 h-3 shrink-0" />
-                  {t.linkOnlyHint}
-                </p>
-              )}
-            </div>
-            <div>
-              <label className="label-mono block mb-1">{t.inviteeNoteLabel}</label>
-              <input
-                type="text"
-                value={inviteNote}
-                onChange={(e) => setInviteNote(e.target.value)}
-                placeholder={t.inviteeNotePh}
-                className="w-full px-3 py-2 rounded-lg border border-[#4A3F35]/20 bg-white text-xs text-[#4A3F35] focus:outline-none focus:ring-2 focus:ring-[#4A3F35]"
-              />
-            </div>
-            <button
-              onClick={handleInvite}
-              disabled={inviting}
-              className="btn-accent w-full py-3 text-sm font-bold disabled:opacity-50"
-            >
-              <Send className="w-4 h-4 mr-2" />
-              <span>{inviting ? t.sendingInviteBtn : t.createInviteBtn}</span>
-            </button>
-          </div>
-
-          {/* Your invitations */}
-          <div className="card-paper p-5 sm:p-6 space-y-3">
-            <div className="label-mono">{t.yourInvitesTitle}</div>
-            {myInvites.length === 0 ? (
-              <p className="text-xs text-[#5D5449]/70 italic py-2">{t.noInvitesYet}</p>
-            ) : (
-              <div className="space-y-2.5">
-                {myInvites.map((invitee) => (
-                  <div key={invitee.id} className="p-3 bg-white rounded-xl border border-[#4A3F35]/15 space-y-2">
-                    <div className="flex items-center justify-between gap-2">
-                      <div className="min-w-0">
-                        <p className="text-xs font-bold text-[#4A3F35] truncate">{invitee.name}</p>
-                        <p className="text-[10px] font-mono text-[#8B735B] truncate">
-                          {invitee.email || invitee.phone || t.channelNone}
-                        </p>
-                        {invitee.guest_note && (
-                          <p className="text-[10px] text-[#5D5449] italic truncate">{invitee.guest_note}</p>
-                        )}
-                      </div>
-                      <span
-                        className={`px-2 py-0.5 rounded-full text-[10px] font-bold border shrink-0 ${
-                          invitee.rsvp_status === 'Attending'
-                            ? 'bg-emerald-50 text-emerald-800 border-emerald-300'
-                            : invitee.rsvp_status === 'Declined'
-                            ? 'bg-rose-50 text-rose-800 border-rose-300'
-                            : 'bg-[#E9E0D2] text-[#8B735B] border-[#CBAE94]'
-                        }`}
-                      >
-                        {statusWord(invitee.rsvp_status)}
-                      </span>
-                    </div>
-                    <div className="flex flex-wrap items-center gap-2">
-                      <button
-                        onClick={() => copyText(`${window.location.origin}/rsvp/${invitee.magic_token}`, `link-${invitee.id}`)}
-                        className="px-2.5 py-1.5 rounded-lg bg-[#E9E0D2] hover:bg-[#CBAE94] hover:text-white text-[#8B735B] text-[10px] font-bold font-mono transition-colors border border-[#CBAE94] inline-flex items-center gap-1"
-                      >
-                        {copiedKey === `link-${invitee.id}` ? <Check className="w-3 h-3 text-emerald-600" /> : <Copy className="w-3 h-3" />}
-                        <span>{copiedKey === `link-${invitee.id}` ? t.linkCopied : t.copyLink}</span>
-                      </button>
-                      <button
-                        onClick={() => copyText((invitee as Guest & { invite_message?: string }).invite_message || '', `msg-${invitee.id}`)}
-                        className="px-2.5 py-1.5 rounded-lg bg-white hover:bg-[#EFE6DC] text-[#5D5449] text-[10px] font-bold font-mono transition-colors border border-[#CBAE94] inline-flex items-center gap-1"
-                      >
-                        {copiedKey === `msg-${invitee.id}` ? <Check className="w-3 h-3 text-emerald-600" /> : <MessageSquare className="w-3 h-3" />}
-                        <span>{copiedKey === `msg-${invitee.id}` ? t.linkCopied : t.copyMessageBtn}</span>
-                      </button>
-                      <button
-                        onClick={() => handleRemoveInvite(invitee)}
-                        className="ml-auto px-2.5 py-1.5 rounded-lg bg-rose-50 hover:bg-rose-100 text-rose-700 text-[10px] font-bold font-mono transition-colors border border-rose-300 inline-flex items-center gap-1"
-                      >
-                        <Trash2 className="w-3 h-3" />
-                        <span>{t.removeInviteBtn}</span>
-                      </button>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
           </div>
         </div>
       )}
