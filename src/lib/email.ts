@@ -42,7 +42,7 @@ function buildGuestEmail(guest: Guest, settings: EventSettings): { subject: stri
           <tr><td style="padding: 4px 0; color: #8B735B; vertical-align: top;">${fr ? 'Lieu' : 'Venue'}</td><td style="padding: 4px 0;"><strong>${venue}</strong><br/><span style="color: #A09080;">${venueAddress}</span></td></tr>
         </table>
         <div style="text-align: center; margin: 24px 0;">
-          <a href="${link}" style="display: inline-block; padding: 12px 32px; background: #8B735B; color: white; text-decoration: none; border-radius: 40px; font-size: 15px; font-weight: bold;">${fr ? 'Répondre au RSVP' : 'RSVP Now'}</a>
+          <a href="${link}" style="display: inline-block; padding: 12px 32px; background: #8B735B; color: white; text-decoration: none; border-radius: 40px; font-size: 15px; font-weight: bold;">${fr ? 'Répondre' : 'RSVP Now'}</a>
         </div>
         <p style="font-size: 12px; color: #A09080; text-align: center;">${fr ? 'Votre code de réservation :' : 'Your reservation code:'} <strong style="color: #4A3F35;">${guest.code}</strong></p>
         <p style="font-size: 12px; color: #A09080; text-align: center;">${fr ? "Impossible de cliquer ? Copiez ce lien dans votre navigateur :" : "Can't click the button? Copy this link into your browser:"}<br/><span style="color: #8B735B;">${link}</span></p>
@@ -98,7 +98,7 @@ export async function sendReminderEmail(guest: Guest, settings: EventSettings): 
           ? `Nous n'avons pas encore de nouvelles de vous ! Merci de nous confirmer votre présence au <strong>${showerLabelFr}</strong> le <strong>${date}</strong>.`
           : `We haven't heard from you yet! Please let us know if you can make it to <strong>${showerLabel}</strong> on <strong>${date}</strong>.`}</p>
         <div style="text-align: center; margin: 20px 0;">
-          <a href="${link}" style="display: inline-block; padding: 11px 28px; background: #8B735B; color: white; text-decoration: none; border-radius: 40px; font-size: 14px; font-weight: bold;">${fr ? 'Répondre maintenant' : 'RSVP Now'}</a>
+          <a href="${link}" style="display: inline-block; padding: 11px 28px; background: #8B735B; color: white; text-decoration: none; border-radius: 40px; font-size: 14px; font-weight: bold;">${fr ? 'Répondre' : 'RSVP Now'}</a>
         </div>
         <p style="font-size: 11px; color: #A09080; text-align: center;">${fr ? 'Code :' : 'Code:'} <strong>${guest.code}</strong></p>
       </div>
