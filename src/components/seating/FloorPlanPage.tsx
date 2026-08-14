@@ -8,6 +8,8 @@ import {
 import { adminFetch } from '../../lib/api';
 import { DayOfQrModal } from './DayOfQrModal';
 import { UnassignedGuestsSidebar } from './UnassignedGuestsSidebar';
+import { SmartSuggestionsModal } from './SmartSuggestionsModal';
+import { HoverTooltip } from './HoverTooltip';
 import { FloorPlanEditor } from './FloorPlanEditor';
 import { motion, AnimatePresence } from 'motion/react';
 import { Modal } from '../shared/Modal';
@@ -1339,152 +1341,29 @@ export const FloorPlanPage = () => {
         />
       )}
 
-      {/* Smart Seating Suggestion Modal */}
-      <Modal open={isSmartSuggestOpen} onClose={() => setIsSmartSuggestOpen(false)} maxWidth="xl"
-        panelClassName="flex flex-col max-h-[90vh]"
-        contentClassName="overflow-y-auto max-h-none flex-1"
-        title={
-          <div className="flex items-center gap-2.5">
-            <div className="w-10 h-10 rounded-2xl bg-gradient-to-br from-amber-600 to-[#8B735B] text-white flex items-center justify-center shadow-md">
-              <Wand2 className="w-5 h-5 text-amber-200" />
-            </div>
-            <div>
-              <h3 className="font-gaegu text-2xl font-bold text-[#4A3F35] leading-none">
-                Smart Seating Suggestions
-              </h3>
-              <p className="text-xs text-[#8B735B] font-medium mt-1">
-                Auto-matches unassigned guest parties to available venue tables by optimal capacity fit.
-              </p>
-            </div>
-          </div>
-        }>
-        {/* Suggestions Count & Actions */}
-        <div className="flex items-center justify-between text-xs bg-[#EFE6DC]/60 p-3 rounded-2xl border border-[#CBAE94]/40">
-          <span className="font-bold text-[#4A3F35]">
-            {t.seatingProposalsCount.replace('{{count}}', String(smartSuggestions.length))}
-          </span>
-          <div className="flex items-center gap-2">
-            <button
-              type="button"
-              onClick={() =>
-                setSelectedSuggestionIds(
-                  selectedSuggestionIds.size === smartSuggestions.length
-                    ? new Set()
-                    : new Set(smartSuggestions.map((s) => s.id))
-                )
-              }
-              className="px-2.5 py-1 rounded-lg bg-white border border-[#CBAE94] text-[11px] font-bold text-[#8B735B] hover:bg-[#EFE6DC]"
-            >
-              {selectedSuggestionIds.size === smartSuggestions.length
-                ? t.deselectAllBtn
-                : t.selectAllBtn}
-                </button>
-              </div>
-            </div>
-
-            {/* Suggestions List */}
-            <div className="flex-1 overflow-y-auto space-y-3 pr-1">
-              {smartSuggestions.map((sug) => {
-                const isChecked = selectedSuggestionIds.has(sug.id);
-
-                return (
-                  <div
-                    key={sug.id}
-                    onClick={() => {
-                      const next = new Set(selectedSuggestionIds);
-                      if (next.has(sug.id)) next.delete(sug.id);
-                      else next.add(sug.id);
-                      setSelectedSuggestionIds(next);
-                    }}
-                    className={`p-4 rounded-2xl border-2 transition-all cursor-pointer space-y-2 ${
-                      isChecked
-                        ? 'bg-amber-50/60 border-amber-500 shadow-sm ring-1 ring-amber-300'
-                        : 'bg-white border-[#CBAE94]/40 opacity-75 hover:opacity-100'
-                    }`}
-                  >
-                    <div className="flex items-start justify-between gap-3">
-                      <div className="flex items-center gap-3">
-                        <input
-                          type="checkbox"
-                          checked={isChecked}
-                          onChange={() => {}}
-                          className="w-4 h-4 rounded text-amber-600 focus:ring-amber-500 border-[#CBAE94]"
-                        />
-                        <div>
-                          <h4 className="font-bold text-[#4A3F35] text-sm flex items-center gap-2">
-                            <span>{sug.guest.name}</span>
-                            <span className="text-xs font-normal text-[#8B735B]">
-                              ({sug.guest.email})
-                            </span>
-                          </h4>
-                          <p className="text-xs text-[#5D5449] mt-0.5">
-                            Party Size: <strong className="text-[#4A3F35]">{sug.partySize} guest(s)</strong>
-                          </p>
-                        </div>
-                      </div>
-
-                      <div className="text-right">
-                        <span className="inline-block px-2.5 py-1 rounded-full text-[10px] font-mono font-bold uppercase tracking-wider bg-amber-100 text-amber-900 border border-amber-300">
-                          {sug.matchBadge}
-                        </span>
-                        <div className="text-xs font-bold text-[#8B735B] mt-1">
-                          Assign to <span className="text-[#4A3F35] underline">{sug.table.name}</span>
-                        </div>
-                      </div>
-                    </div>
-
-                    <div className="text-[11px] text-[#8B735B] bg-[#FAF6F0] p-2 rounded-xl border border-[#CBAE94]/30 font-medium">
-                      {sug.reason}
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-
-            {/* Modal Footer Controls */}
-            <div className="flex items-center justify-between border-t border-[#CBAE94]/40 pt-4">
-              <button
-                type="button"
-                onClick={() => setIsSmartSuggestOpen(false)}
-                className="px-4 py-2.5 rounded-xl border-2 border-[#CBAE94] text-xs font-bold text-[#5D5449] hover:bg-[#EFE6DC]"
-              >
-                {t.cancelBtn}
-              </button>
-              <button
-                type="button"
-                onClick={handleApplySmartSuggestions}
-                disabled={selectedSuggestionIds.size === 0}
-                className="px-5 py-2.5 rounded-xl bg-gradient-to-r from-amber-700 to-emerald-700 hover:brightness-110 text-white text-xs font-bold shadow-md transition-all flex items-center gap-2 disabled:opacity-40 disabled:cursor-not-allowed"
-              >
-                <Sparkles className="w-4 h-4 text-amber-200" />
-                {t.applySeatingBtn.replace('{{count}}', String(selectedSuggestionIds.size))}
-              </button>
-            </div>
-      </Modal>
+      <SmartSuggestionsModal
+        open={isSmartSuggestOpen}
+        suggestions={smartSuggestions}
+        selectedIds={selectedSuggestionIds}
+        onToggleSelectAll={() =>
+          setSelectedSuggestionIds(
+            selectedSuggestionIds.size === smartSuggestions.length
+              ? new Set()
+              : new Set(smartSuggestions.map((s) => s.id))
+          )
+        }
+        onToggleSuggestion={(id) => {
+          const next = new Set(selectedSuggestionIds);
+          if (next.has(id)) next.delete(id);
+          else next.add(id);
+          setSelectedSuggestionIds(next);
+        }}
+        onApply={handleApplySmartSuggestions}
+        onClose={() => setIsSmartSuggestOpen(false)}
+      />
 
       {/* Floating Hover Details Tooltip */}
-      {hoverTooltip && (
-        <div
-          className="fixed z-50 pointer-events-none bg-[#4A3F35] text-[#FAF6F0] p-3 rounded-2xl shadow-2xl border-2 border-[#CBAE94] text-xs space-y-1 transform -translate-x-1/2 -translate-y-full mb-3 min-w-[220px] max-w-xs animate-fadeIn"
-          style={{ left: hoverTooltip.x, top: hoverTooltip.y - 12 }}
-        >
-          <div className="font-bold text-sm text-amber-200">
-            {hoverTooltip.title}
-          </div>
-          {hoverTooltip.subtitle && (
-            <div className="text-[10px] font-mono text-[#CBAE94] font-bold uppercase tracking-wider">
-              {hoverTooltip.subtitle}
-            </div>
-          )}
-          <div className="pt-1.5 border-t border-[#CBAE94]/30 space-y-1">
-            {hoverTooltip.details.map((d, i) => (
-              <p key={i} className="text-[11px] leading-relaxed text-[#F8F5F0]">
-                {d}
-              </p>
-            ))}
-          </div>
-        </div>
-      )}
+      {hoverTooltip && <HoverTooltip tooltip={hoverTooltip} />}
     </div>
   );
 };
