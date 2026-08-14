@@ -26,8 +26,6 @@ useAppStore.subscribe((state) => {
   if (i18n.language !== lng) void i18n.changeLanguage(lng);
 });
 
-export { i18n };
-
 // Convenience hook: current-language translation object.
 // Replaces the repeated `const language = useAppStore(...); const t = translations[language];`
 // boilerplate in components. Components that also need the language value itself
