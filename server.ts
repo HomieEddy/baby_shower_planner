@@ -54,6 +54,7 @@ import {
   getInvitesByGuest,
   removeInvite,
   inviteMessageFor,
+  getGuestById,
 } from './src/db/service.ts';
 
 const PORT = Number(process.env.PORT) || 3025;
@@ -354,6 +355,12 @@ async function requestHandler(req: http.IncomingMessage, res: http.ServerRespons
       }
 
       if (pathname.startsWith('/api/guests/') && pathname !== '/api/guests/batch-import') {
+        if (method === 'GET' && pathname.endsWith('/invite-message')) {
+          requireAdmin();
+          const id = pathname.replace('/api/guests/', '').replace('/invite-message', '');
+          const guest = await getGuestById(id);
+          return sendJson(res, 200, { message: await inviteMessageFor(guest) });
+        }
           const id = pathname.replace('/api/guests/', '');
         requireAdmin();
         if (method === 'PUT') {

@@ -249,6 +249,11 @@ export async function getGuestByToken(token: string): Promise<Guest | undefined>
   } catch { return undefined; }
 }
 
+export async function getGuestById(id: string): Promise<Guest> {
+  const r = await pb.collection('guests').getOne(id);
+  return fromRecord<Guest>(r);
+}
+
 export async function addGuest(payload: AddGuestPayload): Promise<{ guest: Guest; magic_token: string; invite_message: string }> {
   const existing = await pb.collection('guests').getList(1, 1, {
     filter: payload.email ? `email="${payload.email}"` : `phone="${payload.phone}"`,
