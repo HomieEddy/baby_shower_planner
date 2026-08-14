@@ -9,6 +9,7 @@ import {
   AddGuestPayload, SubmitRsvpPayload, AddGuestbookPayload,
 } from '../types';
 import { getPartyMembers, isMemberCheckedIn, isPartyLead } from '../lib/guestAttendees';
+import { buildInviteMessage } from '../lib/inviteMessage';
 
 const PB_URL = process.env.POCKETBASE_URL || process.env.VITE_POCKETBASE_URL || 'http://127.0.0.1:8090';
 export const pb = new PocketBase(PB_URL);
@@ -44,7 +45,7 @@ const COLLECTION_DEFS: CollectionDef[] = [
       { name: 'name', type: 'text', required: true, options: {} },
       { name: 'email', type: 'text', options: {} },
       { name: 'phone', type: 'text', options: {} },
-      { name: 'delivery_channel', type: 'select', options: { values: ['email', 'text', 'both'] }, required: true },
+      { name: 'delivery_channel', type: 'select', options: { values: ['email', 'text', 'both', 'none'] }, required: true },
       { name: 'code', type: 'text', required: true, options: {} },
       { name: 'max_party_size', type: 'number', options: { min: 1 } },
       { name: 'rsvp_status', type: 'select', options: { values: ['Pending', 'Attending', 'Declined'] }, required: true },
@@ -62,6 +63,9 @@ const COLLECTION_DEFS: CollectionDef[] = [
       { name: 'checked_in', type: 'bool', options: {} },
       { name: 'checked_in_at', type: 'text', options: {} },
       { name: 'checked_in_names', type: 'json', options: {} },
+      { name: 'invited_by_guest_id', type: 'text', options: {} },
+      { name: 'invited_by_guest_name', type: 'text', options: {} },
+      { name: 'guest_note', type: 'text', options: {} },
       { name: 'created_at', type: 'text', options: {} },
     ],
   },
@@ -199,18 +203,33 @@ async function ensureCollections() {
 
 // Add fields added after a collection already exists (e.g. contentOpenAt/contentCloseAt,
 // checked_in_names). Existing PB collections are never recreated — they only get
-// missing fields appended.
+// missing fields appended. Select fields also get new option values merged in
+// (e.g. delivery_channel gained 'none'), since PB rejects values not in the list.
 async function ensureCollectionFields(colName: string) {
   try {
     const col = await pb.collections.getOne(colName);
     const names = new Set(col.fields.map((f: { name: string }) => f.name));
-    const missing = toFields(COLLECTION_DEFS.find(d => d.name === colName)!.schema)
+    const defFields = toFields(COLLECTION_DEFS.find(d => d.name === colName)!.schema);
+    const missing = defFields
       .map(f => String(f.name))
       .filter(n => !names.has(n));
-    if (missing.length === 0) return;
-    await pb.collections.update(col.id, {
-      fields: [...col.fields, ...toFields(COLLECTION_DEFS.find(d => d.name === colName)!.schema).filter(f => missing.includes(String(f.name)))],
-    });
+    const fields = [...(col.fields as unknown as Array<Record<string, unknown>>)];
+    for (const f of fields) {
+      const def = defFields.find(d => String(d.name) === String(f.name));
+      if (def && def.type === 'select' && f.type === 'select') {
+        const defVals = (def.values || []) as string[];
+        const fVals = (f.values || []) as string[];
+        const merged = Array.from(new Set([...defVals, ...fVals]));
+        if (merged.length !== fVals.length) {
+          f.values = merged;
+        }
+      }
+    }
+    if (missing.length > 0) {
+      fields.push(...defFields.filter(f => missing.includes(String(f.name))));
+    }
+    if (missing.length === 0 && fields.every((f, i) => JSON.stringify(f) === JSON.stringify(col.fields[i]))) return;
+    await pb.collections.update(col.id, { fields });
   } catch (err) {
     console.warn(`Could not migrate ${colName} collection fields:`, err);
   }
@@ -230,13 +249,13 @@ export async function getGuestByToken(token: string): Promise<Guest | undefined>
   } catch { return undefined; }
 }
 
-export async function addGuest(payload: AddGuestPayload): Promise<{ guest: Guest; magic_token: string }> {
+export async function addGuest(payload: AddGuestPayload): Promise<{ guest: Guest; magic_token: string; invite_message: string }> {
   const existing = await pb.collection('guests').getList(1, 1, {
     filter: payload.email ? `email="${payload.email}"` : `phone="${payload.phone}"`,
   });
   if (existing.items.length > 0) {
     const g = fromRecord<Guest>(existing.items[0]);
-    return { guest: g, magic_token: g.magic_token };
+    return { guest: g, magic_token: g.magic_token, invite_message: await inviteMessageFor(g) };
   }
   const magic_token = 'token-' + Math.random().toString(36).substring(2, 10) + Date.now().toString(36);
   const partySize = payload.max_party_size && payload.max_party_size > 0 ? payload.max_party_size : 1;
@@ -245,16 +264,27 @@ export async function addGuest(payload: AddGuestPayload): Promise<{ guest: Guest
     name: payload.name,
     email: payload.email || '',
     phone: payload.phone || '',
-    delivery_channel: payload.delivery_channel || 'email',
+    delivery_channel: payload.delivery_channel || 'none',
     code, max_party_size: partySize, rsvp_status: 'Pending',
     attending_party_size: partySize,
     attendee_names: [payload.name],
     attendee_details: [{ name: payload.name, contact: payload.email || payload.phone || '' }],
-    dietary_restrictions: '', language_pref: payload.language_pref || 'EN',
+    dietary_restrictions: '', language_pref: payload.language_pref || 'FR',
     magic_token, token_used: false, created_at: new Date().toISOString(),
     is_read_only: false,
   });
-  return { guest: fromRecord<Guest>(guest), magic_token };
+  const g = fromRecord<Guest>(guest);
+  return { guest: g, magic_token, invite_message: await inviteMessageFor(g) };
+}
+
+// Pre-built copy/paste invitation message (bilingual, follows the guest's
+// language preference). Fetches settings lazily; empty settings → minimal message.
+export async function inviteMessageFor(guest: Guest): Promise<string> {
+  let settings: Partial<EventSettings> = {};
+  try {
+    settings = await getSettings();
+  } catch { /* settings not seeded yet — message falls back to essentials */ }
+  return buildInviteMessage(guest, settings, guest.language_pref);
 }
 
 export async function submitRsvp(token: string, payload: SubmitRsvpPayload): Promise<Guest> {
@@ -291,6 +321,134 @@ export async function resetTokenUsage(token: string): Promise<Guest> {
   return fromRecord<Guest>(updated);
 }
 
+// ─── Self-service contact & guest-to-guest invites ────────────────
+
+export type GuestContactPayload = {
+  email?: string;
+  phone?: string;
+  delivery_channel: 'none' | 'email' | 'text' | 'both';
+};
+
+// Guests add/correct their own contact info (e.g. after receiving a manually
+// shared link) so future reminders reach them. Stored as-is: there's no
+// email/SMS verification infra, and it's their own reminder channel.
+export async function updateGuestContact(token: string, payload: GuestContactPayload): Promise<Guest> {
+  const r = await pb.collection('guests').getFirstListItem(`magic_token="${token}"`);
+  const channel = payload.delivery_channel || 'none';
+  const email = (payload.email || '').trim();
+  const phone = (payload.phone || '').trim();
+  if ((channel === 'email' || channel === 'both') && !email) throw new Error('EMAIL_REQUIRED');
+  if ((channel === 'text' || channel === 'both') && !phone) throw new Error('PHONE_REQUIRED');
+  const updated = await pb.collection('guests').update(r.id, { email, phone, delivery_channel: channel });
+  return fromRecord<Guest>(updated);
+}
+
+export type GuestInviteResult =
+  | { ok: true; guest: Guest; magic_token: string; invite_url: string; invite_message: string; already_invited: boolean; sent: string[]; failed: string[] }
+  | { ok: false; error: 'INVALID_TOKEN' | 'NAME_REQUIRED' | 'CONTACT_REQUIRED' };
+
+// A guest invites someone from their own reservation page. The invitee gets a
+// real guest record + magic link immediately (host retains control: it's an
+// ordinary guest, editable/deletable in the admin). If the contact matches an
+// existing guest, we return that guest's link instead of duplicating.
+export async function inviteGuest(token: string, payload: { name: string; contact?: string; channel?: 'link-only' | 'email' | 'text' | 'both'; note?: string }): Promise<GuestInviteResult> {
+  const inviter = await pb.collection('guests').getFirstListItem(`magic_token="${token}"`).catch(() => null);
+  if (!inviter) return { ok: false, error: 'INVALID_TOKEN' };
+  const name = (payload.name || '').trim();
+  if (!name) return { ok: false, error: 'NAME_REQUIRED' };
+
+  const contact = (payload.contact || '').trim();
+  const channel = payload.channel || 'link-only';
+  const isEmail = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(contact);
+  const phone = !isEmail ? contact : '';
+  const email = isEmail ? contact : '';
+  if (channel !== 'link-only' && !contact) return { ok: false, error: 'CONTACT_REQUIRED' };
+
+  // Dedupe on contact (email preferred, falls back to phone) — reuse the link.
+  if (contact) {
+    const existing = await pb.collection('guests').getList(1, 1, {
+      filter: email ? `email="${email}"` : `phone="${phone}"`,
+    });
+    if (existing.items.length > 0) {
+      const g = fromRecord<Guest>(existing.items[0]);
+      return {
+        ok: true, guest: g, magic_token: g.magic_token,
+        invite_url: `${process.env.APP_URL || 'http://localhost:3025'}/rsvp/${g.magic_token}`,
+        invite_message: await inviteMessageFor(g),
+        already_invited: true, sent: [], failed: [],
+      };
+    }
+  }
+
+  const magic_token = 'token-' + Math.random().toString(36).substring(2, 10) + Date.now().toString(36);
+  const code = Math.floor(1000 + Math.random() * 9000).toString();
+  const inviterGuest = fromRecord<Guest>(inviter);
+  const delivery_channel: 'email' | 'text' | 'both' | 'none' =
+    channel === 'email' ? 'email' : channel === 'text' ? 'text' : channel === 'both' ? 'both' : 'none';
+  const guest = await pb.collection('guests').create({
+    name, email, phone,
+    delivery_channel,
+    code, max_party_size: 1, rsvp_status: 'Pending',
+    attending_party_size: 1,
+    attendee_names: [name],
+    attendee_details: [{ name, contact: contact || '' }],
+    dietary_restrictions: '', language_pref: inviterGuest.language_pref || 'FR',
+    magic_token, token_used: false, created_at: new Date().toISOString(),
+    is_read_only: false,
+    invited_by_guest_id: inviter.id,
+    invited_by_guest_name: inviterGuest.name,
+    guest_note: (payload.note || '').trim(),
+  });
+  const g = fromRecord<Guest>(guest);
+  const invite_url = `${process.env.APP_URL || 'http://localhost:3025'}/rsvp/${magic_token}`;
+
+  // Deliver via the app when a channel + contact was given; otherwise the
+  // inviter shares the link themselves.
+  const sent: string[] = [];
+  const failed: string[] = [];
+  if (channel !== 'link-only') {
+    let settings: EventSettings | null = null;
+    try { settings = await getSettings(); } catch { /* settings missing — skip send */ }
+    if (settings) {
+      if ((channel === 'email' || channel === 'both') && email) {
+        const { sendInvitationEmail } = await import('../lib/email');
+        if (await sendInvitationEmail(g, settings)) sent.push('email'); else failed.push('email');
+      }
+      if ((channel === 'text' || channel === 'both') && phone) {
+        const { sendInvitationSms } = await import('../lib/sms');
+        if (await sendInvitationSms(g, settings)) sent.push('text'); else failed.push('text');
+      }
+    }
+  }
+
+  return {
+    ok: true, guest: g, magic_token, invite_url,
+    invite_message: await inviteMessageFor(g),
+    already_invited: false, sent, failed,
+  };
+}
+
+// Invitations this guest created (name, status, link + message for re-sharing).
+export async function getInvitesByGuest(token: string): Promise<Guest[]> {
+  const inviter = await pb.collection('guests').getFirstListItem(`magic_token="${token}"`).catch(() => null);
+  if (!inviter) return [];
+  const records = await pb.collection('guests').getFullList({
+    filter: `invited_by_guest_id="${inviter.id}"`,
+    sort: '-created_at',
+  });
+  return records.map(r => fromRecord<Guest>(r));
+}
+
+// Guests may remove their own invites (host can always re-add/revert in admin).
+export async function removeInvite(token: string, inviteId: string): Promise<boolean> {
+  const inviter = await pb.collection('guests').getFirstListItem(`magic_token="${token}"`).catch(() => null);
+  if (!inviter) return false;
+  const invite = await pb.collection('guests').getOne(inviteId).catch(() => null);
+  if (!invite || String(invite.invited_by_guest_id || '') !== inviter.id) return false;
+  await deleteGuest(inviteId);
+  return true;
+}
+
 export async function updateGuest(id: string, updates: Partial<Guest>): Promise<Guest> {
   const updated = await pb.collection('guests').update(id, updates);
   return fromRecord<Guest>(updated);
@@ -324,7 +482,7 @@ export async function batchImportGuests(guestList: AddGuestPayload[]): Promise<{
       delivery_channel: item.delivery_channel || 'email', code,
       max_party_size: Number(item.max_party_size) || 1,
       rsvp_status: 'Pending', attending_party_size: 0,
-      dietary_restrictions: '', language_pref: item.language_pref === 'FR' ? 'FR' : 'EN',
+      dietary_restrictions: '', language_pref: item.language_pref === 'EN' ? 'EN' : 'FR',
       magic_token, token_used: false,
       created_at: new Date().toISOString(),
     });
@@ -810,7 +968,9 @@ async function deliverToGuest(
   settings: EventSettings,
   type: 'invitation' | 'reminder'
 ): Promise<boolean> {
-  const channel = g.delivery_channel || 'email';
+  const channel = g.delivery_channel || 'none';
+  // Link-only guests were shared manually (host or inviter) — nothing to send.
+  if (channel === 'none') return true;
   let ok = true;
 
   if (channel === 'email' || channel === 'both') {

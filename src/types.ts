@@ -2,7 +2,7 @@ export type Language = 'EN' | 'FR';
 
 export type RsvpStatus = 'Pending' | 'Attending' | 'Declined';
 
-export type DeliveryChannel = 'email' | 'text' | 'both';
+export type DeliveryChannel = 'email' | 'text' | 'both' | 'none';
 
 export interface AttendeeInfo {
   name: string;
@@ -35,6 +35,12 @@ export interface Guest {
   checked_in_at?: string;
   /** Names of party members (excluding the primary guest) who checked in */
   checked_in_names?: string[];
+  /** Guest who created this invitation (guest-to-guest invites) */
+  invited_by_guest_id?: string;
+  /** Denormalized inviter name — survives the inviter being deleted */
+  invited_by_guest_name?: string;
+  /** Optional note from the inviter to the host */
+  guest_note?: string;
 }
 
 export interface GuestbookEntry {

@@ -24,9 +24,14 @@ describe('GuestImportSchema', () => {
     expect(r.success).toBe(true);
     if (r.success) {
       expect(r.data.delivery_channel).toBe('email');
-      expect(r.data.language_pref).toBe('EN');
+      expect(r.data.language_pref).toBe('FR');
       expect(r.data.max_party_size).toBe(1);
     }
+  });
+
+  it('accepts link-only channel', () => {
+    const r = GuestImportSchema.safeParse({ name: 'Marie Curie', delivery_channel: 'none' });
+    expect(r.success).toBe(true);
   });
 
   it('rejects missing name', () => {
