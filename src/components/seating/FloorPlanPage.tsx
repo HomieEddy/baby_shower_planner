@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import {
   Guest,
   FloorMapData,
@@ -651,6 +651,59 @@ export const FloorPlanPage = () => {
   };
 
 
+  // Host-view statistics, recomputed only when guests/map/filter change.
+  const hostStats = useMemo(() => {
+    const totalConfirmedGuests = guests
+      .filter((g) => g.rsvp_status === 'Attending')
+      .reduce((sum, g) => sum + getGuestPartySize(g), 0);
+
+    const totalSeatedGuests = floorMap
+      ? floorMap.tables.reduce((sum, tbl) => sum + getTableOccupiedSeats(tbl, guests), 0)
+      : 0;
+
+    const seatingProgressPercent = totalConfirmedGuests > 0
+      ? Math.min(100, Math.round((totalSeatedGuests / totalConfirmedGuests) * 100))
+      : 0;
+
+    const emptyTablesCount = floorMap
+      ? floorMap.tables.filter((t) => getTableStatus(t, guests) === 'empty').length
+      : 0;
+
+    const partialTablesCount = floorMap
+      ? floorMap.tables.filter((t) => getTableStatus(t, guests) === 'partial').length
+      : 0;
+
+    const fullTablesCount = floorMap
+      ? floorMap.tables.filter((t) => getTableStatus(t, guests) === 'full').length
+      : 0;
+
+    const unassignedGuestsList = guests.filter((g) => {
+      if (g.rsvp_status !== 'Attending') return false;
+      const isSeated = floorMap?.tables.some((t) => t.assignedGuestIds.includes(g.id));
+      if (isSeated) return false;
+
+      if (unassignedFilterQuery.trim()) {
+        const q = unassignedFilterQuery.toLowerCase();
+        const matchName = g.name.toLowerCase().includes(q);
+        const matchEmail = g.email.toLowerCase().includes(q);
+        const matchCode = g.code ? g.code.toLowerCase().includes(q) : false;
+        const matchAttendees = g.attendee_names?.some((a) => a.toLowerCase().includes(q));
+        return matchName || matchEmail || matchCode || matchAttendees;
+      }
+      return true;
+    });
+
+    return {
+      totalConfirmedGuests,
+      totalSeatedGuests,
+      seatingProgressPercent,
+      emptyTablesCount,
+      partialTablesCount,
+      fullTablesCount,
+      unassignedGuestsList,
+    };
+  }, [guests, floorMap, unassignedFilterQuery]);
+
   return (
     <div className="space-y-6 pb-12">
       {/* Top Banner & Mode Switcher */}
@@ -722,49 +775,20 @@ export const FloorPlanPage = () => {
         )}
       </AnimatePresence>
 
+
       {/* ========================================================= */}
       {/* HOST CANVAS VIEW & QUICK ACTIONS                          */}
       {/* ========================================================= */}
       {(() => {
-        const totalConfirmedGuests = guests
-          .filter((g) => g.rsvp_status === 'Attending')
-          .reduce((sum, g) => sum + getGuestPartySize(g), 0);
-
-        const totalSeatedGuests = floorMap
-          ? floorMap.tables.reduce((sum, tbl) => sum + getTableOccupiedSeats(tbl, guests), 0)
-          : 0;
-
-        const seatingProgressPercent = totalConfirmedGuests > 0
-          ? Math.min(100, Math.round((totalSeatedGuests / totalConfirmedGuests) * 100))
-          : 0;
-
-        const emptyTablesCount = floorMap
-          ? floorMap.tables.filter((t) => getTableStatus(t, guests) === 'empty').length
-          : 0;
-
-        const partialTablesCount = floorMap
-          ? floorMap.tables.filter((t) => getTableStatus(t, guests) === 'partial').length
-          : 0;
-
-        const fullTablesCount = floorMap
-          ? floorMap.tables.filter((t) => getTableStatus(t, guests) === 'full').length
-          : 0;
-
-        const unassignedGuestsList = guests.filter((g) => {
-          if (g.rsvp_status !== 'Attending') return false;
-          const isSeated = floorMap?.tables.some((t) => t.assignedGuestIds.includes(g.id));
-          if (isSeated) return false;
-
-          if (unassignedFilterQuery.trim()) {
-            const q = unassignedFilterQuery.toLowerCase();
-            const matchName = g.name.toLowerCase().includes(q);
-            const matchEmail = g.email.toLowerCase().includes(q);
-            const matchCode = g.code ? g.code.toLowerCase().includes(q) : false;
-            const matchAttendees = g.attendee_names?.some((a) => a.toLowerCase().includes(q));
-            return matchName || matchEmail || matchCode || matchAttendees;
-          }
-          return true;
-        });
+        const {
+          totalConfirmedGuests,
+          totalSeatedGuests,
+          seatingProgressPercent,
+          emptyTablesCount,
+          partialTablesCount,
+          fullTablesCount,
+          unassignedGuestsList,
+        } = hostStats;
 
         return (
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
@@ -1212,7 +1236,9 @@ export const FloorPlanPage = () => {
                                 seatStroke = '#059669';
                               }
 
-                              return (
+
+
+  return (
                                 <Circle
                                   key={`seat-${table.id}-${idx}`}
                                   x={seatX}
