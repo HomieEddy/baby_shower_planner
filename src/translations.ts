@@ -1,4 +1,4 @@
-import { Language } from './types';
+﻿﻿﻿﻿﻿﻿import { Language } from './types';
 
 export interface Translations {
   activeAlertsHistory: string;
@@ -278,7 +278,6 @@ export interface Translations {
   floorPlanInfoTitle: string;
   floorPlanSubtitleGuest: string;
   floorPlanSubtitleHost: string;
-  floorPlanTitle: string;
   foldLineLabel: string;
   footerCopyright: string;
   footerCub: string;
@@ -436,7 +435,6 @@ export interface Translations {
   markSentBtn: string;
   masonryLabel: string;
   masonryLayoutLabel: string;
-  mealsWord: string;
   messageCopiedToast: string;
   metricsTitle: string;
   nameExamplePh: string;
@@ -511,7 +509,6 @@ export interface Translations {
   readOnlyContactHostNote: string;
   readOnlyNotice: string;
   readyLabel: string;
-  rectTableBtn: string;
   rectangleShape: string;
   redoBtn: string;
   redoSeatingTitle: string;
@@ -542,7 +539,6 @@ export interface Translations {
   roomPresets: string;
   roomWidthLabel: string;
   roundShape: string;
-  roundTableBtn: string;
   rsvpConfirmedLabel: string;
   rsvpConfirmedMsgAttending: string;
   rsvpConfirmedMsgDeclined: string;
@@ -562,7 +558,6 @@ export interface Translations {
   rsvpUnlockedToast: string;
   saveAllSettingsBtn: string;
   saveAndCloseBtn: string;
-  saveChangesBtn: string;
   savingChangesBtn: string;
   savingSettingsBtn: string;
   scanAtEntrance: string;
@@ -726,7 +721,109 @@ export interface Translations {
   yourNameOptional: string;
   yourSeatLabel: string;
   yourTableLabel: string;
-}
+  floorPlanBadge: string;
+  savingChangesLabel: string;
+  unseatedCountLabel: string;
+  matchingTablesLabel: string;
+  highlightingTablesBtn: string;
+  selectHighlightBtn: string;
+  allTablesFilterLabel: string;
+  emptyTablesFilterLabel: string;
+  partialTablesFilterLabel: string;
+  fullTablesFilterLabel: string;
+  fullySeatedBadge: string;
+  unseatedWord: string;
+  editorTitle: string;
+  unsavedChangesBadge: string;
+  editorSubtitle: string;
+  seatsTotalLabel: string;
+  confirmedCountLabel: string;
+  roomDimensionsLabel: string;
+  roomPresetsLabel: string;
+  roomPresetSmall: string;
+  roomPresetStandard: string;
+  roomPresetLarge: string;
+  roomPresetGrand: string;
+  expandRoomBtn: string;
+  addTablesLabel: string;
+  addVenueFeaturesLabel: string;
+  entranceBtn: string;
+  parentsStageBtn: string;
+  giftTableBtn: string;
+  photoBoothBtn: string;
+  cakeStationBtn: string;
+  drinksBarBtn: string;
+  foodStationBtn: string;
+  quickGuideLabel: string;
+  quickGuideText: string;
+  fullScreenCanvasLabel: string;
+  liveDraftStageLabel: string;
+  draftTableInspectorLabel: string;
+  noTableSelectedTitle: string;
+  noTableSelectedMsg: string;
+  switchByGuestModeBtn: string;
+  guestFirstSeatingLabel: string;
+  selectGuestSeatTitle: string;
+  confirmedAttendingLabel: string;
+  primaryGuestLabel: string;
+  selectedPartyLabel: string;
+  requiresSeatsLabel: string;
+  includedAttendeesLabel: string;
+  chooseVenueTableLabel: string;
+  currentlySeatedHere: string;
+  noDraftGuestsMsg: string;
+  attendingNamesLabel: string;
+  chooseGuestOption: string;
+  selectGuestHint: string;
+  venueBadge: string;
+  venueIntro: string;
+  registryTitle: string;
+  registryTagline: string;
+  tapToChoosePhoto: string;
+  guestPhotoAlt: string;
+  tapToViewDetails: string;
+  deselectPhotoTitle: string;
+  selectPhotoTitle: string;
+  guestSingular: string;
+  unassignedWord: string;
+  cateringManifestTitle: string;
+  dietaryOnlyBtn: string;
+  showingDietaryOnlyBtn: string;
+  checkinFailedToast: string;
+  noContactLabel: string;
+  partyOfLabel: string;
+  thankYouTrackerTitle: string;
+  thankYouTrackerSubtitle: string;
+  scheduleOfTheDayLabel: string;
+  themeComboSelectorLabel: string;
+  printingCardsLabel: string;
+  foldedTentCardsBtn: string;
+  nameBadgesBtn: string;
+  allTablesOption: string;
+  tableFilterLabel: string;
+  printPreviewLabel: string;
+  paperLayoutLabel: string;
+  noAttendingGuestsMsg: string;
+  seatedAtLabel: string;
+  helloMyNameIsLabel: string;
+  pauseBtn: string;
+  playBtn: string;
+  memoryMomentTitle: string;
+  deleteAllConfirmTitle: string;
+  deleteAllConfirmMsg: string;
+  bulkDeleteConfirmTitle: string;
+  bulkDeleteConfirmMsg: string;
+  savingBtn: string;
+  totalDietaryNeedsLabel: string;
+  noGuestsYetTitle: string;
+  noGuestsYetMsg: string;
+  noGuestsMatchTitle: string;
+  noGuestsMatchMsg: string;
+  floorPlanTitle: string;
+  mealsWord: string;
+  rectTableBtn: string;
+  roundTableBtn: string;
+  saveChangesBtn: string;}
 
 export const translations: Record<Language, Translations> = {
   EN: {
@@ -1455,6 +1552,104 @@ export const translations: Record<Language, Translations> = {
     yourNameOptional: "Your Name (Optional)",
     yourSeatLabel: "Your Seat",
     yourTableLabel: "Your Table / Seating Area",
+    floorPlanBadge: "Interactive Floor Plan",
+    savingChangesLabel: "Saving changes...",
+    unseatedCountLabel: "{{count}} Unseated",
+    matchingTablesLabel: "Matching Tables with Capacity:",
+    highlightingTablesBtn: "Highlighting Available Tables",
+    selectHighlightBtn: "Select & Highlight Tables",
+    allTablesFilterLabel: "All Tables ({{count}})",
+    emptyTablesFilterLabel: "Empty ({{count}})",
+    partialTablesFilterLabel: "Partial ({{count}})",
+    fullTablesFilterLabel: "Full ({{count}})",
+    fullySeatedBadge: "Fully Seated!",
+    unseatedWord: "unseated",
+    editorTitle: "Full-Screen Floor Plan Editor",
+    unsavedChangesBadge: "Unsaved Changes",
+    editorSubtitle: "Drag & drop tables, customize venue features, and assign confirmed guests",
+    seatsTotalLabel: "{{count}} Seats Total",
+    confirmedCountLabel: "{{count}} Confirmed",
+    roomDimensionsLabel: "Room Dimensions",
+    roomPresetsLabel: "Room Presets",
+    roomPresetSmall: "Small (750×550)",
+    roomPresetStandard: "Standard (900×650)",
+    roomPresetLarge: "Large (1200×850)",
+    roomPresetGrand: "Grand (1500×1000)",
+    expandRoomBtn: "+ Expand Room (+200×150px)",
+    addTablesLabel: "Add Tables",
+    addVenueFeaturesLabel: "Add Venue Features",
+    entranceBtn: "Entrance",
+    parentsStageBtn: "Parents Stage",
+    giftTableBtn: "Gift Table",
+    photoBoothBtn: "Photo Booth",
+    cakeStationBtn: "Cake Station",
+    drinksBarBtn: "Drinks Bar",
+    foodStationBtn: "Food Station",
+    quickGuideLabel: "Quick Guide",
+    quickGuideText: "• Click elements on the canvas stage to select them. • Drag elements to position them around the venue floor. • Click {{save}} at top right when done!",
+    fullScreenCanvasLabel: "Full-Screen Interactive Canvas",
+    liveDraftStageLabel: "Live Draft Stage",
+    draftTableInspectorLabel: "Draft Table Inspector",
+    noTableSelectedTitle: "No Table Selected",
+    noTableSelectedMsg: "Click on any table on the interactive canvas to edit its capacity, view seated guests, or assign new parties.",
+    switchByGuestModeBtn: "Switch to By Guest & Party Mode",
+    guestFirstSeatingLabel: "Guest-First Seating Mode",
+    selectGuestSeatTitle: "Select Guest & Seat Party",
+    confirmedAttendingLabel: "Confirmed Attending Guests",
+    primaryGuestLabel: "Primary Guest",
+    selectedPartyLabel: "Selected Party",
+    requiresSeatsLabel: "Requires {{count}} Seat(s)",
+    includedAttendeesLabel: "Included Attendees ({{count}}):",
+    chooseVenueTableLabel: "Choose Venue Table:",
+    currentlySeatedHere: "Currently Seated Here",
+    noDraftGuestsMsg: "No guests assigned to this table in draft.",
+    attendingNamesLabel: "Attending Names:",
+    chooseGuestOption: "+ Choose guest / party to seat...",
+    selectGuestHint: "Select a confirmed guest above to view compatible tables and seat their party.",
+    venueBadge: "Venue & Schedule",
+    venueIntro: "Here are the details for the celebration - we can't wait to see you there!",
+    registryTitle: "Baby Registry",
+    registryTagline: "If you'd like to gift something, here is our registry:",
+    tapToChoosePhoto: "Tap to take or choose a photo",
+    guestPhotoAlt: "Guest",
+    tapToViewDetails: "Tap to view details",
+    deselectPhotoTitle: "Deselect Photo",
+    selectPhotoTitle: "Select Photo",
+    guestSingular: "guest(s)",
+    unassignedWord: "Unassigned",
+    cateringManifestTitle: "Attending Guest Manifest ({{count}})",
+    dietaryOnlyBtn: "Filter Dietary Only",
+    showingDietaryOnlyBtn: "Showing Dietary Only",
+    checkinFailedToast: "Check-in failed",
+    noContactLabel: "No contact",
+    partyOfLabel: "Party of {{count}}",
+    thankYouTrackerTitle: "Automated Thank You Card Tracker",
+    thankYouTrackerSubtitle: "Log shower gifts received, auto-generate personalized thank-you notes, and track thank-you card status.",
+    scheduleOfTheDayLabel: "Schedule of the Day",
+    themeComboSelectorLabel: "Theme & Color Combo Selector",
+    printingCardsLabel: "Print {{count}} Card(s)",
+    foldedTentCardsBtn: "Folded Tent Cards",
+    nameBadgesBtn: "Name Badges",
+    allTablesOption: "All Tables ({{count}} guests)",
+    tableFilterLabel: "Table:",
+    printPreviewLabel: "Print Preview",
+    paperLayoutLabel: "Paper layout",
+    noAttendingGuestsMsg: "No attending guests yet - cards will appear here once guests confirm.",
+    seatedAtLabel: "Seated At",
+    helloMyNameIsLabel: "Hello, My Name Is",
+    pauseBtn: "Pause",
+    playBtn: "Play",
+    memoryMomentTitle: "Bebe Memory Moment",
+    deleteAllConfirmTitle: "Delete Guest?",
+    deleteAllConfirmMsg: "Are you sure you want to delete {{name}} from the guest list? Their RSVP and seating will be removed.",
+    bulkDeleteConfirmTitle: "Delete Selected Guests?",
+    bulkDeleteConfirmMsg: "This will permanently remove {{count}} guest(s) and their RSVPs. This cannot be undone.",
+    savingBtn: "Saving...",
+    totalDietaryNeedsLabel: "Total Reported Dietary Needs: {{count}}",
+    noGuestsYetTitle: "No Guest Invitations Yet",
+    noGuestsYetMsg: "Your invitation list is empty! Add guests using the form above.",
+    noGuestsMatchTitle: "No Guests Found",
+    noGuestsMatchMsg: "No guests matched your current search query or filter.",
   },
   FR: {
     activeAlertsHistory: "Historique des alertes diffusées",
@@ -2182,5 +2377,102 @@ export const translations: Record<Language, Translations> = {
     yourNameOptional: "Votre nom (optionnel)",
     yourSeatLabel: "Votre Siège",
     yourTableLabel: "Votre table / zone assise",
-  },
+    floorPlanBadge: "Plan de salle interactif",
+    savingChangesLabel: "Enregistrement...",
+    unseatedCountLabel: "{{count}} non place(s)",
+    matchingTablesLabel: "Tables disponibles avec capacite :",
+    highlightingTablesBtn: "Surligner les tables disponibles",
+    selectHighlightBtn: "Selectionner et surligner",
+    allTablesFilterLabel: "Toutes les tables ({{count}})",
+    emptyTablesFilterLabel: "Vides ({{count}})",
+    partialTablesFilterLabel: "Partielles ({{count}})",
+    fullTablesFilterLabel: "Pleines ({{count}})",
+    fullySeatedBadge: "Tous places !",
+    unseatedWord: "non place(s)",
+    editorTitle: "Editeur de plan de salle plein ecran",
+    unsavedChangesBadge: "Modifications non enregistrees",
+    editorSubtitle: "Glissez-deposez les tables, personnalisez le lieu et placez les invites confirmes",
+    seatsTotalLabel: "{{count}} sieges au total",
+    confirmedCountLabel: "{{count}} confirme(s)",
+    roomDimensionsLabel: "Dimensions de la salle",
+    roomPresetsLabel: "Prereglages de salle",
+    roomPresetSmall: "Petite (750x550)",
+    roomPresetStandard: "Standard (900x650)",
+    roomPresetLarge: "Grande (1200x850)",
+    roomPresetGrand: "Tres grande (1500x1000)",
+    expandRoomBtn: "+ Agrandir la salle (+200x150px)",
+    addTablesLabel: "Ajouter des tables",
+    addVenueFeaturesLabel: "Ajouter des elements du lieu",
+    entranceBtn: "Entree",
+    parentsStageBtn: "Scene des parents",
+    giftTableBtn: "Table cadeaux",
+    photoBoothBtn: "Photomaton",
+    cakeStationBtn: "Table de gateaux",
+    drinksBarBtn: "Bar a boissons",
+    foodStationBtn: "Station repas",
+    quickGuideLabel: "Guide rapide",
+    quickGuideText: "• Cliquez sur les elements de la toile pour les selectionner. • Glissez-les pour les positionner dans la salle. • Cliquez sur {{save}} en haut a droite quand c'est pret !",
+    fullScreenCanvasLabel: "Toile interactive plein ecran",
+    liveDraftStageLabel: "Apercu du brouillon en direct",
+    draftTableInspectorLabel: "Inspecteur de table (brouillon)",
+    noTableSelectedTitle: "Aucune table selectionnee",
+    noTableSelectedMsg: "Cliquez sur une table de la toile pour modifier sa capacite, voir les invites places ou assigner de nouveaux groupes.",
+    switchByGuestModeBtn: "Passer au mode Par invite & groupe",
+    guestFirstSeatingLabel: "Mode placement par invite",
+    selectGuestSeatTitle: "Selectionner l'invite et placer le groupe",
+    confirmedAttendingLabel: "Invites confirmes",
+    primaryGuestLabel: "Invite principal",
+    selectedPartyLabel: "Groupe selectionne",
+    requiresSeatsLabel: "Necessite {{count}} place(s)",
+    includedAttendeesLabel: "Personnes incluses ({{count}}) :",
+    chooseVenueTableLabel: "Choisir la table :",
+    currentlySeatedHere: "Place a cette table",
+    noDraftGuestsMsg: "Aucun invite assigne a cette table dans le brouillon.",
+    attendingNamesLabel: "Noms des participants :",
+    chooseGuestOption: "+ Choisir un invite / groupe a placer...",
+    selectGuestHint: "Selectionnez un invite confirme ci-dessus pour voir les tables compatibles et placer son groupe.",
+    venueBadge: "Lieu & Programme",
+    venueIntro: "Voici les details de la celebration - nous avons hate de vous y voir !",
+    registryTitle: "Liste de naissance",
+    registryTagline: "Si vous souhaitez offrir un cadeau, voici notre liste :",
+    tapToChoosePhoto: "Touchez pour prendre ou choisir une photo",
+    guestPhotoAlt: "Invite",
+    tapToViewDetails: "Touchez pour voir les details",
+    deselectPhotoTitle: "Deselectionner la photo",
+    selectPhotoTitle: "Selectionner la photo",
+    guestSingular: "invite(s)",
+    unassignedWord: "Non assigne",
+    cateringManifestTitle: "Liste des invites presents ({{count}})",
+    dietaryOnlyBtn: "Filtrer regime alimentaire",
+    showingDietaryOnlyBtn: "Regime alimentaire uniquement",
+    checkinFailedToast: "Echec de l'enregistrement",
+    noContactLabel: "Aucun contact",
+    partyOfLabel: "Groupe de {{count}}",
+    thankYouTrackerTitle: "Suivi automatise des cartes de remerciement",
+    thankYouTrackerSubtitle: "Enregistrez les cadeaux recus, generez automatiquement des mots de remerciement personnalises et suivez leur envoi.",
+    scheduleOfTheDayLabel: "Programme de la journee",
+    themeComboSelectorLabel: "Selecteur de theme & combinaison de couleurs",
+    printingCardsLabel: "Imprimer {{count}} carte(s)",
+    foldedTentCardsBtn: "Cartes pliantes",
+    nameBadgesBtn: "Badges nominatifs",
+    allTablesOption: "Toutes les tables ({{count}} invites)",
+    tableFilterLabel: "Table :",
+    printPreviewLabel: "Apercu d'impression",
+    paperLayoutLabel: "Disposition papier",
+    noAttendingGuestsMsg: "Aucun invite confirme pour l'instant - les cartes apparaitront ici une fois les invites confirmes.",
+    seatedAtLabel: "Place a",
+    helloMyNameIsLabel: "Bonjour, je m'appelle",
+    pauseBtn: "Pause",
+    playBtn: "Lecture",
+    memoryMomentTitle: "Moment souvenir Bebe",
+    deleteAllConfirmTitle: "Supprimer l'invite ?",
+    deleteAllConfirmMsg: "Voulez-vous vraiment supprimer {{name}} de la liste des invites ? Son RSVP et son placement seront retires.",
+    bulkDeleteConfirmTitle: "Supprimer les invites selectionnes ?",
+    bulkDeleteConfirmMsg: "Cela supprimera definitivement {{count}} invite(s) et leurs RSVP. Cette action est irreversible.",
+    savingBtn: "Enregistrement...",
+    totalDietaryNeedsLabel: "Total des besoins alimentaires signales : {{count}}",
+    noGuestsYetTitle: "Aucune invitation d'invite",
+    noGuestsYetMsg: "Votre liste d'invites est vide ! Ajoutez des invites avec le formulaire ci-dessus.",
+    noGuestsMatchTitle: "Aucun invite trouve",
+    noGuestsMatchMsg: "Aucun invite ne correspond a votre recherche ou filtre actuel.", },
 };
