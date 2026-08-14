@@ -255,9 +255,11 @@ export async function getGuestById(id: string): Promise<Guest> {
 }
 
 export async function addGuest(payload: AddGuestPayload): Promise<{ guest: Guest; magic_token: string; invite_message: string }> {
-  const existing = await pb.collection('guests').getList(1, 1, {
-    filter: payload.email ? `email="${payload.email}"` : `phone="${payload.phone}"`,
-  });
+  const existing = payload.email || payload.phone
+    ? await pb.collection('guests').getList(1, 1, {
+        filter: payload.email ? `email="${payload.email}"` : `phone="${payload.phone}"`,
+      })
+    : { items: [] };
   if (existing.items.length > 0) {
     const g = fromRecord<Guest>(existing.items[0]);
     return { guest: g, magic_token: g.magic_token, invite_message: await inviteMessageFor(g) };
