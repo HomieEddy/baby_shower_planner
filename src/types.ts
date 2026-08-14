@@ -1,7 +1,5 @@
 export type Language = 'EN' | 'FR';
 
-export type RsvpStatus = 'Pending' | 'Attending' | 'Declined';
-
 export type DeliveryChannel = 'email' | 'text' | 'both' | 'none';
 
 export interface AttendeeInfo {
@@ -18,7 +16,7 @@ export interface Guest {
   delivery_channel?: DeliveryChannel;
   code: string; // 4-digit reservation code (e.g. "2026")
   max_party_size: number;
-  rsvp_status: RsvpStatus;
+  rsvp_status: 'Pending' | 'Attending' | 'Declined';
   attending_party_size: number;
   attendee_names?: string[]; // Individual full names of all attending party members
   attendee_details?: AttendeeInfo[]; // Detailed attendee list with optional contact info
@@ -93,19 +91,6 @@ export interface ScheduleItem {
   titleFr: string;
   descEn?: string;
   descFr?: string;
-}
-
-export interface EventDetails {
-  babyName: string;
-  parentsNames: string;
-  date: string;
-  time: string;
-  venueName: string;
-  venueAddress: string;
-  registryUrl: string;
-  showScheduleTime?: boolean;
-  schedule: ScheduleItem[];
-  themeId?: string;
 }
 
 export interface EventSettings {

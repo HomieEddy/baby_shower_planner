@@ -14,16 +14,12 @@ import { Modal } from '../shared/Modal';
 import { cardStagger, popIn, fadeUp } from '../shared/motionPresets';
 import { useT } from '../shared/i18n';
 import {
-  Heart,
   CheckCircle2,
   XCircle,
   Users,
-  Utensils,
   Send,
   Sparkles,
-  Gift,
   Lightbulb,
-  ExternalLink,
   Edit3,
   AlertCircle,
   Calendar,
@@ -604,8 +600,8 @@ export const RsvpPage = () => {
                             </span>
                             <h3 className="font-newsreader text-2xl sm:text-3xl font-bold text-[#4A3F35]">
                               {guest.rsvp_status === 'Attending'
-                                ? `${t.rsvpConfirmedMsgAttending}`
-                                : `${t.rsvpConfirmedMsgDeclined}`}
+                                ? t.rsvpConfirmedMsgAttending
+                                : t.rsvpConfirmedMsgDeclined}
                             </h3>
                             {guest.is_read_only && (
                               <p className="text-xs text-[#5D5449] font-medium pt-1 max-w-md mx-auto">

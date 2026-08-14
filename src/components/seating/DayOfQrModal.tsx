@@ -2,7 +2,7 @@ import React, { useState, useRef } from 'react';
 import { motion } from 'motion/react';
 import { Language, EventSettings } from '../../types';
 import { translations } from '../../translations';
-import { QrCode, Printer, X, Download, MapPin, Sparkles, Globe } from 'lucide-react';
+import { QrCode, Printer, Download, MapPin, Sparkles, Globe } from 'lucide-react';
 import { fadeUp, floatPulse } from '../shared/motionPresets';
 import { Modal } from '../shared/Modal';
 

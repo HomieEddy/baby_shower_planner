@@ -1,6 +1,6 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Guest, GuestbookEntry, Language, EventSettings, EventAlert, GiftLog } from '../../types';
+import { Guest, GuestbookEntry, EventSettings, EventAlert, GiftLog } from '../../types';
 import { HostPhotoGalleryPage } from '../photos/HostPhotoGalleryPage';
 import { CateringSummaryView } from './CateringSummaryView';
 import { EscortCardsGenerator } from './EscortCardsGenerator';
@@ -13,8 +13,7 @@ import { useToast } from '../shared/ToastContext';
 import { useConfirm } from '../shared/ConfirmDialog';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useSettingsStore } from '../../stores/settingsStore';
-import { adminFetch, logout as adminLogout } from '../../lib/api';
-import { parseToYmd, parseTimeRange } from '../../lib/dateUtils';
+import { adminFetch } from '../../lib/api';
 import { motion, AnimatePresence, Variants } from 'motion/react';
 import { useAppStore } from '../../stores/appStore';
 import { useT } from '../shared/i18n';
@@ -123,10 +122,8 @@ export const AdminDashboard = () => {
     alerts: [] as EventAlert[],
     gifts: [] as GiftLog[],
   };
-  const loading = overviewQuery.isLoading;
   const refreshOverview = async () => { await queryClient.invalidateQueries({ queryKey: ['admin-overview'] }); };
 
-  const [showQrModal, setShowQrModal] = useState(false);
   const [notification, setNotification] = useState<string | null>(null);
 
   const confirm = useConfirm();
@@ -316,7 +313,6 @@ export const AdminDashboard = () => {
           language={language}
           t={t}
           guests={guests}
-          guestbookEntries={guestbookEntries}
           onRefresh={refreshOverview}
         />
       )}
@@ -425,7 +421,7 @@ export const AdminDashboard = () => {
           exit={{ opacity: 0, y: -10 }}
           transition={{ duration: 0.25 }}
         >
-          <HostPhotoGalleryPage onOpenQrModal={() => setShowQrModal(true)} />
+          <HostPhotoGalleryPage />
         </motion.div>
       )}
 

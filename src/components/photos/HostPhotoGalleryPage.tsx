@@ -12,7 +12,6 @@ import {
   Building2,
   RefreshCw,
   Printer,
-  X,
   LayoutGrid,
   Columns,
   CheckSquare,
@@ -31,14 +30,8 @@ import { PhotoSlideshow } from './PhotoSlideshow';
 import { EventPhoto, TableElement } from '../../types';
 import { useT } from '../shared/i18n';
 
-interface HostPhotoGalleryPageProps {
-  onOpenQrModal?: () => void;
-}
-
-export const HostPhotoGalleryPage: React.FC<HostPhotoGalleryPageProps> = ({
-  onOpenQrModal,
-}) => {
-    const t = useT();
+export const HostPhotoGalleryPage: React.FC = () => {
+  const t = useT();
   const { toast } = useToast();
   const confirm = useConfirm();
   const settings = useSettingsStore((s) => s.settings);

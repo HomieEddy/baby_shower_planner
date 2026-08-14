@@ -3,7 +3,7 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { GiftLog, EventSettings, Guest } from '../../types';
-import { Gift, Mail, CheckCircle2, Copy, Sparkles, Trash2, Send, Heart, Clock, Search, Filter, Loader2 } from 'lucide-react';
+import { Gift, Mail, CheckCircle2, Copy, Sparkles, Trash2, Send, Search, Loader2 } from 'lucide-react';
 import { useToast } from '../shared/ToastContext';
 import { useConfirm } from '../shared/ConfirmDialog';
 import { Modal } from '../shared/Modal';

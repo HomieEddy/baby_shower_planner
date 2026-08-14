@@ -12,11 +12,9 @@ import {
   Send,
   CheckCircle2,
   Sparkles,
-  MessageSquare,
   Clock,
   User,
   Printer,
-  Download,
   Lock,
 } from 'lucide-react';
 import { useToast } from '../shared/ToastContext';
@@ -55,7 +53,6 @@ export const GuestbookPage = () => {
 
   const [entries, setEntries] = useState<GuestbookEntry[]>([]);
   const [loadingEntries, setLoadingEntries] = useState(true);
-  const [activeSection, setActiveSection] = useState<'wishes' | 'predictions'>('wishes');
 
   const fileInputRef = useRef<HTMLInputElement>(null);
   const feedScrollRef = useRef<HTMLDivElement>(null);

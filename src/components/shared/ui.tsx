@@ -1,4 +1,4 @@
-import { ReactNode, InputHTMLAttributes, SelectHTMLAttributes, TextareaHTMLAttributes } from 'react';
+import { ReactNode, InputHTMLAttributes, SelectHTMLAttributes } from 'react';
 
 // Small, theme-consistent form primitives. Two visual variants:
 //   solid — bold 2px border (settings / guest edit forms)
@@ -32,14 +32,6 @@ interface TextInputProps extends InputHTMLAttributes<HTMLInputElement> {
 
 export const TextInput = ({ variant = 'solid', className = '', ...props }: TextInputProps) => (
   <input {...props} className={`${variantClass(variant)} ${className}`} />
-);
-
-interface TextAreaProps extends TextareaHTMLAttributes<HTMLTextAreaElement> {
-  variant?: Variant;
-}
-
-export const TextArea = ({ variant = 'solid', className = '', ...props }: TextAreaProps) => (
-  <textarea {...props} className={`${variantClass(variant)} ${className}`} />
 );
 
 interface SelectProps extends SelectHTMLAttributes<HTMLSelectElement> {
