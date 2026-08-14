@@ -2,6 +2,7 @@ import React from 'react';
 import { Sparkles, Play, Pause, X } from 'lucide-react';
 import { EventPhoto } from '../../types';
 import { useSettingsStore } from '../../stores/settingsStore';
+import { useT } from '../shared/i18n';
 
 interface PhotoSlideshowProps {
   photos: EventPhoto[];
@@ -18,6 +19,7 @@ export const PhotoSlideshow: React.FC<PhotoSlideshowProps> = ({
   onTogglePlay,
   onClose,
 }) => {
+  const t = useT();
   const settings = useSettingsStore((s) => s.settings);
   const photo = photos[currentIndex];
 
@@ -38,7 +40,7 @@ export const PhotoSlideshow: React.FC<PhotoSlideshowProps> = ({
             className="px-3 py-1.5 rounded-xl bg-white/20 hover:bg-white/30 text-white text-xs font-bold flex items-center gap-1.5"
           >
             {isPlaying ? <Pause className="w-4 h-4" /> : <Play className="w-4 h-4" />}
-            <span>{isPlaying ? 'Pause' : 'Play'}</span>
+            <span>{isPlaying ? t.pauseBtn : t.playBtn}</span>
           </button>
 
           <button
@@ -61,7 +63,7 @@ export const PhotoSlideshow: React.FC<PhotoSlideshowProps> = ({
 
       <div className="bg-white/10 backdrop-blur-md rounded-2xl p-4 max-w-xl w-full text-center text-white space-y-1">
         <p className="text-base font-bold text-amber-200">
-          {photo.caption || 'Bébé Memory Moment'}
+          {photo.caption || t.memoryMomentTitle}
         </p>
         <p className="text-xs text-white/80">
           Uploaded by {photo.uploader_name} • {photo.table_name}
