@@ -249,14 +249,12 @@ export const AdminSettingsTab: React.FC<AdminSettingsTabProps> = ({ language, t,
             <div>
               <label className="label-mono block mb-1">{t.parentsNamesLabel2}</label>
               <TextInput type="text" required value={parentsNames} onChange={(e) => setParentsNames(e.target.value)}
-                placeholder={t.parentsNamesExamplePh}
-                className="" />
+                placeholder={t.parentsNamesExamplePh} />
             </div>
             <div>
               <label className="label-mono block mb-1">{t.babyNameOptionalLabel}</label>
               <TextInput type="text" value={babyName} onChange={(e) => setBabyName(e.target.value)}
-                placeholder={t.babyNameOptionalPh}
-                className="" />
+                placeholder={t.babyNameOptionalPh} />
             </div>
 
             <div className="space-y-1">
@@ -310,8 +308,7 @@ export const AdminSettingsTab: React.FC<AdminSettingsTabProps> = ({ language, t,
             <div>
               <label className="label-mono block mb-1">{t.fullVenueAddressLabel}</label>
               <TextInput type="text" required value={venueAddress} onChange={(e) => setVenueAddress(e.target.value)}
-                placeholder={t.venueAddressExamplePh}
-                className="" />
+                placeholder={t.venueAddressExamplePh} />
             </div>
           </div>
 
