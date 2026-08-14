@@ -17,20 +17,13 @@ import {
   Send,
   Copy,
   Check,
-  Search,
   Upload,
-  Download,
   FileSpreadsheet,
-  Settings,
-  Trash2,
   Mail,
   Smartphone,
   MessageSquare,
   Lightbulb,
   Link2,
-  CheckSquare,
-  Square,
-  X,
 } from 'lucide-react';
 import { Guest, Language, DeliveryChannel } from '../../types';
 import { Translations } from '../../translations';
