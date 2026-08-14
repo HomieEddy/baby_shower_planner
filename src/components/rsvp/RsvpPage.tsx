@@ -428,19 +428,19 @@ export const RsvpPage = () => {
       ) : (
       <>
       {/* 3-Tab Carousel Header Navigation Control */}
-      <div className="bg-white border-2 border-[#4A3F35] p-1.5 rounded-full flex items-center justify-between max-w-lg mx-auto shadow-sm">
+      <div className="bg-white border-2 border-[#4A3F35] p-1.5 rounded-full flex items-center justify-between max-w-lg mx-auto shadow-sm overflow-hidden">
         <button
           onClick={() => handleTabChange(TAB_ORDER[(TAB_ORDER.indexOf(activeTab) + 2) % 3])}
-          className="p-2.5 rounded-full hover:bg-[#E9E0D2]/50 text-[#4A3F35] transition-colors"
+          className="p-1.5 sm:p-2.5 rounded-full hover:bg-[#E9E0D2]/50 text-[#4A3F35] transition-colors shrink-0"
           title={t.prevSlideBtn}
         >
-          <ChevronLeft className="w-5 h-5" />
+          <ChevronLeft className="w-4 h-4 sm:w-5 sm:h-5" />
         </button>
 
-        <div className="flex items-center space-x-1 relative bg-[#F8F5F0] p-1 rounded-full border border-[#4A3F35]/15">
+        <div className="flex items-center justify-center flex-1 min-w-0 space-x-0.5 sm:space-x-1 relative bg-[#F8F5F0] p-1 rounded-full border border-[#4A3F35]/15">
           <button
             onClick={() => handleTabChange('rsvp')}
-            className={`relative px-4 py-2 rounded-full text-xs font-bold font-mono transition-all flex items-center space-x-2 z-10 ${
+            className={`relative px-2 sm:px-4 py-2 rounded-full text-xs font-bold font-mono transition-all flex items-center space-x-1 sm:space-x-2 z-10 min-w-0 ${
               activeTab === 'rsvp'
                 ? 'text-[#F8F5F0]'
                 : 'text-[#4A3F35]/70 hover:text-[#4A3F35]'
@@ -453,13 +453,13 @@ export const RsvpPage = () => {
                 transition={{ type: 'spring', stiffness: 350, damping: 30 }}
               />
             )}
-            <CheckCircle2 className="w-3.5 h-3.5" />
-            <span>{t.rsvpTabLabel}</span>
+            <CheckCircle2 className="hidden sm:block w-3.5 h-3.5 shrink-0" />
+            <span className="truncate whitespace-nowrap">{t.rsvpTabLabel}</span>
           </button>
 
           <button
             onClick={() => handleTabChange('event')}
-            className={`relative px-4 py-2 rounded-full text-xs font-bold font-mono transition-all flex items-center space-x-2 z-10 ${
+            className={`relative px-2 sm:px-4 py-2 rounded-full text-xs font-bold font-mono transition-all flex items-center space-x-1 sm:space-x-2 z-10 min-w-0 ${
               activeTab === 'event'
                 ? 'text-[#F8F5F0]'
                 : 'text-[#4A3F35]/70 hover:text-[#4A3F35]'
@@ -472,13 +472,13 @@ export const RsvpPage = () => {
                 transition={{ type: 'spring', stiffness: 350, damping: 30 }}
               />
             )}
-            <Calendar className="w-3.5 h-3.5" />
-            <span>{t.eventTabLabel}</span>
+            <Calendar className="hidden sm:block w-3.5 h-3.5 shrink-0" />
+            <span className="truncate whitespace-nowrap">{t.eventTabLabel}</span>
           </button>
 
           <button
             onClick={() => handleTabChange('invite')}
-            className={`relative px-4 py-2 rounded-full text-xs font-bold font-mono transition-all flex items-center space-x-2 z-10 ${
+            className={`relative px-2 sm:px-4 py-2 rounded-full text-xs font-bold font-mono transition-all flex items-center space-x-1 sm:space-x-2 z-10 min-w-0 ${
               activeTab === 'invite'
                 ? 'text-[#F8F5F0]'
                 : 'text-[#4A3F35]/70 hover:text-[#4A3F35]'
@@ -491,17 +491,17 @@ export const RsvpPage = () => {
                 transition={{ type: 'spring', stiffness: 350, damping: 30 }}
               />
             )}
-            <Users className="w-3.5 h-3.5" />
-            <span>{t.inviteTabLabel}</span>
+            <Users className="hidden sm:block w-3.5 h-3.5 shrink-0" />
+            <span className="truncate whitespace-nowrap">{t.inviteTabLabel}</span>
           </button>
         </div>
 
         <button
           onClick={() => handleTabChange(TAB_ORDER[(TAB_ORDER.indexOf(activeTab) + 1) % 3])}
-          className="p-2.5 rounded-full hover:bg-[#E9E0D2]/50 text-[#4A3F35] transition-colors"
+          className="p-1.5 sm:p-2.5 rounded-full hover:bg-[#E9E0D2]/50 text-[#4A3F35] transition-colors shrink-0"
           title={t.nextSlideBtn}
         >
-          <ChevronRight className="w-5 h-5" />
+          <ChevronRight className="w-4 h-4 sm:w-5 sm:h-5" />
         </button>
       </div>
 
