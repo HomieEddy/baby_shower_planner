@@ -18,6 +18,13 @@ interface CateringSummaryViewProps {
   guests: Guest[];
 }
 
+const partySize = (g: Guest) => g.attending_party_size || 1;
+
+const hasDietaryRestriction = (g: Guest) => {
+  const r = (g.dietary_restrictions || '').trim().toLowerCase();
+  return r.length > 0 && r !== 'none';
+};
+
 export const CateringSummaryView: React.FC<CateringSummaryViewProps> = ({ guests }) => {
     const t = useT();
   const { toast } = useToast();
@@ -27,12 +34,10 @@ export const CateringSummaryView: React.FC<CateringSummaryViewProps> = ({ guests
 
   // Filter attending guests only for catering
   const attendingGuests = guests.filter((g) => g.rsvp_status === 'Attending');
-  const totalHeadcount = attendingGuests.reduce((acc, g) => acc + (g.attending_party_size || 1), 0);
+  const totalHeadcount = attendingGuests.reduce((acc, g) => acc + partySize(g), 0);
 
   // Analyze Dietary Restrictions
-  const guestsWithDietary = attendingGuests.filter(
-    (g) => g.dietary_restrictions && g.dietary_restrictions.trim().length > 0 && g.dietary_restrictions.trim().toLowerCase() !== 'none'
-  );
+  const guestsWithDietary = attendingGuests.filter(hasDietaryRestriction);
 
   // Group dietary restrictions into categories
   const dietaryCategories: { [key: string]: { count: number; guests: string[] } } = {
@@ -44,38 +49,37 @@ export const CateringSummaryView: React.FC<CateringSummaryViewProps> = ({ guests
     'Other / Custom Notes': { count: 0, guests: [] },
   };
 
+  const addToCategory = (category: string, g: Guest) => {
+    dietaryCategories[category].count += partySize(g);
+    dietaryCategories[category].guests.push(`${g.name} (${g.dietary_restrictions})`);
+  };
+
   guestsWithDietary.forEach((g) => {
     const text = g.dietary_restrictions.toLowerCase();
     let categorized = false;
 
     if (text.includes('veg') || text.includes('vegan')) {
-      dietaryCategories['Vegetarian / Vegan'].count += g.attending_party_size || 1;
-      dietaryCategories['Vegetarian / Vegan'].guests.push(`${g.name} (${g.dietary_restrictions})`);
+      addToCategory('Vegetarian / Vegan', g);
       categorized = true;
     }
     if (text.includes('gluten') || text.includes('gf') || text.includes('celiac')) {
-      dietaryCategories['Gluten-Free'].count += g.attending_party_size || 1;
-      dietaryCategories['Gluten-Free'].guests.push(`${g.name} (${g.dietary_restrictions})`);
+      addToCategory('Gluten-Free', g);
       categorized = true;
     }
     if (text.includes('nut') || text.includes('peanut')) {
-      dietaryCategories['Nut / Peanut Allergy'].count += g.attending_party_size || 1;
-      dietaryCategories['Nut / Peanut Allergy'].guests.push(`${g.name} (${g.dietary_restrictions})`);
+      addToCategory('Nut / Peanut Allergy', g);
       categorized = true;
     }
     if (text.includes('dairy') || text.includes('lactose')) {
-      dietaryCategories['Dairy-Free / Lactose'].count += g.attending_party_size || 1;
-      dietaryCategories['Dairy-Free / Lactose'].guests.push(`${g.name} (${g.dietary_restrictions})`);
+      addToCategory('Dairy-Free / Lactose', g);
       categorized = true;
     }
     if (text.includes('halal') || text.includes('kosher')) {
-      dietaryCategories['Halal / Kosher'].count += g.attending_party_size || 1;
-      dietaryCategories['Halal / Kosher'].guests.push(`${g.name} (${g.dietary_restrictions})`);
+      addToCategory('Halal / Kosher', g);
       categorized = true;
     }
     if (!categorized) {
-      dietaryCategories['Other / Custom Notes'].count += g.attending_party_size || 1;
-      dietaryCategories['Other / Custom Notes'].guests.push(`${g.name} (${g.dietary_restrictions})`);
+      addToCategory('Other / Custom Notes', g);
     }
   });
 
@@ -92,7 +96,7 @@ export const CateringSummaryView: React.FC<CateringSummaryViewProps> = ({ guests
       g.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
       (g.dietary_restrictions || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
       (g.table_id || '').toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesDietary = !filterDietaryOnly || (g.dietary_restrictions && g.dietary_restrictions.trim().length > 0 && g.dietary_restrictions.toLowerCase() !== 'none');
+    const matchesDietary = !filterDietaryOnly || hasDietaryRestriction(g);
     return matchesSearch && matchesDietary;
   });
 
@@ -104,7 +108,7 @@ export const CateringSummaryView: React.FC<CateringSummaryViewProps> = ({ guests
       header: () => <span>{t.guestNameCol}</span>,
       cell: (info) => <span className="font-bold text-[#4A3F35]">{info.getValue()}</span>,
     }),
-    columnHelper.accessor((g) => g.attending_party_size || 1, {
+    columnHelper.accessor((g) => partySize(g), {
       id: 'partySize',
       header: () => <span>{t.partySizeCol}</span>,
       cell: (info) => <span className="font-mono text-[#4A3F35]">{info.getValue()} guest(s)</span>,
@@ -114,8 +118,7 @@ export const CateringSummaryView: React.FC<CateringSummaryViewProps> = ({ guests
       header: () => <span>{t.dietaryCol}</span>,
       cell: (info) => {
         const g = info.row.original;
-        const hasRestriction =
-          g.dietary_restrictions && g.dietary_restrictions.trim().length > 0 && g.dietary_restrictions.toLowerCase() !== 'none';
+        const hasRestriction = hasDietaryRestriction(g);
         return hasRestriction ? (
           <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-amber-100 text-amber-900 font-bold border border-amber-300">
             <AlertTriangle className="w-3 h-3 shrink-0" />
@@ -151,7 +154,7 @@ export const CateringSummaryView: React.FC<CateringSummaryViewProps> = ({ guests
     const headers = ['Guest Name', 'Attending Party Size', 'Dietary Restrictions & Allergies', 'Table ID', 'Contact Email', 'Contact Phone'];
     const rows = attendingGuests.map((g) => [
       `"${g.name.replace(/"/g, '""')}"`,
-      g.attending_party_size || 1,
+      partySize(g),
       `"${(g.dietary_restrictions || 'None').replace(/"/g, '""')}"`,
       `"${g.table_id || 'Unassigned'}"`,
       `"${(g.email || '').replace(/"/g, '""')}"`,
@@ -244,7 +247,7 @@ export const CateringSummaryView: React.FC<CateringSummaryViewProps> = ({ guests
           <div>
             <p className="text-xs font-mono text-emerald-800 uppercase font-bold">{t.standardMealsLabel}</p>
             <h4 className="text-2xl font-bold font-newsreader text-[#4A3F35]">
-              {totalHeadcount - guestsWithDietary.reduce((acc, g) => acc + (g.attending_party_size || 1), 0)}{' '}
+              {totalHeadcount - guestsWithDietary.reduce((acc, g) => acc + partySize(g), 0)}{' '}
               <span className="text-xs font-normal text-[#8B735B]">{t.mealsWord}</span>
             </h4>
           </div>
