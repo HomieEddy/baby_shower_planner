@@ -23,7 +23,7 @@ import { EventPhoto, TableElement } from '../../types';
 import { compressImage, formatFileSize } from '../../lib/imageCompressor';
 import { useToast } from '../shared/ToastContext';
 import { formatGuestWindow } from '../../lib/dateUtils';
-import { fileToDataUrl } from '../../lib/fileUtils';
+import { uploadPhotoBase64 } from '../../lib/fileUtils';
 import { useAppStore } from '../../stores/appStore';
 import { useT } from '../shared/i18n';
 
@@ -215,17 +215,11 @@ export const GuestPhotoUploadPage = () => {
       // 1) Upload each optimized photo as base64 -> /uploads/xxx.jpg
       const photoPayloads: { url: string; filename: string }[] = [];
       for (const item of fileItems) {
-        const dataUrl = await fileToDataUrl(item.file);
-        const upRes = await fetch('/api/upload', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ photo_base64: dataUrl }),
-        });
-        const upData = await upRes.json();
-        if (!upRes.ok || !upData.photo_url) {
+        const photoUrl = await uploadPhotoBase64(item.file);
+        if (!photoUrl) {
           throw new Error('Photo upload failed. Please try again.');
         }
-        photoPayloads.push({ url: upData.photo_url, filename: item.file.name });
+        photoPayloads.push({ url: photoUrl, filename: item.file.name });
       }
 
       setUploadProgress(60);

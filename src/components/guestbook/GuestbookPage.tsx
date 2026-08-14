@@ -22,7 +22,7 @@ import { cardItem } from '../shared/motionPresets';
 import { useVirtualizer } from '@tanstack/react-virtual';
 import { EmptyState } from '../shared/EmptyState';
 import { formatGuestWindow } from '../../lib/dateUtils';
-import { fileToDataUrl } from '../../lib/fileUtils';
+import { uploadPhotoBase64 } from '../../lib/fileUtils';
 import { GuestbookEntrySchema } from '../../lib/validation';
 import { useAppStore } from '../../stores/appStore';
 import { useT } from '../shared/i18n';
@@ -122,17 +122,7 @@ export const GuestbookPage = () => {
 
       // Upload photo if present
       if (selectedFile) {
-        const dataUrl = await fileToDataUrl(selectedFile);
-        const uploadRes = await fetch('/api/upload', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ photo_base64: dataUrl }),
-        });
-
-        if (uploadRes.ok) {
-          const uploadData = await uploadRes.json();
-          uploadedPhotoUrl = uploadData.photo_url || '';
-        }
+        uploadedPhotoUrl = await uploadPhotoBase64(selectedFile);
       }
 
       // Submit guestbook entry
