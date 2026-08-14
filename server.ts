@@ -49,6 +49,11 @@ import {
   sendInvitations,
   sendReminders,
   initPocketBase,
+  updateGuestContact,
+  inviteGuest,
+  getInvitesByGuest,
+  removeInvite,
+  inviteMessageFor,
 } from './src/db/service.ts';
 
 const PORT = Number(process.env.PORT) || 3025;
@@ -315,6 +320,14 @@ async function requestHandler(req: http.IncomingMessage, res: http.ServerRespons
         return sendJson(res, 200, { status: 'ok', engine: 'Native Node HTTP + PocketBase SDK', time: new Date().toISOString() });
       }
 
+      // Delivery provider availability — the UI hides channels that can't send.
+      if (pathname === '/api/capabilities' && method === 'GET') {
+        return sendJson(res, 200, {
+          email: !!process.env.RESEND_API_KEY,
+          sms: !!(process.env.TWILIO_ACCOUNT_SID && process.env.TWILIO_AUTH_TOKEN && process.env.TWILIO_PHONE_NUMBER),
+        });
+      }
+
       // ─── Guests ───────────────────────────────────────
       if (pathname === '/api/guests') {
         requireAdmin();
@@ -325,15 +338,16 @@ async function requestHandler(req: http.IncomingMessage, res: http.ServerRespons
         if (method === 'POST') {
           const body = await parseJson(req);
           const { name, email, phone, delivery_channel, max_party_size, language_pref } = body;
-          const channel = delivery_channel || 'email';
+          const channel = delivery_channel || 'none';
           if (!name || !name.trim()) return sendJson(res, 400, { error: 'Guest name is required' });
           if ((channel === 'email' || channel === 'both') && (!email || !email.trim())) return sendJson(res, 400, { error: 'Email address is required' });
           if ((channel === 'text' || channel === 'both') && (!phone || !phone.trim())) return sendJson(res, 400, { error: 'Phone number is required' });
+          if (!['email', 'text', 'both', 'none'].includes(channel)) return sendJson(res, 400, { error: 'Invalid delivery channel' });
 
           const result = await addGuest({
             name: name.trim(), email: email?.trim() || '', phone: phone?.trim() || '',
             delivery_channel: channel, max_party_size: Number(max_party_size) || 1,
-            language_pref: language_pref === 'FR' ? 'FR' : 'EN',
+            language_pref: language_pref === 'EN' ? 'EN' : 'FR',
           });
           return sendJson(res, 200, result);
         }
@@ -368,7 +382,53 @@ async function requestHandler(req: http.IncomingMessage, res: http.ServerRespons
         const parts = pathname.replace('/api/rsvp/', '').split('/');
         const token = parts[0];
         const isReset = parts[1] === 'reset';
+        const isContact = parts[1] === 'contact';
+        const isInvite = parts[1] === 'invite' && parts.length === 2;
+        const isInvitesList = parts[1] === 'invites' && parts.length === 2;
+        const isInviteDelete = parts[1] === 'invites' && parts.length === 3;
 
+        if (isInviteDelete && method === 'DELETE') {
+          const removed = await removeInvite(token, parts[2]);
+          if (!removed) return sendJson(res, 404, { error: 'NOT_FOUND', message: 'Invite not found' });
+          return sendJson(res, 200, { success: true });
+        }
+        if (isInvitesList && method === 'GET') {
+          const invites = await getInvitesByGuest(token);
+          const withMessages = await Promise.all(invites.map(async (g) => ({ ...g, invite_message: await inviteMessageFor(g) })));
+          return sendJson(res, 200, { invites: withMessages });
+        }
+        if (isInvite && method === 'POST') {
+          const body = await parseJson(req);
+          const result = await inviteGuest(token, {
+            name: body.name, contact: body.contact, channel: body.channel, note: body.note,
+          });
+          if (!result.ok) {
+            const msg = result.error === 'NAME_REQUIRED' ? 'Invitee name is required'
+              : result.error === 'CONTACT_REQUIRED' ? 'Contact is required for that delivery channel'
+              : 'Invalid invitation token';
+            return sendJson(res, result.error === 'INVALID_TOKEN' ? 404 : 400, { error: result.error, message: msg });
+          }
+          return sendJson(res, 200, result);
+        }
+        if (isContact && method === 'POST') {
+          const body = await parseJson(req);
+          const { email, phone, delivery_channel } = body;
+          if (!['none', 'email', 'text', 'both'].includes(delivery_channel)) {
+            return sendJson(res, 400, { error: 'Invalid delivery channel' });
+          }
+          if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+            return sendJson(res, 400, { error: 'Invalid email address' });
+          }
+          try {
+            const guest = await updateGuestContact(token, { email, phone, delivery_channel });
+            return sendJson(res, 200, { success: true, guest });
+          } catch (err) {
+            const msg = err instanceof Error && err.message === 'EMAIL_REQUIRED' ? 'Email is required for email delivery'
+              : err instanceof Error && err.message === 'PHONE_REQUIRED' ? 'Phone number is required for SMS delivery'
+              : 'Invalid invitation token';
+            return sendJson(res, err instanceof Error && (err.message === 'EMAIL_REQUIRED' || err.message === 'PHONE_REQUIRED') ? 400 : 404, { error: 'CONTACT_UPDATE_FAILED', message: msg });
+          }
+        }
         if (isReset && method === 'POST') {
           const guest = await resetTokenUsage(token);
           return sendJson(res, 200, { success: true, guest });

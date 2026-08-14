@@ -7,6 +7,6 @@ interface AppStore {
 }
 
 export const useAppStore = create<AppStore>((set) => ({
-  language: 'EN',
+  language: 'FR',
   toggleLanguage: () => set((s) => ({ language: s.language === 'EN' ? 'FR' : 'EN' })),
 }));

@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -27,11 +27,13 @@ import {
   Lightbulb,
   QrCode,
   Sparkles,
+  Link2,
 } from 'lucide-react';
-import { Guest, GuestbookEntry, Language } from '../../types';
+import { Guest, GuestbookEntry, Language, DeliveryChannel } from '../../types';
 import { Translations } from '../../translations';
 import { adminFetch } from '../../lib/api';
 import { GuestImportSchema, EditGuestSchema } from '../../lib/validation';
+import { useCapabilities, availableChannels } from '../../lib/capabilities';
 import { useConfirm } from '../shared/ConfirmDialog';
 import { Modal } from '../shared/Modal';
 import { useToast } from '../shared/ToastContext';
@@ -85,7 +87,6 @@ export const AdminGuestsTab: React.FC<AdminGuestsTabProps> = ({ language, t, gue
       language_pref: language,
     },
   });
-  const deliveryChannel = watch('delivery_channel');
 
   const { register: registerEdit, handleSubmit: handleSubmitEdit, reset: resetEditForm, formState: { errors: editErrors } } = useForm<EditGuestFormValues>({
     resolver: zodResolver(EditGuestSchema),
@@ -93,6 +94,7 @@ export const AdminGuestsTab: React.FC<AdminGuestsTabProps> = ({ language, t, gue
       name: '',
       email: '',
       phone: '',
+      delivery_channel: 'none',
       max_party_size: 2,
       rsvp_status: 'Pending',
     },
@@ -114,7 +116,22 @@ export const AdminGuestsTab: React.FC<AdminGuestsTabProps> = ({ language, t, gue
     name: string;
     email: string;
     token: string;
+    message: string;
   } | null>(null);
+
+  const [copiedMsg, setCopiedMsg] = useState(false);
+  const [sourceFilter, setSourceFilter] = useState<'All' | 'Host' | 'Guest-invited'>('All');
+
+  const { data: caps } = useCapabilities();
+  const channelOptions: DeliveryChannel[] = availableChannels(caps);
+  const deliveryChannel = watch('delivery_channel');
+  // If the current channel can't actually send (e.g. SMS unconfigured), fall
+  // back to a link-only invite rather than leaving a dead option selected.
+  useEffect(() => {
+    if (caps && deliveryChannel && deliveryChannel !== 'none' && !channelOptions.includes(deliveryChannel)) {
+      setValue('delivery_channel', 'none');
+    }
+  }, [caps, deliveryChannel, channelOptions, setValue]);
 
   const getGuestPartySize = (guest: Guest): number => {
     if (!guest) return 1;
@@ -146,7 +163,10 @@ export const AdminGuestsTab: React.FC<AdminGuestsTabProps> = ({ language, t, gue
       g.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
       g.email.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesStatus = statusFilter === 'All' || g.rsvp_status === statusFilter;
-    return matchesSearch && matchesStatus;
+    const matchesSource =
+      sourceFilter === 'All' ||
+      (sourceFilter === 'Guest-invited' ? !!g.invited_by_guest_id : !g.invited_by_guest_id);
+    return matchesSearch && matchesStatus && matchesSource;
   });
 
   const handleOpenEditGuest = (g: Guest) => {
@@ -155,6 +175,9 @@ export const AdminGuestsTab: React.FC<AdminGuestsTabProps> = ({ language, t, gue
       name: g.name,
       email: g.email || '',
       phone: g.phone || '',
+      delivery_channel: channelOptions.includes((g.delivery_channel || 'none') as DeliveryChannel)
+        ? ((g.delivery_channel || 'none') as DeliveryChannel)
+        : 'none',
       max_party_size: Number(g.max_party_size || getGuestPartySize(g) || 2),
       rsvp_status: g.rsvp_status,
     });
@@ -162,6 +185,14 @@ export const AdminGuestsTab: React.FC<AdminGuestsTabProps> = ({ language, t, gue
 
   const handleSaveEditGuest = async (values: EditGuestFormValues) => {
     if (!editingGuest) return;
+    if ((values.delivery_channel === 'email' || values.delivery_channel === 'both') && !(values.email || '').trim()) {
+      toast.error(t.emailRequiredToast);
+      return;
+    }
+    if ((values.delivery_channel === 'text' || values.delivery_channel === 'both') && !(values.phone || '').trim()) {
+      toast.error(t.phoneRequiredToast);
+      return;
+    }
     try {
       setSavingEdit(true);
       const res = await adminFetch(`/api/guests/${editingGuest.id}`, {
@@ -171,6 +202,7 @@ export const AdminGuestsTab: React.FC<AdminGuestsTabProps> = ({ language, t, gue
           name: values.name.trim(),
           email: (values.email || '').trim(),
           phone: (values.phone || '').trim(),
+          delivery_channel: values.delivery_channel,
           max_party_size: values.max_party_size,
           attending_party_size: values.rsvp_status === 'Attending' ? values.max_party_size : editingGuest.attending_party_size,
           rsvp_status: values.rsvp_status,
@@ -212,14 +244,14 @@ export const AdminGuestsTab: React.FC<AdminGuestsTabProps> = ({ language, t, gue
       toast.info(t.noExportToast);
       return;
     }
-    const headers = ['Guest Name', 'Email', 'Phone', 'Delivery Channel', 'RSVP Status', 'Max Party Size', 'Attending Party Size', 'Dietary Restrictions', 'Table ID', 'Magic RSVP Token', 'Magic RSVP URL'];
+    const headers = ['Guest Name', 'Email', 'Phone', 'Delivery Channel', 'RSVP Status', 'Max Party Size', 'Attending Party Size', 'Dietary Restrictions', 'Table ID', 'Magic RSVP Token', 'Magic RSVP URL', 'Invited By'];
     const rows = guests.map((g) => {
       const url = `${window.location.origin}/rsvp/${g.magic_token}`;
       return [
         `"${g.name.replace(/"/g, '""')}"`,
         `"${(g.email || '').replace(/"/g, '""')}"`,
         `"${(g.phone || '').replace(/"/g, '""')}"`,
-        `"${g.delivery_channel || 'email'}"`,
+        `"${g.delivery_channel || 'none'}"`,
         `"${g.rsvp_status}"`,
         g.max_party_size,
         g.attending_party_size,
@@ -227,6 +259,7 @@ export const AdminGuestsTab: React.FC<AdminGuestsTabProps> = ({ language, t, gue
         `"${g.table_id || ''}"`,
         `"${g.magic_token}"`,
         `"${url}"`,
+        `"${(g.invited_by_guest_name || 'Host').replace(/"/g, '""')}"`,
       ].join(',');
     });
     const csvContent = 'data:text/csv;charset=utf-8,' + [headers.join(','), ...rows].join('\n');
@@ -302,7 +335,7 @@ export const AdminGuestsTab: React.FC<AdminGuestsTabProps> = ({ language, t, gue
             email: parts[1] || '',
             phone: parts[2] || '',
             max_party_size: Number(parts[3]) || 2,
-            delivery_channel: parts[4] && ['email', 'text', 'both'].includes(parts[4].toLowerCase()) ? parts[4].toLowerCase() : 'email',
+            delivery_channel: parts[4] && ['email', 'text', 'both', 'none'].includes(parts[4].toLowerCase()) ? parts[4].toLowerCase() : 'email',
             language_pref: language,
           });
         }
@@ -364,6 +397,7 @@ export const AdminGuestsTab: React.FC<AdminGuestsTabProps> = ({ language, t, gue
           name: data.guest.name,
           email: contactInfo || data.guest.email || data.guest.phone || '',
           token: data.magic_token,
+          message: data.invite_message || '',
         });
         setValue('name', '');
         setValue('email', '');
@@ -458,20 +492,23 @@ export const AdminGuestsTab: React.FC<AdminGuestsTabProps> = ({ language, t, gue
           <form onSubmit={handleSubmit(handleAddGuest)} className="space-y-4">
             <div className="bg-[#EFE6DC]/40 p-3.5 rounded-2xl border border-[#CBAE94]/60 space-y-2">
               <label className="label-mono block text-xs font-bold text-[#8B735B]">{t.fieldSendVia} *</label>
-              <div className="grid grid-cols-3 gap-2">
-                <button type="button" onClick={() => setValue('delivery_channel', 'email')}
-                  className={`py-2 px-3 rounded-xl border text-xs font-bold transition-all flex items-center justify-center gap-1.5 ${deliveryChannel === 'email' ? 'bg-[#8B735B] text-white border-[#8B735B] shadow-xs' : 'bg-white text-[#5D5449] border-[#CBAE94] hover:bg-[#EFE6DC]'}`}>
-                  <Mail className="w-3.5 h-3.5" /><span>{t.channelEmail}</span>
-                </button>
-                <button type="button" onClick={() => setValue('delivery_channel', 'text')}
-                  className={`py-2 px-3 rounded-xl border text-xs font-bold transition-all flex items-center justify-center gap-1.5 ${deliveryChannel === 'text' ? 'bg-[#8B735B] text-white border-[#8B735B] shadow-xs' : 'bg-white text-[#5D5449] border-[#CBAE94] hover:bg-[#EFE6DC]'}`}>
-                  <MessageSquare className="w-3.5 h-3.5" /><span>{t.channelText}</span>
-                </button>
-                <button type="button" onClick={() => setValue('delivery_channel', 'both')}
-                  className={`py-2 px-3 rounded-xl border text-xs font-bold transition-all flex items-center justify-center gap-1.5 ${deliveryChannel === 'both' ? 'bg-[#8B735B] text-white border-[#8B735B] shadow-xs' : 'bg-white text-[#5D5449] border-[#CBAE94] hover:bg-[#EFE6DC]'}`}>
-                  <Smartphone className="w-3.5 h-3.5" /><span>{t.channelBoth}</span>
-                </button>
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                {channelOptions.map((c) => (
+                  <button key={c} type="button" onClick={() => setValue('delivery_channel', c)}
+                    className={`py-2 px-3 rounded-xl border text-xs font-bold transition-all flex items-center justify-center gap-1.5 ${deliveryChannel === c ? 'bg-[#8B735B] text-white border-[#8B735B] shadow-xs' : 'bg-white text-[#5D5449] border-[#CBAE94] hover:bg-[#EFE6DC]'}`}>
+                    {c === 'none' ? <Link2 className="w-3.5 h-3.5" />
+                      : c === 'email' ? <Mail className="w-3.5 h-3.5" />
+                      : c === 'text' ? <MessageSquare className="w-3.5 h-3.5" />
+                      : <Smartphone className="w-3.5 h-3.5" />}
+                    <span>{c === 'none' ? t.channelNone : c === 'email' ? t.channelEmail : c === 'text' ? t.channelText : t.channelBoth}</span>
+                  </button>
+                ))}
               </div>
+              {deliveryChannel === 'none' && (
+                <p className="text-[11px] text-[#8B735B] font-mono flex items-center gap-1">
+                  <Lightbulb className="w-3 h-3 shrink-0" /> {t.linkOnlyHint}
+                </p>
+              )}
             </div>
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -584,6 +621,13 @@ export const AdminGuestsTab: React.FC<AdminGuestsTabProps> = ({ language, t, gue
                   className={`px-2.5 py-1 rounded-full transition-colors ${statusFilter === st ? 'bg-[#8B735B] text-white shadow-xs font-bold' : 'text-[#5D5449] hover:text-[#8B735B]'}`}>{st}</button>
               ))}
             </div>
+
+            <div className="flex items-center space-x-1 bg-white p-1 rounded-full text-xs font-bold font-mono border border-[#CBAE94]" title={t.sourceFilterTitle}>
+              {(['All', 'Host', 'Guest-invited'] as const).map((st) => (
+                <button key={st} onClick={() => setSourceFilter(st)}
+                  className={`px-2.5 py-1 rounded-full transition-colors ${sourceFilter === st ? 'bg-[#D4A373] text-white shadow-xs font-bold' : 'text-[#5D5449] hover:text-[#8B735B]'}`}>{st}</button>
+              ))}
+            </div>
           </div>
         </div>
 
@@ -595,6 +639,7 @@ export const AdminGuestsTab: React.FC<AdminGuestsTabProps> = ({ language, t, gue
               const channelLabel =
                 guest.delivery_channel === 'both' ? t.channelBoth
                 : guest.delivery_channel === 'text' ? t.channelText
+                : guest.delivery_channel === 'none' ? t.channelNone
                 : t.channelEmail;
               const partySize = getGuestPartySize(guest);
               const maxSize = Math.max(guest.max_party_size || 1, partySize);
@@ -621,6 +666,15 @@ export const AdminGuestsTab: React.FC<AdminGuestsTabProps> = ({ language, t, gue
                               {channelLabel}
                             </span>
                           ) : null}
+                          {guest.invited_by_guest_name ? (
+                            <span className="px-2 py-0.5 rounded-md bg-amber-50 border border-amber-300 text-[10px] font-mono font-bold text-amber-800" title={guest.guest_note || ''}>
+                              {t.invitedByBadge.replace('{{name}}', guest.invited_by_guest_name)}
+                            </span>
+                          ) : (
+                            <span className="px-2 py-0.5 rounded-md bg-[#F8F5F0] border border-[#CBAE94]/50 text-[10px] font-mono font-bold text-[#5D5449]/60">
+                              {t.invitedByHostBadge}
+                            </span>
+                          )}
                         </div>
                         <div className="text-[11px] text-[#5D5449]/70 font-mono truncate mt-0.5 flex items-center gap-2 flex-wrap">
                           {guest.email ? <span className="inline-flex items-center gap-1"><Mail className="w-3 h-3 shrink-0" />{guest.email}</span> : null}
@@ -749,9 +803,26 @@ export const AdminGuestsTab: React.FC<AdminGuestsTabProps> = ({ language, t, gue
         <div className="bg-white p-3.5 rounded-2xl border-2 border-[#CBAE94] font-mono text-xs text-[#5D5449] break-all select-all">
           {window.location.origin}/rsvp/{invitedGuestModal?.token}
         </div>
+        {invitedGuestModal?.message && (
+          <div className="bg-[#EFE6DC]/50 p-3 rounded-xl border border-[#CBAE94] whitespace-pre-wrap text-left text-[11px] text-[#5D5449] font-mono max-h-40 overflow-y-auto">
+            {invitedGuestModal.message}
+          </div>
+        )}
         <p className="text-[11px] text-[#8B735B] bg-[#EFE6DC] p-3 rounded-xl border border-[#CBAE94] font-mono"><Lightbulb className="w-3.5 h-3.5 inline" /> {t.sendEmailLogNotice}</p>
         <div className="flex space-x-3">
           <button onClick={() => invitedGuestModal && handleCopyMagicLink(invitedGuestModal.token)} className="btn-accent flex-1 py-3 text-xs">{t.copyLink}</button>
+          {invitedGuestModal?.message && (
+            <button onClick={() => {
+              if (!invitedGuestModal) return;
+              navigator.clipboard.writeText(invitedGuestModal.message);
+              setCopiedMsg(true);
+              setTimeout(() => setCopiedMsg(false), 2000);
+              toast.love(t.messageCopiedToast);
+            }} className="btn-outline-accent flex-1 py-3 text-xs inline-flex items-center justify-center">
+              {copiedMsg ? <Check className="w-3.5 h-3.5 mr-1.5 text-emerald-600" /> : <Copy className="w-3.5 h-3.5 mr-1.5" />}
+              <span>{t.copyMessageBtn}</span>
+            </button>
+          )}
           <button onClick={() => { if (invitedGuestModal) { const m = invitedGuestModal; setInvitedGuestModal(null); navigate(`/rsvp/${m.token}`); } }} className="btn-outline-accent flex-1 py-3 text-xs">{t.previewInviteBtn}</button>
         </div>
         <button onClick={() => setInvitedGuestModal(null)} className="w-full py-2 text-[#5D5449]/70 hover:text-[#5D5449] text-xs font-mono font-bold text-center">{t.closeModal}</button>
@@ -780,6 +851,14 @@ export const AdminGuestsTab: React.FC<AdminGuestsTabProps> = ({ language, t, gue
                     <label className="label-mono block mb-1">{t.phoneLabel}</label>
                     <TextInput type="tel" {...registerEdit('phone')} />
                   </div>
+                </div>
+                <div>
+                  <label className="label-mono block mb-1">{t.fieldSendVia}</label>
+                  <Select {...registerEdit('delivery_channel')}>
+                    {channelOptions.map((c) => (
+                      <option key={c} value={c}>{c === 'none' ? t.channelNone : c === 'email' ? t.channelEmail : c === 'text' ? t.channelText : t.channelBoth}</option>
+                    ))}
+                  </Select>
                 </div>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <div>

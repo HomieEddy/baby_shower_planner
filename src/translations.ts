@@ -102,6 +102,7 @@ export interface Translations {
   cateringTitle: string;
   channelBoth: string;
   channelEmail: string;
+  channelNone: string;
   channelText: string;
   checkInBtn: string;
   checkedInLabel: string;
@@ -130,6 +131,12 @@ export interface Translations {
   combinedLabel: string;
   confirmedGuestsLabel: string;
   connectError: string;
+  contactCardHint: string;
+  contactCardTitle: string;
+  contactForChannelError: string;
+  contactSaveBtn: string;
+  contactSaveErrorToast: string;
+  contactSavedToast: string;
   contentCloseLabel: string;
   contentOpenLabel: string;
   contentWindowSubtitle: string;
@@ -140,7 +147,9 @@ export interface Translations {
   copyCardImageBtn: string;
   copyLink: string;
   copyMagicLinkTitle: string;
+  copyMessageBtn: string;
   copyNoteBtn: string;
+  createInviteBtn: string;
   csvColumnsHint: string;
   csvEmptyToast: string;
   csvImportErrorToast: string;
@@ -376,17 +385,37 @@ export interface Translations {
   insufficientSeats: string;
   invalidTokenMsg: string;
   invalidTokenTitle: string;
+  inviteAlreadyInvitedToast: string;
+  inviteChannelLabel: string;
+  inviteCreatedHint: string;
+  inviteCreatedTitle: string;
+  inviteFailedToast: string;
+  inviteGuestHint: string;
+  inviteGuestTitle: string;
   inviteLinkForLabel: string;
+  inviteNameRequiredToast: string;
+  inviteRemovedToast: string;
+  inviteSentChannelToast: string;
+  inviteSentLinkOnlyToast: string;
   inviteSentModalMsg: string;
   inviteSentModalTitle: string;
+  invitedByBadge: string;
+  invitedByHostBadge: string;
   invitedGuestLabel: string;
   invitedGuestsLabel: string;
+  inviteeContactLabel: string;
+  inviteeContactPh: string;
+  inviteeNameLabel: string;
+  inviteeNamePh: string;
+  inviteeNoteLabel: string;
+  inviteeNotePh: string;
   invitesErrorToast: string;
   invitesFailedSuffix: string;
   invitesNoneToast: string;
   invitesSentMsg: string;
   langSwitch: string;
   linkCopied: string;
+  linkOnlyHint: string;
   linksCopiedToast: string;
   liveFeedTab: string;
   livePreviewLabel: string;
@@ -403,6 +432,7 @@ export interface Translations {
   masonryLabel: string;
   masonryLayoutLabel: string;
   mealsWord: string;
+  messageCopiedToast: string;
   metricsTitle: string;
   nameExamplePh: string;
   nameExamplePlaceholder: string;
@@ -420,11 +450,13 @@ export interface Translations {
   noEntriesYet: string;
   noExportToast: string;
   noGuestsInCategory: string;
+  noInvitesYet: string;
   noMatchMsg: string;
   noPhoneError: string;
   noSearchMatch: string;
   notYetLabel: string;
   noteCopiedToast: string;
+  notificationChoiceLabel: string;
   openGuestbookLink: string;
   openMapsBtn: string;
   openMapsTitle: string;
@@ -489,6 +521,9 @@ export interface Translations {
   remindersSentMsg: string;
   removeBtn: string;
   removeGuestBtn: string;
+  removeInviteBtn: string;
+  removeInviteMsg: string;
+  removeInviteTitle: string;
   removePhotoBtn: string;
   removePhotoTitle: string;
   renderingCard: string;
@@ -569,6 +604,7 @@ export interface Translations {
   signatureTypographyLabel: string;
   simulatedDispatchLabel: string;
   smartSuggestBtn: string;
+  sourceFilterTitle: string;
   specialDietaryLabel: string;
   standardMealsLabel: string;
   startTimeLabel: string;
@@ -679,6 +715,7 @@ export interface Translations {
   wipeDbBtn: string;
   wipeDbConfirm: string;
   wrongPasswordMsg: string;
+  yourInvitesTitle: string;
   yourNameOptional: string;
   yourSeatLabel: string;
   yourTableLabel: string;
@@ -787,6 +824,7 @@ export const translations: Record<Language, Translations> = {
     cateringTitle: "Catering & Kitchen Operations",
     channelBoth: "Both (Email + Text)",
     channelEmail: "Email",
+    channelNone: "Link only",
     channelText: "Text (SMS)",
     checkInBtn: "Check In",
     checkedInLabel: "Checked In",
@@ -815,6 +853,12 @@ export const translations: Record<Language, Translations> = {
     combinedLabel: "Combined:",
     confirmedGuestsLabel: "Confirmed Guests",
     connectError: "Could not connect to server",
+    contactCardHint: "Add your email or phone so we can send you reminders and updates.",
+    contactCardTitle: "Contact & notifications",
+    contactForChannelError: "Add a valid email or phone for {{channel}} delivery",
+    contactSaveBtn: "Save",
+    contactSaveErrorToast: "Could not save your contact info",
+    contactSavedToast: "Contact info saved",
     contentCloseLabel: "Closes at",
     contentOpenLabel: "Opens at (event start)",
     contentWindowSubtitle: "The guestbook and photo uploads are locked for guests outside this window. Leave Closes at empty to keep them open after the event starts.",
@@ -825,7 +869,9 @@ export const translations: Record<Language, Translations> = {
     copyCardImageBtn: "Copy Card Image",
     copyLink: "Copy Link",
     copyMagicLinkTitle: "Copy RSVP Magic Link",
+    copyMessageBtn: "Copy message",
     copyNoteBtn: "Copy Note Text",
+    createInviteBtn: "Create invitation",
     csvColumnsHint: "Name, Email, Phone, Max Party Size, Channel (email/text)",
     csvEmptyToast: "Please enter CSV data to import.",
     csvImportErrorToast: "An error occurred during CSV import.",
@@ -1061,9 +1107,28 @@ export const translations: Record<Language, Translations> = {
     insufficientSeats: "Insufficient Seats",
     invalidTokenMsg: "This magic invitation link is invalid or expired. Please contact the shower co-hosts.",
     invalidTokenTitle: "Invalid or Expired Invitation",
+    inviteAlreadyInvitedToast: "{{name}} is already invited — here's their link",
+    inviteChannelLabel: "How should they receive the invitation?",
+    inviteCreatedHint: "Share this link with {{name}} — they'll RSVP on their own page.",
+    inviteCreatedTitle: "Invitation ready!",
+    inviteFailedToast: "Could not create the invitation. Try again.",
+    inviteGuestHint: "Know someone who'd love to come? Give them their own invitation — no need to ask us.",
+    inviteGuestTitle: "Invite a guest",
     inviteLinkForLabel: "Invitation link for",
+    inviteNameRequiredToast: "Add the invitee's full name",
+    inviteRemovedToast: "Invitation removed",
+    inviteSentChannelToast: "Invitation sent to {{name}} via {{channel}}",
+    inviteSentLinkOnlyToast: "Invitation ready — share the link with {{name}}",
     inviteSentModalMsg: "The magic link below has been logged to the system console and ready to share:",
     inviteSentModalTitle: "Invitation Created & Sent!",
+    invitedByBadge: "Invited by {{name}}",
+    invitedByHostBadge: "Host",
+    inviteeContactLabel: "Email or phone (optional)",
+    inviteeContactPh: "cousin@email.com or +1 555 000 1234",
+    inviteeNameLabel: "Full name",
+    inviteeNamePh: "Their full name",
+    inviteeNoteLabel: "Note for the hosts (optional)",
+    inviteeNotePh: "e.g. My cousin from Toronto",
     invitedGuestLabel: "Invited Guest:",
     invitedGuestsLabel: "invited guests.",
     invitesErrorToast: "Failed to send invitations",
@@ -1072,6 +1137,7 @@ export const translations: Record<Language, Translations> = {
     invitesSentMsg: "Invitations sent to {{count}} guests!",
     langSwitch: "Français (FR)",
     linkCopied: "Copied!",
+    linkOnlyHint: "You'll get a ready-to-send message to share yourself (WhatsApp, Messenger…).",
     linksCopiedToast: "Copied {{count}} invitation links to clipboard!",
     liveFeedTab: "Live Feed",
     livePreviewLabel: "Live Typography & Color Palette Preview",
@@ -1088,6 +1154,7 @@ export const translations: Record<Language, Translations> = {
     masonryLabel: "Masonry",
     masonryLayoutLabel: "Masonry Waterfall Layout",
     mealsWord: "meals",
+    messageCopiedToast: "Invitation message copied",
     metricsTitle: "RSVP Overview",
     nameExamplePh: "e.g. Marie & Pierre Curie",
     nameExamplePlaceholder: "e.g., Aunt Sarah & Mark",
@@ -1105,11 +1172,13 @@ export const translations: Record<Language, Translations> = {
     noEntriesYet: "No guestbook entries yet. Share the QR code at the party!",
     noExportToast: "No guest data available to export.",
     noGuestsInCategory: "No guests in this category",
+    noInvitesYet: "You haven't invited anyone yet",
     noMatchMsg: "No guests match your search",
     noPhoneError: "No phone number on file for this guest.",
     noSearchMatch: "No invited guests match your search filter.",
     notYetLabel: "Not Yet",
     noteCopiedToast: "Thank You note copied to clipboard!",
+    notificationChoiceLabel: "I want to receive reminders via",
     openGuestbookLink: "Open Guestbook",
     openMapsBtn: "Open in Google Maps",
     openMapsTitle: "Open Venue in Google Maps",
@@ -1174,6 +1243,9 @@ export const translations: Record<Language, Translations> = {
     remindersSentMsg: "Reminders sent to {{count}} pending guests!",
     removeBtn: "Remove",
     removeGuestBtn: "Remove Guest",
+    removeInviteBtn: "Remove",
+    removeInviteMsg: "{{name}} will lose access to their invitation link.",
+    removeInviteTitle: "Remove this invitation?",
     removePhotoBtn: "Remove photo",
     removePhotoTitle: "Remove photo",
     renderingCard: "Rendering High-Res Card Image...",
@@ -1254,6 +1326,7 @@ export const translations: Record<Language, Translations> = {
     signatureTypographyLabel: "Signature Typography",
     simulatedDispatchLabel: "Simulated Broadcast Dispatched",
     smartSuggestBtn: "Smart Seating Suggestion",
+    sourceFilterTitle: "Filter by who invited them (Host or guests)",
     specialDietaryLabel: "Special Dietary Requests",
     standardMealsLabel: "Standard Meals",
     startTimeLabel: "Start Time",
@@ -1364,6 +1437,7 @@ export const translations: Record<Language, Translations> = {
     wipeDbBtn: "Clear All Data",
     wipeDbConfirm: "All event data cleared. Ready to start fresh.",
     wrongPasswordMsg: "Wrong password",
+    yourInvitesTitle: "Your invitations",
     yourNameOptional: "Your Name (Optional)",
     yourSeatLabel: "Your Seat",
     yourTableLabel: "Your Table / Seating Area",
@@ -1470,6 +1544,7 @@ export const translations: Record<Language, Translations> = {
     cateringTitle: "Traiteur & opérations cuisine",
     channelBoth: "Les deux (Courriel + SMS)",
     channelEmail: "Courriel",
+    channelNone: "Lien uniquement",
     channelText: "Texto (SMS)",
     checkInBtn: "Enregistrer",
     checkedInLabel: "Arrivés",
@@ -1498,6 +1573,12 @@ export const translations: Record<Language, Translations> = {
     combinedLabel: "Combiné :",
     confirmedGuestsLabel: "Invités confirmés",
     connectError: "Impossible de se connecter au serveur",
+    contactCardHint: "Ajoutez votre e-mail ou téléphone pour recevoir les rappels et mises à jour.",
+    contactCardTitle: "Contact et notifications",
+    contactForChannelError: "Ajoutez un e-mail ou téléphone valide pour l'envoi par {{channel}}",
+    contactSaveBtn: "Enregistrer",
+    contactSaveErrorToast: "Impossible d'enregistrer vos coordonnées",
+    contactSavedToast: "Coordonnées enregistrées",
     contentCloseLabel: "Fermeture",
     contentOpenLabel: "Ouverture (début de l'événement)",
     contentWindowSubtitle: "Le livre d'or et les photos sont verrouillés pour les invités en dehors de cette fenêtre. Laissez Fermeture vide pour les laisser ouverts après le début de l'événement.",
@@ -1508,7 +1589,9 @@ export const translations: Record<Language, Translations> = {
     copyCardImageBtn: "Copier l'image de la carte",
     copyLink: "Copier le lien",
     copyMagicLinkTitle: "Copier le lien magique RSVP",
+    copyMessageBtn: "Copier le message",
     copyNoteBtn: "Copier le texte",
+    createInviteBtn: "Créer l'invitation",
     csvColumnsHint: "Nom, Email, Téléphone, Taille max, Canal (email/text)",
     csvEmptyToast: "Veuillez saisir des données CSV à importer.",
     csvImportErrorToast: "Une erreur est survenue lors de l'import.",
@@ -1744,17 +1827,37 @@ export const translations: Record<Language, Translations> = {
     insufficientSeats: "Nombre de places insuffisant",
     invalidTokenMsg: "Ce lien magique est invalide ou a expiré. Veuillez contacter les hôtes de la baby shower.",
     invalidTokenTitle: "Lien d'invitation invalide",
+    inviteAlreadyInvitedToast: "{{name}} est déjà invité — voici son lien",
+    inviteChannelLabel: "Comment doit-il/elle recevoir l'invitation ?",
+    inviteCreatedHint: "Partagez ce lien avec {{name}} — il/elle répondra sur sa propre page.",
+    inviteCreatedTitle: "Invitation prête !",
+    inviteFailedToast: "Impossible de créer l'invitation. Réessayez.",
+    inviteGuestHint: "Vous connaissez quelqu'un qui aimerait venir ? Offrez-lui sa propre invitation — inutile de nous demander.",
+    inviteGuestTitle: "Inviter un invité",
     inviteLinkForLabel: "Lien d'invitation pour",
+    inviteNameRequiredToast: "Ajoutez le nom complet de l'invité",
+    inviteRemovedToast: "Invitation retirée",
+    inviteSentChannelToast: "Invitation envoyée à {{name}} par {{channel}}",
+    inviteSentLinkOnlyToast: "Invitation prête — partagez le lien avec {{name}}",
     inviteSentModalMsg: "Le lien magique ci-dessous a été enregistré dans la console et est prêt à être partagé :",
     inviteSentModalTitle: "Invitation créée et envoyée !",
+    invitedByBadge: "Invité par {{name}}",
+    invitedByHostBadge: "Hôte",
     invitedGuestLabel: "Invité :",
     invitedGuestsLabel: "invités.",
+    inviteeContactLabel: "E-mail ou téléphone (optionnel)",
+    inviteeContactPh: "cousin@email.com ou +1 555 000 1234",
+    inviteeNameLabel: "Nom complet",
+    inviteeNamePh: "Nom complet de l'invité",
+    inviteeNoteLabel: "Message pour les hôtes (optionnel)",
+    inviteeNotePh: "ex. Mon cousin de Montréal",
     invitesErrorToast: "Échec de l'envoi des invitations",
     invitesFailedSuffix: "({{count}} en échec)",
     invitesNoneToast: "Aucune invitation envoyée. Vérifiez RESEND_API_KEY.",
     invitesSentMsg: "Invitations envoyées à {{count}} invités !",
     langSwitch: "English (EN)",
     linkCopied: "Copié !",
+    linkOnlyHint: "Vous recevrez un message prêt à envoyer à partager vous-même (WhatsApp, Messenger…).",
     linksCopiedToast: "{{count}} liens d'invitation copiés !",
     liveFeedTab: "Fil en direct",
     livePreviewLabel: "Aperçu en direct de la typographie & palette",
@@ -1771,6 +1874,7 @@ export const translations: Record<Language, Translations> = {
     masonryLabel: "Cascade",
     masonryLayoutLabel: "Disposition en cascade",
     mealsWord: "repas",
+    messageCopiedToast: "Message d'invitation copié",
     metricsTitle: "Aperçu des RSVPs",
     nameExamplePh: "ex : Marie & Pierre Curie",
     nameExamplePlaceholder: "ex : Tante Sarah & Marc",
@@ -1788,11 +1892,13 @@ export const translations: Record<Language, Translations> = {
     noEntriesYet: "Aucun message pour l'instant. Partagez le QR code lors de la fête !",
     noExportToast: "Aucune donnée d'invité à exporter.",
     noGuestsInCategory: "Aucun invité dans cette catégorie",
+    noInvitesYet: "Vous n'avez encore invité personne",
     noMatchMsg: "Aucun invité ne correspond à votre recherche",
     noPhoneError: "Aucun numéro de téléphone pour cet invité.",
     noSearchMatch: "Aucun invité ne correspond à votre filtre de recherche.",
     notYetLabel: "Pas encore",
     noteCopiedToast: "Remerciement copié dans le presse-papier !",
+    notificationChoiceLabel: "Je souhaite recevoir les rappels par",
     openGuestbookLink: "Ouvrir le livre d'or",
     openMapsBtn: "Ouvrir dans Google Maps",
     openMapsTitle: "Ouvrir le lieu dans Google Maps",
@@ -1857,6 +1963,9 @@ export const translations: Record<Language, Translations> = {
     remindersSentMsg: "Rappels envoyés à {{count}} invités en attente !",
     removeBtn: "Retirer",
     removeGuestBtn: "Retirer l'invité",
+    removeInviteBtn: "Retirer",
+    removeInviteMsg: "{{name}} perdra l'accès à son lien d'invitation.",
+    removeInviteTitle: "Retirer cette invitation ?",
     removePhotoBtn: "Retirer la photo",
     removePhotoTitle: "Retirer la photo",
     renderingCard: "Génération de la carte HD...",
@@ -1937,6 +2046,7 @@ export const translations: Record<Language, Translations> = {
     signatureTypographyLabel: "Typographie signature",
     simulatedDispatchLabel: "Diffusion simulée effectuée",
     smartSuggestBtn: "Suggestion de placement",
+    sourceFilterTitle: "Filtrer par qui les a invités (hôte ou invités)",
     specialDietaryLabel: "Demandes alimentaires spéciales",
     standardMealsLabel: "Repas standards",
     startTimeLabel: "Heure de début",
@@ -2047,6 +2157,7 @@ export const translations: Record<Language, Translations> = {
     wipeDbBtn: "Effacer toutes les données",
     wipeDbConfirm: "Toutes les données de l'événement ont été effacées.",
     wrongPasswordMsg: "Mot de passe incorrect",
+    yourInvitesTitle: "Vos invitations",
     yourNameOptional: "Votre nom (optionnel)",
     yourSeatLabel: "Votre Siège",
     yourTableLabel: "Votre table / zone assise",

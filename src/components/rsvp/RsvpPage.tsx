@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useForm, useFieldArray } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -6,8 +6,11 @@ import { z } from 'zod';
 import { Guest, EventAlert } from '../../types';
 import { EventDetailsCard } from './EventDetailsCard';
 import { stripPrimaryAttendees, buildAttendeePayload } from '../../lib/guestAttendees';
+import { useCapabilities } from '../../lib/capabilities';
 import { motion, AnimatePresence } from 'motion/react';
 import { useToast } from '../shared/ToastContext';
+import { useConfirm } from '../shared/ConfirmDialog';
+import { Modal } from '../shared/Modal';
 import { cardStagger, popIn, fadeUp } from '../shared/motionPresets';
 import { useT } from '../shared/i18n';
 import {
@@ -28,6 +31,11 @@ import {
   ChevronRight,
   AlertTriangle,
   Bell,
+  Copy,
+  Check,
+  MessageSquare,
+  Link2,
+  Trash2,
 } from 'lucide-react';
 
 const RsvpFormSchema = z.object({
@@ -137,6 +145,165 @@ export const RsvpPage = () => {
   useEffect(() => {
     fetchGuest();
   }, [token]);
+
+  // ─── Contact & notifications (self-service) ────────────────────
+  const { data: caps } = useCapabilities();
+  const contactChannels: ('none' | 'email' | 'text' | 'both')[] = ['none'];
+  if (caps?.email) contactChannels.push('email');
+  if (caps?.sms) contactChannels.push('text');
+  if (caps?.email && caps?.sms) contactChannels.push('both');
+  const inviteChannels: ('link-only' | 'email' | 'text' | 'both')[] = ['link-only'];
+  if (caps?.email) inviteChannels.push('email');
+  if (caps?.sms) inviteChannels.push('text');
+  if (caps?.email && caps?.sms) inviteChannels.push('both');
+  const channelLabel = (c: string) =>
+    c === 'email' ? t.channelEmail : c === 'text' ? t.channelText : c === 'both' ? t.channelBoth : t.channelNone;
+
+  const [contactEmail, setContactEmail] = useState('');
+  const [contactPhone, setContactPhone] = useState('');
+  const [contactChannel, setContactChannel] = useState<'none' | 'email' | 'text' | 'both'>('none');
+  const [savingContact, setSavingContact] = useState(false);
+
+  const [inviteName, setInviteName] = useState('');
+  const [inviteContact, setInviteContact] = useState('');
+  const [inviteChannel, setInviteChannel] = useState<'link-only' | 'email' | 'text' | 'both'>('link-only');
+  const [inviteNote, setInviteNote] = useState('');
+  const [inviting, setInviting] = useState(false);
+  const [inviteModal, setInviteModal] = useState<{ name: string; url: string; message: string } | null>(null);
+
+  const [myInvites, setMyInvites] = useState<Guest[]>([]);
+  const [copiedKey, setCopiedKey] = useState<string | null>(null);
+  const confirm = useConfirm();
+
+  useEffect(() => {
+    if (guest) {
+      setContactEmail(guest.email || '');
+      setContactPhone(guest.phone || '');
+      setContactChannel(['none', 'email', 'text', 'both'].includes(guest.delivery_channel as string)
+        ? (guest.delivery_channel as 'none' | 'email' | 'text' | 'both')
+        : 'none');
+    }
+  }, [guest]);
+
+  const fetchInvites = useCallback(async () => {
+    if (!token) return;
+    try {
+      const res = await fetch(`/api/rsvp/${token}/invites`);
+      const data = await res.json();
+      if (res.ok && data.invites) setMyInvites(data.invites);
+    } catch { /* non-fatal */ }
+  }, [token]);
+
+  useEffect(() => {
+    if (guest) fetchInvites();
+  }, [guest, fetchInvites]);
+
+  const copyText = async (text: string, key: string) => {
+    try { await navigator.clipboard.writeText(text); } catch { /* clipboard blocked */ }
+    setCopiedKey(key);
+    setTimeout(() => setCopiedKey(null), 2000);
+  };
+
+  const handleSaveContact = async () => {
+    if (!token) return;
+    if ((contactChannel === 'email' || contactChannel === 'both') && !contactEmail.trim()) {
+      toast.error(t.contactForChannelError.replace('{{channel}}', t.channelEmail));
+      return;
+    }
+    if ((contactChannel === 'text' || contactChannel === 'both') && !contactPhone.trim()) {
+      toast.error(t.contactForChannelError.replace('{{channel}}', t.channelText));
+      return;
+    }
+    try {
+      setSavingContact(true);
+      const res = await fetch(`/api/rsvp/${token}/contact`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: contactEmail, phone: contactPhone, delivery_channel: contactChannel }),
+      });
+      const data = await res.json();
+      if (res.ok && data.guest) {
+        setGuest(data.guest);
+        toast.love(t.contactSavedToast);
+      } else {
+        toast.error(data.message || t.contactSaveErrorToast);
+      }
+    } catch (err) {
+      console.error('Contact save error:', err);
+      toast.error(t.contactSaveErrorToast);
+    } finally {
+      setSavingContact(false);
+    }
+  };
+
+  const handleInvite = async () => {
+    if (!token) return;
+    if (!inviteName.trim()) {
+      toast.error(t.inviteNameRequiredToast);
+      return;
+    }
+    if (inviteChannel !== 'link-only' && !inviteContact.trim()) {
+      toast.error(t.contactForChannelError.replace('{{channel}}', channelLabel(inviteChannel)));
+      return;
+    }
+    try {
+      setInviting(true);
+      const res = await fetch(`/api/rsvp/${token}/invite`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ name: inviteName, contact: inviteContact, channel: inviteChannel, note: inviteNote }),
+      });
+      const data = await res.json();
+      if (res.ok && data.ok) {
+        setInviteModal({ name: data.guest.name, url: data.invite_url, message: data.invite_message });
+        if (data.already_invited) {
+          toast.info(t.inviteAlreadyInvitedToast.replace('{{name}}', data.guest.name));
+        } else if (data.sent.length > 0) {
+          toast.love(t.inviteSentChannelToast
+            .replace('{{name}}', data.guest.name)
+            .replace('{{channel}}', data.sent.map((c: string) => channelLabel(c)).join(' + ')));
+        } else {
+          toast.info(t.inviteSentLinkOnlyToast.replace('{{name}}', data.guest.name));
+        }
+        setInviteName('');
+        setInviteContact('');
+        setInviteNote('');
+        fetchInvites();
+      } else {
+        toast.error(data.message || t.inviteFailedToast);
+      }
+    } catch (err) {
+      console.error('Invite error:', err);
+      toast.error(t.inviteFailedToast);
+    } finally {
+      setInviting(false);
+    }
+  };
+
+  const handleRemoveInvite = async (invitee: Guest) => {
+    if (!token) return;
+    const ok = await confirm({
+      title: t.removeInviteTitle,
+      message: t.removeInviteMsg.replace('{{name}}', invitee.name),
+      confirmText: t.removeInviteBtn,
+    });
+    if (!ok) return;
+    try {
+      const res = await fetch(`/api/rsvp/${token}/invites/${invitee.id}`, { method: 'DELETE' });
+      if (res.ok) {
+        toast.info(t.inviteRemovedToast);
+        fetchInvites();
+      } else {
+        toast.error(t.inviteFailedToast);
+      }
+    } catch (err) {
+      console.error('Remove invite error:', err);
+      toast.error(t.inviteFailedToast);
+    }
+  };
+
+  const statusWord = (s: string) =>
+    s === 'Attending' ? t.statusAttendingWord : s === 'Declined' ? t.statusDeclinedWord : t.statusPendingWord;
 
   // Handle Submit
   const onSubmit = async (data: RsvpFormValues) => {
@@ -781,6 +948,234 @@ export const RsvpPage = () => {
 
         </AnimatePresence>
       </div>
+
+      {/* Contact & notifications (self-service) */}
+      {guest && !loading && (
+        <div className="max-w-2xl mx-auto space-y-5 pt-4">
+          <div className="card-paper p-5 sm:p-6 space-y-4">
+            <div className="flex items-center gap-2.5">
+              <div className="p-2 bg-[#EFE6DC] text-[#8B735B] rounded-xl border border-[#CBAE94]">
+                <Bell className="w-4 h-4" />
+              </div>
+              <div>
+                <h3 className="font-sans text-base font-bold text-[#8B735B]">{t.contactCardTitle}</h3>
+                <p className="text-[11px] text-[#5D5449]">{t.contactCardHint}</p>
+              </div>
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div>
+                <label className="label-mono block mb-1">{t.fieldEmail}</label>
+                <input
+                  type="email"
+                  value={contactEmail}
+                  onChange={(e) => setContactEmail(e.target.value)}
+                  className="w-full px-3 py-2 rounded-lg border border-[#4A3F35]/20 bg-white text-xs text-[#4A3F35] focus:outline-none focus:ring-2 focus:ring-[#4A3F35]"
+                />
+              </div>
+              <div>
+                <label className="label-mono block mb-1">{t.fieldPhone}</label>
+                <input
+                  type="tel"
+                  value={contactPhone}
+                  onChange={(e) => setContactPhone(e.target.value)}
+                  className="w-full px-3 py-2 rounded-lg border border-[#4A3F35]/20 bg-white text-xs text-[#4A3F35] focus:outline-none focus:ring-2 focus:ring-[#4A3F35]"
+                />
+              </div>
+            </div>
+            <div className="flex flex-wrap items-end gap-3">
+              <div className="flex-1 min-w-[200px]">
+                <label className="label-mono block mb-1">{t.notificationChoiceLabel}</label>
+                <select
+                  value={contactChannel}
+                  onChange={(e) => setContactChannel(e.target.value as 'none' | 'email' | 'text' | 'both')}
+                  className="w-full px-3 py-2 rounded-lg border border-[#4A3F35]/20 bg-white text-xs font-bold text-[#4A3F35] focus:outline-none focus:ring-2 focus:ring-[#4A3F35]"
+                >
+                  {contactChannels.map((c) => (
+                    <option key={c} value={c}>{channelLabel(c)}</option>
+                  ))}
+                </select>
+              </div>
+              <button
+                onClick={handleSaveContact}
+                disabled={savingContact}
+                className="btn-accent px-5 py-2 text-xs font-bold disabled:opacity-50 inline-flex items-center"
+              >
+                <Check className="w-3.5 h-3.5 mr-1.5" />
+                <span>{savingContact ? t.sendingInviteBtn : t.contactSaveBtn}</span>
+              </button>
+            </div>
+          </div>
+
+          {/* Invite a guest */}
+          <div className="card-paper p-5 sm:p-6 space-y-4">
+            <div className="flex items-center gap-2.5">
+              <div className="p-2 bg-[#EFE6DC] text-[#8B735B] rounded-xl border border-[#CBAE94]">
+                <Users className="w-4 h-4" />
+              </div>
+              <div>
+                <h3 className="font-sans text-base font-bold text-[#8B735B]">{t.inviteGuestTitle}</h3>
+                <p className="text-[11px] text-[#5D5449]">{t.inviteGuestHint}</p>
+              </div>
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <div>
+                <label className="label-mono block mb-1">{t.inviteeNameLabel} *</label>
+                <input
+                  type="text"
+                  value={inviteName}
+                  onChange={(e) => setInviteName(e.target.value)}
+                  placeholder={t.inviteeNamePh}
+                  className="w-full px-3 py-2 rounded-lg border border-[#4A3F35]/20 bg-white text-xs text-[#4A3F35] focus:outline-none focus:ring-2 focus:ring-[#4A3F35]"
+                />
+              </div>
+              <div>
+                <label className="label-mono block mb-1">{t.inviteeContactLabel}</label>
+                <input
+                  type="text"
+                  value={inviteContact}
+                  onChange={(e) => setInviteContact(e.target.value)}
+                  placeholder={t.inviteeContactPh}
+                  className="w-full px-3 py-2 rounded-lg border border-[#4A3F35]/20 bg-white text-xs text-[#4A3F35] focus:outline-none focus:ring-2 focus:ring-[#4A3F35]"
+                />
+              </div>
+            </div>
+            <div>
+              <label className="label-mono block mb-1">{t.inviteChannelLabel}</label>
+              <select
+                value={inviteChannel}
+                onChange={(e) => setInviteChannel(e.target.value as 'link-only' | 'email' | 'text' | 'both')}
+                className="w-full px-3 py-2 rounded-lg border border-[#4A3F35]/20 bg-white text-xs font-bold text-[#4A3F35] focus:outline-none focus:ring-2 focus:ring-[#4A3F35]"
+              >
+                {inviteChannels.map((c) => (
+                  <option key={c} value={c}>{channelLabel(c)}</option>
+                ))}
+              </select>
+              {inviteChannel === 'link-only' && (
+                <p className="text-[11px] text-[#8B735B] font-medium mt-1 flex items-center gap-1">
+                  <Link2 className="w-3 h-3 shrink-0" />
+                  {t.linkOnlyHint}
+                </p>
+              )}
+            </div>
+            <div>
+              <label className="label-mono block mb-1">{t.inviteeNoteLabel}</label>
+              <input
+                type="text"
+                value={inviteNote}
+                onChange={(e) => setInviteNote(e.target.value)}
+                placeholder={t.inviteeNotePh}
+                className="w-full px-3 py-2 rounded-lg border border-[#4A3F35]/20 bg-white text-xs text-[#4A3F35] focus:outline-none focus:ring-2 focus:ring-[#4A3F35]"
+              />
+            </div>
+            <button
+              onClick={handleInvite}
+              disabled={inviting}
+              className="btn-accent w-full py-3 text-sm font-bold disabled:opacity-50"
+            >
+              <Send className="w-4 h-4 mr-2" />
+              <span>{inviting ? t.sendingInviteBtn : t.createInviteBtn}</span>
+            </button>
+          </div>
+
+          {/* Your invitations */}
+          <div className="card-paper p-5 sm:p-6 space-y-3">
+            <div className="label-mono">{t.yourInvitesTitle}</div>
+            {myInvites.length === 0 ? (
+              <p className="text-xs text-[#5D5449]/70 italic py-2">{t.noInvitesYet}</p>
+            ) : (
+              <div className="space-y-2.5">
+                {myInvites.map((invitee) => (
+                  <div key={invitee.id} className="p-3 bg-white rounded-xl border border-[#4A3F35]/15 space-y-2">
+                    <div className="flex items-center justify-between gap-2">
+                      <div className="min-w-0">
+                        <p className="text-xs font-bold text-[#4A3F35] truncate">{invitee.name}</p>
+                        <p className="text-[10px] font-mono text-[#8B735B] truncate">
+                          {invitee.email || invitee.phone || t.channelNone}
+                        </p>
+                        {invitee.guest_note && (
+                          <p className="text-[10px] text-[#5D5449] italic truncate">{invitee.guest_note}</p>
+                        )}
+                      </div>
+                      <span
+                        className={`px-2 py-0.5 rounded-full text-[10px] font-bold border shrink-0 ${
+                          invitee.rsvp_status === 'Attending'
+                            ? 'bg-emerald-50 text-emerald-800 border-emerald-300'
+                            : invitee.rsvp_status === 'Declined'
+                            ? 'bg-rose-50 text-rose-800 border-rose-300'
+                            : 'bg-[#E9E0D2] text-[#8B735B] border-[#CBAE94]'
+                        }`}
+                      >
+                        {statusWord(invitee.rsvp_status)}
+                      </span>
+                    </div>
+                    <div className="flex flex-wrap items-center gap-2">
+                      <button
+                        onClick={() => copyText(`${window.location.origin}/rsvp/${invitee.magic_token}`, `link-${invitee.id}`)}
+                        className="px-2.5 py-1.5 rounded-lg bg-[#E9E0D2] hover:bg-[#CBAE94] hover:text-white text-[#8B735B] text-[10px] font-bold font-mono transition-colors border border-[#CBAE94] inline-flex items-center gap-1"
+                      >
+                        {copiedKey === `link-${invitee.id}` ? <Check className="w-3 h-3 text-emerald-600" /> : <Copy className="w-3 h-3" />}
+                        <span>{copiedKey === `link-${invitee.id}` ? t.linkCopied : t.copyLink}</span>
+                      </button>
+                      <button
+                        onClick={() => copyText((invitee as Guest & { invite_message?: string }).invite_message || '', `msg-${invitee.id}`)}
+                        className="px-2.5 py-1.5 rounded-lg bg-white hover:bg-[#EFE6DC] text-[#5D5449] text-[10px] font-bold font-mono transition-colors border border-[#CBAE94] inline-flex items-center gap-1"
+                      >
+                        {copiedKey === `msg-${invitee.id}` ? <Check className="w-3 h-3 text-emerald-600" /> : <MessageSquare className="w-3 h-3" />}
+                        <span>{copiedKey === `msg-${invitee.id}` ? t.linkCopied : t.copyMessageBtn}</span>
+                      </button>
+                      <button
+                        onClick={() => handleRemoveInvite(invitee)}
+                        className="ml-auto px-2.5 py-1.5 rounded-lg bg-rose-50 hover:bg-rose-100 text-rose-700 text-[10px] font-bold font-mono transition-colors border border-rose-300 inline-flex items-center gap-1"
+                      >
+                        <Trash2 className="w-3 h-3" />
+                        <span>{t.removeInviteBtn}</span>
+                      </button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* Invite success modal */}
+      <Modal open={!!inviteModal} onClose={() => setInviteModal(null)} maxWidth="md">
+        <div className="text-center space-y-4">
+          <div className="w-12 h-12 mx-auto bg-[#E9E0D2] text-[#4A3F35] rounded-full flex items-center justify-center border-2 border-[#4A3F35]">
+            <CheckCircle2 className="w-6 h-6" />
+          </div>
+          <div className="space-y-1">
+            <h3 className="font-newsreader text-2xl font-bold text-[#4A3F35]">{t.inviteCreatedTitle}</h3>
+            <p className="text-xs text-[#5D5449]">{t.inviteCreatedHint.replace('{{name}}', inviteModal?.name || '')}</p>
+          </div>
+          <div className="bg-white p-3.5 rounded-2xl border-2 border-[#CBAE94] font-mono text-xs text-[#5D5449] break-all select-all">
+            {inviteModal?.url}
+          </div>
+          <div className="bg-[#EFE6DC]/50 p-3 rounded-xl border border-[#CBAE94] whitespace-pre-wrap text-left text-[11px] text-[#5D5449] font-mono max-h-40 overflow-y-auto">
+            {inviteModal?.message}
+          </div>
+          <div className="flex space-x-3">
+            <button
+              onClick={() => copyText(inviteModal?.url || '', 'invite-url')}
+              className="btn-accent flex-1 py-3 text-xs inline-flex items-center justify-center"
+            >
+              {copiedKey === 'invite-url' ? <Check className="w-3.5 h-3.5 mr-1.5" /> : <Copy className="w-3.5 h-3.5 mr-1.5" />}
+              <span>{t.copyLink}</span>
+            </button>
+            <button
+              onClick={() => copyText(inviteModal?.message || '', 'invite-msg')}
+              className="btn-outline-accent flex-1 py-3 text-xs inline-flex items-center justify-center"
+            >
+              {copiedKey === 'invite-msg' ? <Check className="w-3.5 h-3.5 mr-1.5" /> : <MessageSquare className="w-3.5 h-3.5 mr-1.5" />}
+              <span>{t.copyMessageBtn}</span>
+            </button>
+          </div>
+          <button onClick={() => setInviteModal(null)} className="w-full py-2 text-[#5D5449]/70 hover:text-[#5D5449] text-xs font-mono font-bold text-center">
+            {t.closeModal}
+          </button>
+        </div>
+      </Modal>
       </>
       )}
 

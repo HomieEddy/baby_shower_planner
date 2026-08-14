@@ -5,8 +5,8 @@ import { EmptyState } from './EmptyState';
 describe('EmptyState', () => {
   it('renders the translated guestbook preset title', () => {
     render(<EmptyState type="guestbook" />);
-    // EN default language
-    expect(screen.getByText('No Warm Wishes Left Yet')).toBeInTheDocument();
+    // FR default language
+    expect(screen.getByText('Aucun vœu pour l\'instant')).toBeInTheDocument();
   });
 
   it('renders a custom title over the preset', () => {
