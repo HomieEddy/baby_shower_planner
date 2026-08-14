@@ -21,7 +21,7 @@ export const AdminLogin = () => {
       const res = await fetch('/api/guests', {
         headers: { 'x-admin-token': password },
       });
-      if (res.status === 401) {
+      if (!res.ok) {
         setError(t.wrongPasswordMsg);
         setLoading(false);
         return;

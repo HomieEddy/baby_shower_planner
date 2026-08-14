@@ -150,6 +150,10 @@ export const AdminDashboard = () => {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(data),
     });
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      throw new Error(err.error || `Settings save failed (${res.status})`);
+    }
     const result = await res.json();
     if (result.settings) {
       setSettings(result.settings);

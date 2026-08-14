@@ -6,11 +6,11 @@
   "rewrites": [
     {
       "source": "/api/:path*",
-      "destination": "https://YOUR-API-SERVICE.up.railway.app/api/:path*"
+      "destination": "https://babyshowerplanner-production.up.railway.app/api/:path*"
     },
     {
       "source": "/uploads/:path*",
-      "destination": "https://YOUR-API-SERVICE.up.railway.app/uploads/:path*"
+      "destination": "https://babyshowerplanner-production.up.railway.app/uploads/:path*"
     },
     {
       "source": "/(.*)",
