@@ -32,7 +32,7 @@ function buildGuestEmail(guest: Guest, settings: EventSettings): { subject: stri
         <div style="font-size: 14px; color: #A09080; margin-top: 4px;">${settings.parentsNames || ''}</div>
       </div>
       <div style="background: white; border-radius: 16px; padding: 24px; border: 1px solid #E8E0D4;">
-        <p style="font-size: 16px; margin: 0 0 16px;">${fr ? `Bonjour ${guest.name.split(' ')[0]},` : `Dear ${guest.name.split(' ')[0]},`}</p>
+        <p style="font-size: 16px; margin: 0 0 16px;">${fr ? `Bonjour ${guest.name},` : `Dear ${guest.name},`}</p>
         <p style="font-size: 14px; line-height: 1.6; color: #5D5449;">${fr
           ? `Vous êtes chaleureusement invités à célébrer l'arrivée de notre petit ange ! Rejoignez-nous pour une après-midi de jeux, gourmandises et souvenirs.`
           : 'You are warmly invited to celebrate the upcoming arrival of our little angel! Join us for an afternoon of games, treats, and memories.'}</p>
@@ -93,7 +93,7 @@ export async function sendReminderEmail(guest: Guest, settings: EventSettings): 
         <div style="font-size: 22px; font-weight: bold; color: #8B735B;">${fr ? 'Petit rappel' : 'Friendly Reminder'}</div>
       </div>
       <div style="background: white; border-radius: 16px; padding: 24px; border: 1px solid #E8E0D4;">
-        <p style="font-size: 15px; margin: 0 0 12px;">${fr ? `Bonjour ${guest.name.split(' ')[0]},` : `Hi ${guest.name.split(' ')[0]},`}</p>
+        <p style="font-size: 15px; margin: 0 0 12px;">${fr ? `Bonjour ${guest.name},` : `Hi ${guest.name},`}</p>
         <p style="font-size: 13px; line-height: 1.5; color: #5D5449;">${fr
           ? `Nous n'avons pas encore de nouvelles de vous ! Merci de nous confirmer votre présence au <strong>${showerLabelFr}</strong> le <strong>${date}</strong>.`
           : `We haven't heard from you yet! Please let us know if you can make it to <strong>${showerLabel}</strong> on <strong>${date}</strong>.`}</p>
@@ -133,7 +133,7 @@ export async function sendAlertEmail(guest: Guest, settings: EventSettings, titl
         <div style="font-size: 20px; font-weight: bold; color: #8B735B;">${title}</div>
       </div>
       <div style="background: white; border-radius: 16px; padding: 24px; border: 1px solid #E8E0D4;">
-        <p style="font-size: 15px; margin: 0 0 12px;">${fr ? `Bonjour ${guest.name.split(' ')[0]},` : `Hi ${guest.name.split(' ')[0]},`}</p>
+        <p style="font-size: 15px; margin: 0 0 12px;">${fr ? `Bonjour ${guest.name},` : `Hi ${guest.name},`}</p>
         <p style="font-size: 13px; line-height: 1.6; color: #5D5449;">${message}</p>
         <div style="text-align: center; margin: 20px 0;">
           <a href="${link}" style="display: inline-block; padding: 11px 28px; background: #8B735B; color: white; text-decoration: none; border-radius: 40px; font-size: 14px; font-weight: bold;">${fr ? 'Voir le RSVP' : 'View RSVP'}</a>
