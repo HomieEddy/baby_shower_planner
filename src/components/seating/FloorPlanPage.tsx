@@ -7,6 +7,7 @@ import {
 } from '../../types';
 import { adminFetch } from '../../lib/api';
 import { DayOfQrModal } from './DayOfQrModal';
+import { UnassignedGuestsSidebar } from './UnassignedGuestsSidebar';
 import { FloorPlanEditor } from './FloorPlanEditor';
 import { motion, AnimatePresence } from 'motion/react';
 import { Modal } from '../shared/Modal';
@@ -25,16 +26,13 @@ import {
   Users,
   Printer,
   Download,
-  Search,
   Sparkles,
-  Utensils,
   X,
   Mail,
   Info,
   Layers,
   Maximize2,
   CheckCircle2,
-  UserX,
   Undo2,
   Redo2,
   Wand2,
@@ -770,191 +768,16 @@ export const FloorPlanPage = () => {
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
           {/* Left Column: Unassigned Guests Sidebar & Host Actions (lg:col-span-4) */}
           <div className="lg:col-span-4 space-y-4">
-            {/* Unassigned Guests Sidebar */}
-            <div className="bg-[#FFFDF9] rounded-3xl p-5 shadow-lg border-2 border-[#CBAE94] space-y-3">
-              <div className="flex items-center justify-between pb-2 border-b border-[#CBAE94]/40">
-                <div className="flex items-center gap-2">
-                  <div className="w-8 h-8 rounded-xl bg-[#8B735B]/10 text-[#8B735B] flex items-center justify-center font-bold">
-                    <UserX className="w-4 h-4" />
-                  </div>
-                  <div>
-                    <h3 className="font-gaegu text-xl font-bold text-[#4A3F35] leading-none">
-                      {t.unassignedGuestsLabel}
-                    </h3>
-                    <p className="text-[11px] text-[#8B735B] font-medium">
-                      {t.selectPartyHint}
-                    </p>
-                  </div>
-                </div>
-                <span className="px-2.5 py-1 rounded-full bg-[#EFE6DC] text-[#8B735B] text-xs font-mono font-bold border border-[#CBAE94]">
-                  {unassignedGuestsList.length} Unseated
-                </span>
-              </div>
-
-              {/* Search Filter Box */}
-              <div className="relative">
-                <Search className="w-3.5 h-3.5 text-[#8B735B] absolute left-3 top-1/2 -translate-y-1/2" />
-                <input
-                  type="text"
-                  placeholder={t.filterUnassignedPh}
-                  value={unassignedFilterQuery}
-                  onChange={(e) => setUnassignedFilterQuery(e.target.value)}
-                  className="w-full pl-8 pr-3 py-2 rounded-xl border border-[#CBAE94] text-xs font-bold text-[#5D5449] bg-white focus:outline-none focus:ring-2 focus:ring-[#8B735B]/30"
-                />
-              </div>
-
-              {/* Active Selected Party Highlight Banner */}
-              {selectedUnassignedGuest && (
-                <div className="p-3.5 rounded-2xl bg-emerald-50 border-2 border-emerald-400 space-y-2.5 shadow-sm">
-                  <div className="flex items-start justify-between gap-2">
-                    <div>
-                      <span className="px-2 py-0.5 rounded-md bg-emerald-600 text-white text-[10px] font-mono font-bold uppercase">
-                        Active Seating Target
-                      </span>
-                      <h4 className="font-bold text-[#4A3F35] text-sm mt-1">
-                        {selectedUnassignedGuest.name}
-                      </h4>
-                      <p className="text-xs text-emerald-800 font-bold">
-                        Party of {getGuestPartySize(selectedUnassignedGuest)} ({getGuestPartySize(selectedUnassignedGuest)} seats needed)
-                      </p>
-                    </div>
-                    <button
-                      onClick={() => setSelectedUnassignedGuest(null)}
-                      className="p-1 rounded-lg text-emerald-700 hover:bg-emerald-200 transition-colors"
-                      title={t.clearSelectionBtn}
-                    >
-                      <X className="w-4 h-4" />
-                    </button>
-                  </div>
-
-                  <p className="text-[11px] text-emerald-900 bg-emerald-100/70 p-2 rounded-xl border border-emerald-200 leading-snug">
-                    <strong>{t.mapGuidanceLabel}</strong> Available tables with at least {getGuestPartySize(selectedUnassignedGuest)} free seats are highlighted in <strong className="text-emerald-700 font-extrabold">{t.greenLegend}</strong> {t.greenLegendHint}
-                  </p>
-
-                  {/* Available Table Direct Seating Buttons */}
-                  <div className="space-y-1 pt-1 border-t border-emerald-200">
-                    <span className="text-[10px] font-mono font-bold uppercase text-emerald-800 block">
-                      Matching Tables with Capacity:
-                    </span>
-                    <div className="space-y-1 max-h-36 overflow-y-auto pr-1">
-                      {floorMap?.tables
-                        .filter((t) => {
-                          const occ = getTableOccupiedSeats(t, guests);
-                          return t.capacity - occ >= getGuestPartySize(selectedUnassignedGuest);
-                        })
-                        .map((t) => {
-                          const occ = getTableOccupiedSeats(t, guests);
-                          const free = t.capacity - occ;
-                          return (
-                            <button
-                              key={t.id}
-                              onClick={async () => {
-                                const success = await handleMainAssignGuest(selectedUnassignedGuest.id, t.id);
-                                if (success) setSelectedUnassignedGuest(null);
-                              }}
-                              className="w-full p-2 rounded-xl bg-white hover:bg-emerald-100 border border-emerald-300 text-left transition-all flex items-center justify-between group shadow-sm"
-                            >
-                              <span className="text-xs font-bold text-[#4A3F35] group-hover:text-emerald-900 flex items-center gap-1">
-                                <Utensils className="w-3 h-3" /> {t.name}
-                              </span>
-                              <span className="text-[11px] font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-md border border-emerald-200">
-                                {free} free seats
-                              </span>
-                            </button>
-                          );
-                        })}
-                      {floorMap?.tables.filter((t) => t.capacity - getTableOccupiedSeats(t, guests) >= getGuestPartySize(selectedUnassignedGuest)).length === 0 && (
-                        <p className="text-xs text-amber-700 italic bg-amber-50 p-2 rounded-xl border border-amber-200">
-                          No single table currently has {getGuestPartySize(selectedUnassignedGuest)} free seats.
-                        </p>
-                      )}
-                    </div>
-                  </div>
-                </div>
-              )}
-
-              {/* Scrollable Unassigned Guest Cards List */}
-              <div className="space-y-2 max-h-[340px] overflow-y-auto pr-1">
-                {unassignedGuestsList.length === 0 ? (
-                  <div className="p-4 rounded-2xl bg-emerald-50 border border-emerald-200 text-center space-y-1">
-                    <CheckCircle2 className="w-6 h-6 text-emerald-600 mx-auto" />
-                    <p className="text-xs font-bold text-emerald-900">
-                      {t.allSeatedTitle}
-                    </p>
-                    <p className="text-[11px] text-emerald-700">
-                      {t.allSeatedMsg}
-                    </p>
-                  </div>
-                ) : (
-                  unassignedGuestsList.map((g) => {
-                    const pSize = getGuestPartySize(g);
-                    const isSelected = selectedUnassignedGuest?.id === g.id;
-
-                    return (
-                      <div
-                        key={g.id}
-                        onClick={() => setSelectedUnassignedGuest(isSelected ? null : g)}
-                        className={`p-3 rounded-2xl border-2 transition-all cursor-pointer space-y-2 ${
-                          isSelected
-                            ? 'bg-emerald-50/80 border-emerald-500 shadow-md ring-2 ring-emerald-300'
-                            : 'bg-white hover:bg-[#EFE6DC]/40 border-[#CBAE94]/60'
-                        }`}
-                      >
-                        <div className="flex items-start justify-between gap-2">
-                          <div>
-                            <h4 className="font-bold text-[#4A3F35] text-xs">
-                              {g.name}
-                            </h4>
-                            <p className="text-[11px] text-[#8B735B] font-medium">
-                              {g.email}
-                            </p>
-                          </div>
-                          <span className="px-2 py-0.5 rounded-full bg-[#EFE6DC] text-[#8B735B] text-[10px] font-bold border border-[#CBAE94]/60 whitespace-nowrap">
-                            Party of {pSize}
-                          </span>
-                        </div>
-
-                        {g.attendee_names && g.attendee_names.length > 0 && (
-                          <div className="flex flex-wrap gap-1 pt-0.5">
-                            {g.attendee_names.map((att, aIdx) => (
-                              <span
-                                key={aIdx}
-                                className="px-2 py-0.5 rounded-md bg-[#FAF6F0] border border-[#CBAE94]/40 text-[10px] text-[#5D5449] font-medium"
-                              >
-                                • {att}
-                              </span>
-                            ))}
-                          </div>
-                        )}
-
-                        <button
-                          type="button"
-                          onClick={(e) => {
-                            e.stopPropagation();
-                            setSelectedUnassignedGuest(isSelected ? null : g);
-                          }}
-                          className={`w-full py-1.5 px-3 rounded-xl text-xs font-bold transition-colors flex items-center justify-center gap-1.5 ${
-                            isSelected
-                              ? 'bg-emerald-600 text-white shadow-sm'
-                              : 'bg-[#EFE6DC] hover:bg-[#CBAE94]/40 text-[#8B735B]'
-                          }`}
-                        >
-                          {isSelected ? (
-                            <>
-                              <CheckCircle2 className="w-3.5 h-3.5" /> Highlighting Available Tables
-                            </>
-                          ) : (
-                            <>
-                              <Users className="w-3.5 h-3.5" /> Select & Highlight Tables
-                            </>
-                          )}
-                        </button>
-                      </div>
-                    );
-                  })
-                )}
-              </div>
-            </div>
+            <UnassignedGuestsSidebar
+              unassignedGuests={unassignedGuestsList}
+              floorMap={floorMap}
+              guests={guests}
+              selectedGuest={selectedUnassignedGuest}
+              filterQuery={unassignedFilterQuery}
+              onFilterQueryChange={setUnassignedFilterQuery}
+              onSelectGuest={setSelectedUnassignedGuest}
+              onAssign={handleMainAssignGuest}
+            />
 
             {/* Quick Actions Panel */}
             <div className="bg-[#FFFDF9] rounded-3xl p-5 shadow-lg border-2 border-[#CBAE94] space-y-3">
