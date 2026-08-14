@@ -42,3 +42,23 @@ export const floatPulse: Transition = {
   repeatType: 'mirror',
   ease: 'easeInOut',
 };
+
+// ─── Admin section motion (container + card stagger) ────────────
+
+export const adminContainerVariants: Variants = {
+  hidden: { opacity: 0 },
+  show: {
+    opacity: 1,
+    transition: { staggerChildren: 0.08, delayChildren: 0.04 },
+  },
+};
+
+export const adminCardVariants: Variants = {
+  hidden: { opacity: 0, y: 18, scale: 0.98 },
+  show: {
+    opacity: 1,
+    y: 0,
+    scale: 1,
+    transition: { duration: 0.38, ease: [0.22, 1, 0.36, 1] },
+  },
+};

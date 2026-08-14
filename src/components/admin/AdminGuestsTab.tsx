@@ -3,7 +3,8 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { useNavigate } from 'react-router-dom';
-import { motion, AnimatePresence, Variants } from 'motion/react';
+import { motion, AnimatePresence } from 'motion/react';
+import { adminContainerVariants, adminCardVariants } from '../shared/motionPresets';
 import {
   Users,
   CheckCircle2,
@@ -39,24 +40,6 @@ import { Modal } from '../shared/Modal';
 import { useToast } from '../shared/ToastContext';
 import { EmptyState } from '../shared/EmptyState';
 import { TextInput, Select } from '../shared/ui';
-
-const containerVariants: Variants = {
-  hidden: { opacity: 0 },
-  show: {
-    opacity: 1,
-    transition: { staggerChildren: 0.08, delayChildren: 0.04 },
-  },
-};
-
-const cardVariants: Variants = {
-  hidden: { opacity: 0, y: 18, scale: 0.98 },
-  show: {
-    opacity: 1,
-    y: 0,
-    scale: 1,
-    transition: { duration: 0.38, ease: [0.22, 1, 0.36, 1] },
-  },
-};
 
 interface AdminGuestsTabProps {
   language: Language;
@@ -457,7 +440,7 @@ export const AdminGuestsTab: React.FC<AdminGuestsTabProps> = ({ language, t, gue
   return (
     <motion.div
       key="guests"
-      variants={containerVariants}
+      variants={adminContainerVariants}
       initial="hidden"
       animate="show"
       className="space-y-8"
@@ -472,7 +455,7 @@ export const AdminGuestsTab: React.FC<AdminGuestsTabProps> = ({ language, t, gue
         </div>
       </div>
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <motion.div variants={cardVariants} className="card-paper-sm p-4 sm:p-5 relative overflow-hidden">
+        <motion.div variants={adminCardVariants} className="card-paper-sm p-4 sm:p-5 relative overflow-hidden">
           <div className="flex items-center justify-between">
             <span className="label-mono">{t.statAttending}</span>
             <CheckCircle2 className="w-5 h-5 text-[#8B735B]" />
@@ -483,7 +466,7 @@ export const AdminGuestsTab: React.FC<AdminGuestsTabProps> = ({ language, t, gue
           <div className="mt-2 text-[11px] text-[#8B735B] font-mono font-bold">{t.statTotalAttendingParty}</div>
         </motion.div>
 
-        <motion.div variants={cardVariants} className="card-paper-sm p-4 sm:p-5">
+        <motion.div variants={adminCardVariants} className="card-paper-sm p-4 sm:p-5">
           <div className="flex items-center justify-between">
             <span className="label-mono">{t.statPending}</span>
             <Clock className="w-5 h-5 text-[#8B735B]" />
@@ -494,7 +477,7 @@ export const AdminGuestsTab: React.FC<AdminGuestsTabProps> = ({ language, t, gue
           <div className="mt-2 text-[11px] text-[#5D5449] font-mono">{t.awaitingResponse}</div>
         </motion.div>
 
-        <motion.div variants={cardVariants} className="card-paper-sm p-4 sm:p-5">
+        <motion.div variants={adminCardVariants} className="card-paper-sm p-4 sm:p-5">
           <div className="flex items-center justify-between">
             <span className="label-mono">{t.statDeclined}</span>
             <XCircle className="w-5 h-5 text-rose-500" />
@@ -505,7 +488,7 @@ export const AdminGuestsTab: React.FC<AdminGuestsTabProps> = ({ language, t, gue
           <div className="mt-2 text-[11px] text-rose-600 font-mono">{t.unableToAttend}</div>
         </motion.div>
 
-        <motion.div variants={cardVariants} className="card-paper-sm p-4 sm:p-5">
+        <motion.div variants={adminCardVariants} className="card-paper-sm p-4 sm:p-5">
           <div className="flex items-center justify-between">
             <span className="label-mono">{t.statTotalGuests}</span>
             <Users className="w-5 h-5 text-[#8B735B]" />
@@ -519,7 +502,7 @@ export const AdminGuestsTab: React.FC<AdminGuestsTabProps> = ({ language, t, gue
 
       {/* Middle Section: Add Guest Form & Dietary Restriction Summary */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <motion.div variants={cardVariants} className="lg:col-span-2 card-paper p-6 sm:p-8 space-y-6">
+        <motion.div variants={adminCardVariants} className="lg:col-span-2 card-paper p-6 sm:p-8 space-y-6">
           <div className="flex items-center space-x-3">
             <div className="p-2.5 bg-[#EFE6DC] text-[#8B735B] rounded-2xl border border-[#CBAE94]">
               <UserPlus className="w-5 h-5" />
@@ -590,7 +573,7 @@ export const AdminGuestsTab: React.FC<AdminGuestsTabProps> = ({ language, t, gue
           </form>
         </motion.div>
 
-        <motion.div variants={cardVariants} className="card-paper p-6 flex flex-col justify-between">
+        <motion.div variants={adminCardVariants} className="card-paper p-6 flex flex-col justify-between">
           <div>
             <div className="flex items-center space-x-2.5 mb-4">
               <div className="p-2 bg-[#EFE6DC] text-[#8B735B] rounded-xl border border-[#CBAE94]">
@@ -618,7 +601,7 @@ export const AdminGuestsTab: React.FC<AdminGuestsTabProps> = ({ language, t, gue
       </div>
 
       {/* Invited Guests Table Section */}
-      <motion.div variants={cardVariants} className="card-paper p-6 sm:p-8 space-y-6">
+      <motion.div variants={adminCardVariants} className="card-paper p-6 sm:p-8 space-y-6">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div>
             <div className="label-mono">{t.guestListBadge}</div>

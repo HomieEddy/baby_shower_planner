@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { motion, Variants } from 'motion/react';
+import { motion } from 'motion/react';
+import { adminContainerVariants, adminCardVariants } from '../shared/motionPresets';
 import {
   ShieldAlert,
   Bell,
@@ -13,24 +14,6 @@ import { adminFetch } from '../../lib/api';
 import { Modal } from '../shared/Modal';
 import { formatDateLong } from '../../lib/dateUtils';
 import { useToast } from '../shared/ToastContext';
-
-const containerVariants: Variants = {
-  hidden: { opacity: 0 },
-  show: {
-    opacity: 1,
-    transition: { staggerChildren: 0.08, delayChildren: 0.04 },
-  },
-};
-
-const cardVariants: Variants = {
-  hidden: { opacity: 0, y: 18, scale: 0.98 },
-  show: {
-    opacity: 1,
-    y: 0,
-    scale: 1,
-    transition: { duration: 0.38, ease: [0.22, 1, 0.36, 1] },
-  },
-};
 
 interface AdminAlertsTabProps {
   language: Language;
@@ -110,13 +93,13 @@ export const AdminAlertsTab: React.FC<AdminAlertsTabProps> = ({ language, t, gue
   return (
     <motion.div
       key="alerts"
-      variants={containerVariants}
+      variants={adminContainerVariants}
       initial="hidden"
       animate="show"
       className="space-y-8"
     >
       {/* Dispatch Alert Form Card */}
-      <motion.div variants={cardVariants} className="card-paper p-6 sm:p-8 space-y-6">
+      <motion.div variants={adminCardVariants} className="card-paper p-6 sm:p-8 space-y-6">
         <div className="flex items-center space-x-3 border-b border-[#CBAE94]/40 pb-4">
           <div className="p-3 bg-amber-100 text-amber-800 rounded-2xl border border-amber-300">
             <ShieldAlert className="w-6 h-6" />
@@ -222,7 +205,7 @@ export const AdminAlertsTab: React.FC<AdminAlertsTabProps> = ({ language, t, gue
       </motion.div>
 
       {/* Broadcast History */}
-      <motion.div variants={cardVariants} className="card-paper p-6 sm:p-8 space-y-4">
+      <motion.div variants={adminCardVariants} className="card-paper p-6 sm:p-8 space-y-4">
         <h4 className="font-sans text-lg font-bold text-[#8B735B] flex items-center space-x-2">
           <Bell className="w-5 h-5 text-[#8B735B]" /><span>Active Broadcast Alerts History ({alerts.length})</span>
         </h4>
