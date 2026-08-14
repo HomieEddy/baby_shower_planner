@@ -153,6 +153,9 @@ export const AdminGuestsTab: React.FC<AdminGuestsTabProps> = ({ language, t, gue
   const pendingGuests = primaryGuests.filter((g) => g.rsvp_status === 'Pending');
   const declinedGuests = primaryGuests.filter((g) => g.rsvp_status === 'Declined');
   const totalAttendingPartySize = attendingGuests.reduce((acc, g) => acc + getGuestPartySize(g), 0);
+  const pendingPartySize = pendingGuests.reduce((acc, g) => acc + getGuestPartySize(g), 0);
+  const declinedPartySize = declinedGuests.reduce((acc, g) => acc + getGuestPartySize(g), 0);
+  const totalPartySize = guests.reduce((acc, g) => acc + getGuestPartySize(g), 0);
 
   const dietaryList = guests
     .filter((g) => g.rsvp_status === 'Attending' && g.dietary_restrictions && g.dietary_restrictions.trim() !== '')
@@ -462,11 +465,10 @@ export const AdminGuestsTab: React.FC<AdminGuestsTabProps> = ({ language, t, gue
             <span className="label-mono">{t.statAttending}</span>
             <CheckCircle2 className="w-5 h-5 text-[#8B735B]" />
           </div>
-          <div className="mt-3 flex items-baseline justify-between">
-            <span className="text-2xl sm:text-3xl font-sans font-bold text-[#8B735B]">{attendingGuests.length}</span>
-            <span className="text-xs text-[#5D5449] font-mono">({totalAttendingPartySize} {t.colPartySize.toLowerCase()})</span>
+          <div className="mt-3">
+            <span className="text-2xl sm:text-3xl font-sans font-bold text-[#8B735B]">{attendingGuests.length} / {totalAttendingPartySize}</span>
           </div>
-          <div className="mt-2 text-[11px] text-[#8B735B] font-mono font-bold">{t.statTotalAttendingParty}: {totalAttendingPartySize}</div>
+          <div className="mt-2 text-[11px] text-[#8B735B] font-mono font-bold">{t.statTotalAttendingParty}</div>
         </motion.div>
 
         <motion.div variants={cardVariants} className="card-paper-sm p-4 sm:p-5">
@@ -475,7 +477,7 @@ export const AdminGuestsTab: React.FC<AdminGuestsTabProps> = ({ language, t, gue
             <Clock className="w-5 h-5 text-[#8B735B]" />
           </div>
           <div className="mt-3">
-            <span className="text-2xl sm:text-3xl font-sans font-bold text-[#8B735B]">{pendingGuests.length}</span>
+            <span className="text-2xl sm:text-3xl font-sans font-bold text-[#8B735B]">{pendingGuests.length} / {pendingPartySize}</span>
           </div>
           <div className="mt-2 text-[11px] text-[#5D5449] font-mono">{t.awaitingResponse}</div>
         </motion.div>
@@ -486,7 +488,7 @@ export const AdminGuestsTab: React.FC<AdminGuestsTabProps> = ({ language, t, gue
             <XCircle className="w-5 h-5 text-rose-500" />
           </div>
           <div className="mt-3">
-            <span className="text-2xl sm:text-3xl font-sans font-bold text-[#8B735B]">{declinedGuests.length}</span>
+            <span className="text-2xl sm:text-3xl font-sans font-bold text-[#8B735B]">{declinedGuests.length} / {declinedPartySize}</span>
           </div>
           <div className="mt-2 text-[11px] text-rose-600 font-mono">{t.unableToAttend}</div>
         </motion.div>
@@ -497,7 +499,7 @@ export const AdminGuestsTab: React.FC<AdminGuestsTabProps> = ({ language, t, gue
             <Users className="w-5 h-5 text-[#8B735B]" />
           </div>
           <div className="mt-3">
-            <span className="text-2xl sm:text-3xl font-sans font-bold text-[#8B735B]">{guests.length}</span>
+            <span className="text-2xl sm:text-3xl font-sans font-bold text-[#8B735B]">{guests.length} / {totalPartySize}</span>
           </div>
           <div className="mt-2 text-[11px] text-[#5D5449] font-mono">{t.totalGuestInvites}</div>
         </motion.div>
