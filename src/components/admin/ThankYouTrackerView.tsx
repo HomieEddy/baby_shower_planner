@@ -207,10 +207,10 @@ export const ThankYouTrackerView: React.FC<ThankYouTrackerViewProps> = ({
               <span>{t.gratitudeTitle}</span>
             </div>
             <h2 className="font-newsreader text-3xl font-bold text-[#4A3F35] mt-1">
-              Automated Thank You Card Tracker
+              {t.thankYouTrackerTitle}
             </h2>
             <p className="text-xs text-[#8B735B] font-sans">
-              Log shower gifts received, auto-generate personalized thank-you notes, and track thank-you card status.
+              {t.thankYouTrackerSubtitle}
             </p>
           </div>
         </div>
@@ -372,7 +372,7 @@ export const ThankYouTrackerView: React.FC<ThankYouTrackerViewProps> = ({
                   filterStatus === 'ALL' ? 'bg-white text-[#4A3F35] shadow-xs' : 'text-[#8B735B]'
                 }`}
               >
-                All
+                {t.filterStatusAll}
               </button>
               <button
                 type="button"
@@ -381,7 +381,7 @@ export const ThankYouTrackerView: React.FC<ThankYouTrackerViewProps> = ({
                   filterStatus === 'PENDING' ? 'bg-white text-rose-800 shadow-xs' : 'text-[#8B735B]'
                 }`}
               >
-                Pending ({pendingCount})
+                {t.giftFilterPending} ({pendingCount})
               </button>
               <button
                 type="button"
@@ -390,7 +390,7 @@ export const ThankYouTrackerView: React.FC<ThankYouTrackerViewProps> = ({
                   filterStatus === 'SENT' ? 'bg-white text-emerald-800 shadow-xs' : 'text-[#8B735B]'
                 }`}
               >
-                Sent ({sentCount})
+                {t.giftFilterSent} ({sentCount})
               </button>
             </div>
           </div>

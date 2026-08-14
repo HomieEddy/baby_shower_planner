@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import {
   Guest,
   FloorMapData,
@@ -651,6 +651,59 @@ export const FloorPlanPage = () => {
   };
 
 
+  // Host-view statistics, recomputed only when guests/map/filter change.
+  const hostStats = useMemo(() => {
+    const totalConfirmedGuests = guests
+      .filter((g) => g.rsvp_status === 'Attending')
+      .reduce((sum, g) => sum + getGuestPartySize(g), 0);
+
+    const totalSeatedGuests = floorMap
+      ? floorMap.tables.reduce((sum, tbl) => sum + getTableOccupiedSeats(tbl, guests), 0)
+      : 0;
+
+    const seatingProgressPercent = totalConfirmedGuests > 0
+      ? Math.min(100, Math.round((totalSeatedGuests / totalConfirmedGuests) * 100))
+      : 0;
+
+    const emptyTablesCount = floorMap
+      ? floorMap.tables.filter((t) => getTableStatus(t, guests) === 'empty').length
+      : 0;
+
+    const partialTablesCount = floorMap
+      ? floorMap.tables.filter((t) => getTableStatus(t, guests) === 'partial').length
+      : 0;
+
+    const fullTablesCount = floorMap
+      ? floorMap.tables.filter((t) => getTableStatus(t, guests) === 'full').length
+      : 0;
+
+    const unassignedGuestsList = guests.filter((g) => {
+      if (g.rsvp_status !== 'Attending') return false;
+      const isSeated = floorMap?.tables.some((t) => t.assignedGuestIds.includes(g.id));
+      if (isSeated) return false;
+
+      if (unassignedFilterQuery.trim()) {
+        const q = unassignedFilterQuery.toLowerCase();
+        const matchName = g.name.toLowerCase().includes(q);
+        const matchEmail = g.email.toLowerCase().includes(q);
+        const matchCode = g.code ? g.code.toLowerCase().includes(q) : false;
+        const matchAttendees = g.attendee_names?.some((a) => a.toLowerCase().includes(q));
+        return matchName || matchEmail || matchCode || matchAttendees;
+      }
+      return true;
+    });
+
+    return {
+      totalConfirmedGuests,
+      totalSeatedGuests,
+      seatingProgressPercent,
+      emptyTablesCount,
+      partialTablesCount,
+      fullTablesCount,
+      unassignedGuestsList,
+    };
+  }, [guests, floorMap, unassignedFilterQuery]);
+
   return (
     <div className="space-y-6 pb-12">
       {/* Top Banner & Mode Switcher */}
@@ -658,16 +711,16 @@ export const FloorPlanPage = () => {
         <div>
           <div className="flex items-center gap-2 mb-1">
             <span className="inline-flex items-center gap-1 px-3 py-0.5 rounded-full bg-[#EFE6DC] text-[#8B735B] text-xs font-mono font-bold uppercase">
-              <Layout className="w-3.5 h-3.5" /> Interactive Floor Plan
+              <Layout className="w-3.5 h-3.5" /> {t.floorPlanBadge}
             </span>
             {saving && (
               <span className="text-xs font-mono text-[#8B735B] animate-pulse">
-                • Saving changes...
+                • {t.savingChangesLabel}
               </span>
             )}
           </div>
           <h2 className="font-gaegu text-3xl sm:text-4xl font-bold text-[#4A3F35]">
-            Venue Seating & Floor Canvas
+            {t.floorPlanTitle}
           </h2>
           <p className="text-xs text-[#5D5449] font-medium mt-0.5">
             {t.hostModeSubtitle}
@@ -722,49 +775,20 @@ export const FloorPlanPage = () => {
         )}
       </AnimatePresence>
 
+
       {/* ========================================================= */}
       {/* HOST CANVAS VIEW & QUICK ACTIONS                          */}
       {/* ========================================================= */}
       {(() => {
-        const totalConfirmedGuests = guests
-          .filter((g) => g.rsvp_status === 'Attending')
-          .reduce((sum, g) => sum + getGuestPartySize(g), 0);
-
-        const totalSeatedGuests = floorMap
-          ? floorMap.tables.reduce((sum, tbl) => sum + getTableOccupiedSeats(tbl, guests), 0)
-          : 0;
-
-        const seatingProgressPercent = totalConfirmedGuests > 0
-          ? Math.min(100, Math.round((totalSeatedGuests / totalConfirmedGuests) * 100))
-          : 0;
-
-        const emptyTablesCount = floorMap
-          ? floorMap.tables.filter((t) => getTableStatus(t, guests) === 'empty').length
-          : 0;
-
-        const partialTablesCount = floorMap
-          ? floorMap.tables.filter((t) => getTableStatus(t, guests) === 'partial').length
-          : 0;
-
-        const fullTablesCount = floorMap
-          ? floorMap.tables.filter((t) => getTableStatus(t, guests) === 'full').length
-          : 0;
-
-        const unassignedGuestsList = guests.filter((g) => {
-          if (g.rsvp_status !== 'Attending') return false;
-          const isSeated = floorMap?.tables.some((t) => t.assignedGuestIds.includes(g.id));
-          if (isSeated) return false;
-
-          if (unassignedFilterQuery.trim()) {
-            const q = unassignedFilterQuery.toLowerCase();
-            const matchName = g.name.toLowerCase().includes(q);
-            const matchEmail = g.email.toLowerCase().includes(q);
-            const matchCode = g.code ? g.code.toLowerCase().includes(q) : false;
-            const matchAttendees = g.attendee_names?.some((a) => a.toLowerCase().includes(q));
-            return matchName || matchEmail || matchCode || matchAttendees;
-          }
-          return true;
-        });
+        const {
+          totalConfirmedGuests,
+          totalSeatedGuests,
+          seatingProgressPercent,
+          emptyTablesCount,
+          partialTablesCount,
+          fullTablesCount,
+          unassignedGuestsList,
+        } = hostStats;
 
         return (
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
@@ -868,11 +892,11 @@ export const FloorPlanPage = () => {
                   </span>
                   {seatingProgressPercent === 100 ? (
                     <span className="px-2.5 py-1 rounded-full bg-emerald-100 text-emerald-800 text-xs font-bold flex items-center gap-1 border border-emerald-300">
-                      <CheckCircle2 className="w-3.5 h-3.5" /> Fully Seated!
+                      <CheckCircle2 className="w-3.5 h-3.5" /> {t.fullySeatedBadge}
                     </span>
                   ) : (
                     <span className="px-2.5 py-1 rounded-full bg-[#EFE6DC] text-[#8B735B] text-xs font-bold border border-[#CBAE94]">
-                      {Math.max(0, totalConfirmedGuests - totalSeatedGuests)} unseated
+                      {Math.max(0, totalConfirmedGuests - totalSeatedGuests)} {t.unseatedWord}
                     </span>
                   )}
                 </div>
@@ -961,7 +985,7 @@ export const FloorPlanPage = () => {
                         : 'bg-white hover:bg-[#EFE6DC] text-[#5D5449] border border-[#CBAE94]/60'
                     }`}
                   >
-                    All Tables ({floorMap ? floorMap.tables.length : 0})
+                    {t.allTablesFilterLabel.replace('{{count}}', String(floorMap ? floorMap.tables.length : 0))}
                   </button>
                   <button
                     type="button"
@@ -973,7 +997,7 @@ export const FloorPlanPage = () => {
                     }`}
                   >
                     <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-                    Empty ({emptyTablesCount})
+                    {t.emptyTablesFilterLabel.replace('{{count}}', String(emptyTablesCount))}
                   </button>
                   <button
                     type="button"
@@ -985,7 +1009,7 @@ export const FloorPlanPage = () => {
                     }`}
                   >
                     <span className="w-2 h-2 rounded-full bg-amber-500" />
-                    Partial ({partialTablesCount})
+                    {t.partialTablesFilterLabel.replace('{{count}}', String(partialTablesCount))}
                   </button>
                   <button
                     type="button"
@@ -997,7 +1021,7 @@ export const FloorPlanPage = () => {
                     }`}
                   >
                     <span className="w-2 h-2 rounded-full bg-rose-500" />
-                    Full ({fullTablesCount})
+                    {t.fullTablesFilterLabel.replace('{{count}}', String(fullTablesCount))}
                   </button>
                 </div>
               </div>
@@ -1212,7 +1236,9 @@ export const FloorPlanPage = () => {
                                 seatStroke = '#059669';
                               }
 
-                              return (
+
+
+  return (
                                 <Circle
                                   key={`seat-${table.id}-${idx}`}
                                   x={seatX}

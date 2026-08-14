@@ -48,7 +48,7 @@ export const UnassignedGuestsSidebar = ({
           </div>
         </div>
         <span className="px-2.5 py-1 rounded-full bg-[#EFE6DC] text-[#8B735B] text-xs font-mono font-bold border border-[#CBAE94]">
-          {unassignedGuests.length} Unseated
+          {t.unseatedCountLabel.replace('{{count}}', String(unassignedGuests.length))}
         </span>
       </div>
 
@@ -95,7 +95,7 @@ export const UnassignedGuestsSidebar = ({
           {/* Available Table Direct Seating Buttons */}
           <div className="space-y-1 pt-1 border-t border-emerald-200">
             <span className="text-[10px] font-mono font-bold uppercase text-emerald-800 block">
-              Matching Tables with Capacity:
+              {t.matchingTablesLabel}
             </span>
             <div className="space-y-1 max-h-36 overflow-y-auto pr-1">
               {matchingTables.map((tbl) => {
@@ -197,11 +197,11 @@ export const UnassignedGuestsSidebar = ({
                 >
                   {isSelected ? (
                     <>
-                      <CheckCircle2 className="w-3.5 h-3.5" /> Highlighting Available Tables
+                      <CheckCircle2 className="w-3.5 h-3.5" /> {t.highlightingTablesBtn}
                     </>
                   ) : (
                     <>
-                      <Users className="w-3.5 h-3.5" /> Select & Highlight Tables
+                      <Users className="w-3.5 h-3.5" /> {t.selectHighlightBtn}
                     </>
                   )}
                 </button>

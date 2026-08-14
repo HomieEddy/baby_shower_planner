@@ -133,7 +133,7 @@ export const CateringSummaryView: React.FC<CateringSummaryViewProps> = ({ guests
     columnHelper.accessor((g) => g.table_id || '', {
       id: 'tableId',
       header: () => <span>{t.tableIdCol}</span>,
-      cell: (info) => <span className="font-mono text-[#4A3F35]">{info.getValue() || 'Unassigned'}</span>,
+      cell: (info) => <span className="font-mono text-[#4A3F35]">{info.getValue() || t.unassignedWord}</span>,
     }),
   ];
 
@@ -157,7 +157,7 @@ export const CateringSummaryView: React.FC<CateringSummaryViewProps> = ({ guests
       `"${g.name.replace(/"/g, '""')}"`,
       partySize(g),
       `"${(g.dietary_restrictions || 'None').replace(/"/g, '""')}"`,
-      `"${g.table_id || 'Unassigned'}"`,
+      `"${g.table_id || t.unassignedWord}"`,
       `"${(g.email || '').replace(/"/g, '""')}"`,
       `"${(g.phone || '').replace(/"/g, '""')}"`,
     ]);
@@ -224,7 +224,7 @@ export const CateringSummaryView: React.FC<CateringSummaryViewProps> = ({ guests
           <div>
             <p className="text-xs font-mono text-[#8B735B] uppercase font-bold">{t.totalAttendingLabel}</p>
             <h4 className="text-2xl font-bold font-newsreader text-[#4A3F35]">
-              {attendingGuests.length} <span className="text-xs font-normal text-[#8B735B]">({totalHeadcount} meals total)</span>
+              {attendingGuests.length}           <span className="text-xs font-normal text-[#8B735B]">({totalHeadcount} {t.mealsWord} total)</span>
             </h4>
           </div>
         </div>
@@ -277,7 +277,7 @@ export const CateringSummaryView: React.FC<CateringSummaryViewProps> = ({ guests
                     info.count > 0 ? 'bg-amber-200 text-amber-900' : 'bg-[#EFE6DC] text-[#8B735B]'
                   }`}
                 >
-                  {info.count} {info.count === 1 ? 'meal' : 'meals'}
+                  {info.count} {t.mealsWord}
                 </span>
               </div>
 
@@ -323,7 +323,7 @@ export const CateringSummaryView: React.FC<CateringSummaryViewProps> = ({ guests
       {/* Guest Dietary Table */}
       <div className="card-paper p-6 space-y-4">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-          <h3 className="font-sans text-lg font-bold text-[#4A3F35]">Attending Guest Manifest ({filteredList.length})</h3>
+          <h3 className="font-sans text-lg font-bold text-[#4A3F35]">{t.cateringManifestTitle.replace('{{count}}', String(filteredList.length))}</h3>
 
           <div className="flex items-center gap-2">
             <SearchInput
@@ -342,7 +342,7 @@ export const CateringSummaryView: React.FC<CateringSummaryViewProps> = ({ guests
                   : 'bg-white text-[#8B735B] border-[#CBAE94] hover:bg-[#EFE6DC]'
               }`}
             >
-              {filterDietaryOnly ? 'Showing Dietary Only' : 'Filter Dietary Only'}
+                {filterDietaryOnly ? t.showingDietaryOnlyBtn : t.dietaryOnlyBtn}
             </button>
           </div>
         </div>

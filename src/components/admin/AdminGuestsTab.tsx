@@ -202,9 +202,9 @@ export const AdminGuestsTab: React.FC<AdminGuestsTabProps> = ({ language, t, gue
 
   const handleDeleteGuest = async (id: string, guestName: string) => {
     const ok = await confirm({
-      title: `${t.deleteGuestTitle}?`,
-      message: `Are you sure you want to delete the invitation for "${guestName}"? Their RSVP, seating assignment, and links will be removed.`,
-      confirmText: 'Delete Guest',
+      title: t.deleteAllConfirmTitle,
+      message: t.deleteAllConfirmMsg.replace('{{name}}', guestName),
+      confirmText: t.deleteGuestTitle,
     });
     if (!ok) return;
     try {
@@ -405,8 +405,8 @@ export const AdminGuestsTab: React.FC<AdminGuestsTabProps> = ({ language, t, gue
   const handleBulkDelete = async () => {
     if (selectedIds.length === 0) return;
     const ok = await confirm({
-      title: t.bulkDeleteBtn,
-      message: `Delete ${selectedIds.length} guest(s)? Their RSVPs, seating assignments, and links will be removed. This cannot be undone.`,
+      title: t.bulkDeleteConfirmTitle,
+      message: t.bulkDeleteConfirmMsg.replace('{{count}}', String(selectedIds.length)),
       confirmText: t.bulkDeleteBtn,
     });
     if (!ok) return;
@@ -543,7 +543,7 @@ export const AdminGuestsTab: React.FC<AdminGuestsTabProps> = ({ language, t, gue
             )}
           </div>
           <div className="mt-4 pt-3 border-t border-dashed border-[#CBAE94] text-[11px] text-[#8B735B] font-mono font-bold text-center">
-            Total Reported Dietary Needs: {dietaryList.length}
+                {t.totalDietaryNeedsLabel.replace('{{count}}', String(dietaryList.length))}
           </div>
         </motion.div>
       </div>
@@ -601,8 +601,8 @@ export const AdminGuestsTab: React.FC<AdminGuestsTabProps> = ({ language, t, gue
             <div className="p-6">
               <EmptyState
                 type={guests.length === 0 ? 'guests' : 'search'}
-                title={guests.length === 0 ? 'No Guest Invitations Yet' : 'No Guests Found'}
-                description={guests.length === 0 ? 'Your invitation list is empty! Add guests using the form above.' : 'No guests matched your current search query or filter.'}
+                title={guests.length === 0 ? t.noGuestsYetTitle : t.noGuestsMatchTitle}
+                description={guests.length === 0 ? t.noGuestsYetMsg : t.noGuestsMatchMsg}
                 actionLabel={guests.length === 0 ? t.addFirstGuestBtn : t.clearFilterBtn}
                 onAction={guests.length === 0
                   ? () => { const el = document.querySelector('input[required]'); if (el) (el as HTMLElement).focus(); }
@@ -733,7 +733,7 @@ export const AdminGuestsTab: React.FC<AdminGuestsTabProps> = ({ language, t, gue
                   <button type="button" onClick={() => setEditingGuest(null)}
                     className="px-4 py-2.5 rounded-xl border border-[#CBAE94] text-xs font-bold text-[#5D5449] hover:bg-[#EFE6DC]">{t.cancelBtn}</button>
                   <button type="submit" disabled={savingEdit}
-                    className="px-5 py-2.5 rounded-xl bg-[#8B735B] hover:bg-[#705C47] text-white text-xs font-bold shadow-md">{savingEdit ? 'Saving...' : 'Save Changes'}</button>
+                    className="px-5 py-2.5 rounded-xl bg-[#8B735B] hover:bg-[#705C47] text-white text-xs font-bold shadow-md">{savingEdit ? t.savingBtn : t.saveChangesBtn}</button>
                 </div>
               </form>
       </Modal>

@@ -51,7 +51,7 @@ export const GuestCheckIn = () => {
       });
       if (!res.ok) {
         const data = await res.json().catch(() => ({}));
-        toast.error(data.error || 'Check-in failed');
+        toast.error(data.error || t.checkinFailedToast);
         return;
       }
       toast.success(successMsg);
@@ -160,7 +160,7 @@ export const GuestCheckIn = () => {
                         )}
                       </div>
                       <div className="text-[11px] text-[#A09080] font-mono">
-                        {guest.email || guest.phone || 'No contact'} &middot; Party of {guest.attending_party_size || guest.max_party_size}
+                        {guest.email || guest.phone || t.noContactLabel} · {t.partyOfLabel.replace('{{count}}', String(guest.attending_party_size || guest.max_party_size))}
                         {guest.checked_in_at && ` · ${new Date(guest.checked_in_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`}
                       </div>
                     </div>
