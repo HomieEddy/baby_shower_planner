@@ -29,6 +29,7 @@ import { PhotoLightbox } from './PhotoLightbox';
 import { PhotoSlideshow } from './PhotoSlideshow';
 import { EventPhoto, TableElement } from '../../types';
 import { useT } from '../shared/i18n';
+import { useFloorMapTables } from '../shared/hooks';
 
 export const HostPhotoGalleryPage: React.FC = () => {
   const t = useT();
@@ -36,7 +37,6 @@ export const HostPhotoGalleryPage: React.FC = () => {
   const confirm = useConfirm();
   const settings = useSettingsStore((s) => s.settings);
   const [photos, setPhotos] = useState<EventPhoto[]>([]);
-  const [tables, setTables] = useState<TableElement[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedTableFilter, setSelectedTableFilter] = useState('all');
@@ -194,21 +194,10 @@ export const HostPhotoGalleryPage: React.FC = () => {
     }
   };
 
-  const fetchTables = async () => {
-    try {
-      const res = await fetch('/api/floorplan');
-      const data = await res.json();
-      if (data.floorMap && data.floorMap.tables) {
-        setTables(data.floorMap.tables);
-      }
-    } catch (err) {
-      console.error('Error fetching tables:', err);
-    }
-  };
+  const { data: tables = [] } = useFloorMapTables();
 
   useEffect(() => {
     fetchPhotos();
-    fetchTables();
   }, []);
 
   // Slideshow auto-advance timer

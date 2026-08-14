@@ -19,13 +19,14 @@ import {
   FileCheck2,
   Lock,
 } from 'lucide-react';
-import { EventPhoto, TableElement } from '../../types';
+import { EventPhoto } from '../../types';
 import { compressImage, formatFileSize } from '../../lib/imageCompressor';
 import { useToast } from '../shared/ToastContext';
 import { formatGuestWindow } from '../../lib/dateUtils';
 import { uploadPhotoBase64 } from '../../lib/fileUtils';
 import { useAppStore } from '../../stores/appStore';
 import { useT } from '../shared/i18n';
+import { useFloorMapTables } from '../shared/hooks';
 
 export interface OptimizedFileItem {
   id: string;
@@ -43,7 +44,7 @@ export const GuestPhotoUploadPage = () => {
   const [searchParams] = useSearchParams();
   const initialTableId = searchParams.get('tableId') || undefined;
   const { toast } = useToast();
-  const [tables, setTables] = useState<TableElement[]>([]);
+  const { data: tables = [] } = useFloorMapTables();
   const [selectedTableId, setSelectedTableId] = useState<string>(initialTableId || '');
   const [uploaderName, setUploaderName] = useState('');
   const [caption, setCaption] = useState('');
@@ -79,21 +80,12 @@ export const GuestPhotoUploadPage = () => {
       .catch(() => {});
   }, []);
 
-  // Fetch tables list to let guests select their table if not in URL
+  // Pre-select the table from the URL when it exists on the map
   useEffect(() => {
-    fetch('/api/floorplan')
-      .then((res) => res.json())
-      .then((data) => {
-        if (data.floorMap && data.floorMap.tables) {
-          setTables(data.floorMap.tables);
-          if (initialTableId) {
-            const found = data.floorMap.tables.find((t: TableElement) => t.id === initialTableId);
-            if (found) setSelectedTableId(found.id);
-          }
-        }
-      })
-      .catch((err) => console.error('Error loading tables for upload:', err));
-  }, [initialTableId]);
+    if (initialTableId && tables.some((t) => t.id === initialTableId)) {
+      setSelectedTableId(initialTableId);
+    }
+  }, [initialTableId, tables]);
 
   // Handle file selection
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
