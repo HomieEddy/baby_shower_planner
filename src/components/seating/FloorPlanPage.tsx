@@ -711,16 +711,16 @@ export const FloorPlanPage = () => {
         <div>
           <div className="flex items-center gap-2 mb-1">
             <span className="inline-flex items-center gap-1 px-3 py-0.5 rounded-full bg-[#EFE6DC] text-[#8B735B] text-xs font-mono font-bold uppercase">
-              <Layout className="w-3.5 h-3.5" /> Interactive Floor Plan
+              <Layout className="w-3.5 h-3.5" /> {t.floorPlanBadge}
             </span>
             {saving && (
               <span className="text-xs font-mono text-[#8B735B] animate-pulse">
-                • Saving changes...
+                • {t.savingChangesLabel}
               </span>
             )}
           </div>
           <h2 className="font-gaegu text-3xl sm:text-4xl font-bold text-[#4A3F35]">
-            Venue Seating & Floor Canvas
+            {t.floorPlanTitle}
           </h2>
           <p className="text-xs text-[#5D5449] font-medium mt-0.5">
             {t.hostModeSubtitle}
@@ -892,11 +892,11 @@ export const FloorPlanPage = () => {
                   </span>
                   {seatingProgressPercent === 100 ? (
                     <span className="px-2.5 py-1 rounded-full bg-emerald-100 text-emerald-800 text-xs font-bold flex items-center gap-1 border border-emerald-300">
-                      <CheckCircle2 className="w-3.5 h-3.5" /> Fully Seated!
+                      <CheckCircle2 className="w-3.5 h-3.5" /> {t.fullySeatedBadge}
                     </span>
                   ) : (
                     <span className="px-2.5 py-1 rounded-full bg-[#EFE6DC] text-[#8B735B] text-xs font-bold border border-[#CBAE94]">
-                      {Math.max(0, totalConfirmedGuests - totalSeatedGuests)} unseated
+                      {Math.max(0, totalConfirmedGuests - totalSeatedGuests)} {t.unseatedWord}
                     </span>
                   )}
                 </div>
@@ -985,7 +985,7 @@ export const FloorPlanPage = () => {
                         : 'bg-white hover:bg-[#EFE6DC] text-[#5D5449] border border-[#CBAE94]/60'
                     }`}
                   >
-                    All Tables ({floorMap ? floorMap.tables.length : 0})
+                    {t.allTablesFilterLabel.replace('{{count}}', String(floorMap ? floorMap.tables.length : 0))}
                   </button>
                   <button
                     type="button"
@@ -997,7 +997,7 @@ export const FloorPlanPage = () => {
                     }`}
                   >
                     <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-                    Empty ({emptyTablesCount})
+                    {t.emptyTablesFilterLabel.replace('{{count}}', String(emptyTablesCount))}
                   </button>
                   <button
                     type="button"
@@ -1009,7 +1009,7 @@ export const FloorPlanPage = () => {
                     }`}
                   >
                     <span className="w-2 h-2 rounded-full bg-amber-500" />
-                    Partial ({partialTablesCount})
+                    {t.partialTablesFilterLabel.replace('{{count}}', String(partialTablesCount))}
                   </button>
                   <button
                     type="button"
@@ -1021,7 +1021,7 @@ export const FloorPlanPage = () => {
                     }`}
                   >
                     <span className="w-2 h-2 rounded-full bg-rose-500" />
-                    Full ({fullTablesCount})
+                    {t.fullTablesFilterLabel.replace('{{count}}', String(fullTablesCount))}
                   </button>
                 </div>
               </div>

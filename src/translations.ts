@@ -1,4 +1,4 @@
-﻿﻿﻿﻿﻿﻿import { Language } from './types';
+﻿﻿﻿﻿﻿﻿﻿﻿import { Language } from './types';
 
 export interface Translations {
   activeAlertsHistory: string;
@@ -823,7 +823,12 @@ export interface Translations {
   mealsWord: string;
   rectTableBtn: string;
   roundTableBtn: string;
-  saveChangesBtn: string;}
+  saveChangesBtn: string;
+  eventBadge: string;
+  eventIntro: string;
+  registryCardTitle: string;
+  registryCardTagline: string;
+}
 
 export const translations: Record<Language, Translations> = {
   EN: {
@@ -1389,6 +1394,10 @@ export const translations: Record<Language, Translations> = {
     saveAllSettingsBtn: "Save All Settings",
     saveAndCloseBtn: "Save & Close",
     saveChangesBtn: "Save Changes",
+    eventBadge: "Celebrating our baby's arrival",
+    eventIntro: "Join us for an afternoon of games, sweet treats, and memories as we prepare to welcome our little angel into the world!",
+    registryCardTitle: "Amazon Baby Registry",
+    registryCardTagline: "Your presence is the sweetest gift!",
     savingChangesBtn: "Saving...",
     savingSettingsBtn: "Saving...",
     scanAtEntrance: "Scan at entrance",
@@ -2214,6 +2223,10 @@ export const translations: Record<Language, Translations> = {
     saveAllSettingsBtn: "Enregistrer les paramètres",
     saveAndCloseBtn: "Enregistrer & Fermer",
     saveChangesBtn: "Enregistrer",
+    eventBadge: "Célébrons l'arrivée de notre bébé",
+    eventIntro: "Rejoignez-nous pour une après-midi de jeux, gourmandises et souvenirs en attendant l'arrivée de notre petit ange !",
+    registryCardTitle: "Registre de Bébé Amazon",
+    registryCardTagline: "Votre présence est le plus doux des cadeaux !",
     savingChangesBtn: "Enregistrement...",
     savingSettingsBtn: "Enregistrement...",
     scanAtEntrance: "À présenter à l'entrée",

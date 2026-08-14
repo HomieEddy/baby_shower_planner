@@ -95,7 +95,7 @@ export const GuestbookForm = ({
               <Camera className="w-5 h-5 text-[#8B735B]" />
             </div>
             <p className="text-xs font-bold text-[#5D5449]">
-              Tap to take or choose a photo
+              {t.tapToChoosePhoto}
             </p>
             <p className="text-[11px] text-[#5D5449]/70 font-mono">
               {t.gbPhotoHelper}
