@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Guest } from '../../types';
 import { adminFetch } from '../../lib/api';
 import { getPartyMembers, isMemberCheckedIn } from '../../lib/guestAttendees';

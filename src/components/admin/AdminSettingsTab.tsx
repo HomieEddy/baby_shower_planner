@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { TextInput } from '../shared/ui';
 import { motion, Variants } from 'motion/react';
 import {

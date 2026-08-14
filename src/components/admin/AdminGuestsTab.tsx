@@ -24,14 +24,12 @@ import {
   Smartphone,
   MessageSquare,
   Lightbulb,
-  QrCode,
-  Sparkles,
   Link2,
   CheckSquare,
   Square,
   X,
 } from 'lucide-react';
-import { Guest, GuestbookEntry, Language, DeliveryChannel } from '../../types';
+import { Guest, Language, DeliveryChannel } from '../../types';
 import { Translations } from '../../translations';
 import { adminFetch } from '../../lib/api';
 import { GuestImportSchema, EditGuestSchema } from '../../lib/validation';
@@ -64,14 +62,13 @@ interface AdminGuestsTabProps {
   language: Language;
   t: Translations;
   guests: Guest[];
-  guestbookEntries: GuestbookEntry[];
   onRefresh: () => Promise<void>;
 }
 
 type AddGuestFormValues = z.input<typeof GuestImportSchema>;
 type EditGuestFormValues = z.input<typeof EditGuestSchema>;
 
-export const AdminGuestsTab: React.FC<AdminGuestsTabProps> = ({ language, t, guests, guestbookEntries, onRefresh }) => {
+export const AdminGuestsTab: React.FC<AdminGuestsTabProps> = ({ language, t, guests, onRefresh }) => {
   const navigate = useNavigate();
   const { toast } = useToast();
   const confirm = useConfirm();
