@@ -72,7 +72,7 @@ export const EscortCardsGenerator: React.FC<EscortCardsGeneratorProps> = ({ gues
                   cardType === 'tent' ? 'bg-white text-[#4A3F35] shadow-xs' : 'text-[#8B735B]'
                 }`}
               >
-                <Ticket className="w-3.5 h-3.5 inline" /> Folded Tent Cards
+                <Ticket className="w-3.5 h-3.5 inline" /> {t.foldedTentCardsBtn}
               </button>
               <button
                 type="button"
@@ -81,7 +81,7 @@ export const EscortCardsGenerator: React.FC<EscortCardsGeneratorProps> = ({ gues
                   cardType === 'nametag' ? 'bg-white text-[#4A3F35] shadow-xs' : 'text-[#8B735B]'
                 }`}
               >
-                <Tag className="w-3.5 h-3.5 inline" /> Name Badges
+                <Tag className="w-3.5 h-3.5 inline" /> {t.nameBadgesBtn}
               </button>
             </div>
           </div>
@@ -93,10 +93,10 @@ export const EscortCardsGenerator: React.FC<EscortCardsGeneratorProps> = ({ gues
               onChange={(e) => setSelectedTableFilter(e.target.value)}
               className="w-full px-3 py-2 rounded-xl border border-[#CBAE94] text-xs font-bold bg-white text-[#4A3F35]"
             >
-              <option value="ALL">All Tables ({attendingGuests.length} guests)</option>
+              <option value="ALL">{t.allTablesOption.replace('{{count}}', String(attendingGuests.length))}</option>
               {uniqueTables.map((tbl) => (
                 <option key={tbl} value={tbl}>
-                  Table: {tbl}
+                  {t.tableFilterLabel} {tbl}
                 </option>
               ))}
             </select>
@@ -130,16 +130,16 @@ export const EscortCardsGenerator: React.FC<EscortCardsGeneratorProps> = ({ gues
       <div className="card-paper p-6 sm:p-8 space-y-4">
         <div className="flex items-center justify-between border-b border-[#CBAE94]/30 pb-3 print:hidden">
           <h3 className="font-sans text-lg font-bold text-[#4A3F35]">
-            Print Preview ({filteredGuests.length} items)
+            {t.printPreviewLabel} ({filteredGuests.length} items)
           </h3>
           <span className="text-xs font-mono text-[#8B735B]">
-            Paper layout: 2-Column Grid (Standard A4 / Letter)
+            {t.paperLayoutLabel}: 2-Column Grid (Standard A4 / Letter)
           </span>
         </div>
 
         {filteredGuests.length === 0 ? (
           <div className="text-center py-12 text-[#8B735B] font-sans">
-            No attending guests found for this table selection.
+                {t.noAttendingGuestsMsg}
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 print:grid-cols-2 print:gap-4 print:p-0">
@@ -191,7 +191,7 @@ export const EscortCardsGenerator: React.FC<EscortCardsGeneratorProps> = ({ gues
 
                       <div className="flex flex-col items-center justify-center text-right">
                         <span className="text-[9px] font-mono text-[#8B735B] uppercase font-bold">
-                          Seated At
+                          {t.seatedAtLabel}
                         </span>
                         <div className="px-3 py-1 rounded-xl bg-[#EFE6DC] border border-[#CBAE94] text-[#4A3F35] font-bold text-sm font-mono mt-0.5">
                           {tableNum}
@@ -222,7 +222,7 @@ export const EscortCardsGenerator: React.FC<EscortCardsGeneratorProps> = ({ gues
 
                     <div className="text-center my-auto py-2">
                       <p className="text-[10px] text-[#8B735B] uppercase font-mono tracking-widest">
-                        Hello, My Name Is
+                        {t.helloMyNameIsLabel}
                       </p>
                       <h2 className="font-newsreader text-3xl font-bold text-[#4A3F35] mt-1">
                         {guest.name}
@@ -230,7 +230,7 @@ export const EscortCardsGenerator: React.FC<EscortCardsGeneratorProps> = ({ gues
                     </div>
 
                     <div className="flex items-center justify-between border-t border-[#CBAE94]/40 pt-2 text-xs font-mono">
-                      <span className="font-bold text-[#8B735B]">Table: {tableNum}</span>
+                      <span className="font-bold text-[#8B735B]">{t.tableFilterLabel} {tableNum}</span>
                       <span className="text-[10px] text-[#8B735B]">Party of {guest.attending_party_size || 1}</span>
                     </div>
                   </div>
