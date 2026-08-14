@@ -240,6 +240,9 @@ export interface Translations {
   exportCsvBtn: string;
   exportCsvTitle: string;
   exportedToast: string;
+  bulkDeleteBtn: string;
+  bulkSelectedLabel: string;
+  bulkResendBtn: string;
   fieldEmail: string;
   fieldLanguage: string;
   fieldMaxParty: string;
@@ -965,6 +968,9 @@ export const translations: Record<Language, Translations> = {
     exportCsvBtn: "Export CSV",
     exportCsvTitle: "Export guest list to CSV file",
     exportedToast: "Guest list exported to CSV!",
+    bulkDeleteBtn: "Delete",
+    bulkSelectedLabel: "{{count}} selected",
+    bulkResendBtn: "Resend Invitations",
     fieldEmail: "Email Address",
     fieldLanguage: "Preferred Language",
     fieldMaxParty: "Max Party Size",
@@ -1688,6 +1694,9 @@ export const translations: Record<Language, Translations> = {
     exportCsvBtn: "Exporter CSV",
     exportCsvTitle: "Exporter la liste des invités en CSV",
     exportedToast: "Liste des invités exportée en CSV !",
+    bulkDeleteBtn: "Supprimer",
+    bulkSelectedLabel: "{{count}} sélectionné(s)",
+    bulkResendBtn: "Renvoyer les invitations",
     fieldEmail: "Adresse E-mail",
     fieldLanguage: "Langue préférée",
     fieldMaxParty: "Taille max du groupe",

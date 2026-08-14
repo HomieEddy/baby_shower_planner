@@ -744,7 +744,8 @@ async function requestHandler(req: http.IncomingMessage, res: http.ServerRespons
       // ─── Invitation Sending ──────────────────────────
       if (pathname === '/api/send-invitations' && method === 'POST') {
         requireAdmin();
-        const result = await sendInvitations();
+        const body = await parseJson(req).catch(() => ({}));
+        const result = await sendInvitations(Array.isArray(body.guestIds) ? body.guestIds : undefined);
         return sendJson(res, 200, result);
       }
 

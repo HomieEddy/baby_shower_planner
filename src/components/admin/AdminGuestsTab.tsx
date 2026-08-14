@@ -27,6 +27,9 @@ import {
   QrCode,
   Sparkles,
   Link2,
+  CheckSquare,
+  Square,
+  X,
 } from 'lucide-react';
 import { Guest, GuestbookEntry, Language, DeliveryChannel } from '../../types';
 import { Translations } from '../../translations';
@@ -107,6 +110,7 @@ export const AdminGuestsTab: React.FC<AdminGuestsTabProps> = ({ language, t, gue
   const [importingCsv, setImportingCsv] = useState(false);
 
   const [copiedToken, setCopiedToken] = useState<string | null>(null);
+  const [selectedIds, setSelectedIds] = useState<string[]>([]);
 
   const [editingGuest, setEditingGuest] = useState<Guest | null>(null);
   const [savingEdit, setSavingEdit] = useState(false);
@@ -243,8 +247,12 @@ export const AdminGuestsTab: React.FC<AdminGuestsTabProps> = ({ language, t, gue
       toast.info(t.noExportToast);
       return;
     }
+    exportGuestsCsv(guests);
+  };
+
+  const exportGuestsCsv = (list: Guest[]) => {
     const headers = ['Guest Name', 'Email', 'Phone', 'Delivery Channel', 'RSVP Status', 'Max Party Size', 'Attending Party Size', 'Dietary Restrictions', 'Table ID', 'Magic RSVP Token', 'Magic RSVP URL', 'Invited By'];
-    const rows = guests.map((g) => {
+    const rows = list.map((g) => {
       const url = `${window.location.origin}/rsvp/${g.magic_token}`;
       return [
         `"${g.name.replace(/"/g, '""')}"`,
@@ -386,6 +394,55 @@ export const AdminGuestsTab: React.FC<AdminGuestsTabProps> = ({ language, t, gue
       await navigator.clipboard.writeText(data.message);
       toast.love(t.messageCopiedToast);
     } catch {
+      toast.error(t.invitesErrorToast);
+    }
+  };
+
+  const toggleSelect = (id: string) =>
+    setSelectedIds((prev) => (prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]));
+
+  const toggleSelectAll = () =>
+    setSelectedIds((prev) =>
+      prev.length === filteredGuests.length && filteredGuests.length > 0
+        ? []
+        : filteredGuests.map((g) => g.id)
+    );
+
+  const handleBulkResend = async () => {
+    if (selectedIds.length === 0) return;
+    try {
+      const res = await adminFetch('/api/send-invitations', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ guestIds: selectedIds }),
+      });
+      const data = await res.json();
+      if (data.sent > 0) toast.love(t.invitesSentMsg.replace('{{count}}', String(data.sent)) + (data.failed > 0 ? t.invitesFailedSuffix.replace('{{count}}', String(data.failed)) : ''));
+      else toast.info(t.invitesNoneToast);
+      setSelectedIds([]);
+    } catch { toast.error(t.invitesErrorToast); }
+  };
+
+  const handleBulkExport = () => {
+    if (selectedIds.length === 0) return;
+    exportGuestsCsv(guests.filter((g) => selectedIds.includes(g.id)));
+  };
+
+  const handleBulkDelete = async () => {
+    if (selectedIds.length === 0) return;
+    const ok = await confirm({
+      title: t.bulkDeleteBtn,
+      message: `Delete ${selectedIds.length} guest(s)? Their RSVPs, seating assignments, and links will be removed. This cannot be undone.`,
+      confirmText: t.bulkDeleteBtn,
+    });
+    if (!ok) return;
+    try {
+      await Promise.all(selectedIds.map((id) => adminFetch(`/api/guests/${id}`, { method: 'DELETE' })));
+      toast.love(t.guestDeletedToast.replace('{{name}}', String(selectedIds.length)));
+      setSelectedIds([]);
+      await onRefresh();
+    } catch (err) {
+      console.error('Bulk delete failed:', err);
       toast.error(t.invitesErrorToast);
     }
   };
@@ -586,8 +643,37 @@ export const AdminGuestsTab: React.FC<AdminGuestsTabProps> = ({ language, t, gue
                   className={`px-2.5 py-1 rounded-full transition-colors ${sourceFilter === st ? 'bg-[#D4A373] text-white shadow-xs font-bold' : 'text-[#5D5449] hover:text-[#8B735B]'}`}>{st}</button>
               ))}
             </div>
+
+            <button type="button" onClick={toggleSelectAll}
+              className={`px-3 py-1.5 rounded-full font-bold text-xs transition-all flex items-center gap-1 shadow-2xs ${selectedIds.length > 0 ? 'bg-[#8B735B] text-white border border-[#8B735B]' : 'bg-white border border-[#CBAE94] text-[#8B735B] hover:bg-[#EFE6DC]'}`} title={t.selectAllBtn}>
+              {selectedIds.length === filteredGuests.length && filteredGuests.length > 0 ? <CheckSquare className="w-3.5 h-3.5" /> : <Square className="w-3.5 h-3.5" />}
+              <span className="hidden md:inline">{t.selectAllBtn}</span>
+            </button>
           </div>
         </div>
+
+        {selectedIds.length > 0 && (
+          <motion.div initial={{ opacity: 0, y: -6 }} animate={{ opacity: 1, y: 0 }}
+            className="flex flex-wrap items-center gap-2 bg-[#EFE6DC] border-2 border-[#8B735B] rounded-2xl px-4 py-2.5 mb-3">
+            <span className="text-xs font-bold font-mono text-[#8B735B] mr-1">{t.bulkSelectedLabel.replace('{{count}}', String(selectedIds.length))}</span>
+            <button onClick={handleBulkResend}
+              className="px-3 py-1.5 rounded-full bg-[#8B735B] text-white font-bold text-xs hover:bg-[#4A3F35] transition-all flex items-center gap-1 shadow-2xs">
+              <Send className="w-3.5 h-3.5" /><span className="hidden md:inline">{t.bulkResendBtn}</span>
+            </button>
+            <button onClick={handleBulkExport}
+              className="px-3 py-1.5 rounded-full bg-white border border-[#CBAE94] text-[#8B735B] font-bold text-xs hover:bg-[#EFE6DC] transition-all flex items-center gap-1 shadow-2xs">
+              <Download className="w-3.5 h-3.5" /><span className="hidden md:inline">{t.exportCsvBtn}</span>
+            </button>
+            <button onClick={handleBulkDelete}
+              className="px-3 py-1.5 rounded-full bg-rose-100 border border-rose-300 text-rose-700 font-bold text-xs hover:bg-rose-200 transition-all flex items-center gap-1 shadow-2xs">
+              <Trash2 className="w-3.5 h-3.5" /><span className="hidden md:inline">{t.bulkDeleteBtn}</span>
+            </button>
+            <button onClick={() => setSelectedIds([])}
+              className="ml-auto p-1.5 rounded-full text-[#5D5449]/70 hover:text-[#5D5449] hover:bg-white transition-colors" title={t.deselectAllBtn}>
+              <X className="w-4 h-4" />
+            </button>
+          </motion.div>
+        )}
 
         <div className="grid grid-cols-1 gap-3">
           <AnimatePresence>
@@ -613,6 +699,11 @@ export const AdminGuestsTab: React.FC<AdminGuestsTabProps> = ({ language, t, gue
                   {/* Header: initials, name, status */}
                   <div className="flex items-start justify-between gap-3">
                     <div className="flex items-center gap-3 min-w-0">
+                      <button type="button" onClick={() => toggleSelect(guest.id)}
+                        className={`shrink-0 rounded-lg border-2 p-1 transition-colors cursor-pointer ${selectedIds.includes(guest.id) ? 'bg-[#8B735B] border-[#8B735B] text-white' : 'border-[#CBAE94] text-transparent hover:border-[#8B735B] hover:text-[#8B735B]'}`}
+                        title={selectedIds.includes(guest.id) ? t.deselectAllBtn : t.selectAllBtn}>
+                        <Check className="w-3.5 h-3.5" />
+                      </button>
                       <div className="w-10 h-10 rounded-full bg-[#EFE6DC] border border-[#CBAE94] flex items-center justify-center shrink-0">
                         <span className="text-xs font-bold text-[#8B735B]">{initials}</span>
                       </div>

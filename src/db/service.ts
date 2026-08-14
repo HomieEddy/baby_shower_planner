@@ -987,7 +987,7 @@ async function deliverToGuest(
   if (channel === 'none') return true;
   let ok = true;
 
-  if (channel === 'email' || channel === 'both') {
+  if ((channel === 'email' || channel === 'both') && g.email) {
     const fn = type === 'invitation' ? 'sendInvitationEmail' : 'sendReminderEmail';
     const { [fn]: sendEmail } = await import('../lib/email');
     ok = await sendEmail(g, settings) && ok;
@@ -1000,8 +1000,9 @@ async function deliverToGuest(
   return ok;
 }
 
-export async function sendInvitations(): Promise<{ sent: number; failed: number }> {
-  const guests = await getAllGuests();
+export async function sendInvitations(guestIds?: string[]): Promise<{ sent: number; failed: number }> {
+  const all = await getAllGuests();
+  const guests = guestIds && guestIds.length > 0 ? all.filter(g => guestIds.includes(g.id)) : all;
   const records = await pb.collection('settings').getFullList();
   const settings = records[0] || {};
   let sent = 0, failed = 0;
