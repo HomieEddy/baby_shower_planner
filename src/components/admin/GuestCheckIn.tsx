@@ -1,10 +1,11 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { Guest } from '../../types';
 import { adminFetch } from '../../lib/api';
 import { getPartyMembers, isMemberCheckedIn } from '../../lib/guestAttendees';
 import { useToast } from '../shared/ToastContext';
-import { Search, CheckCircle2, RotateCcw, Users, UserCheck, UserX, ChevronDown, ChevronRight } from 'lucide-react';
+import { CheckCircle2, RotateCcw, Users, UserCheck, UserX, ChevronDown, ChevronRight } from 'lucide-react';
 import { useT } from '../shared/i18n';
+import { SearchInput } from '../shared/ui';
 
 export const GuestCheckIn = () => {
   const t = useT();
@@ -16,37 +17,24 @@ export const GuestCheckIn = () => {
   const [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState<string | null>(null);
 
-  const fetchData = useCallback(async () => {
+  const fetchData = useCallback(async (isActive: () => boolean = () => true) => {
     const [gRes, sRes] = await Promise.all([
       adminFetch('/api/guests'),
       adminFetch('/api/check-in/stats'),
     ]);
     const gData = await gRes.json();
     const sData = await sRes.json();
+    if (!isActive()) return;
     setGuests(gData.guests || []);
     setStats(sData.stats || { total: 0, checkedIn: 0, expected: 0 });
     setLoading(false);
   }, []);
 
-  // Initial load: setState happens inside the promise callbacks, not
-  // synchronously in the effect body.
   useEffect(() => {
     let cancelled = false;
-    Promise.all([
-      adminFetch('/api/guests'),
-      adminFetch('/api/check-in/stats'),
-    ])
-      .then(async ([gRes, sRes]) => {
-        const [gData, sData] = await Promise.all([gRes.json(), sRes.json()]);
-        if (cancelled) return;
-        setGuests(gData.guests || []);
-        setStats(sData.stats || { total: 0, checkedIn: 0, expected: 0 });
-      })
-      .finally(() => {
-        if (!cancelled) setLoading(false);
-      });
+    fetchData(() => !cancelled);
     return () => { cancelled = true; };
-  }, []);
+  }, [fetchData]);
 
   const runAction = async (
     guestId: string,
@@ -63,7 +51,7 @@ export const GuestCheckIn = () => {
       });
       if (!res.ok) {
         const data = await res.json().catch(() => ({}));
-        toast.error(data.error || 'Check-in failed');
+        toast.error(data.error || t.checkinFailedToast);
         return;
       }
       toast.success(successMsg);
@@ -109,17 +97,13 @@ export const GuestCheckIn = () => {
       </div>
 
       {/* Search */}
-      <div className="relative">
-        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#A09080]" />
-        <input
-          type="text"
-          value={search}
-          onChange={e => setSearch(e.target.value)}
-          placeholder={t.searchCheckinPh}
-          className="w-full pl-10 pr-4 py-3 rounded-2xl border-2 border-[#CBAE94] bg-white text-sm focus:outline-none focus:ring-2 focus:ring-[#8B735B]"
-          autoFocus
-        />
-      </div>
+      <SearchInput
+        variant="lg"
+        value={search}
+        onChange={(e) => setSearch(e.target.value)}
+        placeholder={t.searchCheckinPh}
+        autoFocus
+      />
 
       {/* Guest list */}
       {loading ? (
@@ -176,7 +160,7 @@ export const GuestCheckIn = () => {
                         )}
                       </div>
                       <div className="text-[11px] text-[#A09080] font-mono">
-                        {guest.email || guest.phone || 'No contact'} &middot; Party of {guest.attending_party_size || guest.max_party_size}
+                        {guest.email || guest.phone || t.noContactLabel} · {t.partyOfLabel.replace('{{count}}', String(guest.attending_party_size || guest.max_party_size))}
                         {guest.checked_in_at && ` · ${new Date(guest.checked_in_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`}
                       </div>
                     </div>

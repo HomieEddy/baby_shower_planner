@@ -30,7 +30,7 @@ export const EventDetailsCard = () => {
 
       {/* Badge */}
       <div className="inline-block font-mono text-[11px] uppercase tracking-widest px-4 py-1.5 bg-[#E9E0D2] text-[#4A3F35] rounded-full font-bold mb-6 border border-[#4A3F35]/10">
-        {language === 'EN' ? "Celebrating our baby's arrival" : "Célébrons l'arrivée de notre bébé"}
+        {t.eventBadge}
       </div>
 
       {/* Main Title */}
@@ -46,9 +46,7 @@ export const EventDetailsCard = () => {
 
       {/* Intro Description */}
       <p className="text-[#4A3F35]/70 text-base sm:text-lg max-w-2xl mx-auto leading-relaxed mb-10 font-sans">
-        {language === 'EN'
-          ? 'Join us for an afternoon of games, sweet treats, and memories as we prepare to welcome our little angel into the world!'
-          : "Rejoignez-nous pour une après-midi de jeux, gourmandises et souvenirs en attendant l'arrivée de notre petit ange !"}
+        {t.eventIntro}
       </p>
 
       {/* 3-Column Quick Metadata Grid */}
@@ -133,10 +131,10 @@ export const EventDetailsCard = () => {
         <div className="mt-8 bg-[#E9E0D2]/60 border border-[#4A3F35]/20 rounded-2xl p-6 flex flex-col sm:flex-row items-center justify-between gap-4 text-left">
           <div>
             <h4 className="font-bold text-[#4A3F35] text-base font-sans">
-              {language === 'EN' ? 'Amazon Baby Registry' : 'Registre de Bébé Amazon'}
+              {t.registryCardTitle}
             </h4>
             <p className="text-xs text-[#4A3F35]/70 font-sans">
-              {language === 'EN' ? 'Your presence is the sweetest gift!' : 'Votre présence est le plus doux des cadeaux !'}
+              {t.registryCardTagline}
             </p>
           </div>
           <a

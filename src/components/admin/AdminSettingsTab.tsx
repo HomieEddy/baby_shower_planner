@@ -1,6 +1,7 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { TextInput } from '../shared/ui';
-import { motion, Variants } from 'motion/react';
+import { motion } from 'motion/react';
+import { adminContainerVariants, adminCardVariants } from '../shared/motionPresets';
 import {
   Settings,
   Clock,
@@ -34,24 +35,6 @@ import { Translations } from '../../translations';
 import { parseToYmd, formatDateLong, parseTimeRange, formatTimeRangeString } from '../../lib/dateUtils';
 import { THEME_PRESETS, getThemeById, applyThemeToDocument, getContrastTextColor } from '../../themePresets';
 import { useToast } from '../shared/ToastContext';
-
-const containerVariants: Variants = {
-  hidden: { opacity: 0 },
-  show: {
-    opacity: 1,
-    transition: { staggerChildren: 0.08, delayChildren: 0.04 },
-  },
-};
-
-const cardVariants: Variants = {
-  hidden: { opacity: 0, y: 18, scale: 0.98 },
-  show: {
-    opacity: 1,
-    y: 0,
-    scale: 1,
-    transition: { duration: 0.38, ease: [0.22, 1, 0.36, 1] },
-  },
-};
 
 // ISO timestamp -> <TextInput type="datetime-local"> value (local time)
 function isoToLocalInput(iso: string): string {
@@ -226,12 +209,12 @@ export const AdminSettingsTab: React.FC<AdminSettingsTabProps> = ({ language, t,
   return (
     <motion.div
       key="settings"
-      variants={containerVariants}
+      variants={adminContainerVariants}
       initial="hidden"
       animate="show"
       className="space-y-8"
     >
-      <motion.div variants={cardVariants} className="card-paper p-6 sm:p-8 space-y-6">
+      <motion.div variants={adminCardVariants} className="card-paper p-6 sm:p-8 space-y-6">
         <div className="flex items-center justify-between border-b border-[#CBAE94]/40 pb-4">
           <div className="flex items-center space-x-3">
             <div className="p-3 bg-[#EFE6DC] text-[#8B735B] rounded-2xl border border-[#CBAE94]">
@@ -249,14 +232,12 @@ export const AdminSettingsTab: React.FC<AdminSettingsTabProps> = ({ language, t,
             <div>
               <label className="label-mono block mb-1">{t.parentsNamesLabel2}</label>
               <TextInput type="text" required value={parentsNames} onChange={(e) => setParentsNames(e.target.value)}
-                placeholder={t.parentsNamesExamplePh}
-                className="" />
+                placeholder={t.parentsNamesExamplePh} />
             </div>
             <div>
               <label className="label-mono block mb-1">{t.babyNameOptionalLabel}</label>
               <TextInput type="text" value={babyName} onChange={(e) => setBabyName(e.target.value)}
-                placeholder={t.babyNameOptionalPh}
-                className="" />
+                placeholder={t.babyNameOptionalPh} />
             </div>
 
             <div className="space-y-1">
@@ -310,8 +291,7 @@ export const AdminSettingsTab: React.FC<AdminSettingsTabProps> = ({ language, t,
             <div>
               <label className="label-mono block mb-1">{t.fullVenueAddressLabel}</label>
               <TextInput type="text" required value={venueAddress} onChange={(e) => setVenueAddress(e.target.value)}
-                placeholder={t.venueAddressExamplePh}
-                className="" />
+                placeholder={t.venueAddressExamplePh} />
             </div>
           </div>
 

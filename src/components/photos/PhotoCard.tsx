@@ -22,6 +22,7 @@ export const PhotoCard: React.FC<PhotoCardProps> = ({
   onLike,
   onClick,
 }) => {
+  const t = useT();
   return (
     <div
       onClick={() => onClick(photo)}
@@ -46,7 +47,7 @@ export const PhotoCard: React.FC<PhotoCardProps> = ({
         />
         <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex items-end p-3.5 text-white">
           <span className="text-xs font-medium line-clamp-2 leading-tight">
-            {photo.caption || 'Tap to view details'}
+            {photo.caption || t.tapToViewDetails}
           </span>
         </div>
 
@@ -58,7 +59,7 @@ export const PhotoCard: React.FC<PhotoCardProps> = ({
               ? 'bg-[#8B735B] text-white ring-2 ring-white scale-105 opacity-100'
               : 'bg-black/50 text-white/90 hover:bg-black/70 group-hover:opacity-100 opacity-80 sm:opacity-0'
           }`}
-          title={isSelected ? 'Deselect Photo' : 'Select Photo'}
+          title={isSelected ? t.deselectPhotoTitle : t.selectPhotoTitle}
         >
           {isSelected ? <Check className="w-4 h-4 stroke-[3]" /> : <Square className="w-4 h-4" />}
         </button>
@@ -73,7 +74,7 @@ export const PhotoCard: React.FC<PhotoCardProps> = ({
           type="button"
           onClick={(e) => { e.stopPropagation(); onDelete(photo.id); }}
           className="absolute top-2.5 right-2.5 p-1.5 rounded-xl bg-black/60 text-white hover:bg-rose-600 transition-colors opacity-0 group-hover:opacity-100 shadow-sm"
-          title="{t.deletePhotoBtn}"
+          title={t.deletePhotoBtn}
         >
           <Trash2 className="w-3.5 h-3.5" />
         </button>
@@ -82,7 +83,7 @@ export const PhotoCard: React.FC<PhotoCardProps> = ({
       <div className="p-3.5 bg-[#FFFDF9] flex items-center justify-between gap-2 border-t border-[#CBAE94]/30">
         <div className="truncate">
           <p className="text-xs font-bold text-[#4A3F35] truncate">
-            {photo.uploader_name || 'Guest'}
+            {photo.uploader_name || t.guestPhotoAlt}
           </p>
           <p className="text-[10px] text-[#8B735B]">
             {new Date(photo.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}

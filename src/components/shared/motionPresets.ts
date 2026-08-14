@@ -7,17 +7,6 @@ import type { Variants, Transition } from 'motion/react';
 export const easeOutBack = [0.175, 0.885, 0.32, 1.275] as const;
 export const easeOutExpo = [0.16, 1, 0.3, 1] as const;
 
-export const springPop: Transition = { type: 'spring', stiffness: 380, damping: 15 };
-
-export const pageEntrance: Variants = {
-  hidden: { opacity: 0, y: 18 },
-  show: {
-    opacity: 1,
-    y: 0,
-    transition: { duration: 0.45, ease: easeOutExpo },
-  },
-};
-
 export const cardStagger: Variants = {
   hidden: {},
   show: { transition: { staggerChildren: 0.07, delayChildren: 0.05 } },
@@ -54,9 +43,22 @@ export const floatPulse: Transition = {
   ease: 'easeInOut',
 };
 
-export const gentleRotate: Transition = {
-  duration: 3,
-  repeat: Infinity,
-  repeatType: 'mirror',
-  ease: 'easeInOut',
+// ─── Admin section motion (container + card stagger) ────────────
+
+export const adminContainerVariants: Variants = {
+  hidden: { opacity: 0 },
+  show: {
+    opacity: 1,
+    transition: { staggerChildren: 0.08, delayChildren: 0.04 },
+  },
+};
+
+export const adminCardVariants: Variants = {
+  hidden: { opacity: 0, y: 18, scale: 0.98 },
+  show: {
+    opacity: 1,
+    y: 0,
+    scale: 1,
+    transition: { duration: 0.38, ease: [0.22, 1, 0.36, 1] },
+  },
 };
