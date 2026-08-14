@@ -1,4 +1,3 @@
-import React from 'react';
 import { Group, Circle, Rect, Text, Line, Arc } from 'react-konva';
 import { TableElement, LandmarkElement } from '../../types';
 
@@ -7,15 +6,12 @@ import { TableElement, LandmarkElement } from '../../types';
 interface TableBodyProps {
   table: TableElement;
   isSelected: boolean;
-  capacityStatus?: 'full' | 'partial' | 'empty';
 }
 
-export const renderTableBody = ({ table, isSelected, capacityStatus }: TableBodyProps) => {
+export const renderTableBody = ({ table, isSelected }: TableBodyProps) => {
   const strokeColor = isSelected ? '#4A3F35' : '#D4C9B5';
   const strokeW = isSelected ? 3 : 1.5;
-  const fillColor = capacityStatus === 'full' ? '#F0E8DC'
-    : capacityStatus === 'partial' ? '#FAF6F0'
-    : '#FFFDF9';
+  const fillColor = '#FFFDF9';
 
   if (table.shape === 'circle') {
     const r = table.width / 2;
@@ -40,78 +36,6 @@ export const renderTableBody = ({ table, isSelected, capacityStatus }: TableBody
     </Group>
   );
 };
-
-// ─── Premium Table Rendering ─────────────────────────────────────
-
-interface TableRenderProps {
-  table: TableElement;
-  isSelected: boolean;
-  occupiedSeats: number;
-  highlightGuest?: boolean;
-}
-
-export const renderTable = (props: TableRenderProps) => {
-  const { table } = props;
-  return table.shape === 'circle' ? renderRoundTable(props) : renderRectTable(props);
-};
-
-function renderRoundTable({ table, isSelected, occupiedSeats }: TableRenderProps) {
-  const r = table.width / 2;
-  const cx = table.width / 2;
-  const cy = table.height / 2;
-  const capacity = table.capacity || 8;
-  const seatAngle = (2 * Math.PI) / capacity;
-
-  return (
-    <Group>
-      <Circle x={cx + 2} y={cy + 3} radius={r + 1} fill="rgba(0,0,0,0.08)" />
-      <Circle x={cx} y={cy} radius={r} fill="#FAF6F0" stroke={isSelected ? '#4A3F35' : '#D4C9B5'} strokeWidth={isSelected ? 3 : 1.5} />
-      <Circle x={cx} y={cy} radius={r * 0.85} fill="#F5F0E8" />
-      <Circle x={cx} y={cy} radius={r * 0.4} fill="rgba(212, 163, 115, 0.08)" />
-      {Array.from({ length: capacity }).map((_, i) => {
-        const angle = seatAngle * i - Math.PI / 2;
-        const sx = cx + (r - 8) * Math.cos(angle);
-        const sy = cy + (r - 8) * Math.sin(angle);
-        return (
-          <Circle key={i} x={sx} y={sy} radius={4} fill={i < occupiedSeats ? '#8B735B' : '#E8E0D4'} stroke={isSelected ? '#4A3F35' : '#D4C9B5'} strokeWidth={0.5} />
-        );
-      })}
-      <Circle x={cx} y={cy} radius={5} fill="#D4A373" opacity={0.6} />
-      <Circle x={cx} y={cy} radius={2} fill="#D4A373" />
-      <Text text={table.name} x={0} y={cy + r * 0.5} width={table.width} align="center" fontSize={10} fontStyle="bold" fill={isSelected ? '#4A3F35' : '#8B735B'} />
-      <Text text={`${occupiedSeats}/${capacity}`} x={0} y={cy + r * 0.5 + 12} width={table.width} align="center" fontSize={8} fill={occupiedSeats > capacity ? '#C53030' : '#A09080'} />
-    </Group>
-  );
-}
-
-function renderRectTable({ table, isSelected, occupiedSeats }: TableRenderProps) {
-  const w = table.width;
-  const h = table.height;
-  const capacity = table.capacity || 6;
-  const chairsPerSide = Math.max(2, Math.min(Math.floor(capacity / 2) * 2, Math.floor(capacity)));
-
-  return (
-    <Group>
-      <Rect x={3} y={4} width={w} height={h} cornerRadius={14} fill="rgba(0,0,0,0.06)" />
-      <Rect width={w} height={h} fill="#F5F0E8" stroke={isSelected ? '#4A3F35' : '#D4C9B5'} strokeWidth={isSelected ? 3 : 1.5} cornerRadius={14} />
-      <Rect x={4} y={4} width={w - 8} height={h - 8} fill="#FAF6F0" cornerRadius={12} />
-      <Line points={[w * 0.2, h / 2, w * 0.8, h / 2]} stroke="#E8E0D4" strokeWidth={1} dash={[4, 4]} />
-      {/* Chairs along top and bottom */}
-      {Array.from({ length: chairsPerSide }).map((_, i) => {
-        const occupiedTop = i < Math.min(chairsPerSide, Math.max(0, Math.ceil(occupiedSeats / 2)));
-        const occupiedBot = i < Math.min(chairsPerSide, Math.max(0, Math.floor(occupiedSeats / 2)));
-        return (
-          <React.Fragment key={i}>
-            <Rect x={(w / (chairsPerSide + 1)) * (i + 1) - 5} y={-5} width={10} height={5} fill={occupiedTop ? '#8B735B' : '#E8E0D4'} stroke="#D4C9B5" strokeWidth={0.5} cornerRadius={2} />
-            <Rect x={(w / (chairsPerSide + 1)) * (i + 1) - 5} y={h} width={10} height={5} fill={occupiedBot ? '#8B735B' : '#E8E0D4'} stroke="#D4C9B5" strokeWidth={0.5} cornerRadius={2} />
-          </React.Fragment>
-        );
-      })}
-      <Text text={table.name} width={w} height={h * 0.5} align="center" verticalAlign="middle" fontSize={11} fontStyle="bold" fill={isSelected ? '#4A3F35' : '#8B735B'} padding={4} />
-      <Text text={`${occupiedSeats}/${capacity}`} width={w} y={h * 0.55} align="center" fontSize={8} fill={occupiedSeats > capacity ? '#C53030' : '#A09080'} />
-    </Group>
-  );
-}
 
 // ─── Premium Landmark Rendering ──────────────────────────────────
 
