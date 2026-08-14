@@ -3,6 +3,7 @@ import { Guest } from '../../types';
 import { Utensils, Printer, AlertTriangle, CheckCircle2, Search, Users, FileSpreadsheet, ArrowUpDown, ChevronUp, ChevronDown, BarChart3 } from 'lucide-react';
 import { useToast } from '../shared/ToastContext';
 import { useT } from '../shared/i18n';
+import { usePrint } from '../shared/hooks';
 import {
   useReactTable,
   getCoreRowModel,
@@ -169,12 +170,7 @@ export const CateringSummaryView: React.FC<CateringSummaryViewProps> = ({ guests
     toast.success(t.cateringExportedToast);
   };
 
-  const handlePrintManifest = () => {
-    toast.info(t.cateringPrintToast);
-    setTimeout(() => {
-      window.print();
-    }, 300);
-  };
+  const printManifest = usePrint();
 
   return (
     <div className="space-y-6">
@@ -205,7 +201,7 @@ export const CateringSummaryView: React.FC<CateringSummaryViewProps> = ({ guests
             </button>
             <button
               type="button"
-              onClick={handlePrintManifest}
+              onClick={() => printManifest(t.cateringPrintToast, 300)}
               className="px-4 py-2.5 rounded-xl bg-[#8B735B] text-white font-bold text-xs hover:bg-[#705C47] transition-all flex items-center gap-2 shadow-2xs cursor-pointer"
             >
               <Printer className="w-4 h-4" />

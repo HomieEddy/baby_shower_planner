@@ -36,6 +36,7 @@ import { adminFetch } from '../../lib/api';
 import { GuestImportSchema, EditGuestSchema } from '../../lib/validation';
 import { useCapabilities, availableChannels } from '../../lib/capabilities';
 import { useConfirm } from '../shared/ConfirmDialog';
+import { useCopyFeedback } from '../shared/hooks';
 import { Modal } from '../shared/Modal';
 import { useToast } from '../shared/ToastContext';
 import { EmptyState } from '../shared/EmptyState';
@@ -89,7 +90,7 @@ export const AdminGuestsTab: React.FC<AdminGuestsTabProps> = ({ language, t, gue
   const [rawCsvText, setRawCsvText] = useState('');
   const [importingCsv, setImportingCsv] = useState(false);
 
-  const [copiedToken, setCopiedToken] = useState<string | null>(null);
+  const { copiedKey: copiedToken, copy: copyMagicLink } = useCopyFeedback();
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [metricMode, setMetricMode] = useState<'invites' | 'party'>(() =>
     localStorage.getItem('guestMetricMode') === 'party' ? 'party' : 'invites'
@@ -109,7 +110,6 @@ export const AdminGuestsTab: React.FC<AdminGuestsTabProps> = ({ language, t, gue
     message: string;
   } | null>(null);
 
-  const [copiedMsg, setCopiedMsg] = useState(false);
   const [sourceFilter, setSourceFilter] = useState<'All' | 'Host' | 'Guest-invited'>('All');
 
   const { data: caps } = useCapabilities();
@@ -371,9 +371,7 @@ export const AdminGuestsTab: React.FC<AdminGuestsTabProps> = ({ language, t, gue
 
   const handleCopyMagicLink = (token: string) => {
     const fullUrl = `${window.location.origin}/rsvp/${token}`;
-    navigator.clipboard.writeText(fullUrl);
-    setCopiedToken(token);
-    setTimeout(() => setCopiedToken(null), 2000);
+    copyMagicLink(fullUrl, token);
   };
 
   const handleCopyInviteMessage = async (guestId: string) => {
@@ -861,12 +859,10 @@ export const AdminGuestsTab: React.FC<AdminGuestsTabProps> = ({ language, t, gue
             {invitedGuestModal?.message && (
               <button onClick={() => {
                 if (!invitedGuestModal) return;
-                navigator.clipboard.writeText(invitedGuestModal.message);
-                setCopiedMsg(true);
-                setTimeout(() => setCopiedMsg(false), 2000);
+                copyMagicLink(invitedGuestModal.message, 'msg');
                 toast.love(t.messageCopiedToast);
               }} className="btn-outline-accent flex-1 py-3 text-xs inline-flex items-center justify-center">
-                {copiedMsg ? <Check className="w-3.5 h-3.5 mr-1.5 text-emerald-600" /> : <Copy className="w-3.5 h-3.5 mr-1.5" />}
+                {copiedToken === 'msg' ? <Check className="w-3.5 h-3.5 mr-1.5 text-emerald-600" /> : <Copy className="w-3.5 h-3.5 mr-1.5" />}
                 <span>{t.copyMessageBtn}</span>
               </button>
             )}

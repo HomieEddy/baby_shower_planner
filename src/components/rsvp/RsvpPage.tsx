@@ -13,6 +13,7 @@ import { useConfirm } from '../shared/ConfirmDialog';
 import { Modal } from '../shared/Modal';
 import { cardStagger, popIn, fadeUp } from '../shared/motionPresets';
 import { useT } from '../shared/i18n';
+import { useCopyFeedback } from '../shared/hooks';
 import {
   CheckCircle2,
   XCircle,
@@ -167,7 +168,7 @@ export const RsvpPage = () => {
   const [inviteModal, setInviteModal] = useState<{ name: string; url: string; message: string } | null>(null);
 
   const [myInvites, setMyInvites] = useState<Guest[]>([]);
-  const [copiedKey, setCopiedKey] = useState<string | null>(null);
+  const { copiedKey, copy: copyText } = useCopyFeedback();
   const confirm = useConfirm();
 
   useEffect(() => {
@@ -192,12 +193,6 @@ export const RsvpPage = () => {
   useEffect(() => {
     if (guest) fetchInvites();
   }, [guest, fetchInvites]);
-
-  const copyText = async (text: string, key: string) => {
-    try { await navigator.clipboard.writeText(text); } catch { /* clipboard blocked */ }
-    setCopiedKey(key);
-    setTimeout(() => setCopiedKey(null), 2000);
-  };
 
   const handleSaveContact = async () => {
     if (!token) return;

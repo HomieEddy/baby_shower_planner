@@ -26,6 +26,7 @@ import { fileToDataUrl } from '../../lib/fileUtils';
 import { GuestbookEntrySchema } from '../../lib/validation';
 import { useAppStore } from '../../stores/appStore';
 import { useT } from '../shared/i18n';
+import { usePrint } from '../shared/hooks';
 
 export const GuestbookPage = () => {
   const language = useAppStore((s) => s.language);
@@ -64,12 +65,7 @@ export const GuestbookPage = () => {
     overscan: 5,
   });
 
-  const handlePrintKeepsake = () => {
-    toast.info(t.gbPrintToast);
-    setTimeout(() => {
-      window.print();
-    }, 400);
-  };
+  const printKeepsake = usePrint();
 
   // Fetch guestbook entries
   const fetchEntries = async () => {
@@ -235,7 +231,7 @@ export const GuestbookPage = () => {
         <div className="pt-2 flex justify-end border-t border-[#CBAE94]/30">
           <button
             type="button"
-            onClick={handlePrintKeepsake}
+            onClick={() => printKeepsake(t.gbPrintToast)}
             className="px-3.5 py-2 rounded-xl bg-[#8B735B] text-white font-bold text-xs hover:bg-[#705C47] transition-all flex items-center gap-1.5 shadow-xs"
           >
             <Printer className="w-3.5 h-3.5" />
