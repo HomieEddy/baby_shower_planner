@@ -6,11 +6,13 @@ import { Guest, EventSettings, Language } from '../types';
 export function buildInviteMessage(guest: Guest, settings: Partial<EventSettings>, language: Language = 'FR'): string {
   const link = `${process.env.APP_URL || 'http://localhost:3025'}/rsvp/${guest.magic_token}`;
   const baby = settings.babyName || '';
+  const parents = settings.parentsNames || '';
+  const host = parents || baby;
   const date = settings.date || '';
   const time = settings.time || '';
   const venue = settings.venueName || '';
   const address = settings.venueAddress || '';
-  const shower = baby ? `${baby}'s Baby Shower` : 'Baby Shower';
+  const shower = host ? `${host}'s Baby Shower` : 'Baby Shower';
   const lines =
     language === 'EN'
       ? [
@@ -23,7 +25,7 @@ export function buildInviteMessage(guest: Guest, settings: Partial<EventSettings
           `Your reservation code: ${guest.code}`,
         ]
       : [
-          `Vous êtes invité à ${baby ? `la baby shower de ${baby}` : 'la baby shower'} !`,
+          `Vous êtes invité ${host ? `au baby shower de ${host}` : 'au baby shower'} !`,
           date ? `Date : ${date}` : '',
           time ? `Heure : ${time}` : '',
           venue ? `Lieu : ${venue}${address ? `, ${address}` : ''}` : '',

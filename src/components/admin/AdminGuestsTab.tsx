@@ -793,39 +793,41 @@ export const AdminGuestsTab: React.FC<AdminGuestsTabProps> = ({ language, t, gue
 
       {/* Modal: Invite Sent Confirmation */}
       <Modal open={!!invitedGuestModal} onClose={() => setInvitedGuestModal(null)} maxWidth="md">
-        <div className="w-12 h-12 bg-[#EFE6DC] text-[#8B735B] rounded-full flex items-center justify-center mx-auto border-2 border-[#CBAE94]">
-          <CheckCircle2 className="w-6 h-6" />
-        </div>
-        <div className="text-center space-y-1">
-          <h3 className="font-sans text-2xl font-bold text-[#8B735B]">{t.inviteSentModalTitle}</h3>
-          <p className="text-xs text-[#5D5449]">{t.inviteLinkForLabel} <strong className="text-[#8B735B]">{invitedGuestModal?.name}</strong> ({invitedGuestModal?.email})</p>
-        </div>
-        <div className="bg-white p-3.5 rounded-2xl border-2 border-[#CBAE94] font-mono text-xs text-[#5D5449] break-all select-all">
-          {window.location.origin}/rsvp/{invitedGuestModal?.token}
-        </div>
-        {invitedGuestModal?.message && (
-          <div className="bg-[#EFE6DC]/50 p-3 rounded-xl border border-[#CBAE94] whitespace-pre-wrap text-left text-[11px] text-[#5D5449] font-mono max-h-40 overflow-y-auto">
-            {invitedGuestModal.message}
+        <div className="space-y-4">
+          <div className="w-12 h-12 bg-[#EFE6DC] text-[#8B735B] rounded-full flex items-center justify-center mx-auto border-2 border-[#CBAE94]">
+            <CheckCircle2 className="w-6 h-6" />
           </div>
-        )}
-        <p className="text-[11px] text-[#8B735B] bg-[#EFE6DC] p-3 rounded-xl border border-[#CBAE94] font-mono"><Lightbulb className="w-3.5 h-3.5 inline" /> {t.sendEmailLogNotice}</p>
-        <div className="flex space-x-3">
-          <button onClick={() => invitedGuestModal && handleCopyMagicLink(invitedGuestModal.token)} className="btn-accent flex-1 py-3 text-xs">{t.copyLink}</button>
+          <div className="text-center space-y-1">
+            <h3 className="font-sans text-2xl font-bold text-[#8B735B]">{t.inviteSentModalTitle}</h3>
+            <p className="text-xs text-[#5D5449]">{t.inviteLinkForLabel} <strong className="text-[#8B735B]">{invitedGuestModal?.name}</strong> ({invitedGuestModal?.email})</p>
+          </div>
+          <div className="bg-white p-3.5 rounded-2xl border-2 border-[#CBAE94] font-mono text-xs text-[#5D5449] break-all select-all">
+            {window.location.origin}/rsvp/{invitedGuestModal?.token}
+          </div>
           {invitedGuestModal?.message && (
-            <button onClick={() => {
-              if (!invitedGuestModal) return;
-              navigator.clipboard.writeText(invitedGuestModal.message);
-              setCopiedMsg(true);
-              setTimeout(() => setCopiedMsg(false), 2000);
-              toast.love(t.messageCopiedToast);
-            }} className="btn-outline-accent flex-1 py-3 text-xs inline-flex items-center justify-center">
-              {copiedMsg ? <Check className="w-3.5 h-3.5 mr-1.5 text-emerald-600" /> : <Copy className="w-3.5 h-3.5 mr-1.5" />}
-              <span>{t.copyMessageBtn}</span>
-            </button>
+            <div className="bg-[#EFE6DC]/50 p-3 rounded-xl border border-[#CBAE94] whitespace-pre-wrap text-left text-[11px] text-[#5D5449] font-mono max-h-40 overflow-y-auto">
+              {invitedGuestModal.message}
+            </div>
           )}
-          <button onClick={() => { if (invitedGuestModal) { const m = invitedGuestModal; setInvitedGuestModal(null); navigate(`/rsvp/${m.token}`); } }} className="btn-outline-accent flex-1 py-3 text-xs">{t.previewInviteBtn}</button>
+          <p className="text-[11px] text-[#8B735B] bg-[#EFE6DC] p-3 rounded-xl border border-[#CBAE94] font-mono"><Lightbulb className="w-3.5 h-3.5 inline" /> {t.sendEmailLogNotice}</p>
+          <div className="flex space-x-3">
+            <button onClick={() => invitedGuestModal && handleCopyMagicLink(invitedGuestModal.token)} className="btn-accent flex-1 py-3 text-xs">{t.copyLink}</button>
+            {invitedGuestModal?.message && (
+              <button onClick={() => {
+                if (!invitedGuestModal) return;
+                navigator.clipboard.writeText(invitedGuestModal.message);
+                setCopiedMsg(true);
+                setTimeout(() => setCopiedMsg(false), 2000);
+                toast.love(t.messageCopiedToast);
+              }} className="btn-outline-accent flex-1 py-3 text-xs inline-flex items-center justify-center">
+                {copiedMsg ? <Check className="w-3.5 h-3.5 mr-1.5 text-emerald-600" /> : <Copy className="w-3.5 h-3.5 mr-1.5" />}
+                <span>{t.copyMessageBtn}</span>
+              </button>
+            )}
+            <button onClick={() => { if (invitedGuestModal) { const m = invitedGuestModal; setInvitedGuestModal(null); navigate(`/rsvp/${m.token}`); } }} className="btn-outline-accent flex-1 py-3 text-xs">{t.previewInviteBtn}</button>
+          </div>
+          <button onClick={() => setInvitedGuestModal(null)} className="w-full py-2 text-[#5D5449]/70 hover:text-[#5D5449] text-xs font-mono font-bold text-center">{t.closeModal}</button>
         </div>
-        <button onClick={() => setInvitedGuestModal(null)} className="w-full py-2 text-[#5D5449]/70 hover:text-[#5D5449] text-xs font-mono font-bold text-center">{t.closeModal}</button>
       </Modal>
 
       {/* Modal: Edit Guest */}
