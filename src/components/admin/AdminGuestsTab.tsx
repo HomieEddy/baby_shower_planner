@@ -34,7 +34,8 @@ import { Guest, Language, DeliveryChannel } from '../../types';
 import { Translations } from '../../translations';
 import { adminFetch } from '../../lib/api';
 import { GuestImportSchema, EditGuestSchema } from '../../lib/validation';
-import { useCapabilities, availableChannels } from '../../lib/capabilities';
+import { useCapabilities, availableChannels, channelLabel } from '../../lib/capabilities';
+import { getGuestPartySize as getPartySize } from '../seating/floorPlanHelpers';
 import { useConfirm } from '../shared/ConfirmDialog';
 import { useCopyFeedback } from '../shared/hooks';
 import { Modal } from '../shared/Modal';
@@ -123,17 +124,7 @@ export const AdminGuestsTab: React.FC<AdminGuestsTabProps> = ({ language, t, gue
     }
   }, [caps, deliveryChannel, channelOptions, setValue]);
 
-  const getGuestPartySize = (guest: Guest): number => {
-    if (!guest) return 1;
-    const namesCount = guest.attendee_names ? guest.attendee_names.length : 0;
-    const detailsCount = guest.attendee_details ? guest.attendee_details.length : 0;
-    const attendingCount = guest.attending_party_size || 0;
-    const maxCount = guest.max_party_size || 1;
-    if (guest.rsvp_status === 'Attending') {
-      return Math.max(namesCount, detailsCount, attendingCount, 1);
-    }
-    return Math.max(namesCount, detailsCount, attendingCount, maxCount, 1);
-  };
+  const getGuestPartySize = getPartySize;
 
   const primaryGuests = guests.filter((g) => !g.is_read_only);
   const attendingGuests = primaryGuests.filter((g) => g.rsvp_status === 'Attending');
@@ -522,7 +513,7 @@ export const AdminGuestsTab: React.FC<AdminGuestsTabProps> = ({ language, t, gue
                       : c === 'email' ? <Mail className="w-3.5 h-3.5" />
                       : c === 'text' ? <MessageSquare className="w-3.5 h-3.5" />
                       : <Smartphone className="w-3.5 h-3.5" />}
-                    <span>{c === 'none' ? t.channelNone : c === 'email' ? t.channelEmail : c === 'text' ? t.channelText : t.channelBoth}</span>
+                    <span>{channelLabel(t, c)}</span>
                   </button>
                 ))}
               </div>
@@ -675,11 +666,7 @@ export const AdminGuestsTab: React.FC<AdminGuestsTabProps> = ({ language, t, gue
             {filteredGuests.map((guest) => {
               const isCopied = copiedToken === guest.magic_token;
               const initials = guest.name.split(' ').map((w) => w[0]).filter(Boolean).slice(0, 2).join('').toUpperCase();
-              const channelLabel =
-                guest.delivery_channel === 'both' ? t.channelBoth
-                : guest.delivery_channel === 'text' ? t.channelText
-                : guest.delivery_channel === 'none' ? t.channelNone
-                : t.channelEmail;
+              const channelLabelValue = channelLabel(t, guest.delivery_channel || 'none');
               const partySize = getGuestPartySize(guest);
               const maxSize = Math.max(guest.max_party_size || 1, partySize);
 
@@ -707,7 +694,7 @@ export const AdminGuestsTab: React.FC<AdminGuestsTabProps> = ({ language, t, gue
                           <h4 className="font-bold text-[#5D5449] text-sm truncate">{guest.name}</h4>
                           {guest.delivery_channel ? (
                             <span className="px-2 py-0.5 rounded-md bg-[#EFE6DC] border border-[#CBAE94] text-[10px] font-mono font-bold text-[#8B735B]">
-                              {channelLabel}
+                              {channelLabelValue}
                             </span>
                           ) : null}
                           {guest.invited_by_guest_name ? (
@@ -900,7 +887,7 @@ export const AdminGuestsTab: React.FC<AdminGuestsTabProps> = ({ language, t, gue
                   <label className="label-mono block mb-1">{t.fieldSendVia}</label>
                   <Select {...registerEdit('delivery_channel')}>
                     {channelOptions.map((c) => (
-                      <option key={c} value={c}>{c === 'none' ? t.channelNone : c === 'email' ? t.channelEmail : c === 'text' ? t.channelText : t.channelBoth}</option>
+                      <option key={c} value={c}>{channelLabel(t, c)}</option>
                     ))}
                   </Select>
                 </div>
