@@ -3,12 +3,12 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { GiftLog, EventSettings, Guest } from '../../types';
-import { Gift, Mail, CheckCircle2, Copy, Sparkles, Trash2, Send, Search, Loader2 } from 'lucide-react';
+import { Gift, Mail, CheckCircle2, Copy, Sparkles, Trash2, Send, Loader2 } from 'lucide-react';
 import { useToast } from '../shared/ToastContext';
 import { useConfirm } from '../shared/ConfirmDialog';
 import { Modal } from '../shared/Modal';
 import { EmptyState } from '../shared/EmptyState';
-import { Field, TextInput, Select } from '../shared/ui';
+import { Field, TextInput, Select, SearchInput } from '../shared/ui';
 import { GiftLogSchema } from '../../lib/validation';
 import { adminFetch } from '../../lib/api';
 import { useT } from '../shared/i18n';
@@ -357,16 +357,12 @@ export const ThankYouTrackerView: React.FC<ThankYouTrackerViewProps> = ({
           </h3>
 
           <div className="flex items-center gap-2">
-            <div className="relative">
-              <Search className="w-3.5 h-3.5 text-[#CBAE94] absolute left-3 top-2.5" />
-              <input
-                type="text"
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                placeholder={t.searchGiftsPh}
-                className="pl-8 pr-3 py-1.5 rounded-full border border-[#CBAE94] text-xs font-bold text-[#4A3F35] bg-white w-40 focus:outline-none focus:ring-2 focus:ring-[#8B735B]"
-              />
-            </div>
+            <SearchInput
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              placeholder={t.searchGiftsPh}
+              className="w-40"
+            />
 
             <div className="inline-flex rounded-xl bg-[#EFE6DC] p-1 border border-[#CBAE94]/40 text-xs font-bold">
               <button

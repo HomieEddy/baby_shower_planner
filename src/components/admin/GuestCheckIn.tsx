@@ -3,8 +3,9 @@ import { Guest } from '../../types';
 import { adminFetch } from '../../lib/api';
 import { getPartyMembers, isMemberCheckedIn } from '../../lib/guestAttendees';
 import { useToast } from '../shared/ToastContext';
-import { Search, CheckCircle2, RotateCcw, Users, UserCheck, UserX, ChevronDown, ChevronRight } from 'lucide-react';
+import { CheckCircle2, RotateCcw, Users, UserCheck, UserX, ChevronDown, ChevronRight } from 'lucide-react';
 import { useT } from '../shared/i18n';
+import { SearchInput } from '../shared/ui';
 
 export const GuestCheckIn = () => {
   const t = useT();
@@ -96,17 +97,13 @@ export const GuestCheckIn = () => {
       </div>
 
       {/* Search */}
-      <div className="relative">
-        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#A09080]" />
-        <input
-          type="text"
-          value={search}
-          onChange={e => setSearch(e.target.value)}
-          placeholder={t.searchCheckinPh}
-          className="w-full pl-10 pr-4 py-3 rounded-2xl border-2 border-[#CBAE94] bg-white text-sm focus:outline-none focus:ring-2 focus:ring-[#8B735B]"
-          autoFocus
-        />
-      </div>
+      <SearchInput
+        variant="lg"
+        value={search}
+        onChange={(e) => setSearch(e.target.value)}
+        placeholder={t.searchCheckinPh}
+        autoFocus
+      />
 
       {/* Guest list */}
       {loading ? (

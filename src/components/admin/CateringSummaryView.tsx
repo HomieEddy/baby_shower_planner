@@ -1,9 +1,10 @@
 import React, { useState } from 'react';
 import { Guest } from '../../types';
-import { Utensils, Printer, AlertTriangle, CheckCircle2, Search, Users, FileSpreadsheet, ArrowUpDown, ChevronUp, ChevronDown, BarChart3 } from 'lucide-react';
+import { Utensils, Printer, AlertTriangle, CheckCircle2, Users, FileSpreadsheet, ArrowUpDown, ChevronUp, ChevronDown, BarChart3 } from 'lucide-react';
 import { useToast } from '../shared/ToastContext';
 import { useT } from '../shared/i18n';
 import { usePrint } from '../shared/hooks';
+import { SearchInput } from '../shared/ui';
 import {
   useReactTable,
   getCoreRowModel,
@@ -325,16 +326,12 @@ export const CateringSummaryView: React.FC<CateringSummaryViewProps> = ({ guests
           <h3 className="font-sans text-lg font-bold text-[#4A3F35]">Attending Guest Manifest ({filteredList.length})</h3>
 
           <div className="flex items-center gap-2">
-            <div className="relative">
-              <Search className="w-3.5 h-3.5 text-[#CBAE94] absolute left-3 top-2.5" />
-              <input
-                type="text"
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                placeholder={t.searchCateringPh}
-                className="pl-8 pr-3 py-1.5 rounded-full border border-[#CBAE94] text-xs font-bold text-[#4A3F35] bg-white w-48 focus:outline-none focus:ring-2 focus:ring-[#8B735B]"
-              />
-            </div>
+            <SearchInput
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              placeholder={t.searchCateringPh}
+              className="w-48"
+            />
 
             <button
               type="button"
