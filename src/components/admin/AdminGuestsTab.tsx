@@ -111,6 +111,13 @@ export const AdminGuestsTab: React.FC<AdminGuestsTabProps> = ({ language, t, gue
 
   const [copiedToken, setCopiedToken] = useState<string | null>(null);
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
+  const [metricMode, setMetricMode] = useState<'invites' | 'party'>(() =>
+    localStorage.getItem('guestMetricMode') === 'party' ? 'party' : 'invites'
+  );
+  const switchMetricMode = (m: 'invites' | 'party') => {
+    setMetricMode(m);
+    localStorage.setItem('guestMetricMode', m);
+  };
 
   const [editingGuest, setEditingGuest] = useState<Guest | null>(null);
   const [savingEdit, setSavingEdit] = useState(false);
@@ -459,6 +466,14 @@ export const AdminGuestsTab: React.FC<AdminGuestsTabProps> = ({ language, t, gue
       className="space-y-8"
     >
       {/* Metrics Cards Grid */}
+      <div className="flex justify-end mb-3">
+        <div className="flex items-center space-x-1 bg-white p-1 rounded-full text-xs font-bold font-mono border border-[#CBAE94]">
+          <button onClick={() => switchMetricMode('invites')}
+            className={`px-3 py-1 rounded-full transition-colors ${metricMode === 'invites' ? 'bg-[#8B735B] text-white shadow-xs' : 'text-[#5D5449] hover:text-[#8B735B]'}`}>{t.metricInvitesLabel}</button>
+          <button onClick={() => switchMetricMode('party')}
+            className={`px-3 py-1 rounded-full transition-colors ${metricMode === 'party' ? 'bg-[#8B735B] text-white shadow-xs' : 'text-[#5D5449] hover:text-[#8B735B]'}`}>{t.colPartySize}</button>
+        </div>
+      </div>
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         <motion.div variants={cardVariants} className="card-paper-sm p-4 sm:p-5 relative overflow-hidden">
           <div className="flex items-center justify-between">
@@ -466,7 +481,7 @@ export const AdminGuestsTab: React.FC<AdminGuestsTabProps> = ({ language, t, gue
             <CheckCircle2 className="w-5 h-5 text-[#8B735B]" />
           </div>
           <div className="mt-3">
-            <span className="text-2xl sm:text-3xl font-sans font-bold text-[#8B735B]">{attendingGuests.length} / {totalAttendingPartySize}</span>
+            <span className="text-2xl sm:text-3xl font-sans font-bold text-[#8B735B]">{metricMode === 'party' ? totalAttendingPartySize : attendingGuests.length}</span>
           </div>
           <div className="mt-2 text-[11px] text-[#8B735B] font-mono font-bold">{t.statTotalAttendingParty}</div>
         </motion.div>
@@ -477,7 +492,7 @@ export const AdminGuestsTab: React.FC<AdminGuestsTabProps> = ({ language, t, gue
             <Clock className="w-5 h-5 text-[#8B735B]" />
           </div>
           <div className="mt-3">
-            <span className="text-2xl sm:text-3xl font-sans font-bold text-[#8B735B]">{pendingGuests.length} / {pendingPartySize}</span>
+            <span className="text-2xl sm:text-3xl font-sans font-bold text-[#8B735B]">{metricMode === 'party' ? pendingPartySize : pendingGuests.length}</span>
           </div>
           <div className="mt-2 text-[11px] text-[#5D5449] font-mono">{t.awaitingResponse}</div>
         </motion.div>
@@ -488,7 +503,7 @@ export const AdminGuestsTab: React.FC<AdminGuestsTabProps> = ({ language, t, gue
             <XCircle className="w-5 h-5 text-rose-500" />
           </div>
           <div className="mt-3">
-            <span className="text-2xl sm:text-3xl font-sans font-bold text-[#8B735B]">{declinedGuests.length} / {declinedPartySize}</span>
+            <span className="text-2xl sm:text-3xl font-sans font-bold text-[#8B735B]">{metricMode === 'party' ? declinedPartySize : declinedGuests.length}</span>
           </div>
           <div className="mt-2 text-[11px] text-rose-600 font-mono">{t.unableToAttend}</div>
         </motion.div>
@@ -499,7 +514,7 @@ export const AdminGuestsTab: React.FC<AdminGuestsTabProps> = ({ language, t, gue
             <Users className="w-5 h-5 text-[#8B735B]" />
           </div>
           <div className="mt-3">
-            <span className="text-2xl sm:text-3xl font-sans font-bold text-[#8B735B]">{guests.length} / {totalPartySize}</span>
+            <span className="text-2xl sm:text-3xl font-sans font-bold text-[#8B735B]">{metricMode === 'party' ? totalPartySize : guests.length}</span>
           </div>
           <div className="mt-2 text-[11px] text-[#5D5449] font-mono">{t.totalGuestInvites}</div>
         </motion.div>

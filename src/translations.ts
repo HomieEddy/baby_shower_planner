@@ -243,6 +243,7 @@ export interface Translations {
   bulkDeleteBtn: string;
   bulkSelectedLabel: string;
   bulkResendBtn: string;
+  metricInvitesLabel: string;
   fieldEmail: string;
   fieldLanguage: string;
   fieldMaxParty: string;
@@ -971,6 +972,7 @@ export const translations: Record<Language, Translations> = {
     bulkDeleteBtn: "Delete",
     bulkSelectedLabel: "{{count}} selected",
     bulkResendBtn: "Resend Invitations",
+    metricInvitesLabel: "Invites",
     fieldEmail: "Email Address",
     fieldLanguage: "Preferred Language",
     fieldMaxParty: "Max Party Size",
@@ -1697,6 +1699,7 @@ export const translations: Record<Language, Translations> = {
     bulkDeleteBtn: "Supprimer",
     bulkSelectedLabel: "{{count}} sélectionné(s)",
     bulkResendBtn: "Renvoyer les invitations",
+    metricInvitesLabel: "Invitations",
     fieldEmail: "Adresse E-mail",
     fieldLanguage: "Langue préférée",
     fieldMaxParty: "Taille max du groupe",
