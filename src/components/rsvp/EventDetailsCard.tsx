@@ -37,22 +37,20 @@ export const EventDetailsCard = () => {
 
       {/* Main Title */}
       <h1 className="font-newsreader text-4xl sm:text-5xl lg:text-6xl font-bold text-[#4A3F35] tracking-tight leading-tight mb-4">
-        {settings.babyName
-          ? (language === 'EN'
-              ? `Baby Shower for Baby ${settings.babyName}!`
-              : `Fête de Bébé pour Bébé ${settings.babyName} !`)
-          : (language === 'EN' ? 'Baby Shower!' : 'Fête de Bébé !')}
+        {language === 'EN'
+          ? (settings.parentsNames || settings.babyName)
+            ? `${settings.parentsNames || settings.babyName}'s Baby Shower.`
+            : 'Baby Shower!'
+          : (settings.parentsNames || settings.babyName)
+            ? `Fête de Bébé de ${settings.parentsNames || settings.babyName} !`
+            : 'Fête de Bébé !'}
       </h1>
 
       {/* Intro Description */}
       <p className="text-[#4A3F35]/70 text-base sm:text-lg max-w-2xl mx-auto leading-relaxed mb-10 font-sans">
         {language === 'EN'
-          ? settings.babyName
-            ? `Join us for an afternoon of games, sweet treats, and memories as we prepare to welcome our little ${settings.babyName} into the world!`
-            : 'Join us for an afternoon of games, sweet treats, and memories as we prepare to welcome our little one into the world!'
-          : settings.babyName
-            ? `Rejoignez-nous pour une après-midi de jeux, gourmandises et souvenirs en attendant l'arrivée de ${settings.babyName} !`
-            : "Rejoignez-nous pour une après-midi de jeux, gourmandises et souvenirs en attendant l'arrivée de bébé !"}
+          ? 'Join us for an afternoon of games, sweet treats, and memories as we prepare to welcome our little angel into the world!'
+          : "Rejoignez-nous pour une après-midi de jeux, gourmandises et souvenirs en attendant l'arrivée de notre petit ange !"}
       </p>
 
       {/* 3-Column Quick Metadata Grid */}
