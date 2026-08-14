@@ -22,10 +22,11 @@ import { cardItem } from '../shared/motionPresets';
 import { useVirtualizer } from '@tanstack/react-virtual';
 import { EmptyState } from '../shared/EmptyState';
 import { formatGuestWindow } from '../../lib/dateUtils';
-import { fileToDataUrl } from '../../lib/fileUtils';
+import { uploadPhotoBase64 } from '../../lib/fileUtils';
 import { GuestbookEntrySchema } from '../../lib/validation';
 import { useAppStore } from '../../stores/appStore';
 import { useT } from '../shared/i18n';
+import { usePrint } from '../shared/hooks';
 
 export const GuestbookPage = () => {
   const language = useAppStore((s) => s.language);
@@ -64,12 +65,7 @@ export const GuestbookPage = () => {
     overscan: 5,
   });
 
-  const handlePrintKeepsake = () => {
-    toast.info(t.gbPrintToast);
-    setTimeout(() => {
-      window.print();
-    }, 400);
-  };
+  const printKeepsake = usePrint();
 
   // Fetch guestbook entries
   const fetchEntries = async () => {
@@ -126,17 +122,7 @@ export const GuestbookPage = () => {
 
       // Upload photo if present
       if (selectedFile) {
-        const dataUrl = await fileToDataUrl(selectedFile);
-        const uploadRes = await fetch('/api/upload', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ photo_base64: dataUrl }),
-        });
-
-        if (uploadRes.ok) {
-          const uploadData = await uploadRes.json();
-          uploadedPhotoUrl = uploadData.photo_url || '';
-        }
+        uploadedPhotoUrl = await uploadPhotoBase64(selectedFile);
       }
 
       // Submit guestbook entry
@@ -235,7 +221,7 @@ export const GuestbookPage = () => {
         <div className="pt-2 flex justify-end border-t border-[#CBAE94]/30">
           <button
             type="button"
-            onClick={handlePrintKeepsake}
+            onClick={() => printKeepsake(t.gbPrintToast)}
             className="px-3.5 py-2 rounded-xl bg-[#8B735B] text-white font-bold text-xs hover:bg-[#705C47] transition-all flex items-center gap-1.5 shadow-xs"
           >
             <Printer className="w-3.5 h-3.5" />

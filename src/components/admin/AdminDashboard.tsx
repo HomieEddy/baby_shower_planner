@@ -14,9 +14,10 @@ import { useConfirm } from '../shared/ConfirmDialog';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useSettingsStore } from '../../stores/settingsStore';
 import { adminFetch } from '../../lib/api';
-import { motion, AnimatePresence, Variants } from 'motion/react';
+import { motion, AnimatePresence } from 'motion/react';
 import { useAppStore } from '../../stores/appStore';
 import { useT } from '../shared/i18n';
+import { adminContainerVariants, adminCardVariants } from '../shared/motionPresets';
 import {
   Users,
   Utensils,
@@ -48,30 +49,6 @@ const TABS = [
 ] as const;
 
 type TabId = (typeof TABS)[number]['id'];
-
-const containerVariants: Variants = {
-  hidden: { opacity: 0 },
-  show: {
-    opacity: 1,
-    transition: {
-      staggerChildren: 0.08,
-      delayChildren: 0.04,
-    },
-  },
-};
-
-const cardVariants: Variants = {
-  hidden: { opacity: 0, y: 18, scale: 0.98 },
-  show: {
-    opacity: 1,
-    y: 0,
-    scale: 1,
-    transition: {
-      duration: 0.38,
-      ease: [0.22, 1, 0.36, 1],
-    },
-  },
-};
 
 export const AdminDashboard = () => {
   const navigate = useNavigate();
@@ -175,7 +152,7 @@ export const AdminDashboard = () => {
 
   return (
     <motion.div
-      variants={containerVariants}
+      variants={adminContainerVariants}
       initial="hidden"
       animate="show"
       className="space-y-8"
@@ -195,7 +172,7 @@ export const AdminDashboard = () => {
         )}
       </AnimatePresence>
 
-      <motion.div variants={cardVariants} className="card-paper p-6 sm:p-8 flex flex-col md:flex-row md:items-center justify-between gap-4">
+      <motion.div variants={adminCardVariants} className="card-paper p-6 sm:p-8 flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
           <div className="label-mono mb-1">
             {t.adminCoHostControl}
@@ -342,12 +319,12 @@ export const AdminDashboard = () => {
       {adminSubTab === 'guestbook' && (
         <motion.div
           key="guestbook"
-          variants={containerVariants}
+          variants={adminContainerVariants}
           initial="hidden"
           animate="show"
           className="space-y-8"
         >
-          <motion.div variants={cardVariants} className="card-paper p-6 sm:p-8 space-y-6">
+          <motion.div variants={adminCardVariants} className="card-paper p-6 sm:p-8 space-y-6">
             <div className="flex items-center justify-between">
               <div>
                 <div className="label-mono">{t.dayOfGuestbookTab}</div>
@@ -368,11 +345,11 @@ export const AdminDashboard = () => {
                 </p>
               </div>
             ) : (
-              <motion.div variants={containerVariants} className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              <motion.div variants={adminContainerVariants} className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
                 {guestbookEntries.map((entry) => (
                   <motion.div
                     key={entry.id}
-                    variants={cardVariants}
+                    variants={adminCardVariants}
                     className="bg-[#FAF4EF] rounded-3xl p-5 border-2 border-[#CBAE94] shadow-xs flex flex-col justify-between space-y-4 hover:shadow-md transition-shadow"
                   >
                     {entry.photo_url && (

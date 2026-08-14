@@ -1,8 +1,8 @@
 import React, { useState } from 'react';
 import { Guest, EventSettings } from '../../types';
 import { Printer, Scissors, Tag, Ticket } from 'lucide-react';
-import { useToast } from '../shared/ToastContext';
 import { useT } from '../shared/i18n';
+import { usePrint } from '../shared/hooks';
 
 interface EscortCardsGeneratorProps {
   guests: Guest[];
@@ -11,7 +11,7 @@ interface EscortCardsGeneratorProps {
 
 export const EscortCardsGenerator: React.FC<EscortCardsGeneratorProps> = ({ guests, settings }) => {
     const t = useT();
-  const { toast } = useToast();
+  const print = usePrint();
   const [cardType, setCardType] = useState<'tent' | 'nametag'>('tent');
   const [selectedTableFilter, setSelectedTableFilter] = useState<string>('ALL');
   const [showQrCode, setShowQrCode] = useState(true);
@@ -31,13 +31,6 @@ export const EscortCardsGenerator: React.FC<EscortCardsGeneratorProps> = ({ gues
     if (selectedTableFilter === 'ALL') return true;
     return (g.table_id || 'Unassigned') === selectedTableFilter;
   });
-
-  const handlePrint = () => {
-    toast.info(t.escortPrintToast);
-    setTimeout(() => {
-      window.print();
-    }, 400);
-  };
 
   return (
     <div className="space-y-6">
@@ -59,7 +52,7 @@ export const EscortCardsGenerator: React.FC<EscortCardsGeneratorProps> = ({ gues
 
           <button
             type="button"
-            onClick={handlePrint}
+            onClick={() => print(t.escortPrintToast)}
             className="px-5 py-3 rounded-xl bg-[#8B735B] text-white font-bold text-xs hover:bg-[#705C47] transition-all flex items-center gap-2 shadow-md cursor-pointer shrink-0"
           >
             <Printer className="w-4 h-4" />

@@ -6,13 +6,14 @@ import { z } from 'zod';
 import { Guest, EventAlert } from '../../types';
 import { EventDetailsCard } from './EventDetailsCard';
 import { stripPrimaryAttendees, buildAttendeePayload } from '../../lib/guestAttendees';
-import { useCapabilities } from '../../lib/capabilities';
+import { useCapabilities, availableChannels, channelLabel } from '../../lib/capabilities';
 import { motion, AnimatePresence } from 'motion/react';
 import { useToast } from '../shared/ToastContext';
 import { useConfirm } from '../shared/ConfirmDialog';
 import { Modal } from '../shared/Modal';
 import { cardStagger, popIn, fadeUp } from '../shared/motionPresets';
 import { useT } from '../shared/i18n';
+import { useCopyFeedback } from '../shared/hooks';
 import {
   CheckCircle2,
   XCircle,
@@ -143,16 +144,11 @@ export const RsvpPage = () => {
 
   // ─── Contact & notifications (self-service) ────────────────────
   const { data: caps } = useCapabilities();
-  const contactChannels: ('none' | 'email' | 'text' | 'both')[] = ['none'];
-  if (caps?.email) contactChannels.push('email');
-  if (caps?.sms) contactChannels.push('text');
-  if (caps?.email && caps?.sms) contactChannels.push('both');
+  const contactChannels = availableChannels(caps);
   const inviteChannels: ('link-only' | 'email' | 'text' | 'both')[] = ['link-only'];
   if (caps?.email) inviteChannels.push('email');
   if (caps?.sms) inviteChannels.push('text');
   if (caps?.email && caps?.sms) inviteChannels.push('both');
-  const channelLabel = (c: string) =>
-    c === 'email' ? t.channelEmail : c === 'text' ? t.channelText : c === 'both' ? t.channelBoth : t.channelNone;
 
   const [contactEmail, setContactEmail] = useState('');
   const [contactPhone, setContactPhone] = useState('');
@@ -167,7 +163,7 @@ export const RsvpPage = () => {
   const [inviteModal, setInviteModal] = useState<{ name: string; url: string; message: string } | null>(null);
 
   const [myInvites, setMyInvites] = useState<Guest[]>([]);
-  const [copiedKey, setCopiedKey] = useState<string | null>(null);
+  const { copiedKey, copy: copyText } = useCopyFeedback();
   const confirm = useConfirm();
 
   useEffect(() => {
@@ -192,12 +188,6 @@ export const RsvpPage = () => {
   useEffect(() => {
     if (guest) fetchInvites();
   }, [guest, fetchInvites]);
-
-  const copyText = async (text: string, key: string) => {
-    try { await navigator.clipboard.writeText(text); } catch { /* clipboard blocked */ }
-    setCopiedKey(key);
-    setTimeout(() => setCopiedKey(null), 2000);
-  };
 
   const handleSaveContact = async () => {
     if (!token) return;
@@ -238,7 +228,7 @@ export const RsvpPage = () => {
       return;
     }
     if (inviteChannel !== 'link-only' && !inviteContact.trim()) {
-      toast.error(t.contactForChannelError.replace('{{channel}}', channelLabel(inviteChannel)));
+      toast.error(t.contactForChannelError.replace('{{channel}}', channelLabel(t, inviteChannel)));
       return;
     }
     try {
@@ -256,7 +246,7 @@ export const RsvpPage = () => {
         } else if (data.sent.length > 0) {
           toast.love(t.inviteSentChannelToast
             .replace('{{name}}', data.guest.name)
-            .replace('{{channel}}', data.sent.map((c: string) => channelLabel(c)).join(' + ')));
+            .replace('{{channel}}', data.sent.map((c: string) => channelLabel(t, c)).join(' + ')));
         } else {
           toast.info(t.inviteSentLinkOnlyToast.replace('{{name}}', data.guest.name));
         }
@@ -994,7 +984,7 @@ export const RsvpPage = () => {
                     className="w-full px-3 py-2 rounded-lg border border-[#4A3F35]/20 bg-white text-xs font-bold text-[#4A3F35] focus:outline-none focus:ring-2 focus:ring-[#4A3F35]"
                   >
                     {inviteChannels.map((c) => (
-                      <option key={c} value={c}>{channelLabel(c)}</option>
+                      <option key={c} value={c}>{channelLabel(t, c)}</option>
                     ))}
                   </select>
                   {inviteChannel === 'link-only' && (
@@ -1144,7 +1134,7 @@ export const RsvpPage = () => {
                   className="w-full px-3 py-2 rounded-lg border border-[#4A3F35]/20 bg-white text-xs font-bold text-[#4A3F35] focus:outline-none focus:ring-2 focus:ring-[#4A3F35]"
                 >
                   {contactChannels.map((c) => (
-                    <option key={c} value={c}>{channelLabel(c)}</option>
+                    <option key={c} value={c}>{channelLabel(t, c)}</option>
                   ))}
                 </select>
               </div>

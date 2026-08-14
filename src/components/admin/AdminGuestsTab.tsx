@@ -3,7 +3,8 @@ import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { useNavigate } from 'react-router-dom';
-import { motion, AnimatePresence, Variants } from 'motion/react';
+import { motion, AnimatePresence } from 'motion/react';
+import { adminContainerVariants, adminCardVariants } from '../shared/motionPresets';
 import {
   Users,
   CheckCircle2,
@@ -33,30 +34,14 @@ import { Guest, Language, DeliveryChannel } from '../../types';
 import { Translations } from '../../translations';
 import { adminFetch } from '../../lib/api';
 import { GuestImportSchema, EditGuestSchema } from '../../lib/validation';
-import { useCapabilities, availableChannels } from '../../lib/capabilities';
+import { useCapabilities, availableChannels, channelLabel } from '../../lib/capabilities';
+import { getGuestPartySize as getPartySize } from '../seating/floorPlanHelpers';
 import { useConfirm } from '../shared/ConfirmDialog';
+import { useCopyFeedback } from '../shared/hooks';
 import { Modal } from '../shared/Modal';
 import { useToast } from '../shared/ToastContext';
 import { EmptyState } from '../shared/EmptyState';
 import { TextInput, Select } from '../shared/ui';
-
-const containerVariants: Variants = {
-  hidden: { opacity: 0 },
-  show: {
-    opacity: 1,
-    transition: { staggerChildren: 0.08, delayChildren: 0.04 },
-  },
-};
-
-const cardVariants: Variants = {
-  hidden: { opacity: 0, y: 18, scale: 0.98 },
-  show: {
-    opacity: 1,
-    y: 0,
-    scale: 1,
-    transition: { duration: 0.38, ease: [0.22, 1, 0.36, 1] },
-  },
-};
 
 interface AdminGuestsTabProps {
   language: Language;
@@ -106,7 +91,7 @@ export const AdminGuestsTab: React.FC<AdminGuestsTabProps> = ({ language, t, gue
   const [rawCsvText, setRawCsvText] = useState('');
   const [importingCsv, setImportingCsv] = useState(false);
 
-  const [copiedToken, setCopiedToken] = useState<string | null>(null);
+  const { copiedKey: copiedToken, copy: copyMagicLink } = useCopyFeedback();
   const [selectedIds, setSelectedIds] = useState<string[]>([]);
   const [metricMode, setMetricMode] = useState<'invites' | 'party'>(() =>
     localStorage.getItem('guestMetricMode') === 'party' ? 'party' : 'invites'
@@ -126,7 +111,6 @@ export const AdminGuestsTab: React.FC<AdminGuestsTabProps> = ({ language, t, gue
     message: string;
   } | null>(null);
 
-  const [copiedMsg, setCopiedMsg] = useState(false);
   const [sourceFilter, setSourceFilter] = useState<'All' | 'Host' | 'Guest-invited'>('All');
 
   const { data: caps } = useCapabilities();
@@ -140,17 +124,7 @@ export const AdminGuestsTab: React.FC<AdminGuestsTabProps> = ({ language, t, gue
     }
   }, [caps, deliveryChannel, channelOptions, setValue]);
 
-  const getGuestPartySize = (guest: Guest): number => {
-    if (!guest) return 1;
-    const namesCount = guest.attendee_names ? guest.attendee_names.length : 0;
-    const detailsCount = guest.attendee_details ? guest.attendee_details.length : 0;
-    const attendingCount = guest.attending_party_size || 0;
-    const maxCount = guest.max_party_size || 1;
-    if (guest.rsvp_status === 'Attending') {
-      return Math.max(namesCount, detailsCount, attendingCount, 1);
-    }
-    return Math.max(namesCount, detailsCount, attendingCount, maxCount, 1);
-  };
+  const getGuestPartySize = getPartySize;
 
   const primaryGuests = guests.filter((g) => !g.is_read_only);
   const attendingGuests = primaryGuests.filter((g) => g.rsvp_status === 'Attending');
@@ -388,9 +362,7 @@ export const AdminGuestsTab: React.FC<AdminGuestsTabProps> = ({ language, t, gue
 
   const handleCopyMagicLink = (token: string) => {
     const fullUrl = `${window.location.origin}/rsvp/${token}`;
-    navigator.clipboard.writeText(fullUrl);
-    setCopiedToken(token);
-    setTimeout(() => setCopiedToken(null), 2000);
+    copyMagicLink(fullUrl, token);
   };
 
   const handleCopyInviteMessage = async (guestId: string) => {
@@ -457,7 +429,7 @@ export const AdminGuestsTab: React.FC<AdminGuestsTabProps> = ({ language, t, gue
   return (
     <motion.div
       key="guests"
-      variants={containerVariants}
+      variants={adminContainerVariants}
       initial="hidden"
       animate="show"
       className="space-y-8"
@@ -472,7 +444,7 @@ export const AdminGuestsTab: React.FC<AdminGuestsTabProps> = ({ language, t, gue
         </div>
       </div>
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-        <motion.div variants={cardVariants} className="card-paper-sm p-4 sm:p-5 relative overflow-hidden">
+        <motion.div variants={adminCardVariants} className="card-paper-sm p-4 sm:p-5 relative overflow-hidden">
           <div className="flex items-center justify-between">
             <span className="label-mono">{t.statAttending}</span>
             <CheckCircle2 className="w-5 h-5 text-[#8B735B]" />
@@ -483,7 +455,7 @@ export const AdminGuestsTab: React.FC<AdminGuestsTabProps> = ({ language, t, gue
           <div className="mt-2 text-[11px] text-[#8B735B] font-mono font-bold">{t.statTotalAttendingParty}</div>
         </motion.div>
 
-        <motion.div variants={cardVariants} className="card-paper-sm p-4 sm:p-5">
+        <motion.div variants={adminCardVariants} className="card-paper-sm p-4 sm:p-5">
           <div className="flex items-center justify-between">
             <span className="label-mono">{t.statPending}</span>
             <Clock className="w-5 h-5 text-[#8B735B]" />
@@ -494,7 +466,7 @@ export const AdminGuestsTab: React.FC<AdminGuestsTabProps> = ({ language, t, gue
           <div className="mt-2 text-[11px] text-[#5D5449] font-mono">{t.awaitingResponse}</div>
         </motion.div>
 
-        <motion.div variants={cardVariants} className="card-paper-sm p-4 sm:p-5">
+        <motion.div variants={adminCardVariants} className="card-paper-sm p-4 sm:p-5">
           <div className="flex items-center justify-between">
             <span className="label-mono">{t.statDeclined}</span>
             <XCircle className="w-5 h-5 text-rose-500" />
@@ -505,7 +477,7 @@ export const AdminGuestsTab: React.FC<AdminGuestsTabProps> = ({ language, t, gue
           <div className="mt-2 text-[11px] text-rose-600 font-mono">{t.unableToAttend}</div>
         </motion.div>
 
-        <motion.div variants={cardVariants} className="card-paper-sm p-4 sm:p-5">
+        <motion.div variants={adminCardVariants} className="card-paper-sm p-4 sm:p-5">
           <div className="flex items-center justify-between">
             <span className="label-mono">{t.statTotalGuests}</span>
             <Users className="w-5 h-5 text-[#8B735B]" />
@@ -519,7 +491,7 @@ export const AdminGuestsTab: React.FC<AdminGuestsTabProps> = ({ language, t, gue
 
       {/* Middle Section: Add Guest Form & Dietary Restriction Summary */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <motion.div variants={cardVariants} className="lg:col-span-2 card-paper p-6 sm:p-8 space-y-6">
+        <motion.div variants={adminCardVariants} className="lg:col-span-2 card-paper p-6 sm:p-8 space-y-6">
           <div className="flex items-center space-x-3">
             <div className="p-2.5 bg-[#EFE6DC] text-[#8B735B] rounded-2xl border border-[#CBAE94]">
               <UserPlus className="w-5 h-5" />
@@ -541,7 +513,7 @@ export const AdminGuestsTab: React.FC<AdminGuestsTabProps> = ({ language, t, gue
                       : c === 'email' ? <Mail className="w-3.5 h-3.5" />
                       : c === 'text' ? <MessageSquare className="w-3.5 h-3.5" />
                       : <Smartphone className="w-3.5 h-3.5" />}
-                    <span>{c === 'none' ? t.channelNone : c === 'email' ? t.channelEmail : c === 'text' ? t.channelText : t.channelBoth}</span>
+                    <span>{channelLabel(t, c)}</span>
                   </button>
                 ))}
               </div>
@@ -590,7 +562,7 @@ export const AdminGuestsTab: React.FC<AdminGuestsTabProps> = ({ language, t, gue
           </form>
         </motion.div>
 
-        <motion.div variants={cardVariants} className="card-paper p-6 flex flex-col justify-between">
+        <motion.div variants={adminCardVariants} className="card-paper p-6 flex flex-col justify-between">
           <div>
             <div className="flex items-center space-x-2.5 mb-4">
               <div className="p-2 bg-[#EFE6DC] text-[#8B735B] rounded-xl border border-[#CBAE94]">
@@ -618,7 +590,7 @@ export const AdminGuestsTab: React.FC<AdminGuestsTabProps> = ({ language, t, gue
       </div>
 
       {/* Invited Guests Table Section */}
-      <motion.div variants={cardVariants} className="card-paper p-6 sm:p-8 space-y-6">
+      <motion.div variants={adminCardVariants} className="card-paper p-6 sm:p-8 space-y-6">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div>
             <div className="label-mono">{t.guestListBadge}</div>
@@ -694,11 +666,7 @@ export const AdminGuestsTab: React.FC<AdminGuestsTabProps> = ({ language, t, gue
             {filteredGuests.map((guest) => {
               const isCopied = copiedToken === guest.magic_token;
               const initials = guest.name.split(' ').map((w) => w[0]).filter(Boolean).slice(0, 2).join('').toUpperCase();
-              const channelLabel =
-                guest.delivery_channel === 'both' ? t.channelBoth
-                : guest.delivery_channel === 'text' ? t.channelText
-                : guest.delivery_channel === 'none' ? t.channelNone
-                : t.channelEmail;
+              const channelLabelValue = channelLabel(t, guest.delivery_channel || 'none');
               const partySize = getGuestPartySize(guest);
               const maxSize = Math.max(guest.max_party_size || 1, partySize);
 
@@ -726,7 +694,7 @@ export const AdminGuestsTab: React.FC<AdminGuestsTabProps> = ({ language, t, gue
                           <h4 className="font-bold text-[#5D5449] text-sm truncate">{guest.name}</h4>
                           {guest.delivery_channel ? (
                             <span className="px-2 py-0.5 rounded-md bg-[#EFE6DC] border border-[#CBAE94] text-[10px] font-mono font-bold text-[#8B735B]">
-                              {channelLabel}
+                              {channelLabelValue}
                             </span>
                           ) : null}
                           {guest.invited_by_guest_name ? (
@@ -878,12 +846,10 @@ export const AdminGuestsTab: React.FC<AdminGuestsTabProps> = ({ language, t, gue
             {invitedGuestModal?.message && (
               <button onClick={() => {
                 if (!invitedGuestModal) return;
-                navigator.clipboard.writeText(invitedGuestModal.message);
-                setCopiedMsg(true);
-                setTimeout(() => setCopiedMsg(false), 2000);
+                copyMagicLink(invitedGuestModal.message, 'msg');
                 toast.love(t.messageCopiedToast);
               }} className="btn-outline-accent flex-1 py-3 text-xs inline-flex items-center justify-center">
-                {copiedMsg ? <Check className="w-3.5 h-3.5 mr-1.5 text-emerald-600" /> : <Copy className="w-3.5 h-3.5 mr-1.5" />}
+                {copiedToken === 'msg' ? <Check className="w-3.5 h-3.5 mr-1.5 text-emerald-600" /> : <Copy className="w-3.5 h-3.5 mr-1.5" />}
                 <span>{t.copyMessageBtn}</span>
               </button>
             )}
@@ -921,7 +887,7 @@ export const AdminGuestsTab: React.FC<AdminGuestsTabProps> = ({ language, t, gue
                   <label className="label-mono block mb-1">{t.fieldSendVia}</label>
                   <Select {...registerEdit('delivery_channel')}>
                     {channelOptions.map((c) => (
-                      <option key={c} value={c}>{c === 'none' ? t.channelNone : c === 'email' ? t.channelEmail : c === 'text' ? t.channelText : t.channelBoth}</option>
+                      <option key={c} value={c}>{channelLabel(t, c)}</option>
                     ))}
                   </Select>
                 </div>
