@@ -18,14 +18,20 @@ export const GuestMetricCard = ({
   icon,
   footer,
   iconClass = 'text-[#8B735B]',
+  onClick,
 }: {
   label: string;
   value: React.ReactNode;
   icon: React.ReactNode;
   footer: string;
   iconClass?: string;
+  onClick?: () => void;
 }) => (
-  <motion.div variants={adminCardVariants} className="card-paper-sm p-4 sm:p-5">
+  <motion.div
+    variants={adminCardVariants}
+    onClick={onClick}
+    className={`card-paper-sm p-4 sm:p-5 ${onClick ? 'cursor-pointer hover:-translate-y-0.5 transition-transform' : ''}`}
+  >
     <div className="flex items-center justify-between">
       <span className="label-mono">{label}</span>
       <span className={iconClass}>{icon}</span>
