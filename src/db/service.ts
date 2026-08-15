@@ -1113,6 +1113,7 @@ export async function sendReminders(): Promise<{ sent: number; failed: number }>
 
 export async function wipeDatabaseData() {
   for (const name of COLLECTION_DEFS.map(c => c.name)) {
+    if (name === 'settings') continue; // event settings survive a wipe
     const records = await pb.collection(name).getFullList({ requestKey: null });
     for (const r of records) {
       await pb.collection(name).delete(r.id);
