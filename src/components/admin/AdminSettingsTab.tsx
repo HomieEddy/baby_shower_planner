@@ -30,10 +30,10 @@ import {
   arrayMove,
 } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
-import { EventSettings, ScheduleItem, Language } from '../../types';
+import { EventSettings, ScheduleItem, Language, CustomTheme } from '../../types';
 import { Translations } from '../../translations';
 import { parseToYmd, formatDateLong, parseTimeRange, formatTimeRangeString } from '../../lib/dateUtils';
-import { THEME_PRESETS, getThemeById, applyThemeToDocument, getContrastTextColor } from '../../themePresets';
+import { THEME_PRESETS, getThemeById, applyThemeToDocument, getContrastTextColor, getCustomTheme, CUSTOM_THEME_ID, FONT_OPTIONS, DEFAULT_CUSTOM_THEME } from '../../themePresets';
 import { useToast } from '../shared/ToastContext';
 
 // ISO timestamp -> <TextInput type="datetime-local"> value (local time)
@@ -143,6 +143,7 @@ export const AdminSettingsTab: React.FC<AdminSettingsTabProps> = ({ language, t,
   const [contentCloseAt, setContentCloseAt] = useState(settings?.contentCloseAt ? isoToLocalInput(settings.contentCloseAt) : '');
   const [showScheduleTime, setShowScheduleTime] = useState(settings?.showScheduleTime ?? true);
   const [selectedThemeId, setSelectedThemeId] = useState<string>(settings?.themeId || 'teddy-warmth');
+  const [customTheme, setCustomTheme] = useState<CustomTheme>(settings?.customTheme ?? DEFAULT_CUSTOM_THEME);
   const [schedule, setSchedule] = useState<ScheduleItem[]>(settings?.schedule && Array.isArray(settings.schedule) ? settings.schedule : [
     { id: 'sch-1', time: '2:00 PM', titleEn: 'Guest Arrival & Welcome Refreshments', titleFr: 'Arrivée des invités & rafraîchissements', descEn: 'Mingle, find your table on the floor map, and sign the digital guestbook.', descFr: 'Discutez, trouvez votre table sur la carte et signez le livre d\'or virtuel.' },
     { id: 'sch-2', time: '2:45 PM', titleEn: 'Baby Shower Games & Trivia', titleFr: 'Jeux & quiz sur le thème de bébé', descEn: 'Fun guessing games with special prizes for table winners!', descFr: 'Des jeux amusants avec des prix spéciaux pour les gagnants !' },
@@ -177,6 +178,14 @@ export const AdminSettingsTab: React.FC<AdminSettingsTabProps> = ({ language, t,
     if (!contentCloseAt) setContentCloseAt(`${date}T${end}`);
   };
 
+  const updateCustomTheme = (key: keyof CustomTheme, value: string) => {
+    const next = { ...customTheme, [key]: value };
+    setCustomTheme(next);
+    if (selectedThemeId === CUSTOM_THEME_ID) {
+      applyThemeToDocument(getCustomTheme(next, t.customThemeLabel));
+    }
+  };
+
   const handleSaveSettings = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
@@ -194,6 +203,7 @@ export const AdminSettingsTab: React.FC<AdminSettingsTabProps> = ({ language, t,
         showScheduleTime,
         schedule,
         themeId: selectedThemeId,
+        customTheme,
         contentOpenAt: contentOpenAt ? new Date(contentOpenAt).toISOString() : '',
         contentCloseAt: contentCloseAt ? new Date(contentCloseAt).toISOString() : '',
       });
@@ -382,18 +392,62 @@ export const AdminSettingsTab: React.FC<AdminSettingsTabProps> = ({ language, t,
             <div className="space-y-2">
               <label className="block text-xs font-bold text-[#4A3F35] uppercase tracking-wider font-mono">{t.selectThemeLabel}</label>
               <div className="relative">
-                <select value={selectedThemeId} onChange={(e) => { const theme = getThemeById(e.target.value); setSelectedThemeId(e.target.value); applyThemeToDocument(theme); }}
+                <select value={selectedThemeId} onChange={(e) => {
+                  const v = e.target.value;
+                  setSelectedThemeId(v);
+                  applyThemeToDocument(v === CUSTOM_THEME_ID ? getCustomTheme(customTheme, t.customThemeLabel) : getThemeById(v));
+                }}
                   className="w-full px-4 py-3 rounded-2xl border-2 border-[#CBAE94] bg-white text-sm font-bold text-[#4A3F35] focus:outline-none focus:border-[#8B735B] shadow-xs cursor-pointer appearance-none pr-10">
                   {THEME_PRESETS.map((preset) => (
                     <option key={preset.id} value={preset.id}>{preset.name} ({preset.category}) — Font: {preset.displayFontName}</option>
                   ))}
+                  <option value={CUSTOM_THEME_ID}>{t.customThemeLabel}</option>
                 </select>
                 <div className="absolute right-3.5 top-1/2 -translate-y-1/2 pointer-events-none text-[#8B735B] font-bold">▼</div>
               </div>
+
+              {selectedThemeId === CUSTOM_THEME_ID && (
+                <div className="p-4 rounded-2xl bg-[#EFE6DC]/40 border border-[#CBAE94] space-y-3">
+                  <p className="text-[11px] text-[#5D5449] font-medium">{t.customThemeDesc}</p>
+                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                    {([
+                      ['bg', t.color1BgLabel],
+                      ['ink', t.color2InkLabel],
+                      ['accent', t.color3AccentLabel],
+                    ] as const).map(([key, label]) => (
+                      <label key={key} className="flex flex-col gap-1">
+                        <span className="text-[11px] font-mono font-bold uppercase text-[#8B735B]">{label}</span>
+                        <div className="flex items-center gap-2">
+                          <input
+                            type="color"
+                            value={customTheme[key]}
+                            onChange={(e) => updateCustomTheme(key, e.target.value)}
+                            className="w-10 h-10 rounded-xl border-2 border-[#CBAE94] cursor-pointer bg-white p-0.5"
+                          />
+                          <span className="text-xs font-mono font-bold text-[#5D5449]">{customTheme[key]}</span>
+                        </div>
+                      </label>
+                    ))}
+                  </div>
+                  <label className="block">
+                    <span className="text-[11px] font-mono font-bold uppercase text-[#8B735B] block mb-1">{t.signatureTypographyLabel}</span>
+                    <select
+                      value={customTheme.fontFamily}
+                      onChange={(e) => updateCustomTheme('fontFamily', e.target.value)}
+                      className="w-full px-3 py-2 rounded-xl border border-[#CBAE94] bg-white text-xs font-bold text-[#4A3F35] focus:outline-none">
+                      {FONT_OPTIONS.map((f) => (
+                        <option key={f.fontFamily} value={f.fontFamily}>{f.label}</option>
+                      ))}
+                    </select>
+                  </label>
+                </div>
+              )}
             </div>
 
             {(() => {
-              const currentTheme = getThemeById(selectedThemeId);
+              const currentTheme = selectedThemeId === CUSTOM_THEME_ID
+                ? getCustomTheme(customTheme, t.customThemeLabel)
+                : getThemeById(selectedThemeId);
               const col1Text = getContrastTextColor(currentTheme.bg);
               const col2Text = getContrastTextColor(currentTheme.ink);
               const col3Text = getContrastTextColor(currentTheme.accent);
