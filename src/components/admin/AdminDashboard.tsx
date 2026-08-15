@@ -75,6 +75,12 @@ export const AdminDashboard = () => {
   const [adminSubTab, setAdminSubTab] = useState<TabId>('guests');
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
+  // Re-fetch settings with the admin token: the app-level fetch may have run
+  // before login and received the scrubbed public shape (no host contact).
+  useEffect(() => {
+    fetchSettings();
+  }, [fetchSettings]);
+
   const tabLabel = (id: TabId): string => {
     switch (id) {
       case 'guests': return `${t.tabGuestRsvps} (${guests.length})`;

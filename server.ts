@@ -551,6 +551,11 @@ async function requestHandler(req: http.IncomingMessage, res: http.ServerRespons
       if (pathname === '/api/settings') {
         if (method === 'GET') {
           const settings = await getSettings();
+          // Host contact details are admin-only; guests need event info + footer names.
+          if (!adminOnly()) {
+            delete (settings as Partial<EventSettings>).hostEmail;
+            delete (settings as Partial<EventSettings>).hostPhone;
+          }
           return sendJson(res, 200, { settings });
         }
         if (method === 'POST') {
@@ -625,11 +630,11 @@ async function requestHandler(req: http.IncomingMessage, res: http.ServerRespons
 
       // ─── Gifts ──────────────────────────────────────
       if (pathname === '/api/gifts') {
+        requireAdmin();
         if (method === 'GET') {
           const gifts = await getGifts();
           return sendJson(res, 200, { gifts });
         }
-        requireAdmin();
         if (method === 'POST') {
           const body = await parseJson(req);
           const validation = GiftLogSchema.safeParse(body);
@@ -688,11 +693,11 @@ async function requestHandler(req: http.IncomingMessage, res: http.ServerRespons
 
       // ─── Agenda (host task planner) ───────────────────
       if (pathname === '/api/agenda') {
+        requireAdmin();
         if (method === 'GET') {
           const tasks = await getAgendaTasks();
           return sendJson(res, 200, { tasks });
         }
-        requireAdmin();
         if (method === 'POST') {
           const body = await parseJson(req);
           const validation = AgendaTaskSchema.safeParse(body);
@@ -773,6 +778,7 @@ async function requestHandler(req: http.IncomingMessage, res: http.ServerRespons
       }
 
       if (pathname === '/api/check-in/stats' && method === 'GET') {
+        requireAdmin();
         const stats = await getCheckInStats();
         return sendJson(res, 200, { stats });
       }

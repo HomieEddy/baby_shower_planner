@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 import { EventSettings } from '../types';
+import { adminFetch } from '../lib/api';
 
 interface SettingsStore {
   settings: EventSettings | null;
@@ -11,7 +12,9 @@ export const useSettingsStore = create<SettingsStore>((set) => ({
   settings: null,
   fetchSettings: async () => {
     try {
-      const res = await fetch('/api/settings');
+      // adminFetch so the host (when logged in) receives full settings
+      // incl. reminder contacts; guests get the scrubbed public shape.
+      const res = await adminFetch('/api/settings');
       const data = await res.json();
       if (data.settings) {
         set({ settings: data.settings });
