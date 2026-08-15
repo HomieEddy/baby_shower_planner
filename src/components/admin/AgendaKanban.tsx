@@ -91,15 +91,38 @@ const TaskCard: React.FC<{ task: AgendaTask; language: Language; onOpenTask: (ta
   );
 };
 
-// Empty droppable column body — a task can land anywhere in a column.
-const ColumnDroppable: React.FC<{ id: AgendaStatus; isEmpty: boolean; t: Translations }> = ({ id, isEmpty, t }) => {
+// The whole column body is droppable, so a task can be dropped anywhere
+// in a column (header, between cards, empty space).
+const KanbanColumn: React.FC<{
+  id: AgendaStatus;
+  headerCls: string;
+  tasks: AgendaTask[];
+  t: Translations;
+  language: Language;
+  onOpenTask: (task: AgendaTask) => void;
+}> = ({ id, headerCls, tasks, t, language, onOpenTask }) => {
   const { setNodeRef, isOver } = useDroppable({ id });
   return (
     <div
       ref={setNodeRef}
-      className={`flex-1 min-h-24 rounded-2xl border-2 border-dashed p-2 space-y-2 transition-colors ${isOver ? 'border-[#8B735B] bg-[#EFE6DC]/60' : 'border-transparent'}`}
+      className={`rounded-2xl border-2 p-3 space-y-2 transition-colors ${headerCls} ${isOver ? 'ring-2 ring-[#8B735B]/50' : ''}`}
     >
-      {isEmpty && <p className="text-[11px] text-[#A09080] italic text-center py-4">{t.agendaEmptyColumnMsg}</p>}
+      <div className="flex items-center justify-between px-1">
+        <span className="text-xs font-bold font-mono uppercase tracking-wide">{statusLabel(t, id)}</span>
+        <span className="px-2 py-0.5 rounded-full bg-white/70 border border-current text-[10px] font-mono font-bold">
+          {tasks.length}
+        </span>
+      </div>
+      <SortableContext items={tasks.map(task => task.id)} strategy={verticalListSortingStrategy}>
+        <div className="space-y-2">
+          {tasks.map(task => (
+            <TaskCard key={task.id} task={task} language={language} onOpenTask={onOpenTask} />
+          ))}
+        </div>
+      </SortableContext>
+      {tasks.length === 0 && (
+        <p className="text-[11px] text-[#A09080] italic text-center py-4">{t.agendaEmptyColumnMsg}</p>
+      )}
     </div>
   );
 };
@@ -110,9 +133,12 @@ export const AgendaKanban: React.FC<AgendaKanbanProps> = ({ tasks, t, language, 
 
   const byStatus = useMemo(() => {
     const map: Record<AgendaStatus, AgendaTask[]> = { todo: [], in_progress: [], done: [] };
-    for (const task of tasks) map[task.status]?.push(task);
+    for (const task of tasks) {
+      if (task.id === activeId) continue; // dragged card lives in the DragOverlay
+      map[task.status]?.push(task);
+    }
     return map;
-  }, [tasks]);
+  }, [tasks, activeId]);
 
   const activeTask = tasks.find(t => t.id === activeId) ?? null;
 
@@ -161,22 +187,15 @@ export const AgendaKanban: React.FC<AgendaKanbanProps> = ({ tasks, t, language, 
     >
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         {COLUMNS.map(col => (
-          <div key={col.id} className={`rounded-2xl border-2 ${col.headerCls} p-3 space-y-2`}>
-            <div className="flex items-center justify-between px-1">
-              <span className="text-xs font-bold font-mono uppercase tracking-wide">{statusLabel(t, col.id)}</span>
-              <span className="px-2 py-0.5 rounded-full bg-white/70 border border-current text-[10px] font-mono font-bold">
-                {byStatus[col.id].length}
-              </span>
-            </div>
-            <SortableContext items={byStatus[col.id].map(task => task.id)} strategy={verticalListSortingStrategy}>
-              <div className="space-y-2">
-                {byStatus[col.id].map(task => (
-                  <TaskCard key={task.id} task={task} language={language} onOpenTask={onOpenTask} />
-                ))}
-              </div>
-            </SortableContext>
-            <ColumnDroppable id={col.id} isEmpty={byStatus[col.id].length === 0} t={t} />
-          </div>
+          <KanbanColumn
+            key={col.id}
+            id={col.id}
+            headerCls={col.headerCls}
+            tasks={byStatus[col.id]}
+            t={t}
+            language={language}
+            onOpenTask={onOpenTask}
+          />
         ))}
       </div>
       <DragOverlay>
