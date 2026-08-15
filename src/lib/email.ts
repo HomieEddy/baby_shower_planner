@@ -1,5 +1,6 @@
 import { Resend } from 'resend';
-import { Guest, EventSettings } from '../types';
+import { Guest, EventSettings, AgendaTask } from '../types';
+import { formatTaskDue } from './dateUtils';
 
 let resend: Resend | null = null;
 
@@ -185,6 +186,43 @@ export async function sendThankYouEmail(guest: Guest, text: string): Promise<boo
     return true;
   } catch (err) {
     console.error(`[RESEND] Thank-you failed for ${guest.email}:`, err);
+    return false;
+  }
+}
+
+// Agenda reminder for the host (single-language, per settings.language).
+export async function sendAgendaReminderEmail(to: string, task: AgendaTask, settings: EventSettings): Promise<boolean> {
+  const fr = settings.language === 'FR';
+  const when = formatTaskDue(task.due_date || '', task.due_time, settings.language || 'EN');
+  const subject = fr ? `⏰ Rappel : ${task.title}` : `⏰ Reminder: ${task.title}`;
+  const html = `
+    <div style="font-family: Georgia, serif; max-width: 560px; margin: 0 auto; padding: 32px 24px; background: #FDFBF7; color: #4A3F35;">
+      <div style="text-align: center; margin-bottom: 20px;">
+        <div style="font-size: 22px; font-weight: bold; color: #8B735B;">${fr ? 'Rappel de tâche' : 'Task Reminder'}</div>
+      </div>
+      <div style="background: white; border-radius: 16px; padding: 24px; border: 1px solid #E8E0D4;">
+        <p style="font-size: 15px; margin: 0 0 12px;">${fr ? 'Bonjour, juste un petit rappel :' : 'Hi, just a quick reminder:'}</p>
+        <p style="font-size: 16px; font-weight: bold; margin: 0 0 8px; color: #8B735B;">${task.title}</p>
+        ${when ? `<p style="font-size: 13px; color: #5D5449; margin: 0;">${when}</p>` : ''}
+        ${task.description ? `<p style="font-size: 13px; line-height: 1.5; color: #5D5449; margin: 12px 0 0; font-style: italic;">${task.description}</p>` : ''}
+      </div>
+    </div>`;
+  const client = getClient();
+  if (!client) {
+    console.log(`[MOCK AGENDA EMAIL] To: ${to} | Subject: ${subject}`);
+    return true;
+  }
+  try {
+    await client.emails.send({
+      from: process.env.EMAIL_FROM || 'Baby Shower <onboarding@resend.dev>',
+      to,
+      subject,
+      html,
+    });
+    console.log(`[RESEND] Agenda reminder sent to ${to}`);
+    return true;
+  } catch (err) {
+    console.error(`[RESEND] Agenda reminder failed for ${to}:`, err);
     return false;
   }
 }

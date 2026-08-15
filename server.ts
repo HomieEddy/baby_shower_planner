@@ -3,8 +3,8 @@ import path from 'node:path';
 import fs from 'node:fs';
 import crypto from 'node:crypto';
 import { createServer as createViteServer } from 'vite';
-import { GiftLogSchema } from './src/lib/validation.ts';
-import type { EventSettings } from './src/types.ts';
+import { GiftLogSchema, AgendaTaskSchema, AgendaReorderSchema, ReminderSettingsSchema } from './src/lib/validation.ts';
+import type { EventSettings, AgendaTask } from './src/types.ts';
 import { pb } from './src/db/service';
 import {
   getAllGuests,
@@ -55,6 +55,12 @@ import {
   removeInvite,
   inviteMessageFor,
   getGuestById,
+  getAgendaTasks,
+  addAgendaTask,
+  updateAgendaTask,
+  deleteAgendaTask,
+  reorderAgendaTasks,
+  runAgendaReminderSweep,
 } from './src/db/service.ts';
 
 const PORT = Number(process.env.PORT) || 3025;
@@ -552,7 +558,11 @@ async function requestHandler(req: http.IncomingMessage, res: http.ServerRespons
         if (method === 'POST') {
           requireAdmin();
           const body = await parseJson(req);
-          const settings = await updateSettings(body);
+          const reminder = ReminderSettingsSchema.partial().safeParse(body);
+          if (!reminder.success) {
+            return sendJson(res, 400, { error: reminder.error.issues[0]?.message || 'Invalid settings payload' });
+          }
+          const settings = await updateSettings({ ...body, ...reminder.data });
           return sendJson(res, 200, { success: true, settings });
         }
       }
@@ -697,6 +707,74 @@ async function requestHandler(req: http.IncomingMessage, res: http.ServerRespons
         }
       }
 
+      // ─── Agenda (host task planner) ───────────────────
+      if (pathname === '/api/agenda') {
+        if (method === 'GET') {
+          const tasks = await getAgendaTasks();
+          return sendJson(res, 200, { tasks });
+        }
+        requireAdmin();
+        if (method === 'POST') {
+          const body = await parseJson(req);
+          const validation = AgendaTaskSchema.safeParse(body);
+          if (!validation.success) {
+            return sendJson(res, 400, { error: validation.error.issues[0]?.message || 'Invalid task payload' });
+          }
+          const task = await addAgendaTask(validation.data);
+          return sendJson(res, 200, { success: true, task });
+        }
+      }
+
+      if (pathname === '/api/agenda/reorder' && method === 'POST') {
+        requireAdmin();
+        const body = await parseJson(req);
+        const validation = AgendaReorderSchema.safeParse(body.items);
+        if (!validation.success) {
+          return sendJson(res, 400, { error: 'Invalid reorder payload' });
+        }
+        await reorderAgendaTasks(validation.data);
+        return sendJson(res, 200, { success: true });
+      }
+
+      if (pathname === '/api/agenda/test-reminder' && method === 'POST') {
+        requireAdmin();
+        const settings = await getSettings();
+        const channels = settings.reminderChannels ?? { email: false, sms: false };
+        const sampleTask: AgendaTask = {
+          id: 'test', title: settings.language === 'FR' ? 'Rappel test' : 'Test reminder',
+          due_date: settings.date || '', due_time: undefined,
+          status: 'todo', position: 0, reminder_sent: false, created_at: '',
+        };
+        const results: Record<string, boolean> = {};
+        if (channels.email && settings.hostEmail) {
+          const { sendAgendaReminderEmail } = await import('./src/lib/email');
+          results.email = await sendAgendaReminderEmail(settings.hostEmail, sampleTask, settings);
+        }
+        if (channels.sms && settings.hostPhone) {
+          const { sendAgendaReminderSms } = await import('./src/lib/sms');
+          results.sms = await sendAgendaReminderSms(settings.hostPhone, sampleTask, settings);
+        }
+        return sendJson(res, 200, { success: true, results });
+      }
+
+      if (pathname.startsWith('/api/agenda/')) {
+        requireAdmin();
+        const id = pathname.replace('/api/agenda/', '');
+        if (method === 'PATCH') {
+          const body = await parseJson(req);
+          const validation = AgendaTaskSchema.partial().safeParse(body);
+          if (!validation.success) {
+            return sendJson(res, 400, { error: validation.error.issues[0]?.message || 'Invalid task payload' });
+          }
+          const task = await updateAgendaTask(id, validation.data);
+          return sendJson(res, 200, { success: true, task });
+        }
+        if (method === 'DELETE') {
+          await deleteAgendaTask(id);
+          return sendJson(res, 200, { success: true });
+        }
+      }
+
       // ─── Check-in (admin) ────────────────────────────
       if (pathname === '/api/check-in' && method === 'POST') {
         requireAdmin();
@@ -801,6 +879,20 @@ async function requestHandler(req: http.IncomingMessage, res: http.ServerRespons
 async function startServer() {
   validateSecrets();
   await initPocketBase();
+
+  // Agenda reminder sweep: fires every 5 minutes for tasks inside their
+  // reminder window. Single-process assumption (dev and prod both run one
+  // instance) — a second instance would double-send. ponytail: interval
+  // beats cron here; the sweep is idempotent per task via reminder_sent.
+  setInterval(() => {
+    runAgendaReminderSweep()
+      .then((r) => {
+        if (r.reminded > 0) {
+          console.log(`[AGENDA] Reminded ${r.reminded} task(s)${r.failed ? `, ${r.failed} failed` : ''}`);
+        }
+      })
+      .catch((err) => console.error('[AGENDA] Reminder sweep failed:', err));
+  }, 5 * 60 * 1000).unref();
 
   if (process.env.NODE_ENV !== 'production') {
     // Create the HTTP server first so Vite can attach its HMR websocket to it
