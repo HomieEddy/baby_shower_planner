@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { motion } from 'motion/react';
 import {
@@ -73,24 +73,26 @@ export const AdminAgendaTab: React.FC<AdminAgendaTabProps> = ({ language, t, set
   };
 
   // ─── Reminder settings form ────────────────────────────────────
-  const [emailOn, setEmailOn] = useState(false);
-  const [smsOn, setSmsOn] = useState(false);
-  const [advance, setAdvance] = useState<string>('1d');
-  const [hostEmail, setHostEmail] = useState('');
-  const [hostPhone, setHostPhone] = useState('');
-  const [hostLang, setHostLang] = useState<Language>('EN');
+  // Form state is derived from settings; when the saved settings change
+  // (another tab or this panel), re-sync during render (React's documented
+  // pattern for adjusting state when props change — avoids an effect).
+  const fromSettings = (s?: EventSettings | null) => ({
+    emailOn: s?.reminderChannels?.email ?? false,
+    smsOn: s?.reminderChannels?.sms ?? false,
+    advance: s?.reminderAdvance ?? '1d',
+    hostEmail: s?.hostEmail ?? '',
+    hostPhone: s?.hostPhone ?? '',
+    hostLang: s?.language ?? ('EN' as Language),
+  });
+  const [reminderForm, setReminderForm] = useState(fromSettings(settings));
+  const [lastSettings, setLastSettings] = useState(settings);
+  if (settings !== lastSettings) {
+    setLastSettings(settings);
+    setReminderForm(fromSettings(settings));
+  }
+  const { emailOn, smsOn, advance, hostEmail, hostPhone, hostLang } = reminderForm;
   const [savingReminders, setSavingReminders] = useState(false);
   const [testingReminder, setTestingReminder] = useState(false);
-
-  useEffect(() => {
-    if (!settings) return;
-    setEmailOn(settings.reminderChannels?.email ?? false);
-    setSmsOn(settings.reminderChannels?.sms ?? false);
-    setAdvance(settings.reminderAdvance ?? '1d');
-    setHostEmail(settings.hostEmail ?? '');
-    setHostPhone(settings.hostPhone ?? '');
-    setHostLang(settings.language ?? 'EN');
-  }, [settings]);
 
   const channelConfigured = (emailOn && hostEmail.trim()) || (smsOn && hostPhone.trim());
 
@@ -266,12 +268,12 @@ export const AdminAgendaTab: React.FC<AdminAgendaTabProps> = ({ language, t, set
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <button type="button" onClick={() => setEmailOn(!emailOn)} className={toggleCls(emailOn)}>
+          <button type="button" onClick={() => setReminderForm((f) => ({ ...f, emailOn: !f.emailOn }))} className={toggleCls(emailOn)}>
             <Mail className="w-4 h-4" />
             {t.agendaReminderEmailLabel}
             {caps?.email ? null : <span className="ml-auto text-[9px] font-mono text-amber-700 bg-amber-100 px-1.5 py-0.5 rounded-full">MOCK</span>}
           </button>
-          <button type="button" onClick={() => setSmsOn(!smsOn)} className={toggleCls(smsOn)}>
+          <button type="button" onClick={() => setReminderForm((f) => ({ ...f, smsOn: !f.smsOn }))} className={toggleCls(smsOn)}>
             <MessageSquare className="w-4 h-4" />
             {t.agendaReminderSmsLabel}
             {caps?.sms ? null : <span className="ml-auto text-[9px] font-mono text-amber-700 bg-amber-100 px-1.5 py-0.5 rounded-full">MOCK</span>}
@@ -281,18 +283,18 @@ export const AdminAgendaTab: React.FC<AdminAgendaTabProps> = ({ language, t, set
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
             <label className="label-mono block mb-1">{t.agendaReminderHostEmailLabel}</label>
-            <input type="email" value={hostEmail} onChange={(e) => setHostEmail(e.target.value)} className={inputCls} />
+            <input type="email" value={hostEmail} onChange={(e) => setReminderForm((f) => ({ ...f, hostEmail: e.target.value }))} className={inputCls} />
           </div>
           <div>
             <label className="label-mono block mb-1">{t.agendaReminderHostPhoneLabel}</label>
-            <input type="tel" value={hostPhone} onChange={(e) => setHostPhone(e.target.value)} className={inputCls} />
+            <input type="tel" value={hostPhone} onChange={(e) => setReminderForm((f) => ({ ...f, hostPhone: e.target.value }))} className={inputCls} />
           </div>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
             <label className="label-mono block mb-1">{t.agendaReminderAdvanceLabel}</label>
-            <select value={advance} onChange={(e) => setAdvance(e.target.value)} className={inputCls}>
+            <select value={advance} onChange={(e) => setReminderForm((f) => ({ ...f, advance: e.target.value }))} className={inputCls}>
               {ADVANCE_OPTIONS.map((opt) => (
                 <option key={opt} value={opt}>{advanceLabel(t, opt)}</option>
               ))}
@@ -301,7 +303,7 @@ export const AdminAgendaTab: React.FC<AdminAgendaTabProps> = ({ language, t, set
           </div>
           <div>
             <label className="label-mono block mb-1">{t.agendaReminderLangLabel}</label>
-            <select value={hostLang} onChange={(e) => setHostLang(e.target.value as Language)} className={inputCls}>
+            <select value={hostLang} onChange={(e) => setReminderForm((f) => ({ ...f, hostLang: e.target.value as Language }))} className={inputCls}>
               <option value="EN">English</option>
               <option value="FR">Français</option>
             </select>
