@@ -91,6 +91,7 @@ const COLLECTION_DEFS: CollectionDef[] = [
       { name: 'showScheduleTime', type: 'bool', options: {} },
       { name: 'schedule', type: 'json', options: {} },
       { name: 'themeId', type: 'text', options: {} },
+      { name: 'customTheme', type: 'json', options: {} },
       { name: 'contentOpenAt', type: 'text', options: {} },
       { name: 'contentCloseAt', type: 'text', options: {} },
     ],

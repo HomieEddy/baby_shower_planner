@@ -161,6 +161,8 @@ export interface Translations {
   customMsgLabel: string;
   customTemplate: string;
   customTemplateDesc: string;
+  customThemeDesc: string;
+  customThemeLabel: string;
   dateChangeTemplate: string;
   dateChangeTemplateDesc: string;
   dayOfBadge: string;
@@ -997,6 +999,8 @@ export const translations: Record<Language, Translations> = {
     customMsgLabel: "Custom Message (Optional)",
     customTemplate: "Custom Message",
     customTemplateDesc: "General update",
+    customThemeDesc: "Pick your own font and 3 colors",
+    customThemeLabel: "Custom Theme",
     dateChangeTemplate: "Date Change",
     dateChangeTemplateDesc: "Update event date/time",
     dayOfBadge: "Day-Of Check-In & Seating",
@@ -1436,7 +1440,7 @@ export const translations: Record<Language, Translations> = {
     selectPartyHint: "Select party to highlight fitting tables",
     selectPhotosLabel: "Select Photos (Multiple Supported)",
     selectTablePlaceholder: "-- Select Your Table (Optional) --",
-    selectThemeLabel: "Select Premade Theme (15 Options)",
+    selectThemeLabel: "Select Theme",
     sendEmailBtn: "Send Email",
     sendEmailLogNotice: "No email provider configured — invite details logged to console & magic link generated below.",
     sendInviteBtn: "Send Invite",
@@ -1831,6 +1835,8 @@ export const translations: Record<Language, Translations> = {
     customMsgLabel: "Message personnalisé (Optionnel)",
     customTemplate: "Message personnalisé",
     customTemplateDesc: "Mise à jour générale",
+    customThemeDesc: "Choisissez votre police et vos 3 couleurs",
+    customThemeLabel: "Thème personnalisé",
     dateChangeTemplate: "Changement de date",
     dateChangeTemplateDesc: "Mise à jour de la date/heure",
     dayOfBadge: "Pointage & placement du jour J",
@@ -2270,7 +2276,7 @@ export const translations: Record<Language, Translations> = {
     selectPartyHint: "Sélectionnez un groupe pour mettre en évidence les tables adaptées",
     selectPhotosLabel: "Sélectionner des photos (plusieurs possibles)",
     selectTablePlaceholder: "-- Sélectionnez votre table (optionnel) --",
-    selectThemeLabel: "Sélectionnez un thème (15 options)",
+    selectThemeLabel: "Sélectionnez un thème",
     sendEmailBtn: "Envoyer Email",
     sendEmailLogNotice: "Aucun service d'envoi configuré — invitation enregistrée dans la console et lien généré ci-dessous.",
     sendInviteBtn: "Envoyer l'invitation",
