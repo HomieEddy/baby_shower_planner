@@ -843,9 +843,19 @@ export async function setPhotoVisibility(id: string, visible: boolean): Promise<
   return fromRecord<EventPhoto>(r);
 }
 
-export async function likePhoto(id: string): Promise<EventPhoto | undefined> {
+export async function likePhoto(id: string, deviceId?: string): Promise<EventPhoto | undefined> {
   const r = await pb.collection('photos').getOne(id);
-  const updated = await pb.collection('photos').update(id, { likes: (r.likes || 0) + 1 });
+  const likedBy: string[] = Array.isArray(r.liked_by) ? r.liked_by : [];
+  if (deviceId && likedBy.includes(deviceId)) {
+    return fromRecord<EventPhoto>(r); // this device already liked it
+  }
+  if (!deviceId) {
+    // Legacy callers without an identity: keep the old increment behavior.
+    const updated = await pb.collection('photos').update(id, { likes: (r.likes || 0) + 1 });
+    return fromRecord<EventPhoto>(updated);
+  }
+  const nextLikedBy = [...likedBy, deviceId];
+  const updated = await pb.collection('photos').update(id, { likes: nextLikedBy.length, liked_by: nextLikedBy });
   return fromRecord<EventPhoto>(updated);
 }
 

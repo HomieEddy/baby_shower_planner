@@ -7,6 +7,7 @@ interface PhotoCardProps {
   photo: EventPhoto;
   isSelected: boolean;
   layoutMode: 'masonry' | 'grid';
+  liked: boolean;
   onSelect: (id: string) => void;
   onDelete: (id: string) => void;
   onLike: (id: string) => void;
@@ -18,6 +19,7 @@ export const PhotoCard: React.FC<PhotoCardProps> = ({
   photo,
   isSelected,
   layoutMode,
+  liked,
   onSelect,
   onDelete,
   onLike,
@@ -115,7 +117,7 @@ export const PhotoCard: React.FC<PhotoCardProps> = ({
           onClick={(e) => { e.stopPropagation(); onLike(photo.id); }}
           className="flex items-center gap-1 text-xs font-bold text-rose-600 hover:scale-110 transition-transform p-1"
         >
-          <Heart className={`w-3.5 h-3.5 ${photo.likes ? 'fill-rose-500' : ''}`} />
+          <Heart className={`w-3.5 h-3.5 ${liked ? 'fill-rose-500' : ''}`} />
           <span>{photo.likes || 0}</span>
         </button>
       </div>

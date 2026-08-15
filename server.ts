@@ -593,7 +593,11 @@ async function requestHandler(req: http.IncomingMessage, res: http.ServerRespons
           if (lock) {
             return sendJson(res, 403, { error: 'GUEST_CONTENT_LOCKED', opensAt: lock.opensAt, closesAt: lock.closesAt });
           }
-          const updated = await likePhoto(id);
+          const body = await parseJson(req).catch(() => ({}));
+          const deviceId = typeof body.device_id === 'string' && body.device_id
+            ? body.device_id.slice(0, 64)
+            : undefined;
+          const updated = await likePhoto(id, deviceId);
           return sendJson(res, 200, { success: true, photo: updated });
         }
         if (method === 'PATCH') {
