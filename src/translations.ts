@@ -339,6 +339,7 @@ export interface Translations {
   fpEditCancelledToast: string;
   fpElementRemovedToast: string;
   fpEmailsSentToast: string;
+  fpNoEmailsToast: string;
   fpLandmarkAddedToast: string;
   fpNoFitTableToast: string;
   fpNoFitToast: string;
@@ -1225,6 +1226,7 @@ export const translations: Record<Language, Translations> = {
     fpEditCancelledToast: "Floor plan editing cancelled.",
     fpElementRemovedToast: "Removed element from floor map",
     fpEmailsSentToast: "Sent seating plan emails to {{count}} guest(s)!",
+    fpNoEmailsToast: "No seating plan emails sent — guests need an email address to receive them.",
     fpLandmarkAddedToast: "Added {{name}}",
     fpNoFitTableToast: "\"{{table}}\" only has {{free}} free seat(s), but \"{{guest}}\" needs {{needed}}.",
     fpNoFitToast: "No available table has enough contiguous open seats for remaining unseated parties.",
@@ -2108,6 +2110,7 @@ export const translations: Record<Language, Translations> = {
     fpEditCancelledToast: "Modification du plan annulée.",
     fpElementRemovedToast: "Élément retiré du plan",
     fpEmailsSentToast: "Emails du plan envoyés à {{count}} invité(s) !",
+    fpNoEmailsToast: "Aucun email de plan envoyé — les invités doivent avoir une adresse email.",
     fpLandmarkAddedToast: "{{name}} ajouté",
     fpNoFitTableToast: "« {{table}} » n'a que {{free}} place(s) libre(s), mais « {{guest}} » en demande {{needed}}.",
     fpNoFitToast: "Aucune table disponible n'a assez de places libres pour les groupes restants.",

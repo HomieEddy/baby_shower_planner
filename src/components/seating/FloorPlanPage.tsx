@@ -628,7 +628,9 @@ export const FloorPlanPage = () => {
       const data = await res.json();
       if (data.success) {
         setIsEmailModalOpen(false);
-        setNotification(t.fpEmailsSentToast.replace('{{count}}', String(data.count)));
+        setNotification(data.count > 0
+          ? t.fpEmailsSentToast.replace('{{count}}', String(data.count))
+          : t.fpNoEmailsToast);
         setTimeout(() => setNotification(null), 4000);
       }
     } catch (err) {

@@ -730,11 +730,18 @@ export async function assignGuestToTable(guestId: string, tableId: string | null
 export async function shareFloorPlanEmail(guestIds?: string[], customMessage?: string): Promise<{ count: number }> {
   const guests = guestIds?.length ? await Promise.all(guestIds.map(id => pb.collection('guests').getOne(id))) : await getAllGuests();
   const map = await getFloorMap();
+  let settings: EventSettings | null = null;
+  try { settings = await getSettings(); } catch { /* settings missing — skip send */ }
+  let count = 0;
   for (const g of guests) {
+    if (!g.email || !settings) continue;
     const table = map.tables.find(t => t.assignedGuestIds.includes(g.id));
-    console.log(`[FLOOR PLAN EMAIL] To: ${g.name} <${g.email}> | Table: ${table?.name || 'Unassigned'} | Msg: ${customMessage || ''}`);
+    const { sendFloorPlanEmail } = await import('../lib/email');
+    if (await sendFloorPlanEmail(fromRecord<Guest>(g), settings, table?.name || '', customMessage || '')) {
+      count++;
+    }
   }
-  return { count: guests.length };
+  return { count };
 }
 
 // ─── Photos ───────────────────────────────────────────────────────
