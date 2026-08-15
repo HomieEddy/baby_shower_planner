@@ -24,6 +24,7 @@ export interface Translations {
   agendaColumnTodo: string;
   agendaDeleteConfirmMsg: string;
   agendaDeleteConfirmTitle: string;
+  agendaDeleteBtn: string;
   agendaDescPh: string;
   agendaEditTaskTitle: string;
   agendaEmptyColumnMsg: string;
@@ -35,6 +36,7 @@ export interface Translations {
   agendaReminderEmailLabel: string;
   agendaReminderHostEmailLabel: string;
   agendaReminderHostPhoneLabel: string;
+  agendaReminderLangLabel: string;
   agendaReminderPanelDesc: string;
   agendaReminderPanelTitle: string;
   agendaReminderSaveBtn: string;
@@ -51,6 +53,8 @@ export interface Translations {
   agendaTaskModalSave: string;
   agendaTaskStatusLabel: string;
   agendaTaskTitleLabel: string;
+  agendaTaskSavedToast: string;
+  agendaTaskDeletedToast: string;
   agendaTitlePh: string;
   agendaTodayBtn: string;
   adminCoHostControl: string;
@@ -904,6 +908,7 @@ export const translations: Record<Language, Translations> = {
     agendaColumnTodo: "To Do",
     agendaDeleteConfirmMsg: "This will permanently delete the task. This cannot be undone.",
     agendaDeleteConfirmTitle: "Delete Task?",
+    agendaDeleteBtn: "Delete Task",
     agendaDescPh: "Optional notes...",
     agendaEditTaskTitle: "Edit Task",
     agendaEmptyColumnMsg: "No tasks here yet",
@@ -915,6 +920,7 @@ export const translations: Record<Language, Translations> = {
     agendaReminderEmailLabel: "Email reminders",
     agendaReminderHostEmailLabel: "Host email",
     agendaReminderHostPhoneLabel: "Host phone (SMS)",
+    agendaReminderLangLabel: "Reminder language",
     agendaReminderPanelDesc: "Get notified before tasks are due. Reminders are sent once per task, only for tasks with a due date.",
     agendaReminderPanelTitle: "Reminder Settings",
     agendaReminderSaveBtn: "Save Reminder Settings",
@@ -931,6 +937,8 @@ export const translations: Record<Language, Translations> = {
     agendaTaskModalSave: "Save Task",
     agendaTaskStatusLabel: "Status",
     agendaTaskTitleLabel: "Task title",
+    agendaTaskSavedToast: "Task saved",
+    agendaTaskDeletedToast: "Task deleted",
     agendaTitlePh: "e.g. Order the cake, book the venue...",
     agendaTodayBtn: "Today",
     adminCoHostControl: "[03] Co-Host Control Center",
@@ -1782,6 +1790,7 @@ export const translations: Record<Language, Translations> = {
     agendaColumnTodo: "À faire",
     agendaDeleteConfirmMsg: "Cette action supprimera définitivement la tâche. Impossible d'annuler.",
     agendaDeleteConfirmTitle: "Supprimer la tâche ?",
+    agendaDeleteBtn: "Supprimer la tâche",
     agendaDescPh: "Notes facultatives...",
     agendaEditTaskTitle: "Modifier la tâche",
     agendaEmptyColumnMsg: "Aucune tâche pour le moment",
@@ -1793,6 +1802,7 @@ export const translations: Record<Language, Translations> = {
     agendaReminderEmailLabel: "Rappels par e-mail",
     agendaReminderHostEmailLabel: "E-mail de l'hôte",
     agendaReminderHostPhoneLabel: "Téléphone de l'hôte (SMS)",
+    agendaReminderLangLabel: "Langue des rappels",
     agendaReminderPanelDesc: "Soyez averti avant l'échéance des tâches. Les rappels sont envoyés une seule fois par tâche, uniquement pour les tâches avec une date.",
     agendaReminderPanelTitle: "Paramètres des rappels",
     agendaReminderSaveBtn: "Enregistrer les paramètres",
@@ -1809,6 +1819,8 @@ export const translations: Record<Language, Translations> = {
     agendaTaskModalSave: "Enregistrer la tâche",
     agendaTaskStatusLabel: "Statut",
     agendaTaskTitleLabel: "Titre de la tâche",
+    agendaTaskSavedToast: "Tâche enregistrée",
+    agendaTaskDeletedToast: "Tâche supprimée",
     agendaTitlePh: "ex. Commander le gâteau, réserver la salle...",
     agendaTodayBtn: "Aujourd'hui",
     adminCoHostControl: "[03] Centre de Contrôle Hôte",

@@ -10,6 +10,7 @@ import { GuestCheckIn } from './GuestCheckIn';
 import { AdminSettingsTab } from './AdminSettingsTab';
 import { AdminAlertsTab } from './AdminAlertsTab';
 import { AdminGuestbookFeed } from './AdminGuestbookFeed';
+import { AdminAgendaTab } from './AdminAgendaTab';
 import { useToast } from '../shared/ToastContext';
 import { useConfirm } from '../shared/ConfirmDialog';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
@@ -34,6 +35,7 @@ import {
   Menu,
   X,
   ChevronRight,
+  CalendarDays,
 } from 'lucide-react';
 
 const TABS = [
@@ -41,6 +43,7 @@ const TABS = [
   { id: 'catering', icon: Utensils },
   { id: 'escort', icon: Tag },
   { id: 'gifts', icon: Gift },
+  { id: 'agenda', icon: CalendarDays },
   { id: 'checkin', icon: UserCheck },
   { id: 'settings', icon: Settings },
   { id: 'alerts', icon: AlertTriangle },
@@ -78,6 +81,7 @@ export const AdminDashboard = () => {
       case 'catering': return t.tabCatering;
       case 'escort': return t.tabEscort;
       case 'gifts': return `${t.tabGifts} (${gifts.length})`;
+      case 'agenda': return t.tabAgenda;
       case 'checkin': return t.tabCheckIn;
       case 'settings': return t.tabHostSettings;
       case 'alerts': return t.tabUrgentAlerts;
@@ -340,6 +344,17 @@ export const AdminDashboard = () => {
       {adminSubTab === 'gifts' && (
         <TabPane>
           <ThankYouTrackerView gifts={gifts} guests={guests} settings={settings} onRefreshData={refreshOverview} />
+        </TabPane>
+      )}
+
+      {adminSubTab === 'agenda' && (
+        <TabPane>
+          <AdminAgendaTab
+            language={language}
+            t={t}
+            settings={settings}
+            onSaveSettings={handleSaveSettings}
+          />
         </TabPane>
       )}
 

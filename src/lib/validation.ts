@@ -45,7 +45,7 @@ export const AgendaTaskSchema = z.object({
   description: z.string().optional(),
   due_date: optionalDate,
   due_time: optionalTime,
-  status: z.enum(['todo', 'in_progress', 'done']).default('todo'),
+  status: z.enum(['todo', 'in_progress', 'done']),
 });
 
 export const AgendaReorderSchema = z.array(z.object({
