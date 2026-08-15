@@ -728,7 +728,9 @@ export async function assignGuestToTable(guestId: string, tableId: string | null
 }
 
 export async function shareFloorPlanEmail(guestIds?: string[], customMessage?: string): Promise<{ count: number }> {
-  const guests = guestIds?.length ? await Promise.all(guestIds.map(id => pb.collection('guests').getOne(id))) : await getAllGuests();
+  const guests: any[] = guestIds?.length
+    ? await Promise.all(guestIds.map(id => pb.collection('guests').getOne(id)))
+    : await getAllGuests();
   const map = await getFloorMap();
   let settings: EventSettings | null = null;
   try { settings = await getSettings(); } catch { /* settings missing — skip send */ }

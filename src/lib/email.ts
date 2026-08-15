@@ -175,7 +175,7 @@ export async function sendFloorPlanEmail(guest: Guest, settings: EventSettings, 
   const subject = fr ? 'Votre table pour le baby shower' : 'Your table for the Baby Shower';
   const tableLine = tableName
     ? (fr ? `Vous êtes à la table : <strong>${tableName}</strong>.` : `You are seated at table: <strong>${tableName}</strong>.`)
-    : (fr ? 'Vous n'avez pas de table attitrée.' : 'You have open seating.');
+    : (fr ? "Vous n'avez pas de table attitrée." : 'You have open seating.');
   const html = `
     <div style="font-family: Georgia, serif; max-width: 560px; margin: 0 auto; padding: 32px 24px; background: #FDFBF7; color: #4A3F35;">
       <div style="text-align: center; margin-bottom: 20px;">
@@ -206,7 +206,8 @@ export async function sendFloorPlanEmail(guest: Guest, settings: EventSettings, 
   }
 }
 
-// Free-form thank-you note (used by the gift tracker; delivered as plain HTML paragraphs)export async function sendThankYouEmail(guest: Guest, text: string): Promise<boolean> {
+// Free-form thank-you note (used by the gift tracker; delivered as plain HTML paragraphs)
+export async function sendThankYouEmail(guest: Guest, text: string): Promise<boolean> {
   const client = getClient();
   if (!client) {
     console.log(`[MOCK THANKYOU EMAIL] To: ${guest.email} | Body: ${text.slice(0, 100)}...`);

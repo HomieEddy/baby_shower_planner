@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Guest, GuestbookEntry, EventSettings, EventAlert, GiftLog } from '../../types';
 import { HostPhotoGalleryPage } from '../photos/HostPhotoGalleryPage';
@@ -69,6 +69,7 @@ export const AdminDashboard = () => {
   const language = useAppStore((s) => s.language);
   const settings = useSettingsStore((s) => s.settings);
   const setSettings = useSettingsStore((s) => s.setSettings);
+  const fetchSettings = useSettingsStore((s) => s.fetchSettings);
   const t = useT();
   const { toast } = useToast();
 
