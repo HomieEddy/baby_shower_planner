@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { parseToYmd, formatDateLong, parseTimeRange, formatTime12h, formatTimeRangeString, formatGuestWindow } from './dateUtils';
+import { parseToYmd, formatDateLong, parseTimeRange, formatTime12h, formatTimeRangeString, formatGuestWindow, taskDueAt, isInReminderWindow, formatTaskDue } from './dateUtils';
 
 describe('parseToYmd', () => {
   it('passes through YYYY-MM-DD', () => {
@@ -94,5 +94,49 @@ describe('formatGuestWindow', () => {
   it('handles missing values', () => {
     expect(formatGuestWindow(undefined, undefined, 'EN')).toBe('');
     expect(formatGuestWindow('bad-date', undefined, 'EN')).toBe('');
+  });
+});
+
+describe('taskDueAt', () => {
+  it('uses the given time', () => {
+    expect(taskDueAt('2026-09-12', '18:30')).toBe(new Date(2026, 8, 12, 18, 30).getTime());
+  });
+
+  it('defaults to 09:00 when time omitted', () => {
+    expect(taskDueAt('2026-09-12')).toBe(new Date(2026, 8, 12, 9, 0).getTime());
+  });
+});
+
+describe('isInReminderWindow', () => {
+  const due = new Date(2026, 8, 12, 18, 0).getTime();
+  const DAY = 86_400_000;
+
+  it('fires inside [due - advance, due)', () => {
+    expect(isInReminderWindow(due, DAY, due - DAY)).toBe(true);
+    expect(isInReminderWindow(due, DAY, due - 1)).toBe(true);
+  });
+
+  it('does not fire before the window or at/after due', () => {
+    expect(isInReminderWindow(due, DAY, due - DAY - 1)).toBe(false);
+    expect(isInReminderWindow(due, DAY, due)).toBe(false);
+    expect(isInReminderWindow(due, DAY, due + 60_000)).toBe(false);
+  });
+
+  it('fires immediately when the task was created inside the window', () => {
+    expect(isInReminderWindow(due, DAY, due - 3_600_000)).toBe(true);
+  });
+});
+
+describe('formatTaskDue', () => {
+  it('formats EN with time', () => {
+    expect(formatTaskDue('2026-09-12', '09:00', 'EN')).toBe('Saturday, September 12, 2026 at 9:00 AM');
+  });
+
+  it('formats FR date-only', () => {
+    expect(formatTaskDue('2026-09-12', undefined, 'FR')).toBe('Samedi 12 septembre 2026');
+  });
+
+  it('returns empty for empty date', () => {
+    expect(formatTaskDue('', '09:00', 'EN')).toBe('');
   });
 });

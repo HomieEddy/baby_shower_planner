@@ -1,5 +1,6 @@
 import { createRequire } from 'node:module';
-import { Guest, EventSettings } from '../types';
+import { Guest, EventSettings, AgendaTask } from '../types';
+import { formatTaskDue } from './dateUtils';
 
 const require = createRequire(import.meta.url);
 
@@ -100,6 +101,36 @@ export async function sendThankYouSms(guest: Guest, text: string): Promise<boole
     return true;
   } catch (err) {
     console.error(`[TWILIO] Thank-you SMS failed for ${guest.phone}:`, err);
+    return false;
+  }
+}
+
+// Agenda reminder for the host (single-language, per settings.language).
+export async function sendAgendaReminderSms(to: string, task: AgendaTask, settings: EventSettings): Promise<boolean> {
+  const client = getClient();
+  const fr = settings.language === 'FR';
+  const when = formatTaskDue(task.due_date || '', task.due_time, settings.language || 'EN');
+  const lines = [
+    fr ? `Rappel: ${task.title}` : `Reminder: ${task.title}`,
+    ...(when ? [when] : []),
+    ...(task.description ? [task.description] : []),
+  ];
+  const body = lines.join('\n');
+
+  if (!client || !process.env.TWILIO_PHONE_NUMBER) {
+    console.log(`[MOCK AGENDA SMS] To: ${to} | Body: ${body}`);
+    return true;
+  }
+  try {
+    await client.messages.create({
+      body: body.slice(0, 640),
+      from: process.env.TWILIO_PHONE_NUMBER,
+      to,
+    });
+    console.log(`[TWILIO] Agenda reminder SMS sent to ${to}`);
+    return true;
+  } catch (err) {
+    console.error(`[TWILIO] Agenda reminder SMS failed for ${to}:`, err);
     return false;
   }
 }
