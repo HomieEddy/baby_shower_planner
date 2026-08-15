@@ -3,6 +3,7 @@
 // namespaces (`default` ends up as the namespace object, not the class).
 // `pocketbase/cjs` is the constructor itself and types via dist/pocketbase.cjs.d.ts.
 import PocketBase from 'pocketbase/cjs';
+import crypto from 'node:crypto';
 import {
   Guest, GuestbookEntry, EventSettings, EventAlert, AlertType,
   FloorMapData, EventPhoto, GiftLog, AgendaTask, AgendaStatus,
@@ -20,6 +21,36 @@ pb.autoCancellation(false);
 
 function fromRecord<T>(r: Record<string, unknown>): T {
   return { ...r, created_at: (r.created_at as string) || (r.created as string) } as T;
+}
+
+// Escape a value for safe use inside a PocketBase filter string.
+function escFilter(s: string): string {
+  return s.replace(/\\/g, '\\\\').replace(/"/g, '\\"');
+}
+
+// Cryptographically random invitation token + 4-digit reservation code
+// (Math.random would be predictable enough to guess a guest's RSVP link).
+function newMagicToken(): string {
+  return 'token-' + crypto.randomBytes(6).toString('hex') + Date.now().toString(36);
+}
+function newReservationCode(): string {
+  return crypto.randomInt(1000, 10000).toString();
+}
+
+// Remove a guest from every table on the floor map (decline, deletion).
+async function removeGuestFromFloorMaps(guestId: string): Promise<void> {
+  try {
+    const maps = await pb.collection('floor_maps').getFullList();
+    if (maps.length === 0) return;
+    const map = maps[0];
+    const tables: any[] = JSON.parse(JSON.stringify(map.tables || []));
+    for (const t of tables) {
+      t.assignedGuestIds = (t.assignedGuestIds || []).filter((gid: string) => gid !== guestId);
+    }
+    await pb.collection('floor_maps').update(map.id, { tables });
+  } catch (err) {
+    console.error('Failed to update floor map:', err);
+  }
 }
 
 // ─── Init / Auth / Seed ───────────────────────────────────────────
@@ -251,7 +282,7 @@ export async function getAllGuests(): Promise<Guest[]> {
 
 export async function getGuestByToken(token: string): Promise<Guest | undefined> {
   try {
-    const r = await pb.collection('guests').getFirstListItem(`magic_token="${token}"`);
+    const r = await pb.collection('guests').getFirstListItem(`magic_token="${escFilter(token)}"`);
     return fromRecord<Guest>(r);
   } catch { return undefined; }
 }
@@ -264,16 +295,16 @@ export async function getGuestById(id: string): Promise<Guest> {
 export async function addGuest(payload: AddGuestPayload): Promise<{ guest: Guest; magic_token: string; invite_message: string }> {
   const existing = payload.email || payload.phone
     ? await pb.collection('guests').getList(1, 1, {
-        filter: payload.email ? `email="${payload.email}"` : `phone="${payload.phone}"`,
+        filter: payload.email ? `email="${escFilter(payload.email)}"` : `phone="${escFilter(payload.phone || '')}"`,
       })
     : { items: [] };
   if (existing.items.length > 0) {
     const g = fromRecord<Guest>(existing.items[0]);
     return { guest: g, magic_token: g.magic_token, invite_message: await inviteMessageFor(g) };
   }
-  const magic_token = 'token-' + Math.random().toString(36).substring(2, 10) + Date.now().toString(36);
+  const magic_token = newMagicToken();
   const partySize = payload.max_party_size && payload.max_party_size > 0 ? payload.max_party_size : 1;
-  const code = Math.floor(1000 + Math.random() * 9000).toString();
+  const code = newReservationCode();
   const guest = await pb.collection('guests').create({
     name: payload.name,
     email: payload.email || '',
@@ -302,9 +333,12 @@ export async function inviteMessageFor(guest: Guest): Promise<string> {
 }
 
 export async function submitRsvp(token: string, payload: SubmitRsvpPayload): Promise<Guest> {
-  const r = await pb.collection('guests').getFirstListItem(`magic_token="${token}"`);
+  const r = await pb.collection('guests').getFirstListItem(`magic_token="${escFilter(token)}"`).catch(() => null);
   if (!r) throw new Error('INVALID_TOKEN');
   if (r.is_read_only) return fromRecord<Guest>(r);
+  // Second submission (open tabs, shared links) must not silently overwrite:
+  // the client resets the token first, which is the only way to edit an RSVP.
+  if (r.token_used) throw new Error('RSVP_ALREADY_SUBMITTED');
 
   const updates: Record<string, unknown> = {
     rsvp_status: payload.rsvp_status,
@@ -313,9 +347,21 @@ export async function submitRsvp(token: string, payload: SubmitRsvpPayload): Pro
   };
 
   if (payload.rsvp_status === 'Attending') {
-    const details = payload.attendee_details?.filter(d => d.name.trim()) || [];
-    const names = details.length > 0 ? details.map(d => d.name.trim()) : (payload.attendee_names?.filter(n => n.trim()) || [r.name]);
-    updates.attendee_details = details;
+    const details = Array.isArray(payload.attendee_details)
+      ? payload.attendee_details.filter(d => d && typeof d.name === 'string' && d.name.trim())
+      : [];
+    let names: string[];
+    if (details.length > 0) {
+      names = details.map(d => d.name.trim());
+    } else {
+      const raw = Array.isArray(payload.attendee_names)
+        ? payload.attendee_names.filter(n => typeof n === 'string' && n.trim())
+        : [];
+      names = raw.length > 0 ? raw.map(n => n.trim()) : [r.name];
+    }
+    // Never exceed the party size the host granted.
+    names = names.slice(0, Math.max(1, Number(r.max_party_size) || 1));
+    updates.attendee_details = details.slice(0, names.length);
     updates.attendee_names = names;
     updates.attending_party_size = names.length;
   } else {
@@ -323,14 +369,18 @@ export async function submitRsvp(token: string, payload: SubmitRsvpPayload): Pro
     updates.attendee_details = [];
     updates.attending_party_size = 0;
     updates.table_id = null;
-    // Unassign from floor map tables
   }
   const updated = await pb.collection('guests').update(r.id, updates);
+  if (payload.rsvp_status === 'Declined') {
+    await removeGuestFromFloorMaps(r.id);
+  }
   return fromRecord<Guest>(updated);
 }
 
 export async function resetTokenUsage(token: string): Promise<Guest> {
-  const r = await pb.collection('guests').getFirstListItem(`magic_token="${token}"`);
+  const r = await pb.collection('guests').getFirstListItem(`magic_token="${escFilter(token)}"`).catch(() => null);
+  if (!r) throw new Error('INVALID_TOKEN');
+  if (r.is_read_only) throw new Error('RSVP_READ_ONLY');
   const updated = await pb.collection('guests').update(r.id, { token_used: false });
   return fromRecord<Guest>(updated);
 }
@@ -347,7 +397,7 @@ export type GuestContactPayload = {
 // shared link) so future reminders reach them. Stored as-is: there's no
 // email/SMS verification infra, and it's their own reminder channel.
 export async function updateGuestContact(token: string, payload: GuestContactPayload): Promise<Guest> {
-  const r = await pb.collection('guests').getFirstListItem(`magic_token="${token}"`);
+  const r = await pb.collection('guests').getFirstListItem(`magic_token="${escFilter(token)}"`);
   const channel = payload.delivery_channel || 'none';
   const email = (payload.email || '').trim();
   const phone = (payload.phone || '').trim();
@@ -366,7 +416,7 @@ export type GuestInviteResult =
 // ordinary guest, editable/deletable in the admin). If the contact matches an
 // existing guest, we return that guest's link instead of duplicating.
 export async function inviteGuest(token: string, payload: { name: string; contact?: string; channel?: 'link-only' | 'email' | 'text' | 'both'; note?: string }): Promise<GuestInviteResult> {
-  const inviter = await pb.collection('guests').getFirstListItem(`magic_token="${token}"`).catch(() => null);
+  const inviter = await pb.collection('guests').getFirstListItem(`magic_token="${escFilter(token)}"`).catch(() => null);
   if (!inviter) return { ok: false, error: 'INVALID_TOKEN' };
   const name = (payload.name || '').trim();
   if (!name) return { ok: false, error: 'NAME_REQUIRED' };
@@ -377,11 +427,15 @@ export async function inviteGuest(token: string, payload: { name: string; contac
   const phone = !isEmail ? contact : '';
   const email = isEmail ? contact : '';
   if (channel !== 'link-only' && !contact) return { ok: false, error: 'CONTACT_REQUIRED' };
+  // The contact must actually serve the chosen channel — otherwise the invitee
+  // would get a guest record that can never be reached.
+  if ((channel === 'email' || channel === 'both') && !isEmail) return { ok: false, error: 'CONTACT_REQUIRED' };
+  if (channel === 'text' && isEmail) return { ok: false, error: 'CONTACT_REQUIRED' };
 
   // Dedupe on contact (email preferred, falls back to phone) — reuse the link.
   if (contact) {
     const existing = await pb.collection('guests').getList(1, 1, {
-      filter: email ? `email="${email}"` : `phone="${phone}"`,
+      filter: email ? `email="${escFilter(email)}"` : `phone="${escFilter(phone)}"`,
     });
     if (existing.items.length > 0) {
       const g = fromRecord<Guest>(existing.items[0]);
@@ -394,8 +448,8 @@ export async function inviteGuest(token: string, payload: { name: string; contac
     }
   }
 
-  const magic_token = 'token-' + Math.random().toString(36).substring(2, 10) + Date.now().toString(36);
-  const code = Math.floor(1000 + Math.random() * 9000).toString();
+  const magic_token = newMagicToken();
+  const code = newReservationCode();
   const inviterGuest = fromRecord<Guest>(inviter);
   const delivery_channel: 'email' | 'text' | 'both' | 'none' =
     channel === 'email' ? 'email' : channel === 'text' ? 'text' : channel === 'both' ? 'both' : 'none';
@@ -444,7 +498,7 @@ export async function inviteGuest(token: string, payload: { name: string; contac
 
 // Invitations this guest created (name, status, link + message for re-sharing).
 export async function getInvitesByGuest(token: string): Promise<Guest[]> {
-  const inviter = await pb.collection('guests').getFirstListItem(`magic_token="${token}"`).catch(() => null);
+  const inviter = await pb.collection('guests').getFirstListItem(`magic_token="${escFilter(token)}"`).catch(() => null);
   if (!inviter) return [];
   const records = await pb.collection('guests').getFullList({
     filter: `invited_by_guest_id="${inviter.id}"`,
@@ -455,7 +509,7 @@ export async function getInvitesByGuest(token: string): Promise<Guest[]> {
 
 // Guests may remove their own invites (host can always re-add/revert in admin).
 export async function removeInvite(token: string, inviteId: string): Promise<boolean> {
-  const inviter = await pb.collection('guests').getFirstListItem(`magic_token="${token}"`).catch(() => null);
+  const inviter = await pb.collection('guests').getFirstListItem(`magic_token="${escFilter(token)}"`).catch(() => null);
   if (!inviter) return false;
   const invite = await pb.collection('guests').getOne(inviteId).catch(() => null);
   if (!invite || String(invite.invited_by_guest_id || '') !== inviter.id) return false;
@@ -470,36 +524,35 @@ export async function updateGuest(id: string, updates: Partial<Guest>): Promise<
 
 export async function deleteGuest(id: string): Promise<void> {
   await pb.collection('guests').delete(id);
-  try {
-    const maps = await pb.collection('floor_maps').getFullList();
-    if (maps.length > 0) {
-      const map = maps[0];
-      const tables: any[] = JSON.parse(JSON.stringify(map.tables || []));
-      for (const t of tables) {
-        t.assignedGuestIds = (t.assignedGuestIds || []).filter((gid: string) => gid !== id);
-      }
-      await pb.collection('floor_maps').update(map.id, { tables });
-    }
-  } catch (err) {
-    console.error('Failed to update floor map after guest deletion:', err);
-  }
+  await removeGuestFromFloorMaps(id);
 }
 
 export async function batchImportGuests(guestList: AddGuestPayload[]): Promise<{ imported: Guest[]; count: number }> {
+  const existing = await pb.collection('guests').getFullList();
+  const knownEmails = new Set(existing.map((g: any) => (g.email || '').toLowerCase()));
+  const knownPhones = new Set(existing.map((g: any) => (g.phone || '').trim()));
+  const validChannels = ['email', 'text', 'both', 'none'];
   const imported: Guest[] = [];
   for (const item of guestList) {
     if (!item.name?.trim()) continue;
-    const magic_token = 'token-' + Math.random().toString(36).substring(2, 10) + Date.now().toString(36);
-    const code = Math.floor(1000 + Math.random() * 9000).toString();
+    const email = (item.email || '').trim();
+    const phone = (item.phone || '').trim();
+    // Skip duplicates instead of minting a second magic link for one contact.
+    if ((email && knownEmails.has(email.toLowerCase())) || (phone && knownPhones.has(phone))) continue;
+    const magic_token = newMagicToken();
+    const code = newReservationCode();
+    const channel = validChannels.includes(item.delivery_channel || '') ? item.delivery_channel : 'email';
     const g = await pb.collection('guests').create({
-      name: item.name.trim(), email: item.email?.trim() || '', phone: item.phone?.trim() || '',
-      delivery_channel: item.delivery_channel || 'email', code,
+      name: item.name.trim(), email, phone,
+      delivery_channel: channel, code,
       max_party_size: Number(item.max_party_size) || 1,
       rsvp_status: 'Pending', attending_party_size: 0,
       dietary_restrictions: '', language_pref: item.language_pref === 'EN' ? 'EN' : 'FR',
       magic_token, token_used: false,
       created_at: new Date().toISOString(),
     });
+    if (email) knownEmails.add(email.toLowerCase());
+    if (phone) knownPhones.add(phone);
     imported.push(fromRecord<Guest>(g));
   }
   return { imported, count: imported.length };

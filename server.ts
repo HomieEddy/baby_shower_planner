@@ -441,8 +441,15 @@ async function requestHandler(req: http.IncomingMessage, res: http.ServerRespons
           }
         }
         if (isReset && method === 'POST') {
-          const guest = await resetTokenUsage(token);
-          return sendJson(res, 200, { success: true, guest });
+          try {
+            const guest = await resetTokenUsage(token);
+            return sendJson(res, 200, { success: true, guest });
+          } catch (err) {
+            const msg = err instanceof Error ? err.message : '';
+            if (msg === 'INVALID_TOKEN') return sendJson(res, 404, { error: 'INVALID_TOKEN', message: 'Invitation token not found' });
+            if (msg === 'RSVP_READ_ONLY') return sendJson(res, 403, { error: 'RSVP_READ_ONLY' });
+            throw err;
+          }
         }
         if (method === 'GET') {
           const guest = await getGuestByToken(token);
@@ -455,13 +462,20 @@ async function requestHandler(req: http.IncomingMessage, res: http.ServerRespons
           if (!['Attending', 'Declined'].includes(rsvp_status)) {
             return sendJson(res, 400, { error: 'Invalid RSVP status' });
           }
-          const updated = await submitRsvp(token, {
-            rsvp_status, attending_party_size: Number(attending_party_size) || 1,
-            dietary_restrictions: dietary_restrictions || '',
-            attendee_details,
-            attendee_names,
-          });
-          return sendJson(res, 200, { success: true, guest: updated });
+          try {
+            const updated = await submitRsvp(token, {
+              rsvp_status, attending_party_size: Number(attending_party_size) || 1,
+              dietary_restrictions: dietary_restrictions || '',
+              attendee_details,
+              attendee_names,
+            });
+            return sendJson(res, 200, { success: true, guest: updated });
+          } catch (err) {
+            const msg = err instanceof Error ? err.message : '';
+            if (msg === 'INVALID_TOKEN') return sendJson(res, 404, { error: 'INVALID_TOKEN', message: 'Invitation token not found' });
+            if (msg === 'RSVP_ALREADY_SUBMITTED') return sendJson(res, 409, { error: 'RSVP_ALREADY_SUBMITTED', message: 'This RSVP was already submitted. Edit it from the confirmation screen.' });
+            throw err;
+          }
         }
       }
 

@@ -452,6 +452,7 @@ export interface Translations {
   inviteRemovedToast: string;
   inviteSentChannelToast: string;
   inviteSentLinkOnlyToast: string;
+  inviteDeliveryFailedToast: string;
   inviteSentModalMsg: string;
   inviteSentModalTitle: string;
   inviteTabLabel: string;
@@ -1337,6 +1338,7 @@ export const translations: Record<Language, Translations> = {
     inviteRemovedToast: "Invitation removed",
     inviteSentChannelToast: "Invitation sent to {{name}} via {{channel}}",
     inviteSentLinkOnlyToast: "Invitation ready — share the link with {{name}}",
+    inviteDeliveryFailedToast: "Invitation created for {{name}}, but delivery failed. Share the link manually.",
     inviteSentModalMsg: "The magic link below has been logged to the system console and ready to share:",
     inviteSentModalTitle: "Invitation Created & Sent!",
     inviteTabLabel: "3. Invite a Guest",
@@ -2219,6 +2221,7 @@ export const translations: Record<Language, Translations> = {
     inviteRemovedToast: "Invitation retirée",
     inviteSentChannelToast: "Invitation envoyée à {{name}} par {{channel}}",
     inviteSentLinkOnlyToast: "Invitation prête — partagez le lien avec {{name}}",
+    inviteDeliveryFailedToast: "Invitation créée pour {{name}}, mais l'envoi a échoué. Partagez le lien manuellement.",
     inviteSentModalMsg: "Le lien magique ci-dessous a été enregistré dans la console et est prêt à être partagé :",
     inviteSentModalTitle: "Invitation créée et envoyée !",
     inviteTabLabel: "3. Inviter un invité",

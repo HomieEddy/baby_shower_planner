@@ -249,6 +249,8 @@ export const RsvpPage = () => {
           toast.love(t.inviteSentChannelToast
             .replace('{{name}}', data.guest.name)
             .replace('{{channel}}', data.sent.map((c: string) => channelLabel(t, c)).join(' + ')));
+        } else if (data.failed.length > 0) {
+          toast.error(t.inviteDeliveryFailedToast.replace('{{name}}', data.guest.name));
         } else {
           toast.info(t.inviteSentLinkOnlyToast.replace('{{name}}', data.guest.name));
         }
@@ -327,7 +329,7 @@ export const RsvpPage = () => {
           toast.info(t.rsvpDeclinedToast);
         }
       } else {
-        toast.error(dataRes.error || 'Failed to submit RSVP');
+        toast.error(dataRes.message || dataRes.error || 'Failed to submit RSVP');
       }
     } catch (err) {
       console.error('RSVP submit error:', err);
@@ -341,7 +343,11 @@ export const RsvpPage = () => {
   const handleEditRsvp = async () => {
     if (!token) return;
     try {
-      await fetch(`/api/rsvp/${token}/reset`, { method: 'POST' });
+      const res = await fetch(`/api/rsvp/${token}/reset`, { method: 'POST' });
+      if (!res.ok) {
+        toast.error(t.rsvpResetErrorToast);
+        return;
+      }
       setIsEditing(true);
       setSubmitted(false);
       toast.info(t.rsvpUnlockedToast);
