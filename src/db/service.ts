@@ -165,8 +165,8 @@ const COLLECTION_DEFS: CollectionDef[] = [
       { name: 'uploader_name', type: 'text', options: {} },
       { name: 'table_name', type: 'text', options: {} },
       { name: 'table_id', type: 'text', options: {} },
-      { name: 'likes', type: 'number', options: {} },
-      { name: 'liked_by', type: 'json', options: {} },
+      { name: 'reservation_code', type: 'text', options: {} },
+      { name: 'file_size', type: 'number', options: {} },
       { name: 'visible', type: 'bool', options: {} },
       { name: 'created_at', type: 'text', options: {} },
     ],
@@ -804,13 +804,14 @@ export async function getAllPhotos(includeHidden = false): Promise<EventPhoto[]>
     .filter(p => includeHidden || p.visible !== false);
 }
 
-export async function addPhotosBatch(newPhotos: Array<{ url: string; filename: string; caption?: string; uploader_name?: string; table_name?: string; table_id?: string }>): Promise<EventPhoto[]> {
+export async function addPhotosBatch(newPhotos: Array<{ url: string; filename: string; caption?: string; uploader_name?: string; table_name?: string; table_id?: string; reservation_code?: string; file_size?: number }>): Promise<EventPhoto[]> {
   const created: EventPhoto[] = [];
   for (const p of newPhotos) {
     const r = await pb.collection('photos').create({
       url: p.url, filename: p.filename, caption: p.caption || '',
       uploader_name: p.uploader_name || 'Guest', table_name: p.table_name || 'Open Seating',
-      table_id: p.table_id || '', likes: 0, liked_by: [], visible: true, created_at: new Date().toISOString(),
+      table_id: p.table_id || '', reservation_code: p.reservation_code || '',
+      file_size: p.file_size || 0, visible: true, created_at: new Date().toISOString(),
     });
     created.push(fromRecord<EventPhoto>(r));
   }
@@ -843,20 +844,18 @@ export async function setPhotoVisibility(id: string, visible: boolean): Promise<
   return fromRecord<EventPhoto>(r);
 }
 
-export async function likePhoto(id: string, deviceId?: string): Promise<EventPhoto | undefined> {
-  const r = await pb.collection('photos').getOne(id);
-  const likedBy: string[] = Array.isArray(r.liked_by) ? r.liked_by : [];
-  if (deviceId && likedBy.includes(deviceId)) {
-    return fromRecord<EventPhoto>(r); // this device already liked it
+// Photos already stored under a reservation code (per-guest quota).
+export async function getGuestPhotoUsage(reservationCode: string): Promise<{ count: number; bytes: number }> {
+  const records = await pb.collection('photos').getFullList({
+    filter: `reservation_code="${escFilter(reservationCode)}"`,
+  });
+  let count = 0;
+  let bytes = 0;
+  for (const r of records) {
+    count++;
+    bytes += Number(r.file_size) || 0;
   }
-  if (!deviceId) {
-    // Legacy callers without an identity: keep the old increment behavior.
-    const updated = await pb.collection('photos').update(id, { likes: (r.likes || 0) + 1 });
-    return fromRecord<EventPhoto>(updated);
-  }
-  const nextLikedBy = [...likedBy, deviceId];
-  const updated = await pb.collection('photos').update(id, { likes: nextLikedBy.length, liked_by: nextLikedBy });
-  return fromRecord<EventPhoto>(updated);
+  return { count, bytes };
 }
 
 // ─── Gifts ────────────────────────────────────────────────────────

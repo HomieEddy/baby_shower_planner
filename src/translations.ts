@@ -359,7 +359,6 @@ export interface Translations {
   galleryDeleteFailedToast: string;
   galleryDeletedToast: string;
   galleryFiltersResetToast: string;
-  galleryLikedToast: string;
   galleryPhotoRemovedToast: string;
   galleryPrintQrBtn2: string;
   gbEntryDeletedToast: string;
@@ -730,7 +729,6 @@ export interface Translations {
   totalDietaryReported: string;
   totalGiftsLabel: string;
   totalGuestInvites: string;
-  totalGuestLikes: string;
   totalGuestsLabel: string;
   totalSeatsWord: string;
   totalUploadedPhotos: string;
@@ -749,6 +747,13 @@ export interface Translations {
   undoSeatingTitle: string;
   unseatedConfirmedLabel: string;
   uploadErrorToast: string;
+  uploadBatchLimitToast: string;
+  uploadCodeLabel: string;
+  uploadCodePlaceholder: string;
+  uploadCodeRequiredToast: string;
+  uploadInvalidCodeToast: string;
+  uploadPhotoLimitToast: string;
+  uploadPhotoSizeLimitToast: string;
   uploadHeroDesc: string;
   uploadHeroTitle: string;
   uploadInvalidFileToast: string;
@@ -1256,7 +1261,6 @@ export const translations: Record<Language, Translations> = {
     galleryDeleteFailedToast: "Failed to delete some of the selected photos.",
     galleryDeletedToast: "Successfully deleted {{count}} photo(s).",
     galleryFiltersResetToast: "Search and table filters reset.",
-    galleryLikedToast: "Liked photo!",
     galleryPhotoRemovedToast: "Photo removed from memory library.",
     gbEntryDeletedToast: "Entry deleted.",
     gbEntryHiddenToast: "Entry hidden from guests.",
@@ -1635,7 +1639,6 @@ export const translations: Record<Language, Translations> = {
     totalDietaryReported: "Total Reported Dietary Needs",
     totalGiftsLabel: "Total Gifts Received",
     totalGuestInvites: "Total guest invitations",
-    totalGuestLikes: "Total Guest Likes",
     totalGuestsLabel: "Total Guests",
     totalSeatsWord: "total seats",
     totalUploadedPhotos: "Total Uploaded Photos",
@@ -1654,6 +1657,13 @@ export const translations: Record<Language, Translations> = {
     undoSeatingTitle: "Undo seating change (Ctrl+Z)",
     unseatedConfirmedLabel: "Unseated Confirmed",
     uploadErrorToast: "Upload error: {{error}}",
+    uploadBatchLimitToast: "You can upload at most 12 photos at a time.",
+    uploadCodeLabel: "Reservation code",
+    uploadCodePlaceholder: "4-digit code from your invitation",
+    uploadCodeRequiredToast: "Enter the 4-digit reservation code from your invitation.",
+    uploadInvalidCodeToast: "Reservation code not found. Check your invitation.",
+    uploadPhotoLimitToast: "Photo limit reached: {{remaining}} of 12 left for this reservation.",
+    uploadPhotoSizeLimitToast: "Total photo size limit reached for this reservation (24 MB max).",
     uploadHeroDesc: "Snap pictures of fun games, decorations, and sweet moments at your table! All uploaded photos go directly into the hosts' private memory album.",
     uploadHeroTitle: "Capture & Share Baby Shower Memories!",
     uploadInvalidFileToast: "Invalid file type detected ({{files}}). Only photo file formats (JPEG, PNG, WEBP, HEIC, GIF) are accepted!",
@@ -2150,7 +2160,6 @@ export const translations: Record<Language, Translations> = {
     galleryDeleteFailedToast: "Échec de la suppression de certaines photos.",
     galleryDeletedToast: "{{count}} photo(s) supprimée(s) avec succès.",
     galleryFiltersResetToast: "Recherche et filtres réinitialisés.",
-    galleryLikedToast: "Photo aimée !",
     galleryPhotoRemovedToast: "Photo retirée de la bibliothèque.",
     gbEntryDeletedToast: "Message supprimé.",
     gbEntryHiddenToast: "Message masqué pour les invités.",
@@ -2529,7 +2538,6 @@ export const translations: Record<Language, Translations> = {
     totalDietaryReported: "Total des régimes signalés",
     totalGiftsLabel: "Cadeaux reçus au total",
     totalGuestInvites: "Total des invitations envoyées",
-    totalGuestLikes: "J'aime des invités",
     totalGuestsLabel: "Total des invités",
     totalSeatsWord: "places au total",
     totalUploadedPhotos: "Photos téléchargées au total",
@@ -2548,6 +2556,13 @@ export const translations: Record<Language, Translations> = {
     undoSeatingTitle: "Annuler le changement de placement (Ctrl+Z)",
     unseatedConfirmedLabel: "Confirmés non placés",
     uploadErrorToast: "Erreur d'envoi : {{error}}",
+    uploadBatchLimitToast: "Vous pouvez téléverser au maximum 12 photos à la fois.",
+    uploadCodeLabel: "Code de réservation",
+    uploadCodePlaceholder: "Code à 4 chiffres de votre invitation",
+    uploadCodeRequiredToast: "Entrez le code de réservation à 4 chiffres de votre invitation.",
+    uploadInvalidCodeToast: "Code de réservation introuvable. Vérifiez votre invitation.",
+    uploadPhotoLimitToast: "Limite de photos atteinte : {{remaining}} sur 12 restantes pour cette réservation.",
+    uploadPhotoSizeLimitToast: "Limite de taille totale atteinte pour cette réservation (24 Mo max).",
     uploadHeroDesc: "Prenez des photos des jeux, décorations et moments doux à votre table ! Elles iront directement dans l'album privé des hôtes.",
     uploadHeroTitle: "Capturez & partagez les souvenirs du baby shower !",
     uploadInvalidFileToast: "Type de fichier non valide ({{files}}). Seuls les formats photo (JPEG, PNG, WEBP, HEIC, GIF) sont acceptés !",

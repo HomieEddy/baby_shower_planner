@@ -1,16 +1,14 @@
 import React from 'react';
 import { useT } from '../shared/i18n';
-import { Heart, Trash2, Check, Square, EyeOff, Eye } from 'lucide-react';
+import { Trash2, Check, Square, EyeOff, Eye } from 'lucide-react';
 import { EventPhoto } from '../../types';
 
 interface PhotoCardProps {
   photo: EventPhoto;
   isSelected: boolean;
   layoutMode: 'masonry' | 'grid';
-  liked: boolean;
   onSelect: (id: string) => void;
   onDelete: (id: string) => void;
-  onLike: (id: string) => void;
   onToggleHidden: (id: string) => void;
   onClick: (photo: EventPhoto) => void;
 }
@@ -19,10 +17,8 @@ export const PhotoCard: React.FC<PhotoCardProps> = ({
   photo,
   isSelected,
   layoutMode,
-  liked,
   onSelect,
   onDelete,
-  onLike,
   onToggleHidden,
   onClick,
 }) => {
@@ -111,15 +107,6 @@ export const PhotoCard: React.FC<PhotoCardProps> = ({
             {new Date(photo.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
           </p>
         </div>
-
-        <button
-          type="button"
-          onClick={(e) => { e.stopPropagation(); onLike(photo.id); }}
-          className="flex items-center gap-1 text-xs font-bold text-rose-600 hover:scale-110 transition-transform p-1"
-        >
-          <Heart className={`w-3.5 h-3.5 ${liked ? 'fill-rose-500' : ''}`} />
-          <span>{photo.likes || 0}</span>
-        </button>
       </div>
     </div>
   );

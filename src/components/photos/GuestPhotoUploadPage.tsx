@@ -13,6 +13,7 @@ import {
   Zap,
   FileCheck2,
   Lock,
+  KeyRound,
 } from 'lucide-react';
 import { EventPhoto } from '../../types';
 import { compressImage, formatFileSize } from '../../lib/imageCompressor';
@@ -43,6 +44,7 @@ export const GuestPhotoUploadPage = () => {
   const { data: tables = [] } = useFloorMapTables();
   const [selectedTableId, setSelectedTableId] = useState<string>(initialTableId || '');
   const [uploaderName, setUploaderName] = useState('');
+  const [reservationCode, setReservationCode] = useState('');
   const [caption, setCaption] = useState('');
 
   const [fileItems, setFileItems] = useState<OptimizedFileItem[]>([]);
@@ -127,6 +129,13 @@ export const GuestPhotoUploadPage = () => {
       setFileError(t.uploadInvalidFileToast.replace('{{files}}', invalidFiles.slice(0, 2).join(', ')));
     }
 
+    // Per-guest quota is 12 photos — cap the batch client-side too.
+    const room = Math.max(0, 12 - fileItems.length);
+    if (validFiles.length > room) {
+      setFileError(t.uploadBatchLimitToast);
+      return;
+    }
+
     if (validFiles.length > 0) {
       setIsCompressing(true);
       setCompressionProgress(0);
@@ -190,6 +199,10 @@ export const GuestPhotoUploadPage = () => {
       setFileError(t.uploadSelectErrorToast);
       return;
     }
+    if (!/^\d{4}$/.test(reservationCode.trim())) {
+      setFileError(t.uploadCodeRequiredToast);
+      return;
+    }
 
     setIsUploading(true);
 
@@ -218,6 +231,7 @@ export const GuestPhotoUploadPage = () => {
           caption: caption.trim(),
           table_name: chosenTable?.name || '',
           table_id: chosenTable?.id || '',
+          reservation_code: reservationCode.trim(),
           photos: photoPayloads,
         }),
       });
@@ -233,6 +247,15 @@ export const GuestPhotoUploadPage = () => {
       }
 
       if (!res.ok) {
+        if (data.error === 'INVALID_CODE') {
+          throw new Error(t.uploadInvalidCodeToast);
+        }
+        if (data.error === 'PHOTO_LIMIT_REACHED') {
+          throw new Error(t.uploadPhotoLimitToast.replace('{{remaining}}', String(data.remaining ?? 0)));
+        }
+        if (data.error === 'PHOTO_SIZE_LIMIT_REACHED') {
+          throw new Error(t.uploadPhotoSizeLimitToast);
+        }
         throw new Error(data.error || 'Upload failed');
       }
 
@@ -384,6 +407,24 @@ export const GuestPhotoUploadPage = () => {
                   className="w-full px-4 py-3 rounded-2xl bg-[#FAF6F0] border border-[#CBAE94]/60 text-xs font-medium text-[#4A3F35] placeholder-[#8B735B]/60 focus:outline-none focus:ring-2 focus:ring-[#8B735B]"
                 />
               </div>
+            </div>
+
+            {/* Reservation Code — photo quota is per reservation */}
+            <div>
+              <label className="block text-xs font-bold text-[#4A3F35] uppercase tracking-wider mb-2 flex items-center gap-1.5">
+                <KeyRound className="w-3.5 h-3.5 text-[#8B735B]" />
+                {t.uploadCodeLabel} *
+              </label>
+              <input
+                type="text"
+                inputMode="numeric"
+                maxLength={4}
+                required
+                value={reservationCode}
+                onChange={(e) => setReservationCode(e.target.value.replace(/[^0-9]/g, ''))}
+                placeholder={t.uploadCodePlaceholder}
+                className="w-full max-w-xs px-4 py-3 rounded-2xl bg-[#FAF6F0] border border-[#CBAE94]/60 text-sm font-bold tracking-[0.3em] text-[#4A3F35] placeholder-[#8B735B]/60 placeholder:tracking-normal focus:outline-none focus:ring-2 focus:ring-[#8B735B]"
+              />
             </div>
 
             {/* Photo Caption */}

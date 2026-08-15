@@ -182,12 +182,13 @@ export interface EventPhoto {
   uploader_name?: string;
   table_name?: string;
   table_id?: string;
+  /** Reservation code of the uploading guest (per-guest quota) */
+  reservation_code?: string;
+  /** Stored file size in bytes (per-guest quota) */
+  file_size?: number;
   /** False when the host hid the photo (moderation) */
   visible?: boolean;
   created_at: string;
-  likes?: number;
-  /** Opaque device ids that already liked (dedupe) */
-  liked_by?: string[];
 }
 
 export interface AddGuestbookPayload {

@@ -4,7 +4,6 @@ import {
   Camera,
   Image as ImageIcon,
   Trash2,
-  Heart,
   QrCode,
   Play,
   Filter,
@@ -31,25 +30,10 @@ import { EventPhoto } from '../../types';
 import { useT } from '../shared/i18n';
 import { useFloorMapTables } from '../shared/hooks';
 
-// Stable per-browser identity for like dedupe (no login system for guests).
-const getDeviceId = (): string => {
-  try {
-    let id = localStorage.getItem('bs_device_id');
-    if (!id) {
-      id = 'dev-' + Math.random().toString(36).substring(2, 10) + Date.now().toString(36);
-      localStorage.setItem('bs_device_id', id);
-    }
-    return id;
-  } catch {
-    return 'dev-' + Math.random().toString(36).substring(2, 10);
-  }
-};
-
 export const HostPhotoGalleryPage: React.FC = () => {
   const t = useT();
   const { toast } = useToast();
   const confirm = useConfirm();
-  const deviceId = getDeviceId();
   const settings = useSettingsStore((s) => s.settings);
   const [photos, setPhotos] = useState<EventPhoto[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -250,28 +234,6 @@ export const HostPhotoGalleryPage: React.FC = () => {
     }
   };
 
-  const handleLikePhoto = async (photoId: string, e?: React.MouseEvent) => {
-    if (e) e.stopPropagation();
-
-    try {
-      const res = await adminFetch(`/api/photos/${photoId}/like`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ device_id: deviceId }),
-      });
-      const data = await res.json();
-      if (data.photo) {
-        const prevLikes = photos.find((p) => p.id === photoId)?.likes ?? 0;
-        const alreadyLiked = (data.photo.liked_by ?? []).includes(deviceId) &&
-          data.photo.likes === prevLikes;
-        setPhotos((prev) => prev.map((p) => (p.id === photoId ? data.photo : p)));
-        if (!alreadyLiked) toast.love(t.galleryLikedToast);
-      }
-    } catch (err) {
-      console.error('Failed to like photo:', err);
-    }
-  };
-
   const handleTogglePhotoHidden = async (photoId: string) => {
     const photo = photos.find((p) => p.id === photoId);
     if (!photo) return;
@@ -400,20 +362,6 @@ export const HostPhotoGalleryPage: React.FC = () => {
             </div>
             <div className="w-10 h-10 rounded-2xl bg-emerald-100 text-emerald-800 flex items-center justify-center">
               <Building2 className="w-5 h-5" />
-            </div>
-          </div>
-
-          <div className="bg-[#FFFDF9] p-5 rounded-2xl border border-[#CBAE94]/40 shadow-sm flex items-center justify-between">
-            <div>
-              <p className="text-[11px] font-bold uppercase tracking-wider text-[#8B735B]">
-                {t.totalGuestLikes}
-              </p>
-              <p className="text-2xl font-bold text-[#4A3F35] mt-0.5">
-                {photos.reduce((sum, p) => sum + (p.likes || 0), 0)}
-              </p>
-            </div>
-            <div className="w-10 h-10 rounded-2xl bg-rose-100 text-rose-800 flex items-center justify-center">
-              <Heart className="w-5 h-5 fill-rose-500" />
             </div>
           </div>
         </div>
@@ -590,10 +538,8 @@ export const HostPhotoGalleryPage: React.FC = () => {
                 photo={photo}
                 isSelected={selectedPhotoIds.includes(photo.id)}
                 layoutMode={layoutMode}
-                liked={!!photo.liked_by?.includes(deviceId)}
                 onSelect={(id) => handleToggleSelectPhoto(id)}
                 onDelete={handleDeletePhoto}
-                onLike={handleLikePhoto}
                 onToggleHidden={handleTogglePhotoHidden}
                 onClick={() => setSelectedPhotoIndex(index)}
               />

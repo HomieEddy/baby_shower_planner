@@ -32,7 +32,7 @@ import {
   addPhotosBatch,
   deletePhoto,
   setPhotoVisibility,
-  likePhoto,
+  getGuestPhotoUsage,
   getGifts,
   addGift,
   toggleGiftThankYou,
@@ -83,6 +83,10 @@ const BLOCK_BOTS = process.env.BLOCK_BOTS !== 'false';
 const MAX_BODY_BYTES = Number(process.env.MAX_BODY_BYTES) || 25 * 1024 * 1024;
 const GLOBAL_LIMIT = 600; // requests per minute per IP
 const LOGIN_ATTEMPT_LIMIT = 10; // failed admin-auth attempts per minute per IP
+
+// Per-guest photo quota (keyed by reservation code).
+const MAX_PHOTOS_PER_GUEST = 12;
+const MAX_PHOTOS_BYTES_PER_GUEST = 24 * 1024 * 1024; // 24 MB across all 12
 
 // Well-known crawlers / AI scrapers — they get 403 on the API. Search engines
 // are intentionally NOT in the list (robots.txt covers them).
@@ -568,7 +572,7 @@ async function requestHandler(req: http.IncomingMessage, res: http.ServerRespons
           return sendJson(res, 403, { error: 'GUEST_CONTENT_LOCKED', opensAt: lock.opensAt, closesAt: lock.closesAt });
         }
         const body = await parseJson(req);
-        const { uploader_name, caption, table_name, table_id, photos } = body;
+        const { uploader_name, caption, table_name, table_id, reservation_code, photos } = body;
         const list = Array.isArray(photos) ? photos : [];
         if (list.length === 0) return sendJson(res, 400, { error: 'photos array is required' });
         for (const p of list) {
@@ -576,30 +580,74 @@ async function requestHandler(req: http.IncomingMessage, res: http.ServerRespons
             return sendJson(res, 400, { error: 'Invalid photo URL' });
           }
         }
-        const created = await addPhotosBatch(list.map((p: any) => ({
-          url: p.url, filename: p.filename || 'photo.jpg',
-          caption: caption || '', uploader_name: uploader_name || 'Guest',
-          table_name: table_name || 'Table Visitor', table_id: table_id || '',
-        })));
+        // Files were written to disk in the previous step; remove them if the
+        // registration is rejected so uploads don't accumulate orphans.
+        const removeBatchFiles = () => {
+          for (const p of list) {
+            const f = path.basename(String(p.url));
+            const fp = path.join(uploadsDir, f);
+            try { if (f === path.basename(fp) && fs.existsSync(fp)) fs.unlinkSync(fp); } catch { /* best effort */ }
+          }
+        };
+        // Per-guest quota: uploads are attributed to a reservation code.
+        const code = typeof reservation_code === 'string' ? reservation_code.trim() : '';
+        if (!/^\d{4}$/.test(code)) {
+          removeBatchFiles();
+          return sendJson(res, 400, { error: 'INVALID_CODE', message: 'A valid 4-digit reservation code is required' });
+        }
+        const guest = await pb.collection('guests').getFirstListItem(`code="${code}"`).catch(() => null);
+        if (!guest) {
+          removeBatchFiles();
+          return sendJson(res, 400, { error: 'INVALID_CODE', message: 'Reservation code not found' });
+        }
+        const usage = await getGuestPhotoUsage(code);
+        if (usage.count + list.length > MAX_PHOTOS_PER_GUEST) {
+          removeBatchFiles();
+          return sendJson(res, 400, {
+            error: 'PHOTO_LIMIT_REACHED',
+            message: `Photo limit reached`,
+            uploaded: usage.count,
+            remaining: Math.max(0, MAX_PHOTOS_PER_GUEST - usage.count),
+            max: MAX_PHOTOS_PER_GUEST,
+          });
+        }
+        // Size the incoming files on disk (uploaded in the previous step).
+        let batchBytes = 0;
+        for (const p of list) {
+          const filename = path.basename(String(p.url));
+          const filePath = path.join(uploadsDir, filename);
+          if (!fs.existsSync(filePath)) {
+            removeBatchFiles();
+            return sendJson(res, 400, { error: 'Invalid photo URL' });
+          }
+          batchBytes += fs.statSync(filePath).size;
+        }
+        if (usage.bytes + batchBytes > MAX_PHOTOS_BYTES_PER_GUEST) {
+          removeBatchFiles();
+          return sendJson(res, 400, {
+            error: 'PHOTO_SIZE_LIMIT_REACHED',
+            message: `Total photo size limit reached`,
+            uploadedBytes: usage.bytes,
+            remainingBytes: Math.max(0, MAX_PHOTOS_BYTES_PER_GUEST - usage.bytes),
+            maxBytes: MAX_PHOTOS_BYTES_PER_GUEST,
+          });
+        }
+        const created = await addPhotosBatch(list.map((p: any) => {
+          const filename = path.basename(String(p.url));
+          return {
+            url: p.url, filename: p.filename || 'photo.jpg',
+            caption: caption || '', uploader_name: uploader_name || 'Guest',
+            table_name: table_name || 'Table Visitor', table_id: table_id || '',
+            reservation_code: code,
+            file_size: fs.statSync(path.join(uploadsDir, filename)).size,
+          };
+        }));
         return sendJson(res, 200, { success: true, count: created.length, photos: created });
       }
 
       if (pathname.startsWith('/api/photos/')) {
         const parts = pathname.replace('/api/photos/', '').split('/');
         const id = parts[0];
-        const action = parts[1];
-        if (action === 'like' && method === 'POST') {
-          const lock = await guestLock();
-          if (lock) {
-            return sendJson(res, 403, { error: 'GUEST_CONTENT_LOCKED', opensAt: lock.opensAt, closesAt: lock.closesAt });
-          }
-          const body = await parseJson(req).catch(() => ({}));
-          const deviceId = typeof body.device_id === 'string' && body.device_id
-            ? body.device_id.slice(0, 64)
-            : undefined;
-          const updated = await likePhoto(id, deviceId);
-          return sendJson(res, 200, { success: true, photo: updated });
-        }
         if (method === 'PATCH') {
           requireAdmin();
           const body = await parseJson(req);
