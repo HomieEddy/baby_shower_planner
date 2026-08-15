@@ -21,6 +21,7 @@ export const EditGuestSchema = z.object({
   phone: z.string().optional(),
   delivery_channel: z.enum(['email', 'text', 'both', 'none']),
   max_party_size: z.number().min(1).max(20),
+  attending_party_size: z.number().min(0).max(20),
   rsvp_status: z.enum(['Pending', 'Attending', 'Declined']),
 });
 

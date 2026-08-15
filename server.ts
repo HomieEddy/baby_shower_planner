@@ -3,7 +3,7 @@ import path from 'node:path';
 import fs from 'node:fs';
 import crypto from 'node:crypto';
 import { createServer as createViteServer } from 'vite';
-import { GiftLogSchema, AgendaTaskSchema, AgendaReorderSchema, ReminderSettingsSchema } from './src/lib/validation.ts';
+import { GiftLogSchema, AgendaTaskSchema, AgendaReorderSchema, ReminderSettingsSchema, EditGuestSchema } from './src/lib/validation.ts';
 import type { EventSettings, AgendaTask } from './src/types.ts';
 import { pb } from './src/db/service';
 import {
@@ -369,7 +369,11 @@ async function requestHandler(req: http.IncomingMessage, res: http.ServerRespons
         requireAdmin();
         if (method === 'PUT') {
           const body = await parseJson(req);
-          const guest = await updateGuest(id, body);
+          const validation = EditGuestSchema.partial().safeParse(body);
+          if (!validation.success) {
+            return sendJson(res, 400, { error: validation.error.issues[0]?.message || 'Invalid guest payload' });
+          }
+          const guest = await updateGuest(id, validation.data);
           return sendJson(res, 200, { guest });
         }
         if (method === 'DELETE') {
