@@ -1,6 +1,6 @@
 import { useLocation, useNavigate } from 'react-router-dom';
 import { motion } from 'motion/react';
-import { LayoutDashboard, BookOpen, Globe, MapPin, Sparkles, Camera } from 'lucide-react';
+import { LayoutDashboard, BookOpen, Globe, MapPin, Baby, Camera } from 'lucide-react';
 import { useSettingsStore } from '../../stores/settingsStore';
 import { useAppStore } from '../../stores/appStore';
 import { useT } from '../shared/i18n';
@@ -73,7 +73,7 @@ export const Header: React.FC<HeaderProps> = ({ minimal = false }) => {
                 whileHover={{ rotate: 12, scale: 1.1 }}
                 transition={{ type: 'spring', stiffness: 300, damping: 15 }}
               >
-                <Sparkles className="w-6 h-6 text-[#4A3F35]" />
+                <Baby className="w-6 h-6 text-[#4A3F35]" />
               </motion.div>
               <div>
                 <h2 className="font-gaegu text-3xl sm:text-4xl font-bold text-[#4A3F35] leading-none">
