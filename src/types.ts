@@ -93,6 +93,13 @@ export interface ScheduleItem {
   descFr?: string;
 }
 
+export interface CustomTheme {
+  fontFamily: string;
+  bg: string;
+  ink: string;
+  accent: string;
+}
+
 export interface EventSettings {
   babyName: string;
   parentsNames: string;
@@ -104,6 +111,7 @@ export interface EventSettings {
   showScheduleTime?: boolean;
   schedule?: ScheduleItem[];
   themeId?: string;
+  customTheme?: CustomTheme;
   /** ISO datetimes for the guest content window (guestbook + photo uploads) */
   contentOpenAt?: string;
   contentCloseAt?: string;
