@@ -321,7 +321,7 @@ export const AdminDashboard = () => {
       )}
 
       {adminSubTab === 'guestbook' && (
-        <AdminGuestbookFeed entries={guestbookEntries} />
+        <AdminGuestbookFeed entries={guestbookEntries} onRefresh={refreshOverview} />
       )}
 
       {adminSubTab === 'photos' && (

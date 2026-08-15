@@ -362,6 +362,14 @@ export interface Translations {
   galleryLikedToast: string;
   galleryPhotoRemovedToast: string;
   galleryPrintQrBtn2: string;
+  gbEntryDeletedToast: string;
+  gbEntryHiddenToast: string;
+  gbEntryShownToast: string;
+  moderationHiddenBadge: string;
+  moderationHideBtn: string;
+  moderationShowBtn: string;
+  photoHiddenToast: string;
+  photoShownToast: string;
   gbLeaveAnotherBtn: string;
   gbMessageLabel: string;
   gbMessagePlaceholder: string;
@@ -1250,6 +1258,14 @@ export const translations: Record<Language, Translations> = {
     galleryFiltersResetToast: "Search and table filters reset.",
     galleryLikedToast: "Liked photo!",
     galleryPhotoRemovedToast: "Photo removed from memory library.",
+    gbEntryDeletedToast: "Entry deleted.",
+    gbEntryHiddenToast: "Entry hidden from guests.",
+    gbEntryShownToast: "Entry visible again.",
+    moderationHiddenBadge: "Hidden",
+    moderationHideBtn: "Hide from guests",
+    moderationShowBtn: "Show to guests",
+    photoHiddenToast: "Photo hidden from guests.",
+    photoShownToast: "Photo visible again.",
     galleryPrintQrBtn2: "Print Table QR Cards",
     gbLeaveAnotherBtn: "Leave Another Message",
     gbMessageLabel: "Message or Words of Advice",
@@ -2136,6 +2152,14 @@ export const translations: Record<Language, Translations> = {
     galleryFiltersResetToast: "Recherche et filtres réinitialisés.",
     galleryLikedToast: "Photo aimée !",
     galleryPhotoRemovedToast: "Photo retirée de la bibliothèque.",
+    gbEntryDeletedToast: "Message supprimé.",
+    gbEntryHiddenToast: "Message masqué pour les invités.",
+    gbEntryShownToast: "Message à nouveau visible.",
+    moderationHiddenBadge: "Masqué",
+    moderationHideBtn: "Masquer aux invités",
+    moderationShowBtn: "Montrer aux invités",
+    photoHiddenToast: "Photo masquée pour les invités.",
+    photoShownToast: "Photo à nouveau visible.",
     galleryPrintQrBtn2: "Imprimer les QR de table",
     gbLeaveAnotherBtn: "Laissez un autre message",
     gbMessageLabel: "Message ou Conseils aux parents",

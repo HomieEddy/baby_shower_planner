@@ -1,6 +1,6 @@
 import React from 'react';
 import { useT } from '../shared/i18n';
-import { Heart, Trash2, Check, Square } from 'lucide-react';
+import { Heart, Trash2, Check, Square, EyeOff, Eye } from 'lucide-react';
 import { EventPhoto } from '../../types';
 
 interface PhotoCardProps {
@@ -10,6 +10,7 @@ interface PhotoCardProps {
   onSelect: (id: string) => void;
   onDelete: (id: string) => void;
   onLike: (id: string) => void;
+  onToggleHidden: (id: string) => void;
   onClick: (photo: EventPhoto) => void;
 }
 
@@ -20,13 +21,17 @@ export const PhotoCard: React.FC<PhotoCardProps> = ({
   onSelect,
   onDelete,
   onLike,
+  onToggleHidden,
   onClick,
 }) => {
   const t = useT();
+  const hidden = photo.visible === false;
   return (
     <div
       onClick={() => onClick(photo)}
       className={`group relative bg-white rounded-3xl overflow-hidden border transition-all cursor-pointer flex flex-col ${
+        hidden ? 'opacity-60 border-dashed' : ''
+      } ${
         isSelected
           ? 'ring-2 ring-[#8B735B] border-[#8B735B] shadow-md bg-amber-50/20'
           : 'border-[#CBAE94]/50 shadow-sm hover:shadow-md'
@@ -51,6 +56,12 @@ export const PhotoCard: React.FC<PhotoCardProps> = ({
           </span>
         </div>
 
+        {hidden && (
+          <span className="absolute top-2.5 left-2.5 z-10 px-2.5 py-1 rounded-full bg-rose-600 text-white text-[10px] font-bold font-mono uppercase shadow-sm">
+            {t.moderationHiddenBadge}
+          </span>
+        )}
+
         <button
           type="button"
           onClick={(e) => { e.stopPropagation(); onSelect(photo.id); }}
@@ -58,7 +69,7 @@ export const PhotoCard: React.FC<PhotoCardProps> = ({
             isSelected
               ? 'bg-[#8B735B] text-white ring-2 ring-white scale-105 opacity-100'
               : 'bg-black/50 text-white/90 hover:bg-black/70 group-hover:opacity-100 opacity-80 sm:opacity-0'
-          }`}
+          } ${hidden ? 'left-16' : ''}`}
           title={isSelected ? t.deselectPhotoTitle : t.selectPhotoTitle}
         >
           {isSelected ? <Check className="w-4 h-4 stroke-[3]" /> : <Square className="w-4 h-4" />}
@@ -69,6 +80,15 @@ export const PhotoCard: React.FC<PhotoCardProps> = ({
             {photo.table_name}
           </span>
         )}
+
+        <button
+          type="button"
+          onClick={(e) => { e.stopPropagation(); onToggleHidden(photo.id); }}
+          className="absolute top-2.5 right-10 p-1.5 rounded-xl bg-black/60 text-white hover:bg-[#8B735B] transition-colors opacity-0 group-hover:opacity-100 shadow-sm"
+          title={hidden ? t.moderationShowBtn : t.moderationHideBtn}
+        >
+          {hidden ? <Eye className="w-3.5 h-3.5" /> : <EyeOff className="w-3.5 h-3.5" />}
+        </button>
 
         <button
           type="button"

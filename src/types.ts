@@ -46,6 +46,8 @@ export interface GuestbookEntry {
   guest_name: string;
   message: string;
   photo_url?: string;
+  /** False when the host hid the entry (moderation) */
+  visible?: boolean;
   created_at: string;
 }
 
@@ -180,8 +182,12 @@ export interface EventPhoto {
   uploader_name?: string;
   table_name?: string;
   table_id?: string;
+  /** False when the host hid the photo (moderation) */
+  visible?: boolean;
   created_at: string;
   likes?: number;
+  /** Opaque device ids that already liked (dedupe) */
+  liked_by?: string[];
 }
 
 export interface AddGuestbookPayload {

@@ -250,6 +250,26 @@ export const HostPhotoGalleryPage: React.FC = () => {
     }
   };
 
+  const handleTogglePhotoHidden = async (photoId: string) => {
+    const photo = photos.find((p) => p.id === photoId);
+    if (!photo) return;
+    const nextVisible = photo.visible === false;
+    try {
+      const res = await adminFetch(`/api/photos/${photoId}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ visible: nextVisible }),
+      });
+      const data = await res.json();
+      if (data.photo) {
+        setPhotos((prev) => prev.map((p) => (p.id === photoId ? data.photo : p)));
+        toast.info(nextVisible ? t.photoShownToast : t.photoHiddenToast);
+      }
+    } catch (err) {
+      console.error('Failed to toggle photo visibility:', err);
+    }
+  };
+
   // Filtered photos
   const filteredPhotos = photos.filter((p) => {
     const matchesSearch =
@@ -551,6 +571,7 @@ export const HostPhotoGalleryPage: React.FC = () => {
                 onSelect={(id) => handleToggleSelectPhoto(id)}
                 onDelete={handleDeletePhoto}
                 onLike={handleLikePhoto}
+                onToggleHidden={handleTogglePhotoHidden}
                 onClick={() => setSelectedPhotoIndex(index)}
               />
             ))}

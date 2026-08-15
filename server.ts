@@ -16,6 +16,8 @@ import {
   resetTokenUsage,
   getAllGuestbookEntries,
   addGuestbookEntry,
+  setGuestbookEntryVisibility,
+  deleteGuestbookEntry,
   wipeDatabaseData,
   getSettings,
   updateSettings,
@@ -29,6 +31,7 @@ import {
   getAllPhotos,
   addPhotosBatch,
   deletePhoto,
+  setPhotoVisibility,
   likePhoto,
   getGifts,
   addGift,
@@ -492,7 +495,8 @@ async function requestHandler(req: http.IncomingMessage, res: http.ServerRespons
           return sendJson(res, 403, { error: 'GUEST_CONTENT_LOCKED', opensAt: lock.opensAt, closesAt: lock.closesAt });
         }
         if (method === 'GET') {
-          const entries = await getAllGuestbookEntries();
+          // Admins see hidden entries too (moderation); guests only visible ones.
+          const entries = await getAllGuestbookEntries(adminOnly());
           return sendJson(res, 200, { entries });
         }
         if (method === 'POST') {
@@ -511,6 +515,21 @@ async function requestHandler(req: http.IncomingMessage, res: http.ServerRespons
           }
           const entry = await addGuestbookEntry(validation.data);
           return sendJson(res, 200, { success: true, entry });
+        }
+      }
+
+      if (pathname.startsWith('/api/guestbook/')) {
+        requireAdmin();
+        const id = pathname.replace('/api/guestbook/', '');
+        if (method === 'PATCH') {
+          const body = await parseJson(req);
+          if (typeof body.visible !== 'boolean') return sendJson(res, 400, { error: 'visible (boolean) is required' });
+          const entry = await setGuestbookEntryVisibility(id, body.visible);
+          return sendJson(res, 200, { success: true, entry });
+        }
+        if (method === 'DELETE') {
+          await deleteGuestbookEntry(id);
+          return sendJson(res, 200, { success: true });
         }
       }
 
@@ -537,7 +556,8 @@ async function requestHandler(req: http.IncomingMessage, res: http.ServerRespons
           return sendJson(res, 403, { error: 'GUEST_CONTENT_LOCKED', opensAt: lock.opensAt, closesAt: lock.closesAt });
         }
         if (method === 'GET') {
-          const photos = await getAllPhotos();
+          // Admins see hidden photos too (moderation); guests only visible ones.
+          const photos = await getAllPhotos(adminOnly());
           return sendJson(res, 200, { photos });
         }
       }
@@ -575,6 +595,13 @@ async function requestHandler(req: http.IncomingMessage, res: http.ServerRespons
           }
           const updated = await likePhoto(id);
           return sendJson(res, 200, { success: true, photo: updated });
+        }
+        if (method === 'PATCH') {
+          requireAdmin();
+          const body = await parseJson(req);
+          if (typeof body.visible !== 'boolean') return sendJson(res, 400, { error: 'visible (boolean) is required' });
+          const photo = await setPhotoVisibility(id, body.visible);
+          return sendJson(res, 200, { success: true, photo });
         }
         if (method === 'DELETE') {
           requireAdmin();

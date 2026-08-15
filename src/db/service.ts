@@ -112,6 +112,7 @@ const COLLECTION_DEFS: CollectionDef[] = [
       { name: 'guest_name', type: 'text', required: true, options: {} },
       { name: 'message', type: 'text', required: true, options: {} },
       { name: 'photo_url', type: 'text', options: {} },
+      { name: 'visible', type: 'bool', options: {} },
       { name: 'created_at', type: 'text', options: {} },
     ],
   },
@@ -165,6 +166,8 @@ const COLLECTION_DEFS: CollectionDef[] = [
       { name: 'table_name', type: 'text', options: {} },
       { name: 'table_id', type: 'text', options: {} },
       { name: 'likes', type: 'number', options: {} },
+      { name: 'liked_by', type: 'json', options: {} },
+      { name: 'visible', type: 'bool', options: {} },
       { name: 'created_at', type: 'text', options: {} },
     ],
   },
@@ -237,6 +240,8 @@ async function ensureCollections() {
   }
   await ensureCollectionFields('settings');
   await ensureCollectionFields('guests');
+  await ensureCollectionFields('guestbook');
+  await ensureCollectionFields('photos');
 }
 
 // Add fields added after a collection already exists (e.g. contentOpenAt/contentCloseAt,
@@ -577,17 +582,44 @@ export async function batchImportGuests(guestList: AddGuestPayload[]): Promise<{
 
 // ─── Guestbook ────────────────────────────────────────────────────
 
-export async function getAllGuestbookEntries(): Promise<GuestbookEntry[]> {
+export async function getAllGuestbookEntries(includeHidden = false): Promise<GuestbookEntry[]> {
   const records = await pb.collection('guestbook').getFullList({ sort: '-created_at' });
-  return records.map(r => fromRecord<GuestbookEntry>(r));
+  return records
+    .map(r => fromRecord<GuestbookEntry>(r))
+    .filter(e => includeHidden || e.visible !== false);
 }
 
 export async function addGuestbookEntry(payload: AddGuestbookPayload): Promise<GuestbookEntry> {
   const r = await pb.collection('guestbook').create({
     guest_name: payload.guest_name, message: payload.message,
-    photo_url: payload.photo_url || '', created_at: new Date().toISOString(),
+    photo_url: payload.photo_url || '', visible: true, created_at: new Date().toISOString(),
   });
   return fromRecord<GuestbookEntry>(r);
+}
+
+export async function setGuestbookEntryVisibility(id: string, visible: boolean): Promise<GuestbookEntry> {
+  const r = await pb.collection('guestbook').update(id, { visible });
+  return fromRecord<GuestbookEntry>(r);
+}
+
+export async function deleteGuestbookEntry(id: string): Promise<void> {
+  const r = await pb.collection('guestbook').getOne(id);
+  await pb.collection('guestbook').delete(id);
+  // Remove any attached photo file so uploads don't accumulate orphans.
+  try {
+    const url = (r.photo_url as string) || '';
+    if (url.startsWith('/uploads/')) {
+      const fs = await import('node:fs');
+      const path = await import('node:path');
+      const uploadsDir = path.resolve(process.env.UPLOAD_DIR || path.join(process.cwd(), 'public', 'uploads'));
+      const filePath = path.join(uploadsDir, url.split('/').pop() || '');
+      if (fs.existsSync(filePath) && path.basename(filePath) === url.split('/').pop()) {
+        fs.unlinkSync(filePath);
+      }
+    }
+  } catch (err) {
+    console.error('Failed to remove guestbook photo file:', err);
+  }
 }
 
 // ─── Settings ─────────────────────────────────────────────────────
@@ -765,9 +797,11 @@ export async function shareFloorPlanEmail(guestIds?: string[], customMessage?: s
 
 // ─── Photos ───────────────────────────────────────────────────────
 
-export async function getAllPhotos(): Promise<EventPhoto[]> {
+export async function getAllPhotos(includeHidden = false): Promise<EventPhoto[]> {
   const records = await pb.collection('photos').getFullList({ sort: '-created_at' });
-  return records.map(r => fromRecord<EventPhoto>(r));
+  return records
+    .map(r => fromRecord<EventPhoto>(r))
+    .filter(p => includeHidden || p.visible !== false);
 }
 
 export async function addPhotosBatch(newPhotos: Array<{ url: string; filename: string; caption?: string; uploader_name?: string; table_name?: string; table_id?: string }>): Promise<EventPhoto[]> {
@@ -776,7 +810,7 @@ export async function addPhotosBatch(newPhotos: Array<{ url: string; filename: s
     const r = await pb.collection('photos').create({
       url: p.url, filename: p.filename, caption: p.caption || '',
       uploader_name: p.uploader_name || 'Guest', table_name: p.table_name || 'Open Seating',
-      table_id: p.table_id || '', likes: 0, created_at: new Date().toISOString(),
+      table_id: p.table_id || '', likes: 0, liked_by: [], visible: true, created_at: new Date().toISOString(),
     });
     created.push(fromRecord<EventPhoto>(r));
   }
@@ -802,6 +836,11 @@ export async function deletePhoto(id: string): Promise<void> {
   } catch (err) {
     console.error('Failed to remove photo file:', err);
   }
+}
+
+export async function setPhotoVisibility(id: string, visible: boolean): Promise<EventPhoto> {
+  const r = await pb.collection('photos').update(id, { visible });
+  return fromRecord<EventPhoto>(r);
 }
 
 export async function likePhoto(id: string): Promise<EventPhoto | undefined> {
