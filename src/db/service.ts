@@ -1261,13 +1261,45 @@ function scrubForGuestLookup(g: Guest): Guest {
   };
 }
 
-export async function getSeatingRoster(guestToken?: string): Promise<{ roster: Guest[]; guest: Guest | null }> {
+export async function getSeatingRoster(guestToken?: string, code?: string): Promise<{ seats: Guest[]; guests: Guest[]; guest: Guest | null }> {
   const records = await pb.collection('guests').getFullList();
-  const roster = records.map((r) => scrubForRoster(fromRecord<Guest>(r)));
+
+  // Anonymized seat math: the venue map needs each attending party's size and
+  // table, but never another guest's name, code, or contact details.
+  const seats = records
+    .filter((r: any) => r.rsvp_status === 'Attending')
+    .map((r: any) => {
+      const g = fromRecord<Guest>(r);
+      const namesCount = Array.isArray(g.attendee_names) ? g.attendee_names.length : 0;
+      const detailsCount = Array.isArray(g.attendee_details) ? g.attendee_details.length : 0;
+      const partySize = Math.max(namesCount, detailsCount, g.attending_party_size || 0, 1);
+      return {
+        ...g,
+        name: '',
+        code: '',
+        email: '',
+        phone: '',
+        magic_token: '',
+        dietary_restrictions: '',
+        attendee_names: [],
+        attendee_details: undefined,
+        attending_party_size: partySize,
+      } as Guest;
+    });
+
+  // Code lookup: only the matching party is returned (exact 4-digit match) —
+  // the full roster is never exposed.
+  let guests: Guest[] = [];
+  if (code && /^\d{4}$/.test(code)) {
+    guests = records
+      .filter((r: any) => r.code === code)
+      .map((r: any) => scrubForGuestLookup(fromRecord<Guest>(r)));
+  }
+
   let guest: Guest | null = null;
   if (guestToken) {
-    const found = records.find((r) => r.magic_token === guestToken);
+    const found = records.find((r: any) => r.magic_token === guestToken);
     if (found) guest = scrubForGuestLookup(fromRecord<Guest>(found));
   }
-  return { roster, guest };
+  return { seats, guests, guest };
 }

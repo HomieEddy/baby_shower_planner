@@ -32,7 +32,8 @@ export interface FinderSelection extends AttendeeHit {
 
 interface FinderData {
   floorMap: FloorMapData | null;
-  roster: Guest[];
+  seats: Guest[];
+  guests: Guest[];
   preselected: Guest | null;
 }
 
@@ -46,7 +47,8 @@ const fetchFinderData = async (token: string | undefined): Promise<FinderData> =
   const rosterData = await rosterRes.json();
   return {
     floorMap: mapData.floorMap ?? null,
-    roster: rosterData.roster ?? [],
+    seats: rosterData.seats ?? [],
+    guests: rosterData.guests ?? [],
     preselected: rosterData.guest ?? null,
   };
 };
@@ -79,6 +81,19 @@ export const GuestFinderPage: React.FC = () => {
     queryFn: () => fetchFinderData(initialToken),
   });
 
+  // Code lookup runs server-side: only the matching party is ever returned
+  // (the full roster is not exposed on this page).
+  const searchCode = searchQuery.trim();
+  const { data: searchGuests, isFetching: searching } = useQuery({
+    queryKey: ['finder-search', searchCode],
+    queryFn: async (): Promise<Guest[]> => {
+      const res = await fetch(`/api/floorplan/roster?code=${encodeURIComponent(searchCode)}`);
+      const data = await res.json();
+      return data.guests ?? [];
+    },
+    enabled: /^\d{4}$/.test(searchCode),
+  });
+
   const floorMap = data?.floorMap ?? null;
 
   // Pre-select when arriving via a QR code / invite link; stays dismissed once cleared
@@ -99,31 +114,31 @@ export const GuestFinderPage: React.FC = () => {
     [searchPick, dismissedId, preselected]
   );
 
+  // Venue map needs anonymized seat math for everyone plus the selected
+  // party's own details (names for the seat index, dietary note).
+  const mapRoster = useMemo<Guest[]>(() => {
+    const base = data?.seats ?? [];
+    if (!selected) return base;
+    return [...base.filter((s) => s.id !== selected.guest.id), selected.guest];
+  }, [data, selected]);
+
   // Attendee-level search: one hit per person (primary guest + each attendee),
-  // so a shared reservation code surfaces every member of the party.
-  const hits = useMemo<AttendeeHit[]>(() => {
-    const q = searchQuery.trim().toLowerCase();
-    if (!q) return [];
+  // so a shared reservation code surfaces every member of the party.  const hits = useMemo<AttendeeHit[]>(() => {
+    if (!searchGuests || searchGuests.length === 0) return [];
     const out: AttendeeHit[] = [];
-    for (const g of data?.roster ?? []) {
-      const code = g.code.toLowerCase();
+    for (const g of searchGuests) {
       const names = g.attendee_names && g.attendee_names.length > 0 ? g.attendee_names : [];
       const primary = { guest: g, attendeeName: null, displayName: g.name };
-      const personMatches =
-        primary.displayName.toLowerCase().includes(q) || code.includes(q);
-      if (personMatches) out.push(primary);
+      out.push(primary);
       names.forEach((n) => {
         // The primary guest is often repeated as attendee_names[0] — already
         // represented by the primary hit, so skip the duplicate row.
         if (n.trim().toLowerCase() === g.name.trim().toLowerCase()) return;
-        const hit = { guest: g, attendeeName: n, displayName: n };
-        if (n.toLowerCase().includes(q) || code.includes(q)) {
-          out.push(hit);
-        }
+        out.push({ guest: g, attendeeName: n, displayName: n });
       });
     }
     return out;
-  }, [searchQuery, data]);
+  }, [searchGuests]);
 
   const pickPerson = (hit: AttendeeHit) => {
     setSearchPick({
@@ -171,7 +186,8 @@ export const GuestFinderPage: React.FC = () => {
           old
             ? {
                 ...old,
-                roster: old.roster.map((g) => (g.id === updated.id ? updated : g)),
+                seats: old.seats.map((g) => (g.id === updated.id ? { ...g, checked_in: updated.checked_in, checked_in_names: updated.checked_in_names } : g)),
+                guests: old.guests.map((g) => (g.id === updated.id ? updated : g)),
                 preselected: old.preselected?.id === updated.id ? updated : old.preselected,
               }
             : old
@@ -260,7 +276,12 @@ export const GuestFinderPage: React.FC = () => {
                   transition={{ duration: 0.18 }}
                   className="absolute z-20 left-0 right-0 mt-2 bg-white rounded-2xl border-2 border-[#CBAE94] shadow-xl overflow-hidden"
                 >
-                  {hits.length === 0 ? (
+                  {searching ? (
+                    <div className="p-4 flex items-center gap-2 text-xs text-[#5D5449]/70 italic">
+                      <Info className="w-4 h-4 shrink-0 text-[#CBAE94]" />
+                      {t.finderSearching}
+                    </div>
+                  ) : hits.length === 0 ? (
                     <div className="p-4 flex items-center gap-2 text-xs text-[#5D5449]/70 italic">
                       <Info className="w-4 h-4 shrink-0 text-[#CBAE94]" />
                       {t.finderNoMatch}
@@ -483,7 +504,7 @@ export const GuestFinderPage: React.FC = () => {
                 open={venueOpen}
                 selected={selected}
                 floorMap={floorMap}
-                roster={data?.roster ?? []}
+                roster={mapRoster}
                 onClose={() => setVenueOpen(false)}
               />
 

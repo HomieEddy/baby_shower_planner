@@ -645,7 +645,8 @@ async function requestHandler(req: http.IncomingMessage, res: http.ServerRespons
 
       if (pathname === '/api/floorplan/roster' && method === 'GET') {
         const guestToken = url.searchParams.get('guest') || undefined;
-        const result = await getSeatingRoster(guestToken);
+        const code = url.searchParams.get('code') || undefined;
+        const result = await getSeatingRoster(guestToken, code);
         return sendJson(res, 200, result);
       }
 
