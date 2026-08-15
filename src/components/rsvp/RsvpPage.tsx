@@ -358,11 +358,12 @@ export const RsvpPage = () => {
   };
 
   // Filter alerts for the current guest:
-  // 1. Guests who have DECLINED will NEVER see any broadcast alerts.
+  // 1. Guests who have DECLINED only see CANCELLATION alerts (they might
+  //    still show up otherwise).
   // 2. Filter by target_audience (PENDING vs ATTENDING vs ALL).
   const visibleAlerts = alerts.filter((a) => {
     if (guest?.rsvp_status === 'Declined') {
-      return false;
+      return a.type === 'CANCELLATION';
     }
     if (a.target_audience === 'PENDING') {
       return !guest || guest.rsvp_status === 'Pending';

@@ -636,21 +636,30 @@ export async function createAlert(payload: { type: AlertType; title: string; mes
   const guests = await getAllGuests();
   const target = payload.target_audience || 'ALL';
   const recipientGuests = guests.filter(g => {
+    // Cancellations must reach everyone — declined guests might still show up.
+    if (payload.type === 'CANCELLATION') return true;
     if (g.rsvp_status === 'Declined') return false;
     if (target === 'PENDING') return g.rsvp_status === 'Pending';
     if (target === 'ATTENDING') return g.rsvp_status === 'Attending';
     return true;
   });
-  const emailGuests = recipientGuests.filter(g => !!g.email);
   let settings: EventSettings | null = null;
   try { settings = await getSettings(); } catch { /* settings missing — skip send */ }
-  for (const g of emailGuests) {
-    if (settings) {
+  let notified = 0;
+  for (const g of recipientGuests) {
+    const channel = g.delivery_channel || 'none';
+    if (channel === 'none' || !settings) continue; // link-only: nothing to send
+    let ok = false;
+    if ((channel === 'email' || channel === 'both') && g.email) {
       const { sendAlertEmail } = await import('../lib/email');
-      await sendAlertEmail(g, settings, payload.title, payload.message);
+      ok = (await sendAlertEmail(g, settings, payload.title, payload.message)) || ok;
     }
+    if ((channel === 'text' || channel === 'both') && g.phone) {
+      const { sendAlertSms } = await import('../lib/sms');
+      ok = (await sendAlertSms(g, settings, payload.title, payload.message)) || ok;
+    }
+    if (ok) notified++;
   }
-  const notified = emailGuests.length;
   await pb.collection('alerts').update(r.id, { notified_guests_count: notified });
   return { alert: fromRecord<EventAlert>({ ...r, notified_guests_count: notified }), notified_count: notified };
 }

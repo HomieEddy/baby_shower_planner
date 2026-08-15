@@ -83,6 +83,25 @@ export async function sendReminderSms(guest: Guest, settings: EventSettings): Pr
   }
 }
 
+export async function sendAlertSms(guest: Guest, settings: EventSettings, title: string, message: string): Promise<boolean> {
+  const client = getClient();
+  const body = `${title}\n${message}`;
+
+  if (!client || !process.env.TWILIO_PHONE_NUMBER) {
+    console.log(`[MOCK ALERT SMS] To: ${guest.phone} | Body: ${body}`);
+    return true;
+  }
+
+  try {
+    await client.messages.create({ body: body.slice(0, 640), from: process.env.TWILIO_PHONE_NUMBER, to: guest.phone });
+    console.log(`[TWILIO] Alert SMS sent to ${guest.phone}`);
+    return true;
+  } catch (err) {
+    console.error(`[TWILIO] Alert failed for ${guest.phone}:`, err);
+    return false;
+  }
+}
+
 export async function sendThankYouSms(guest: Guest, text: string): Promise<boolean> {
   const client = getClient();
   if (!client || !process.env.TWILIO_PHONE_NUMBER) {
