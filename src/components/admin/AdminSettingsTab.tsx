@@ -216,12 +216,12 @@ export const AdminSettingsTab: React.FC<AdminSettingsTabProps> = ({ language, t,
     >
       <motion.div variants={adminCardVariants} className="card-paper p-6 sm:p-8 space-y-6">
         <div className="flex items-center justify-between border-b border-[#CBAE94]/40 pb-4">
-          <div className="flex items-center space-x-3">
-            <div className="p-3 bg-[#EFE6DC] text-[#8B735B] rounded-2xl border border-[#CBAE94]">
+          <div className="flex items-center space-x-2.5 sm:space-x-3 min-w-0">
+            <div className="p-2.5 sm:p-3 bg-[#EFE6DC] text-[#8B735B] rounded-2xl border border-[#CBAE94] shrink-0">
               <Settings className="w-6 h-6" />
             </div>
-            <div>
-              <h3 className="font-sans text-2xl font-bold text-[#8B735B]">{t.hostCustomizationTitle}</h3>
+            <div className="min-w-0">
+              <h3 className="font-sans text-xl sm:text-2xl font-bold text-[#8B735B]">{t.hostCustomizationTitle}</h3>
               <p className="text-xs text-[#5D5449]">{t.hostCustomizationDesc}</p>
             </div>
           </div>
@@ -438,7 +438,7 @@ export const AdminSettingsTab: React.FC<AdminSettingsTabProps> = ({ language, t,
           </div>
 
           <div className="pt-2 flex justify-end">
-            <button type="submit" disabled={savingSettings} className="btn-accent px-8 py-3 text-xs flex items-center space-x-2">
+            <button type="submit" disabled={savingSettings} className="btn-accent w-full sm:w-auto px-8 py-3 text-xs flex items-center justify-center space-x-2">
               <Save className="w-4 h-4" /><span>{savingSettings ? t.savingSettingsBtn : t.saveAllSettingsBtn}</span>
             </button>
           </div>
