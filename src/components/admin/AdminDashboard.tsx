@@ -125,7 +125,7 @@ export const AdminDashboard = () => {
       confirmText: 'Delete Alert',
     });
     if (!ok) return;
-    await fetch(`/api/alerts/${alertId}`, { method: 'DELETE' });
+    await adminFetch(`/api/alerts/${alertId}`, { method: 'DELETE' });
     refreshOverview();
     toast.info(t.alertDeletedToast);
   };
