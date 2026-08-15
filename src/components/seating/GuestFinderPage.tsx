@@ -123,7 +123,8 @@ export const GuestFinderPage: React.FC = () => {
   }, [data, selected]);
 
   // Attendee-level search: one hit per person (primary guest + each attendee),
-  // so a shared reservation code surfaces every member of the party.  const hits = useMemo<AttendeeHit[]>(() => {
+  // so a shared reservation code surfaces every member of the party.
+  const hits = useMemo<AttendeeHit[]>(() => {
     if (!searchGuests || searchGuests.length === 0) return [];
     const out: AttendeeHit[] = [];
     for (const g of searchGuests) {
