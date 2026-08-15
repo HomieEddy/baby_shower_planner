@@ -1,3 +1,5 @@
+import type { CustomTheme } from './types';
+
 export interface ThemePreset {
   id: string;
   name: string;
@@ -152,22 +154,55 @@ export const THEME_PRESETS: ThemePreset[] = [
     fontFamily: "'Lora', serif",
     displayFontName: 'Lora (Warm Literary)',
   },
-  {
-    id: 'midnight-starlight',
-    name: 'Midnight Starlight',
-    category: 'Night Sky Dark',
-    bg: '#0F172A',
-    ink: '#F8FAFC',
-    accent: '#F59E0B',
-    fontFamily: "'Space Mono', monospace",
-    displayFontName: 'Space Mono (Retro Tech)',
-    isDark: true,
-    surface: '#1E293B',
-  },
 ];
 
-export function getThemeById(themeId?: string): ThemePreset {
+export const CUSTOM_THEME_ID = 'custom';
+
+export const FONT_OPTIONS: { fontFamily: string; label: string }[] = [
+  { fontFamily: "'Gaegu', cursive", label: 'Gaegu (Playful Hand-Drawn)' },
+  { fontFamily: "'Cormorant Garamond', serif", label: 'Cormorant Garamond (Elegant Serif)' },
+  { fontFamily: "'Playfair Display', serif", label: 'Playfair Display (Chic Serif)' },
+  { fontFamily: "'Quicksand', sans-serif", label: 'Quicksand (Friendly Rounded)' },
+  { fontFamily: "'Caveat', cursive", label: 'Caveat (Warm Script)' },
+  { fontFamily: "'Newsreader', serif", label: 'Newsreader (Editorial Serif)' },
+  { fontFamily: "'Dancing Script', cursive", label: 'Dancing Script (Flowing Cursive)' },
+  { fontFamily: "'Sacramento', cursive", label: 'Sacramento (Delicate Calligraphy)' },
+  { fontFamily: "'Lora', serif", label: 'Lora (Warm Literary)' },
+  { fontFamily: "'Inter', sans-serif", label: 'Inter (Crisp Minimalist)' },
+  { fontFamily: "'Space Mono', monospace", label: 'Space Mono (Retro Tech)' },
+  { fontFamily: "'Great Vibes', cursive", label: 'Great Vibes (Delicate Calligraphy)' },
+  { fontFamily: "'Parisienne', cursive", label: 'Parisienne (Delicate Script)' },
+  { fontFamily: "'Cinzel', serif", label: 'Cinzel (Royal Classical)' },
+  { fontFamily: "'Montserrat', sans-serif", label: 'Montserrat (Refined Geometric)' },
+  { fontFamily: "'Poppins', sans-serif", label: 'Poppins (Bold Geometric)' },
+  { fontFamily: "'Outfit', sans-serif", label: 'Outfit (Clean Modern Sans)' },
+];
+
+export const DEFAULT_CUSTOM_THEME: CustomTheme = {
+  fontFamily: "'Gaegu', cursive",
+  bg: '#FBF2F3',
+  ink: '#4A3A3D',
+  accent: '#D99A9A',
+};
+
+export function getCustomTheme(custom?: CustomTheme, name = 'Custom Theme', category = 'Custom'): ThemePreset {
+  const c = custom ?? DEFAULT_CUSTOM_THEME;
+  const font = FONT_OPTIONS.find((f) => f.fontFamily === c.fontFamily);
+  return {
+    id: CUSTOM_THEME_ID,
+    name,
+    category,
+    bg: c.bg,
+    ink: c.ink,
+    accent: c.accent,
+    fontFamily: c.fontFamily,
+    displayFontName: font?.label || c.fontFamily,
+  };
+}
+
+export function getThemeById(themeId?: string, customTheme?: CustomTheme): ThemePreset {
   if (!themeId) return THEME_PRESETS[0];
+  if (themeId === CUSTOM_THEME_ID) return getCustomTheme(customTheme);
   const found = THEME_PRESETS.find((t) => t.id === themeId);
   return found || THEME_PRESETS[0];
 }
