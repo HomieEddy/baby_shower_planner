@@ -190,18 +190,6 @@ export interface AddGuestbookPayload {
   photo_url?: string;
 }
 
-export interface BabyPrediction {
-  id: string;
-  guest_name: string;
-  guest_id?: string;
-  predicted_date: string; // e.g. "2026-09-18"
-  predicted_weight_lbs: number; // e.g. 7.5
-  predicted_hair_color: string; // e.g. "Brown", "Blonde", "Black"
-  predicted_eye_color: string; // e.g. "Brown", "Blue", "Green", "Hazel"
-  advice_for_parents: string;
-  created_at: string;
-}
-
 export interface GiftLog {
   id: string;
   guest_name: string;

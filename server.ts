@@ -30,8 +30,6 @@ import {
   addPhotosBatch,
   deletePhoto,
   likePhoto,
-  getPredictions,
-  addPrediction,
   getGifts,
   addGift,
   toggleGiftThankYou,
@@ -623,25 +621,6 @@ async function requestHandler(req: http.IncomingMessage, res: http.ServerRespons
         const body = await parseJson(req);
         const result = await shareFloorPlanEmail(body.guestIds, body.customMessage);
         return sendJson(res, 200, { success: true, count: result.count });
-      }
-
-      // ─── Predictions ────────────────────────────────
-      if (pathname === '/api/predictions') {
-        if (method === 'GET') {
-          const predictions = await getPredictions();
-          return sendJson(res, 200, { predictions });
-        }
-        if (method === 'POST') {
-          const body = await parseJson(req);
-          const { guest_name, predicted_date, predicted_weight_lbs, predicted_hair_color, predicted_eye_color, advice_for_parents } = body;
-          if (!guest_name || !predicted_date) return sendJson(res, 400, { error: 'Guest name and date are required' });
-          const newPred = await addPrediction({
-            guest_name, predicted_date, predicted_weight_lbs: Number(predicted_weight_lbs) || 7.0,
-            predicted_hair_color: predicted_hair_color || 'Brown', predicted_eye_color: predicted_eye_color || 'Brown',
-            advice_for_parents: advice_for_parents || '',
-          });
-          return sendJson(res, 200, { success: true, prediction: newPred });
-        }
       }
 
       // ─── Gifts ──────────────────────────────────────

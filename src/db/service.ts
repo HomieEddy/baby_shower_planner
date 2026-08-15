@@ -5,7 +5,7 @@
 import PocketBase from 'pocketbase/cjs';
 import {
   Guest, GuestbookEntry, EventSettings, EventAlert, AlertType,
-  FloorMapData, EventPhoto, BabyPrediction, GiftLog, AgendaTask, AgendaStatus,
+  FloorMapData, EventPhoto, GiftLog, AgendaTask, AgendaStatus,
   AddGuestPayload, SubmitRsvpPayload, AddGuestbookPayload,
 } from '../types';
 import { getPartyMembers, isMemberCheckedIn, isPartyLead } from '../lib/guestAttendees';
@@ -37,6 +37,11 @@ export async function initPocketBase() {
     await pb.admins.authWithPassword(email, password);
   }
   await ensureCollections();
+  // Drop collections from features that were removed (e.g. baby predictions)
+  // so their data doesn't linger in existing databases.
+  for (const name of ['predictions']) {
+    try { await pb.collections.delete(name); } catch { /* absent or already gone */ }
+  }
 }
 
 const COLLECTION_DEFS: CollectionDef[] = [
@@ -129,19 +134,6 @@ const COLLECTION_DEFS: CollectionDef[] = [
       { name: 'table_name', type: 'text', options: {} },
       { name: 'table_id', type: 'text', options: {} },
       { name: 'likes', type: 'number', options: {} },
-      { name: 'created_at', type: 'text', options: {} },
-    ],
-  },
-  {
-    name: 'predictions', type: 'base',
-    schema: [
-      { name: 'guest_name', type: 'text', required: true, options: {} },
-      { name: 'guest_id', type: 'text', options: {} },
-      { name: 'predicted_date', type: 'text', options: {} },
-      { name: 'predicted_weight_lbs', type: 'number', options: {} },
-      { name: 'predicted_hair_color', type: 'text', options: {} },
-      { name: 'predicted_eye_color', type: 'text', options: {} },
-      { name: 'advice_for_parents', type: 'text', options: {} },
       { name: 'created_at', type: 'text', options: {} },
     ],
   },
@@ -711,26 +703,6 @@ export async function likePhoto(id: string): Promise<EventPhoto | undefined> {
   const r = await pb.collection('photos').getOne(id);
   const updated = await pb.collection('photos').update(id, { likes: (r.likes || 0) + 1 });
   return fromRecord<EventPhoto>(updated);
-}
-
-// ─── Predictions ──────────────────────────────────────────────────
-
-export async function getPredictions(): Promise<BabyPrediction[]> {
-  const records = await pb.collection('predictions').getFullList({ sort: '-created_at' });
-  return records.map(r => fromRecord<BabyPrediction>(r));
-}
-
-export async function addPrediction(payload: Omit<BabyPrediction, 'id' | 'created_at'>): Promise<BabyPrediction> {
-  const r = await pb.collection('predictions').create({
-    guest_name: payload.guest_name, guest_id: payload.guest_id || '',
-    predicted_date: payload.predicted_date,
-    predicted_weight_lbs: Number(payload.predicted_weight_lbs) || 7.0,
-    predicted_hair_color: payload.predicted_hair_color || 'Brown',
-    predicted_eye_color: payload.predicted_eye_color || 'Brown',
-    advice_for_parents: payload.advice_for_parents || '',
-    created_at: new Date().toISOString(),
-  });
-  return fromRecord<BabyPrediction>(r);
 }
 
 // ─── Gifts ────────────────────────────────────────────────────────

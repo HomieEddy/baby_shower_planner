@@ -151,7 +151,7 @@ export const AdminDashboard = () => {
   const handleWipeData = async () => {
     const ok = await confirm({
       title: 'Clear All Data?',
-      message: 'This will permanently remove all guests, guestbook entries, alerts, seating maps, photos, predictions, and gifts. Event settings (parents\' names, date, venue) are preserved. This cannot be undone.',
+      message: 'This will permanently remove all guests, guestbook entries, alerts, seating maps, photos, and gifts. Event settings (parents\' names, date, venue) are preserved. This cannot be undone.',
       confirmText: 'Yes, Clear All Data',
     });
     if (!ok) return;
