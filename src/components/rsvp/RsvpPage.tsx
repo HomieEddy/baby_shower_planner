@@ -329,7 +329,7 @@ export const RsvpPage = () => {
           toast.info(t.rsvpDeclinedToast);
         }
       } else {
-        toast.error(dataRes.message || dataRes.error || 'Failed to submit RSVP');
+        toast.error(dataRes.error === 'RSVP_CLOSED' ? t.rsvpClosedToast : dataRes.message || dataRes.error || 'Failed to submit RSVP');
       }
     } catch (err) {
       console.error('RSVP submit error:', err);
@@ -345,7 +345,8 @@ export const RsvpPage = () => {
     try {
       const res = await fetch(`/api/rsvp/${token}/reset`, { method: 'POST' });
       if (!res.ok) {
-        toast.error(t.rsvpResetErrorToast);
+        const data = await res.json().catch(() => ({}));
+        toast.error(data.error === 'RSVP_CLOSED' ? t.rsvpClosedToast : t.rsvpResetErrorToast);
         return;
       }
       setIsEditing(true);

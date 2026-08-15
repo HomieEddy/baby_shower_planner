@@ -605,6 +605,7 @@ export interface Translations {
   rsvpReminderTemplate: string;
   rsvpReminderTemplateDesc: string;
   rsvpResetErrorToast: string;
+  rsvpClosedToast: string;
   rsvpResponseTitle: string;
   rsvpStatusLabel: string;
   rsvpSubmitErrorToast: string;
@@ -1496,6 +1497,7 @@ export const translations: Record<Language, Translations> = {
     rsvpReminderTemplate: "⏰ RSVP Reminder",
     rsvpReminderTemplateDesc: "Target pending guests",
     rsvpResetErrorToast: "Failed to update RSVP status.",
+    rsvpClosedToast: "RSVPs are closed — the event has already passed.",
     rsvpResponseTitle: "RSVP Response",
     rsvpStatusLabel: "RSVP Status",
     rsvpSubmitErrorToast: "An error occurred while submitting your RSVP.",
@@ -2381,6 +2383,7 @@ export const translations: Record<Language, Translations> = {
     rsvpReminderTemplate: "⏰ Rappel RSVP",
     rsvpReminderTemplateDesc: "Cibler les invités en attente",
     rsvpResetErrorToast: "Échec de la mise à jour du statut RSVP.",
+    rsvpClosedToast: "Les RSVP sont fermés — l'événement est déjà passé.",
     rsvpResponseTitle: "Réponse RSVP",
     rsvpStatusLabel: "Statut RSVP",
     rsvpSubmitErrorToast: "Une erreur est survenue lors de l'envoi de votre RSVP.",

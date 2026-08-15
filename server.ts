@@ -452,6 +452,7 @@ async function requestHandler(req: http.IncomingMessage, res: http.ServerRespons
             const msg = err instanceof Error ? err.message : '';
             if (msg === 'INVALID_TOKEN') return sendJson(res, 404, { error: 'INVALID_TOKEN', message: 'Invitation token not found' });
             if (msg === 'RSVP_READ_ONLY') return sendJson(res, 403, { error: 'RSVP_READ_ONLY' });
+            if (msg === 'RSVP_CLOSED') return sendJson(res, 409, { error: 'RSVP_CLOSED', message: 'RSVPs are closed — the event has already passed.' });
             throw err;
           }
         }
@@ -478,6 +479,7 @@ async function requestHandler(req: http.IncomingMessage, res: http.ServerRespons
             const msg = err instanceof Error ? err.message : '';
             if (msg === 'INVALID_TOKEN') return sendJson(res, 404, { error: 'INVALID_TOKEN', message: 'Invitation token not found' });
             if (msg === 'RSVP_ALREADY_SUBMITTED') return sendJson(res, 409, { error: 'RSVP_ALREADY_SUBMITTED', message: 'This RSVP was already submitted. Edit it from the confirmation screen.' });
+            if (msg === 'RSVP_CLOSED') return sendJson(res, 409, { error: 'RSVP_CLOSED', message: 'RSVPs are closed — the event has already passed.' });
             throw err;
           }
         }

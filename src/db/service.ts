@@ -332,6 +332,21 @@ export async function inviteMessageFor(guest: Guest): Promise<string> {
   return buildInviteMessage(guest, settings, guest.language_pref);
 }
 
+// RSVPs close the day after the event: on the day itself guests can still
+// respond (people check invites on their phones while arriving).
+export async function isRsvpClosed(): Promise<boolean> {
+  try {
+    const settings = await getSettings();
+    if (!settings.date) return false;
+    const eventDay = new Date(settings.date + 'T00:00:00').getTime();
+    const today = new Date();
+    const startOfToday = new Date(today.getFullYear(), today.getMonth(), today.getDate()).getTime();
+    return startOfToday > eventDay;
+  } catch {
+    return false; // no settings — nothing to close against
+  }
+}
+
 export async function submitRsvp(token: string, payload: SubmitRsvpPayload): Promise<Guest> {
   const r = await pb.collection('guests').getFirstListItem(`magic_token="${escFilter(token)}"`).catch(() => null);
   if (!r) throw new Error('INVALID_TOKEN');
@@ -339,6 +354,7 @@ export async function submitRsvp(token: string, payload: SubmitRsvpPayload): Pro
   // Second submission (open tabs, shared links) must not silently overwrite:
   // the client resets the token first, which is the only way to edit an RSVP.
   if (r.token_used) throw new Error('RSVP_ALREADY_SUBMITTED');
+  if (await isRsvpClosed()) throw new Error('RSVP_CLOSED');
 
   const updates: Record<string, unknown> = {
     rsvp_status: payload.rsvp_status,
@@ -381,6 +397,7 @@ export async function resetTokenUsage(token: string): Promise<Guest> {
   const r = await pb.collection('guests').getFirstListItem(`magic_token="${escFilter(token)}"`).catch(() => null);
   if (!r) throw new Error('INVALID_TOKEN');
   if (r.is_read_only) throw new Error('RSVP_READ_ONLY');
+  if (await isRsvpClosed()) throw new Error('RSVP_CLOSED');
   const updated = await pb.collection('guests').update(r.id, { token_used: false });
   return fromRecord<Guest>(updated);
 }
