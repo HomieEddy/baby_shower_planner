@@ -119,3 +119,36 @@ export function formatGuestWindow(opensAt?: string, closesAt?: string, lang: Lan
   }
   return '';
 }
+
+// ─── Agenda task due / reminder window ────────────────────────────
+
+export const REMINDER_ADVANCE_MS: Record<string, number> = {
+  '1h': 3_600_000,
+  '6h': 21_600_000,
+  '1d': 86_400_000,
+  '2d': 172_800_000,
+  '1w': 604_800_000,
+};
+
+// Task due timestamp in the server's local timezone. Missing time = 09:00
+// (start of the working day) so reminders don't fire at midnight.
+export function taskDueAt(dueDate: string, dueTime?: string): number {
+  const [y, m, d] = dueDate.split('-').map(Number);
+  const [hh, mm] = (dueTime || '09:00').split(':').map(Number);
+  return new Date(y, m - 1, d, hh, mm).getTime();
+}
+
+// Reminder fires once, inside [dueAt - advance, dueAt).
+export function isInReminderWindow(dueAt: number, advanceMs: number, now: number): boolean {
+  return now >= dueAt - advanceMs && now < dueAt;
+}
+
+// "Saturday, September 12, 2026 at 9:00 AM" (EN) / "Samedi 12 septembre 2026 à 9h00" (FR)
+export function formatTaskDue(dueDate: string, dueTime?: string, lang: Lang = 'EN'): string {
+  const date = formatDateLong(dueDate, lang);
+  if (!date) return '';
+  const time = dueTime ? formatTime12h(dueTime) : '';
+  return lang === 'FR'
+    ? `${date}${time ? ` à ${time}` : ''}`
+    : `${date}${time ? ` at ${time}` : ''}`;
+}

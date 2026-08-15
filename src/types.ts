@@ -115,6 +115,31 @@ export interface EventSettings {
   /** ISO datetimes for the guest content window (guestbook + photo uploads) */
   contentOpenAt?: string;
   contentCloseAt?: string;
+  /** Agenda reminder delivery: host contact + channel toggles */
+  hostEmail?: string;
+  hostPhone?: string;
+  reminderChannels?: { email: boolean; sms: boolean };
+  /** How long before a task's due time the reminder fires ('1h'|'6h'|'1d'|'2d'|'1w') */
+  reminderAdvance?: string;
+  /** Language for host-facing reminder templates (EN default) */
+  language?: Language;
+}
+
+export type AgendaStatus = 'todo' | 'in_progress' | 'done';
+
+export interface AgendaTask {
+  id: string;
+  title: string;
+  description?: string;
+  /** YYYY-MM-DD */
+  due_date?: string;
+  /** HH:mm (24h) */
+  due_time?: string;
+  status: AgendaStatus;
+  /** Ordering within the kanban column */
+  position: number;
+  reminder_sent: boolean;
+  created_at: string;
 }
 
 export type AlertType = 'DATE_CHANGE' | 'VENUE_CHANGE' | 'CANCELLATION' | 'CUSTOM' | 'REMINDER';

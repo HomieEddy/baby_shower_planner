@@ -36,3 +36,28 @@ export const GiftLogSchema = z.object({
   gift_description: z.string().min(1, 'Gift description is required'),
   category: z.enum(['Nursery', 'Clothing', 'Toys', 'Feeding', 'Diapering', 'Other']).default('Nursery'),
 });
+
+const optionalDate = z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Use YYYY-MM-DD').or(z.literal('')).optional();
+const optionalTime = z.string().regex(/^([01]\d|2[0-3]):[0-5]\d$/, 'Use HH:mm (24h)').or(z.literal('')).optional();
+
+export const AgendaTaskSchema = z.object({
+  title: z.string().min(1, 'Task title is required'),
+  description: z.string().optional(),
+  due_date: optionalDate,
+  due_time: optionalTime,
+  status: z.enum(['todo', 'in_progress', 'done']).default('todo'),
+});
+
+export const AgendaReorderSchema = z.array(z.object({
+  id: z.string().min(1),
+  status: z.enum(['todo', 'in_progress', 'done']),
+  position: z.number().int().min(0),
+}));
+
+export const ReminderSettingsSchema = z.object({
+  hostEmail: z.string().email('Invalid email address').optional().or(z.literal('')),
+  hostPhone: z.string().optional(),
+  reminderChannels: z.object({ email: z.boolean(), sms: z.boolean() }).optional(),
+  reminderAdvance: z.enum(['1h', '6h', '1d', '2d', '1w']).optional(),
+  language: z.enum(['EN', 'FR']).optional(),
+});
