@@ -845,6 +845,7 @@ export interface Translations {
   dietaryOnlyBtn: string;
   showingDietaryOnlyBtn: string;
   checkinFailedToast: string;
+  checkinDeclinedError: string;
   noContactLabel: string;
   partyOfLabel: string;
   thankYouTrackerTitle: string;
@@ -1740,6 +1741,7 @@ export const translations: Record<Language, Translations> = {
     dietaryOnlyBtn: "Filter Dietary Only",
     showingDietaryOnlyBtn: "Showing Dietary Only",
     checkinFailedToast: "Check-in failed",
+    checkinDeclinedError: "This guest declined the invitation and cannot check in.",
     noContactLabel: "No contact",
     partyOfLabel: "Party of {{count}}",
     thankYouTrackerTitle: "Automated Thank You Card Tracker",
@@ -2624,6 +2626,7 @@ export const translations: Record<Language, Translations> = {
     dietaryOnlyBtn: "Filtrer regime alimentaire",
     showingDietaryOnlyBtn: "Regime alimentaire uniquement",
     checkinFailedToast: "Echec de l'enregistrement",
+    checkinDeclinedError: "Cet invité a décliné l'invitation et ne peut pas s'enregistrer.",
     noContactLabel: "Aucun contact",
     partyOfLabel: "Groupe de {{count}}",
     thankYouTrackerTitle: "Suivi automatise des cartes de remerciement",

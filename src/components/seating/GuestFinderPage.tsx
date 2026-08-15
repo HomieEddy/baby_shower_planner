@@ -160,7 +160,7 @@ export const GuestFinderPage: React.FC = () => {
       });
       const data = await res.json().catch(() => ({}));
       if (!res.ok) {
-        toast.error(data.error || 'Check-in failed');
+        toast.error(data.error === 'DECLINED' ? t.checkinDeclinedError : data.error || 'Check-in failed');
         return;
       }
       const updated: Guest | undefined = data.guest;
