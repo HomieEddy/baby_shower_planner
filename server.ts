@@ -3,7 +3,7 @@ import path from 'node:path';
 import fs from 'node:fs';
 import crypto from 'node:crypto';
 import { createServer as createViteServer } from 'vite';
-import { GiftLogSchema, AgendaTaskSchema, AgendaReorderSchema, ReminderSettingsSchema, EditGuestSchema } from './src/lib/validation.ts';
+import { GiftLogSchema, AgendaTaskSchema, AgendaReorderSchema, ReminderSettingsSchema, EditGuestSchema, GuestbookEntrySchema } from './src/lib/validation.ts';
 import type { EventSettings, AgendaTask } from './src/types.ts';
 import { pb } from './src/db/service';
 import {
@@ -495,9 +495,19 @@ async function requestHandler(req: http.IncomingMessage, res: http.ServerRespons
         }
         if (method === 'POST') {
           const body = await parseJson(req);
-          const { guest_name, message, photo_url } = body;
-          if (!guest_name || !message) return sendJson(res, 400, { error: 'Name and message are required' });
-          const entry = await addGuestbookEntry({ guest_name, message, photo_url });
+          const validation = GuestbookEntrySchema.safeParse({
+            guest_name: body.guest_name,
+            message: body.message,
+            photo_url: body.photo_url || undefined,
+          });
+          if (!validation.success) {
+            return sendJson(res, 400, { error: validation.error.issues[0]?.message || 'Invalid guestbook entry' });
+          }
+          // Only our own uploads dir may be referenced.
+          if (validation.data.photo_url && !validation.data.photo_url.startsWith('/uploads/')) {
+            return sendJson(res, 400, { error: 'Invalid photo URL' });
+          }
+          const entry = await addGuestbookEntry(validation.data);
           return sendJson(res, 200, { success: true, entry });
         }
       }
@@ -505,17 +515,17 @@ async function requestHandler(req: http.IncomingMessage, res: http.ServerRespons
       // ─── Upload ─────────────────────────────────────
       if (pathname === '/api/upload' && method === 'POST') {
         const body = await parseJson(req);
-        if (body.photo_base64) {
-          const matches = body.photo_base64.match(/^data:([A-Za-z-+\/]+);base64,(.+)$/);
-          if (matches && matches.length === 3) {
-            const allowed: Record<string, string> = { jpeg: 'jpg', jpg: 'jpg', png: 'png', webp: 'webp', gif: 'gif', heic: 'heic' };
-            const ext = allowed[matches[1].split('/')[1]] || 'jpg';
-            const filename = `photo-${Date.now()}-${Math.round(Math.random() * 1e9)}.${ext}`;
-            fs.writeFileSync(path.join(uploadsDir, filename), Buffer.from(matches[2], 'base64'));
-            return sendJson(res, 200, { photo_url: `/uploads/${filename}` });
-          }
+        const matches = typeof body.photo_base64 === 'string'
+          ? body.photo_base64.match(/^data:([A-Za-z-+\/]+);base64,(.+)$/)
+          : null;
+        if (!matches || matches.length !== 3) {
+          return sendJson(res, 400, { error: 'photo_base64 data URL is required' });
         }
-        return sendJson(res, 200, { photo_url: body.photo_url || '/uploads/sample.jpg' });
+        const allowed: Record<string, string> = { jpeg: 'jpg', jpg: 'jpg', png: 'png', webp: 'webp', gif: 'gif', heic: 'heic' };
+        const ext = allowed[matches[1].split('/')[1]] || 'jpg';
+        const filename = `photo-${Date.now()}-${crypto.randomInt(1e9)}.${ext}`;
+        fs.writeFileSync(path.join(uploadsDir, filename), Buffer.from(matches[2], 'base64'));
+        return sendJson(res, 200, { photo_url: `/uploads/${filename}` });
       }
 
       // ─── Photos ─────────────────────────────────────
@@ -537,9 +547,15 @@ async function requestHandler(req: http.IncomingMessage, res: http.ServerRespons
         }
         const body = await parseJson(req);
         const { uploader_name, caption, table_name, table_id, photos } = body;
-        const list = Array.isArray(photos) ? photos : [{ url: body.url || '/uploads/sample.jpg', filename: 'photo.jpg' }];
+        const list = Array.isArray(photos) ? photos : [];
+        if (list.length === 0) return sendJson(res, 400, { error: 'photos array is required' });
+        for (const p of list) {
+          if (typeof p?.url !== 'string' || !p.url.startsWith('/uploads/')) {
+            return sendJson(res, 400, { error: 'Invalid photo URL' });
+          }
+        }
         const created = await addPhotosBatch(list.map((p: any) => ({
-          url: p.url || '/uploads/sample.jpg', filename: p.filename || 'photo.jpg',
+          url: p.url, filename: p.filename || 'photo.jpg',
           caption: caption || '', uploader_name: uploader_name || 'Guest',
           table_name: table_name || 'Table Visitor', table_id: table_id || '',
         })));

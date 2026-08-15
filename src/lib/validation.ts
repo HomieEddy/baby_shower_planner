@@ -26,8 +26,8 @@ export const EditGuestSchema = z.object({
 });
 
 export const GuestbookEntrySchema = z.object({
-  guest_name: z.string().min(1, 'Guest name is required'),
-  message: z.string().min(1, 'Message is required'),
+  guest_name: z.string().min(1, 'Guest name is required').max(80, 'Guest name is too long'),
+  message: z.string().min(1, 'Message is required').max(2000, 'Message is too long'),
   photo_url: z.string().optional(),
 });
 

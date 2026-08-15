@@ -765,7 +765,24 @@ export async function addPhotosBatch(newPhotos: Array<{ url: string; filename: s
 }
 
 export async function deletePhoto(id: string): Promise<void> {
+  const r = await pb.collection('photos').getOne(id);
   await pb.collection('photos').delete(id);
+  // Remove the file so uploads don't accumulate orphans.
+  try {
+    const url = (r.url as string) || '';
+    const filename = url.split('/').pop();
+    if (filename && url.startsWith('/uploads/')) {
+      const fs = await import('node:fs');
+      const path = await import('node:path');
+      const uploadsDir = path.resolve(process.env.UPLOAD_DIR || path.join(process.cwd(), 'public', 'uploads'));
+      const filePath = path.join(uploadsDir, filename);
+      if (fs.existsSync(filePath) && path.basename(filePath) === filename) {
+        fs.unlinkSync(filePath);
+      }
+    }
+  } catch (err) {
+    console.error('Failed to remove photo file:', err);
+  }
 }
 
 export async function likePhoto(id: string): Promise<EventPhoto | undefined> {

@@ -23,6 +23,9 @@ export const PhotoSlideshow: React.FC<PhotoSlideshowProps> = ({
   const settings = useSettingsStore((s) => s.settings);
   const photo = photos[currentIndex];
 
+  // The last photo may be deleted while the slideshow is open.
+  if (!photo) return null;
+
   return (
     <div className="fixed inset-0 z-50 bg-black flex flex-col items-center justify-between p-6 animate-fadeIn">
       <div className="w-full flex items-center justify-between text-white/80 text-xs">

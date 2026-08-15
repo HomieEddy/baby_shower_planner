@@ -224,6 +224,14 @@ export const GuestPhotoUploadPage = () => {
 
       const data = await res.json();
 
+      if (res.status === 403 && data.error === 'GUEST_CONTENT_LOCKED') {
+        // The window closed while this page was open.
+        setIsUploading(false);
+        setLocked(true);
+        setLockInfo({ opensAt: data.opensAt, closesAt: data.closesAt });
+        return;
+      }
+
       if (!res.ok) {
         throw new Error(data.error || 'Upload failed');
       }
