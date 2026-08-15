@@ -63,9 +63,9 @@ function MainAppContent() {
   }, [fetchSettings]);
 
   useEffect(() => {
-    const activeTheme = getThemeById(settings?.themeId);
+    const activeTheme = getThemeById(settings?.themeId, settings?.customTheme);
     applyThemeToDocument(activeTheme);
-  }, [settings?.themeId]);
+  }, [settings?.themeId, settings?.customTheme]);
 
   return (
     <div className="min-h-screen bg-[#FDFBF7] text-[#5D5449] font-sans flex flex-col selection:bg-[#CBAE94] selection:text-white">
