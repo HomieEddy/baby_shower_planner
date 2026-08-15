@@ -113,23 +113,23 @@ export const FloorPlanEditor = ({
   return (
     <div className="fixed inset-0 z-50 bg-[#FAF6F0] flex flex-col w-screen h-screen overflow-hidden animate-fadeIn">
       {/* Top Navigation Bar */}
-      <div className="bg-[#FFFDF9] border-b-2 border-[#CBAE94] px-6 py-3 flex items-center justify-between shadow-md shrink-0">
-        <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-2xl bg-[#8B735B] text-white flex items-center justify-center shadow-md">
+      <div className="bg-[#FFFDF9] border-b-2 border-[#CBAE94] px-3 sm:px-6 py-3 flex items-center justify-between gap-2 shadow-md shrink-0">
+        <div className="flex items-center gap-2 sm:gap-3 min-w-0">
+          <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-2xl bg-[#8B735B] text-white flex items-center justify-center shadow-md shrink-0">
             <Maximize2 className="w-5 h-5" />
           </div>
-          <div>
+          <div className="min-w-0">
             <div className="flex items-center gap-2">
-              <h2 className="font-gaegu text-2xl font-bold text-[#4A3F35]">
+              <h2 className="font-gaegu text-xl sm:text-2xl font-bold text-[#4A3F35] truncate">
                 {t.editorTitle}
               </h2>
               {isDirty && (
-                <span className="px-2.5 py-0.5 rounded-full bg-amber-100 text-amber-800 border border-amber-300 text-[10px] font-mono font-bold uppercase">
+                <span className="px-2.5 py-0.5 rounded-full bg-amber-100 text-amber-800 border border-amber-300 text-[10px] font-mono font-bold uppercase shrink-0">
                   {t.unsavedChangesBadge}
                 </span>
               )}
             </div>
-            <p className="text-[11px] text-[#8B735B] font-medium">
+            <p className="hidden sm:block text-[11px] text-[#8B735B] font-medium">
               {t.editorSubtitle}
             </p>
           </div>
@@ -153,31 +153,31 @@ export const FloorPlanEditor = ({
         </div>
 
         {/* Action Buttons: Cancel and Save Changes */}
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2 shrink-0">
           <button
             type="button"
             onClick={handleCancelEditor}
-            className="px-4 py-2.5 rounded-xl border-2 border-[#CBAE94] bg-white text-[#5D5449] hover:bg-[#EFE6DC] font-bold text-xs flex items-center gap-1.5 transition-colors shadow-sm"
+            className="px-3 sm:px-4 py-2.5 rounded-xl border-2 border-[#CBAE94] bg-white text-[#5D5449] hover:bg-[#EFE6DC] font-bold text-xs flex items-center gap-1.5 transition-colors shadow-sm"
           >
-            <X className="w-4 h-4 text-red-500" /> {t.cancelBtn}
+            <X className="w-4 h-4 text-red-500" /> <span className="hidden sm:inline">{t.cancelBtn}</span>
           </button>
 
           <button
             type="button"
             onClick={handleSaveChanges}
             disabled={saving}
-            className="px-6 py-2.5 rounded-xl bg-emerald-700 hover:bg-emerald-800 text-white font-bold text-xs shadow-lg flex items-center gap-2 transition-all transform hover:scale-105"
+            className="px-4 sm:px-6 py-2.5 rounded-xl bg-emerald-700 hover:bg-emerald-800 text-white font-bold text-xs shadow-lg flex items-center gap-2 transition-all transform hover:scale-105"
           >
             <Save className="w-4 h-4" />
-            {saving ? t.btnSavingChanges : t.btnSaveChanges}
+            <span className="hidden sm:inline">{saving ? t.btnSavingChanges : t.btnSaveChanges}</span>
           </button>
         </div>
       </div>
 
       {/* Modal Main Content (3 Columns) */}
-      <div className="flex-1 overflow-hidden grid grid-cols-1 lg:grid-cols-12 gap-4 p-4">
+      <div className="flex-1 overflow-y-auto lg:overflow-hidden grid grid-cols-1 lg:grid-cols-12 gap-4 p-3 lg:p-4">
         {/* Left Toolbar Column (col-3) */}
-        <div className="lg:col-span-3 overflow-y-auto space-y-4 pr-1">
+        <div className="lg:col-span-3 lg:overflow-y-auto space-y-4 pr-1 order-2 lg:order-1">
           {/* {t.roomDimensionsLabel} & Size Controls */}
           <div className="bg-[#FFFDF9] rounded-3xl p-4 shadow-md border-2 border-[#CBAE94] space-y-3">
             <div className="flex items-center justify-between">
@@ -428,7 +428,7 @@ export const FloorPlanEditor = ({
         {/* Center Canvas Column (col-6) */}
         <div
           ref={modalContainerRef}
-          className="lg:col-span-6 bg-[#FFFDF9] rounded-3xl p-4 shadow-xl border-2 border-[#CBAE94] flex flex-col h-full overflow-hidden"
+          className="lg:col-span-6 bg-[#FFFDF9] rounded-3xl p-3 lg:p-4 shadow-xl border-2 border-[#CBAE94] flex flex-col h-[70vh] lg:h-full overflow-hidden order-1 lg:order-2"
         >
           <div className="flex items-center justify-between mb-2">
             <span className="text-xs font-bold text-[#8B735B] flex items-center gap-1">
@@ -671,7 +671,7 @@ export const FloorPlanEditor = ({
         </div>
 
         {/* Right Inspector Column (col-3) */}
-        <div className="lg:col-span-3 overflow-y-auto space-y-4 pr-1">
+        <div className="lg:col-span-3 lg:overflow-y-auto space-y-4 pr-1 order-3">
           {/* Seating Workflow Mode Switcher */}
           <div className="bg-[#FFFDF9] rounded-2xl p-1.5 shadow-md border-2 border-[#CBAE94] flex items-center gap-1">
             <button

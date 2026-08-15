@@ -69,17 +69,17 @@ export const Header: React.FC<HeaderProps> = ({ minimal = false }) => {
               whileTap={{ scale: 0.98 }}
             >
               <motion.div 
-                className="w-12 h-12 bg-[#E9E0D2] border-2 border-[#4A3F35] rounded-2xl flex items-center justify-center shadow-xs"
+                className="w-10 h-10 sm:w-12 sm:h-12 bg-[#E9E0D2] border-2 border-[#4A3F35] rounded-2xl flex items-center justify-center shadow-xs shrink-0"
                 whileHover={{ rotate: 12, scale: 1.1 }}
                 transition={{ type: 'spring', stiffness: 300, damping: 15 }}
               >
-                <Baby className="w-6 h-6 text-[#4A3F35]" />
+                <Baby className="w-5 h-5 sm:w-6 sm:h-6 text-[#4A3F35]" />
               </motion.div>
-              <div>
-                <h2 className="font-gaegu text-3xl sm:text-4xl font-bold text-[#4A3F35] leading-none">
+              <div className="min-w-0">
+                <h2 className="font-gaegu text-3xl sm:text-4xl font-bold text-[#4A3F35] leading-none truncate">
                   Bébé {settings?.babyName || 'Baby Shower'}
                 </h2>
-                <span className="font-mono text-[10px] uppercase tracking-widest text-[#4A3F35]/60 block mt-0.5">
+                <span className="font-mono text-[10px] uppercase tracking-widest text-[#4A3F35]/60 block mt-0.5 truncate">
                   {t.appSubtitle}
                 </span>
               </div>

@@ -707,7 +707,7 @@ export const FloorPlanPage = () => {
   return (
     <div className="space-y-6 pb-12">
       {/* Top Banner & Mode Switcher */}
-      <div className="bg-[#FFFDF9] rounded-3xl p-6 shadow-xl border-2 border-[#CBAE94] flex flex-col md:flex-row md:items-center justify-between gap-4">
+      <div className="bg-[#FFFDF9] rounded-3xl p-4 sm:p-6 shadow-xl border-2 border-[#CBAE94] flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
           <div className="flex items-center gap-2 mb-1">
             <span className="inline-flex items-center gap-1 px-3 py-0.5 rounded-full bg-[#EFE6DC] text-[#8B735B] text-xs font-mono font-bold uppercase">
@@ -963,9 +963,10 @@ export const FloorPlanPage = () => {
 
                 <button
                   onClick={handleOpenEditor}
-                  className="px-3 py-1.5 rounded-xl bg-[#8B735B] hover:bg-[#705C47] text-white text-xs font-bold transition-all flex items-center gap-1.5 shadow-sm"
+                  className="px-3 py-1.5 rounded-xl bg-[#8B735B] hover:bg-[#705C47] text-white text-xs font-bold transition-all flex items-center gap-1.5 shadow-sm shrink-0"
+                  title={t.btnFullscreenEditor}
                 >
-                  <Maximize2 className="w-3.5 h-3.5" /> Full-Screen Editor
+                  <Maximize2 className="w-3.5 h-3.5" /> <span className="hidden sm:inline">{t.btnFullscreenEditor}</span>
                 </button>
               </div>
 
@@ -1027,7 +1028,7 @@ export const FloorPlanPage = () => {
               </div>
 
               {/* Canvas Outer Wrapper */}
-              <div className="w-full overflow-x-auto flex justify-center bg-[#FAF6F0] p-4 rounded-2xl border border-[#CBAE94]/40 min-h-[500px]">
+              <div className="w-full overflow-x-auto flex justify-center bg-[#FAF6F0] p-3 sm:p-4 rounded-2xl border border-[#CBAE94]/40 min-h-[420px] sm:min-h-[500px]">
                 {floorMap && (
                   <Stage
                     ref={stageRef}
