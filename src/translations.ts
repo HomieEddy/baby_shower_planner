@@ -1,4 +1,4 @@
-﻿﻿﻿﻿﻿﻿﻿﻿import { Language } from './types';
+﻿import { Language } from './types';
 
 export interface Translations {
   activeAlertsHistory: string;
@@ -244,6 +244,8 @@ export interface Translations {
   bulkSelectedLabel: string;
   bulkResendBtn: string;
   metricInvitesLabel: string;
+  metricViewFullListLabel: string;
+  metricViewInvitesLabel: string;
   fieldEmail: string;
   fieldLanguage: string;
   fieldMaxParty: string;
@@ -396,7 +398,10 @@ export interface Translations {
   inviteGuestHint: string;
   inviteGuestTitle: string;
   inviteLinkForLabel: string;
+  inviteMessageLabel: string;
+  invitationDetailsTitle: string;
   inviteNameRequiredToast: string;
+  sentInvitesLabel: string;
   inviteRemovedToast: string;
   inviteSentChannelToast: string;
   inviteSentLinkOnlyToast: string;
@@ -1075,6 +1080,8 @@ export const translations: Record<Language, Translations> = {
     bulkSelectedLabel: "{{count}} selected",
     bulkResendBtn: "Resend Invitations",
     metricInvitesLabel: "Invites",
+    metricViewFullListLabel: "Full List (Grouped by Party)",
+    metricViewInvitesLabel: "Invites + Party Size",
     fieldEmail: "Email Address",
     fieldLanguage: "Preferred Language",
     fieldMaxParty: "Max Party Size",
@@ -1228,7 +1235,10 @@ export const translations: Record<Language, Translations> = {
     inviteGuestHint: "Know someone who'd love to come? Give them their own invitation — no need to ask us.",
     inviteGuestTitle: "Invite a guest",
     inviteLinkForLabel: "Invitation link for",
+    inviteMessageLabel: "Invitation Message",
+    invitationDetailsTitle: "Invitation Details",
     inviteNameRequiredToast: "Add the invitee's full name",
+    sentInvitesLabel: "Invites Sent",
     inviteRemovedToast: "Invitation removed",
     inviteSentChannelToast: "Invitation sent to {{name}} via {{channel}}",
     inviteSentLinkOnlyToast: "Invitation ready — share the link with {{name}}",
@@ -1904,6 +1914,8 @@ export const translations: Record<Language, Translations> = {
     bulkSelectedLabel: "{{count}} sélectionné(s)",
     bulkResendBtn: "Renvoyer les invitations",
     metricInvitesLabel: "Invitations",
+    metricViewFullListLabel: "Liste complète (groupée par groupe)",
+    metricViewInvitesLabel: "Invitations + taille du groupe",
     fieldEmail: "Adresse E-mail",
     fieldLanguage: "Langue préférée",
     fieldMaxParty: "Taille max du groupe",
@@ -2057,7 +2069,10 @@ export const translations: Record<Language, Translations> = {
     inviteGuestHint: "Vous connaissez quelqu'un qui aimerait venir ? Offrez-lui sa propre invitation — inutile de nous demander.",
     inviteGuestTitle: "Inviter un invité",
     inviteLinkForLabel: "Lien d'invitation pour",
+    inviteMessageLabel: "Message d'invitation",
+    invitationDetailsTitle: "Détails de l'invitation",
     inviteNameRequiredToast: "Ajoutez le nom complet de l'invité",
+    sentInvitesLabel: "Invitations envoyées",
     inviteRemovedToast: "Invitation retirée",
     inviteSentChannelToast: "Invitation envoyée à {{name}} par {{channel}}",
     inviteSentLinkOnlyToast: "Invitation prête — partagez le lien avec {{name}}",

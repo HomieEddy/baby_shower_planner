@@ -7,6 +7,7 @@ import { motion, AnimatePresence } from 'motion/react';
 import { adminContainerVariants, adminCardVariants } from '../shared/motionPresets';
 import { GuestRowCard } from './GuestRowCard';
 import { GuestMetricCard, GuestMetricToggle, GuestFiltersBar, BulkActionsBar } from './GuestListParts';
+import { GuestListModal, GuestDetailsModal } from './GuestListModals';
 import {
   Users,
   CheckCircle2,
@@ -99,6 +100,13 @@ export const AdminGuestsTab: React.FC<AdminGuestsTabProps> = ({ language, t, gue
   const [editingGuest, setEditingGuest] = useState<Guest | null>(null);
   const [savingEdit, setSavingEdit] = useState(false);
 
+  const [metricModal, setMetricModal] = useState<'Attending' | 'Pending' | 'Declined' | 'Total' | null>(null);
+  const [metricListView, setMetricListView] = useState<'invites' | 'party'>('invites');
+
+  const [viewingGuest, setViewingGuest] = useState<Guest | null>(null);
+  const [viewingMessage, setViewingMessage] = useState('');
+  const [loadingMessage, setLoadingMessage] = useState(false);
+
   const [invitedGuestModal, setInvitedGuestModal] = useState<{
     name: string;
     email: string;
@@ -162,6 +170,21 @@ export const AdminGuestsTab: React.FC<AdminGuestsTabProps> = ({ language, t, gue
     });
   };
 
+  const handleOpenViewGuest = async (g: Guest) => {
+    setViewingGuest(g);
+    setViewingMessage('');
+    setLoadingMessage(true);
+    try {
+      const res = await adminFetch(`/api/guests/${g.id}/invite-message`);
+      const data = await res.json();
+      if (data.message) setViewingMessage(data.message);
+    } catch {
+      /* non-fatal */
+    } finally {
+      setLoadingMessage(false);
+    }
+  };
+
   const handleSaveEditGuest = async (values: EditGuestFormValues) => {
     if (!editingGuest) return;
     if ((values.delivery_channel === 'email' || values.delivery_channel === 'both') && !(values.email || '').trim()) {
@@ -210,6 +233,7 @@ export const AdminGuestsTab: React.FC<AdminGuestsTabProps> = ({ language, t, gue
     try {
       const res = await adminFetch(`/api/guests/${id}`, { method: 'DELETE' });
       if (res.ok) {
+        setViewingGuest(null);
         toast.info(t.guestDeletedToast.replace('{{name}}', guestName));
         await onRefresh();
       }
@@ -421,6 +445,26 @@ export const AdminGuestsTab: React.FC<AdminGuestsTabProps> = ({ language, t, gue
     }
   };
 
+  const metricModalList: Guest[] = (() => {
+    switch (metricModal) {
+      case 'Attending': return attendingGuests;
+      case 'Pending': return pendingGuests;
+      case 'Declined': return declinedGuests;
+      case 'Total': return guests;
+      default: return [];
+    }
+  })();
+
+  const metricModalTitle = (() => {
+    switch (metricModal) {
+      case 'Attending': return t.statAttending;
+      case 'Pending': return t.statPending;
+      case 'Declined': return t.statDeclined;
+      case 'Total': return t.statTotalGuests;
+      default: return '';
+    }
+  })();
+
   return (
     <motion.div
       key="guests"
@@ -436,16 +480,16 @@ export const AdminGuestsTab: React.FC<AdminGuestsTabProps> = ({ language, t, gue
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         <GuestMetricCard label={t.statAttending} icon={<CheckCircle2 className="w-5 h-5" />}
           value={metricMode === 'party' ? totalAttendingPartySize : attendingGuests.length}
-          footer={t.statTotalAttendingParty} />
+          footer={t.statTotalAttendingParty} onClick={() => setMetricModal('Attending')} />
         <GuestMetricCard label={t.statPending} icon={<Clock className="w-5 h-5" />}
           value={metricMode === 'party' ? pendingPartySize : pendingGuests.length}
-          footer={t.awaitingResponse} iconClass="text-[#5D5449]" />
+          footer={t.awaitingResponse} iconClass="text-[#5D5449]" onClick={() => setMetricModal('Pending')} />
         <GuestMetricCard label={t.statDeclined} icon={<XCircle className="w-5 h-5 text-rose-500" />}
           value={metricMode === 'party' ? declinedPartySize : declinedGuests.length}
-          footer={t.unableToAttend} iconClass="text-rose-600" />
+          footer={t.unableToAttend} iconClass="text-rose-600" onClick={() => setMetricModal('Declined')} />
         <GuestMetricCard label={t.statTotalGuests} icon={<Users className="w-5 h-5" />}
           value={metricMode === 'party' ? totalPartySize : guests.length}
-          footer={t.totalGuestInvites} />
+          footer={t.totalGuestInvites} onClick={() => setMetricModal('Total')} />
       </div>
 
       {/* Middle Section: Add Guest Form & Dietary Restriction Summary */}
@@ -587,12 +631,8 @@ export const AdminGuestsTab: React.FC<AdminGuestsTabProps> = ({ language, t, gue
                 key={guest.id}
                 guest={guest}
                 selected={selectedIds.includes(guest.id)}
-                copiedToken={copiedToken}
                 onToggleSelect={toggleSelect}
-                onCopyLink={handleCopyMagicLink}
-                onCopyMessage={handleCopyInviteMessage}
-                onEdit={handleOpenEditGuest}
-                onDelete={handleDeleteGuest}
+                onView={handleOpenViewGuest}
               />
             ))}
           </AnimatePresence>
@@ -737,6 +777,31 @@ export const AdminGuestsTab: React.FC<AdminGuestsTabProps> = ({ language, t, gue
                 </div>
               </form>
       </Modal>
+
+      {/* Modal: Metric Card Guest List */}
+      <GuestListModal
+        open={!!metricModal}
+        title={metricModalTitle}
+        guests={metricModalList}
+        listView={metricListView}
+        onListViewChange={setMetricListView}
+        onClose={() => setMetricModal(null)}
+      />
+
+      {/* Modal: Invitation Details */}
+      <GuestDetailsModal
+        open={!!viewingGuest}
+        guest={viewingGuest}
+        allGuests={guests}
+        message={viewingMessage}
+        loadingMessage={loadingMessage}
+        copiedToken={copiedToken}
+        onClose={() => setViewingGuest(null)}
+        onCopyLink={handleCopyMagicLink}
+        onCopyMessage={handleCopyInviteMessage}
+        onEdit={(g) => { setViewingGuest(null); handleOpenEditGuest(g); }}
+        onDelete={handleDeleteGuest}
+      />
     </motion.div>
   );
 };
