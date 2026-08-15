@@ -12,6 +12,47 @@ export interface Translations {
   addTableBtn: string;
   addTimelineEventBtn: string;
   addVenueFeatureBtn: string;
+  agendaAddTaskBtn: string;
+  agendaAdvance1d: string;
+  agendaAdvance1h: string;
+  agendaAdvance1w: string;
+  agendaAdvance2d: string;
+  agendaAdvance6h: string;
+  agendaCalendarView: string;
+  agendaColumnDone: string;
+  agendaColumnInProgress: string;
+  agendaColumnTodo: string;
+  agendaDeleteConfirmMsg: string;
+  agendaDeleteConfirmTitle: string;
+  agendaDescPh: string;
+  agendaEditTaskTitle: string;
+  agendaEmptyColumnMsg: string;
+  agendaKanbanView: string;
+  agendaMockHint: string;
+  agendaNewTaskTitle: string;
+  agendaNoTasksToday: string;
+  agendaReminderAdvanceLabel: string;
+  agendaReminderEmailLabel: string;
+  agendaReminderHostEmailLabel: string;
+  agendaReminderHostPhoneLabel: string;
+  agendaReminderPanelDesc: string;
+  agendaReminderPanelTitle: string;
+  agendaReminderSaveBtn: string;
+  agendaReminderSavedToast: string;
+  agendaReminderSmsLabel: string;
+  agendaReminderTestBtn: string;
+  agendaReminderTestFail: string;
+  agendaReminderTestSent: string;
+  agendaReminderTestUnconfigured: string;
+  agendaReminderWindowLabel: string;
+  agendaTaskDescLabel: string;
+  agendaTaskDueDateLabel: string;
+  agendaTaskDueTimeLabel: string;
+  agendaTaskModalSave: string;
+  agendaTaskStatusLabel: string;
+  agendaTaskTitleLabel: string;
+  agendaTitlePh: string;
+  agendaTodayBtn: string;
   adminCoHostControl: string;
   adminLoginLabel: string;
   adminSubtitle: string;
@@ -638,6 +679,7 @@ export interface Translations {
   submitRsvpBtn: string;
   submittingRsvpBtn: string;
   suggestMatchBadge: string;
+  tabAgenda: string;
   tabCatering: string;
   tabCheckIn: string;
   tabEscort: string;
@@ -850,6 +892,47 @@ export const translations: Record<Language, Translations> = {
     addTableBtn: "Add Table",
     addTimelineEventBtn: "Add Timeline Event",
     addVenueFeatureBtn: "Add Venue Feature",
+    agendaAddTaskBtn: "Add Task",
+    agendaAdvance1d: "1 day before",
+    agendaAdvance1h: "1 hour before",
+    agendaAdvance1w: "1 week before",
+    agendaAdvance2d: "2 days before",
+    agendaAdvance6h: "6 hours before",
+    agendaCalendarView: "Calendar",
+    agendaColumnDone: "Done",
+    agendaColumnInProgress: "In Progress",
+    agendaColumnTodo: "To Do",
+    agendaDeleteConfirmMsg: "This will permanently delete the task. This cannot be undone.",
+    agendaDeleteConfirmTitle: "Delete Task?",
+    agendaDescPh: "Optional notes...",
+    agendaEditTaskTitle: "Edit Task",
+    agendaEmptyColumnMsg: "No tasks here yet",
+    agendaKanbanView: "Kanban",
+    agendaMockHint: "Email/SMS providers are not configured — reminders will be logged (mock mode).",
+    agendaNewTaskTitle: "New Task",
+    agendaNoTasksToday: "Nothing due today",
+    agendaReminderAdvanceLabel: "Reminder advance",
+    agendaReminderEmailLabel: "Email reminders",
+    agendaReminderHostEmailLabel: "Host email",
+    agendaReminderHostPhoneLabel: "Host phone (SMS)",
+    agendaReminderPanelDesc: "Get notified before tasks are due. Reminders are sent once per task, only for tasks with a due date.",
+    agendaReminderPanelTitle: "Reminder Settings",
+    agendaReminderSaveBtn: "Save Reminder Settings",
+    agendaReminderSavedToast: "Reminder settings saved",
+    agendaReminderSmsLabel: "SMS reminders",
+    agendaReminderTestBtn: "Send test reminder",
+    agendaReminderTestFail: "Test reminder failed to send",
+    agendaReminderTestSent: "Test reminder sent",
+    agendaReminderTestUnconfigured: "Enable a channel and add a contact to test",
+    agendaReminderWindowLabel: "Tasks due within the advance window will remind you once.",
+    agendaTaskDescLabel: "Description",
+    agendaTaskDueDateLabel: "Due date",
+    agendaTaskDueTimeLabel: "Due time",
+    agendaTaskModalSave: "Save Task",
+    agendaTaskStatusLabel: "Status",
+    agendaTaskTitleLabel: "Task title",
+    agendaTitlePh: "e.g. Order the cake, book the venue...",
+    agendaTodayBtn: "Today",
     adminCoHostControl: "[03] Co-Host Control Center",
     adminLoginLabel: "Admin Login",
     adminSubtitle: "Track RSVPs, dietary restrictions, and manage guest invites in real time.",
@@ -1485,6 +1568,7 @@ export const translations: Record<Language, Translations> = {
     submitRsvpBtn: "Confirm RSVP",
     submittingRsvpBtn: "Submitting...",
     suggestMatchBadge: "Best Fit",
+    tabAgenda: "Agenda",
     tabCatering: "Catering & Dietary",
     tabCheckIn: "Check-In",
     tabEscort: "Print Escort Cards & Name Tags",
@@ -1686,6 +1770,47 @@ export const translations: Record<Language, Translations> = {
     addTableBtn: "Ajouter une table",
     addTimelineEventBtn: "Ajouter un horaire",
     addVenueFeatureBtn: "Ajouter un élément du lieu",
+    agendaAddTaskBtn: "Ajouter une tâche",
+    agendaAdvance1d: "1 jour avant",
+    agendaAdvance1h: "1 heure avant",
+    agendaAdvance1w: "1 semaine avant",
+    agendaAdvance2d: "2 jours avant",
+    agendaAdvance6h: "6 heures avant",
+    agendaCalendarView: "Calendrier",
+    agendaColumnDone: "Terminé",
+    agendaColumnInProgress: "En cours",
+    agendaColumnTodo: "À faire",
+    agendaDeleteConfirmMsg: "Cette action supprimera définitivement la tâche. Impossible d'annuler.",
+    agendaDeleteConfirmTitle: "Supprimer la tâche ?",
+    agendaDescPh: "Notes facultatives...",
+    agendaEditTaskTitle: "Modifier la tâche",
+    agendaEmptyColumnMsg: "Aucune tâche pour le moment",
+    agendaKanbanView: "Kanban",
+    agendaMockHint: "Fournisseurs e-mail/SMS non configurés — les rappels seront journalisés (mode simulé).",
+    agendaNewTaskTitle: "Nouvelle tâche",
+    agendaNoTasksToday: "Rien de prévu aujourd'hui",
+    agendaReminderAdvanceLabel: "Délai du rappel",
+    agendaReminderEmailLabel: "Rappels par e-mail",
+    agendaReminderHostEmailLabel: "E-mail de l'hôte",
+    agendaReminderHostPhoneLabel: "Téléphone de l'hôte (SMS)",
+    agendaReminderPanelDesc: "Soyez averti avant l'échéance des tâches. Les rappels sont envoyés une seule fois par tâche, uniquement pour les tâches avec une date.",
+    agendaReminderPanelTitle: "Paramètres des rappels",
+    agendaReminderSaveBtn: "Enregistrer les paramètres",
+    agendaReminderSavedToast: "Paramètres de rappel enregistrés",
+    agendaReminderSmsLabel: "Rappels par SMS",
+    agendaReminderTestBtn: "Envoyer un rappel test",
+    agendaReminderTestFail: "Échec de l'envoi du rappel test",
+    agendaReminderTestSent: "Rappel test envoyé",
+    agendaReminderTestUnconfigured: "Activez un canal et ajoutez un contact pour tester",
+    agendaReminderWindowLabel: "Les tâches arrivant à échéance dans le délai choisi seront rappelées une fois.",
+    agendaTaskDescLabel: "Description",
+    agendaTaskDueDateLabel: "Date d'échéance",
+    agendaTaskDueTimeLabel: "Heure",
+    agendaTaskModalSave: "Enregistrer la tâche",
+    agendaTaskStatusLabel: "Statut",
+    agendaTaskTitleLabel: "Titre de la tâche",
+    agendaTitlePh: "ex. Commander le gâteau, réserver la salle...",
+    agendaTodayBtn: "Aujourd'hui",
     adminCoHostControl: "[03] Centre de Contrôle Hôte",
     adminLoginLabel: "Connexion admin",
     adminSubtitle: "Suivez les réponses RSVP, les régimes alimentaires et gérez les invitations en temps réel.",
@@ -2321,6 +2446,7 @@ export const translations: Record<Language, Translations> = {
     submitRsvpBtn: "Confirmer mon RSVP",
     submittingRsvpBtn: "Envoi en cours...",
     suggestMatchBadge: "Meilleure correspondance",
+    tabAgenda: "Agenda",
     tabCatering: "Traiteur & Régimes",
     tabCheckIn: "Pointage",
     tabEscort: "Imprimer cartes & badges",
