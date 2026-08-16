@@ -4,8 +4,8 @@ test('landing page shows guest and host login buttons plus event details', async
   await page.goto('/');
   await expect(page.getByRole('button', { name: /Guest Login|Connexion Invité/i })).toBeVisible();
   await expect(page.getByRole('button', { name: /Host Login|Connexion Hôte/i })).toBeVisible();
-  await expect(page.getByText(/Baby Shower for Baby/i).first()).toBeVisible();
-  await expect(page.getByText('Event details coming soon')).toHaveCount(0);
+  await expect(page.getByRole('heading', { level: 1 }).first()).toBeVisible();
+  await expect(page.getByText(/Event details coming soon|détails de l'événement arrivent bientôt/i)).toHaveCount(0);
 
   // legacy /rsvp links land on the new landing page
   await page.goto('/rsvp');
@@ -24,6 +24,11 @@ test('guest portal rejects bad input and unknown codes', async ({ page }) => {
   await page.fill('input[type=text]', '0000');
   await page.click('button[type=submit]');
   await expect(page.getByText(/couldn't find a reservation|Aucune réservation trouvée/i)).toBeVisible();
+
+  // pasted magic link goes straight to the RSVP page
+  await page.fill('input[type=text]', `${page.url()}rsvp/token-abc123`);
+  await page.click('button[type=submit]');
+  await expect(page).toHaveURL(/\/rsvp\/token-abc123$/);
 });
 
 test('admin login gates and dashboard loads', async ({ page }) => {
@@ -31,7 +36,7 @@ test('admin login gates and dashboard loads', async ({ page }) => {
   await page.goto('/login');
   await page.fill('input[type=password]', 'wrong-password');
   await page.click('button[type=submit]');
-  await expect(page.getByText('Wrong password')).toBeVisible();
+  await expect(page.getByText(/Wrong password|Mot de passe incorrect/i)).toBeVisible();
 
   // correct password enters the dashboard with the sidebar nav
   await page.fill('input[type=password]', 'babyshower-admin-2026');
