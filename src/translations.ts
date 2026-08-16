@@ -145,6 +145,7 @@ export interface Translations {
   cateringNoExportToast: string;
   cateringPrintToast: string;
   cateringTitle: string;
+  celebratingLabel: string;
   channelBoth: string;
   channelEmail: string;
   channelNone: string;
@@ -179,6 +180,7 @@ export interface Translations {
   contactCardHint: string;
   contactCardTitle: string;
   contactForChannelError: string;
+  contactNotificationsBtn: string;
   contactSaveBtn: string;
   contactSaveErrorToast: string;
   contactSavedToast: string;
@@ -408,6 +410,7 @@ export interface Translations {
   greenLegendHint: string;
   gridLabel: string;
   gridLayoutLabel: string;
+  guestConfirmationBtn: string;
   guestDeletedToast: string;
   guestEmailsLabel: string;
   guestListBadge: string;
@@ -451,6 +454,7 @@ export interface Translations {
   inviteFailedToast: string;
   inviteGuestHint: string;
   inviteGuestTitle: string;
+  inviteGuestsBtn: string;
   inviteLinkForLabel: string;
   inviteMessageLabel: string;
   invitationDetailsTitle: string;
@@ -798,6 +802,7 @@ export interface Translations {
   wipeDbBtn: string;
   wipeDbConfirm: string;
   wrongPasswordMsg: string;
+  youAreInvitedLabel: string;
   yourInvitesTitle: string;
   yourNameOptional: string;
   yourSeatLabel: string;
@@ -1058,6 +1063,7 @@ export const translations: Record<Language, Translations> = {
     cateringNoExportToast: "No attending guests to export.",
     cateringPrintToast: "Opening printer layout for Catering Report...",
     cateringTitle: "Catering & Kitchen Operations",
+    celebratingLabel: "Celebrating",
     channelBoth: "Both (Email + Text)",
     channelEmail: "Email",
     channelNone: "Link only",
@@ -1092,6 +1098,7 @@ export const translations: Record<Language, Translations> = {
     contactCardHint: "Add your email or phone so we can send you reminders and updates.",
     contactCardTitle: "Contact & notifications",
     contactForChannelError: "Add a valid email or phone for {{channel}} delivery",
+    contactNotificationsBtn: "Contact & Notifications",
     contactSaveBtn: "Save",
     contactSaveErrorToast: "Could not save your contact info",
     contactSavedToast: "Contact info saved",
@@ -1323,6 +1330,7 @@ export const translations: Record<Language, Translations> = {
     gridLabel: "Grid",
     gridLayoutLabel: "Uniform Square Grid Layout",
     guestDeletedToast: "Deleted guest invitation for \"{{name}}\"",
+    guestConfirmationBtn: "Guest Confirmation",
     guestEmailsLabel: "guest email(s)",
     guestListBadge: "[GUESTLIST]",
     guestListTitle: "Invited Guests List",
@@ -1365,6 +1373,7 @@ export const translations: Record<Language, Translations> = {
     inviteFailedToast: "Could not create the invitation. Try again.",
     inviteGuestHint: "Know someone who'd love to come? Give them their own invitation — no need to ask us.",
     inviteGuestTitle: "Invite a guest",
+    inviteGuestsBtn: "Invite Guests",
     inviteLinkForLabel: "Invitation link for",
     inviteMessageLabel: "Invitation Message",
     invitationDetailsTitle: "Invitation Details",
@@ -1720,6 +1729,7 @@ export const translations: Record<Language, Translations> = {
     wipeDbBtn: "Clear All Data",
     wipeDbConfirm: "All event data cleared. Ready to start fresh.",
     wrongPasswordMsg: "Wrong password",
+    youAreInvitedLabel: "You're invited to our",
     yourInvitesTitle: "Your invitations",
     yourNameOptional: "Your Name (Optional)",
     yourSeatLabel: "Your Seat",
@@ -1969,6 +1979,7 @@ export const translations: Record<Language, Translations> = {
     cateringNoExportToast: "Aucun invité présent à exporter.",
     cateringPrintToast: "Ouverture de la mise en page d'impression du rapport traiteur...",
     cateringTitle: "Traiteur & opérations cuisine",
+    celebratingLabel: "Célébration de",
     channelBoth: "Les deux (Courriel + SMS)",
     channelEmail: "Courriel",
     channelNone: "Lien uniquement",
@@ -2003,6 +2014,7 @@ export const translations: Record<Language, Translations> = {
     contactCardHint: "Ajoutez votre e-mail ou téléphone pour recevoir les rappels et mises à jour.",
     contactCardTitle: "Contact et notifications",
     contactForChannelError: "Ajoutez un e-mail ou téléphone valide pour l'envoi par {{channel}}",
+    contactNotificationsBtn: "Contact et notifications",
     contactSaveBtn: "Enregistrer",
     contactSaveErrorToast: "Impossible d'enregistrer vos coordonnées",
     contactSavedToast: "Coordonnées enregistrées",
@@ -2234,6 +2246,7 @@ export const translations: Record<Language, Translations> = {
     gridLabel: "Grille",
     gridLayoutLabel: "Grille carrée uniforme",
     guestDeletedToast: "Invitation de « {{name}} » supprimée",
+    guestConfirmationBtn: "Confirmation de l'invité",
     guestEmailsLabel: "email(s) d'invité(s)",
     guestListBadge: "[LISTE DES INVITÉS]",
     guestListTitle: "Liste des Invités",
@@ -2276,6 +2289,7 @@ export const translations: Record<Language, Translations> = {
     inviteFailedToast: "Impossible de créer l'invitation. Réessayez.",
     inviteGuestHint: "Vous connaissez quelqu'un qui aimerait venir ? Offrez-lui sa propre invitation — inutile de nous demander.",
     inviteGuestTitle: "Inviter un invité",
+    inviteGuestsBtn: "Inviter des invités",
     inviteLinkForLabel: "Lien d'invitation pour",
     inviteMessageLabel: "Message d'invitation",
     invitationDetailsTitle: "Détails de l'invitation",
@@ -2631,6 +2645,7 @@ export const translations: Record<Language, Translations> = {
     wipeDbBtn: "Effacer toutes les données",
     wipeDbConfirm: "Toutes les données de l'événement ont été effacées.",
     wrongPasswordMsg: "Mot de passe incorrect",
+    youAreInvitedLabel: "Vous êtes invité(e) à notre",
     yourInvitesTitle: "Vos invitations",
     yourNameOptional: "Votre nom (optionnel)",
     yourSeatLabel: "Votre Siège",

@@ -10,7 +10,7 @@ export const EventDetailsPage = () => {
   const navigate = useNavigate();
 
   return (
-    <motion.div variants={fadeUp} initial="hidden" animate="show" className="space-y-4">
+    <motion.div variants={fadeUp} initial="hidden" animate="show" className="space-y-4 -mt-6 sm:mt-0">
       <button
         type="button"
         onClick={() => navigate('/')}
