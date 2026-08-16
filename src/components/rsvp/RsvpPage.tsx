@@ -415,9 +415,23 @@ export const RsvpPage = () => {
           invitation card, only for guests who arrived with a valid code/link. */}
       <EventDetailsCard
         hideGuestLogin
+        showProgram={guest?.rsvp_status === 'Attending'}
         actions={
           !loading && !errorMsg && guest ? (
             <div className="flex flex-wrap items-center justify-center gap-1 sm:gap-2">
+              {/* RSVP status indicator */}
+              <span className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-white/85 border shadow-sm text-[11px] font-mono font-bold text-[#4A3F35] border-[#CBAE94]">
+                <span
+                  className={`w-2 h-2 rounded-full ${
+                    guest.rsvp_status === 'Attending'
+                      ? 'bg-emerald-500'
+                      : guest.rsvp_status === 'Declined'
+                      ? 'bg-rose-500'
+                      : 'bg-amber-400'
+                  }`}
+                />
+                {statusWord(guest.rsvp_status)}
+              </span>
               <button
                 type="button"
                 onClick={() => setOpenModal('confirm')}

@@ -49,7 +49,16 @@ function deriveDateParts(dateStr: string, lang: 'EN' | 'FR') {
   return { weekday: '', month: '', day: '', year: '' };
 }
 
-export const EventDetailsCard = ({ hideGuestLogin = false, actions = null }: { hideGuestLogin?: boolean; actions?: ReactNode }) => {
+export const EventDetailsCard = ({
+  hideGuestLogin = false,
+  actions = null,
+  showProgram = false,
+}: {
+  hideGuestLogin?: boolean;
+  actions?: ReactNode;
+  /** Slide 2 (schedule) is only for guests who confirmed they're coming. */
+  showProgram?: boolean;
+}) => {
   const language = useAppStore((s) => s.language);
   const settings = useSettingsStore((s) => s.settings);
   const t = useT();
@@ -86,7 +95,7 @@ export const EventDetailsCard = ({ hideGuestLogin = false, actions = null }: { h
 
   const ink = { color: 'var(--ink)' };
   const headingFont = { fontFamily: 'var(--heading-font)' };
-  const hasProgram = (settings.schedule?.length ?? 0) > 0;
+  const hasProgram = showProgram && (settings.schedule?.length ?? 0) > 0;
 
   const goToSlide = (i: number) => {
     const track = trackRef.current;
