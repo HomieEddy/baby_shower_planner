@@ -281,7 +281,6 @@ export interface Translations {
   eventDateLabel2: string;
   eventDetailsSoonMsg: string;
   eventDetailsSoonTitle: string;
-  eventTabLabel: string;
   eventTimeLabel: string;
   eventTimeRangeLabel: string;
   eventVenueLabel: string;
@@ -466,7 +465,6 @@ export interface Translations {
   inviteDeliveryFailedToast: string;
   inviteSentModalMsg: string;
   inviteSentModalTitle: string;
-  inviteTabLabel: string;
   invitedByBadge: string;
   invitedByHostBadge: string;
   invitedGuestLabel: string;
@@ -608,8 +606,6 @@ export interface Translations {
   renderingCard: string;
   reservationCodeLabel: string;
   responseStatusLabel: string;
-  returnToConfirmationBtn: string;
-  returnToRsvpBtn: string;
   roomDimensions: string;
   roomDimensionsPx: string;
   roomLengthLabel: string;
@@ -632,7 +628,6 @@ export interface Translations {
   rsvpResponseTitle: string;
   rsvpStatusLabel: string;
   rsvpSubmitErrorToast: string;
-  rsvpTabLabel: string;
   rsvpUnlockedToast: string;
   saveAllSettingsBtn: string;
   saveAndCloseBtn: string;
@@ -703,9 +698,6 @@ export interface Translations {
   statusDeclinedWord: string;
   statusLabel: string;
   statusPendingWord: string;
-  step1of2Label: string;
-  step2of2Label: string;
-  step3of3Label: string;
   submitRsvpBtn: string;
   submittingRsvpBtn: string;
   suggestMatchBadge: string;
@@ -794,7 +786,6 @@ export interface Translations {
   venueTitle: string;
   viewBtn: string;
   viewEventDetailsBtn: string;
-  viewEventScheduleBtn: string;
   viewRsvpTitle: string;
   widthLabel: string;
   willNotifyLabel: string;
@@ -913,8 +904,6 @@ export interface Translations {
   saveChangesBtn: string;
   eventBadge: string;
   eventIntro: string;
-  registryCardTitle: string;
-  registryCardTagline: string;
 }
 
 export const translations: Record<Language, Translations> = {
@@ -1199,7 +1188,6 @@ export const translations: Record<Language, Translations> = {
     eventDateLabel2: "Event Date",
     eventDetailsSoonMsg: "The hosts are putting the finishing touches on the celebration page. Please check back later.",
     eventDetailsSoonTitle: "Event details coming soon",
-    eventTabLabel: "2. Event Info",
     eventTimeLabel: "Time",
     eventTimeRangeLabel: "Event Time Range",
     eventVenueLabel: "Venue",
@@ -1385,7 +1373,6 @@ export const translations: Record<Language, Translations> = {
     inviteDeliveryFailedToast: "Invitation created for {{name}}, but delivery failed. Share the link manually.",
     inviteSentModalMsg: "The magic link below has been logged to the system console and ready to share:",
     inviteSentModalTitle: "Invitation Created & Sent!",
-    inviteTabLabel: "3. Invite a Guest",
     invitedByBadge: "Invited by {{name}}",
     invitedByHostBadge: "Host",
     inviteeContactLabel: "Email or phone (optional)",
@@ -1529,8 +1516,6 @@ export const translations: Record<Language, Translations> = {
     renderingCard: "Rendering High-Res Card Image...",
     reservationCodeLabel: "Reservation Code:",
     responseStatusLabel: "Response Status",
-    returnToConfirmationBtn: "Return to RSVP Confirmation",
-    returnToRsvpBtn: "Return to Step 1: RSVP Form",
     roomDimensions: "Room Dimensions",
     roomDimensionsPx: "Room Dimensions (px)",
     roomLengthLabel: "Room Length:",
@@ -1554,15 +1539,12 @@ export const translations: Record<Language, Translations> = {
     rsvpResponseTitle: "RSVP Response",
     rsvpStatusLabel: "RSVP Status",
     rsvpSubmitErrorToast: "An error occurred while submitting your RSVP.",
-    rsvpTabLabel: "1. RSVP Form",
     rsvpUnlockedToast: "RSVP unlocked for updates.",
     saveAllSettingsBtn: "Save All Settings",
     saveAndCloseBtn: "Save & Close",
     saveChangesBtn: "Save Changes",
     eventBadge: "Celebrating our baby's arrival",
     eventIntro: "Join us for an afternoon of games, sweet treats, and memories as we prepare to welcome our little angel into the world!",
-    registryCardTitle: "Amazon Baby Registry",
-    registryCardTagline: "Your presence is the sweetest gift!",
     savingChangesBtn: "Saving...",
     savingSettingsBtn: "Saving...",
     scanAtEntrance: "Scan at entrance",
@@ -1630,9 +1612,6 @@ export const translations: Record<Language, Translations> = {
     statusDeclinedWord: "Declined",
     statusLabel: "Status:",
     statusPendingWord: "Pending",
-    step1of2Label: "Step 1 of 2: Guest Confirmation",
-    step2of2Label: "Step 2 of 2: Event Information",
-    step3of3Label: "Step 3 of 3: Invite Guests",
     submitRsvpBtn: "Confirm RSVP",
     submittingRsvpBtn: "Submitting...",
     suggestMatchBadge: "Best Fit",
@@ -1721,7 +1700,6 @@ export const translations: Record<Language, Translations> = {
     venueTitle: "Your Table & Seat",
     viewBtn: "View",
     viewEventDetailsBtn: "View Event Details & Google Maps",
-    viewEventScheduleBtn: "View Event Schedule & Venue",
     viewRsvpTitle: "Test / View RSVP Form",
     widthLabel: "Width",
     willNotifyLabel: "Will notify",
@@ -2115,7 +2093,6 @@ export const translations: Record<Language, Translations> = {
     eventDateLabel2: "Date de l'événement",
     eventDetailsSoonMsg: "Les hôtes finalisent la page de célébration. Revenez plus tard.",
     eventDetailsSoonTitle: "Les détails de l'événement arrivent bientôt",
-    eventTabLabel: "2. Infos événement",
     eventTimeLabel: "Heure",
     eventTimeRangeLabel: "Plage horaire de l'événement",
     eventVenueLabel: "Lieu",
@@ -2301,7 +2278,6 @@ export const translations: Record<Language, Translations> = {
     inviteDeliveryFailedToast: "Invitation créée pour {{name}}, mais l'envoi a échoué. Partagez le lien manuellement.",
     inviteSentModalMsg: "Le lien magique ci-dessous a été enregistré dans la console et est prêt à être partagé :",
     inviteSentModalTitle: "Invitation créée et envoyée !",
-    inviteTabLabel: "3. Inviter un invité",
     invitedByBadge: "Invité par {{name}}",
     invitedByHostBadge: "Hôte",
     invitedGuestLabel: "Invité :",
@@ -2445,8 +2421,6 @@ export const translations: Record<Language, Translations> = {
     renderingCard: "Génération de la carte HD...",
     reservationCodeLabel: "Code de réservation :",
     responseStatusLabel: "Statut de réponse",
-    returnToConfirmationBtn: "Retour à la confirmation RSVP",
-    returnToRsvpBtn: "Retour à l'étape 1 : Formulaire RSVP",
     roomDimensions: "Dimensions de la salle",
     roomDimensionsPx: "Dimensions de la salle (px)",
     roomLengthLabel: "Longueur de la salle :",
@@ -2470,15 +2444,12 @@ export const translations: Record<Language, Translations> = {
     rsvpResponseTitle: "Réponse RSVP",
     rsvpStatusLabel: "Statut RSVP",
     rsvpSubmitErrorToast: "Une erreur est survenue lors de l'envoi de votre RSVP.",
-    rsvpTabLabel: "1. Formulaire RSVP",
     rsvpUnlockedToast: "RSVP déverrouillé pour modifications.",
     saveAllSettingsBtn: "Enregistrer les paramètres",
     saveAndCloseBtn: "Enregistrer & Fermer",
     saveChangesBtn: "Enregistrer",
     eventBadge: "Célébrons l'arrivée de notre bébé",
     eventIntro: "Rejoignez-nous pour une après-midi de jeux, gourmandises et souvenirs en attendant l'arrivée de notre petit ange !",
-    registryCardTitle: "Registre de Bébé Amazon",
-    registryCardTagline: "Votre présence est le plus doux des cadeaux !",
     savingChangesBtn: "Enregistrement...",
     savingSettingsBtn: "Enregistrement...",
     scanAtEntrance: "À présenter à l'entrée",
@@ -2546,9 +2517,6 @@ export const translations: Record<Language, Translations> = {
     statusDeclinedWord: "Décliné",
     statusLabel: "Statut :",
     statusPendingWord: "En attente",
-    step1of2Label: "Étape 1 sur 2 : Confirmation de l'invité",
-    step2of2Label: "Étape 2 sur 2 : Informations sur l'événement",
-    step3of3Label: "Étape 3 sur 3 : Inviter des invités",
     submitRsvpBtn: "Confirmer mon RSVP",
     submittingRsvpBtn: "Envoi en cours...",
     suggestMatchBadge: "Meilleure correspondance",
@@ -2637,7 +2605,6 @@ export const translations: Record<Language, Translations> = {
     venueTitle: "Votre table & votre place",
     viewBtn: "Voir",
     viewEventDetailsBtn: "Voir les détails & Google Maps",
-    viewEventScheduleBtn: "Voir le programme & le lieu",
     viewRsvpTitle: "Tester / Voir le formulaire RSVP",
     widthLabel: "Largeur",
     willNotifyLabel: "Notifiera",
