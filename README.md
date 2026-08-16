@@ -102,6 +102,8 @@ Then in the admin app (`/admin`): add a guest with `delivery_channel` email/text
 
 Guests never see the admin header/nav. They reach their pages only via invitation magic links and day-of QR codes:
 
+- `/`: landing page (guest/host login buttons + event details)
+- `/portal`: guest login — enter the 4-digit reservation code or paste a magic link
 - `/rsvp/:token`: reservation / RSVP
 - `/seating?guest=<token>`: floor map
 - `/guestbook` and `/upload-photos`: guestbook and photo uploads, **time-locked**

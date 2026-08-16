@@ -1,9 +1,29 @@
 import { test, expect } from '@playwright/test';
 
-test('guest home renders the event page', async ({ page }) => {
-  await page.goto('/rsvp');
+test('landing page shows guest and host login buttons plus event details', async ({ page }) => {
+  await page.goto('/');
+  await expect(page.getByRole('button', { name: /Guest Login|Connexion Invité/i })).toBeVisible();
+  await expect(page.getByRole('button', { name: /Host Login|Connexion Hôte/i })).toBeVisible();
   await expect(page.getByText(/Baby Shower for Baby/i).first()).toBeVisible();
   await expect(page.getByText('Event details coming soon')).toHaveCount(0);
+
+  // legacy /rsvp links land on the new landing page
+  await page.goto('/rsvp');
+  await expect(page).toHaveURL(/\/$/);
+});
+
+test('guest portal rejects bad input and unknown codes', async ({ page }) => {
+  await page.goto('/portal');
+
+  // not a code and not a link
+  await page.fill('input[type=text]', 'hello');
+  await page.click('button[type=submit]');
+  await expect(page.getByText(/Enter your 4-digit reservation code|code de réservation à 4 chiffres/i)).toBeVisible();
+
+  // plausible but unknown code
+  await page.fill('input[type=text]', '0000');
+  await page.click('button[type=submit]');
+  await expect(page.getByText(/couldn't find a reservation|Aucune réservation trouvée/i)).toBeVisible();
 });
 
 test('admin login gates and dashboard loads', async ({ page }) => {

@@ -102,7 +102,7 @@ Security hardening (rate limits, bot blocking, CSP/HSTS headers, prod secret val
 ## Conventions
 - Bilingual EN/FR throughout: every user-facing string goes through `translations.ts`
 - **Two UI surfaces** (split in `App.tsx`):
-  - Guest pages (`/rsvp`, `/rsvp/:token`, `/find-my-table`, `/guestbook`, `/upload-photos`) render without the admin header/nav; they are reached only via invitation magic links and day-of QR codes. `/seating` is admin-only (RequireAdmin); the guest finder lives on `/find-my-table` (QR links use `/find-my-table?guest=<token>` to pre-select)
+  - Guest pages (`/` landing with guest/host login buttons, `/portal` code-or-magic-link login, `/rsvp/:token`, `/find-my-table`, `/guestbook`, `/upload-photos`) render without the admin header/nav; they are reached only via invitation magic links and day-of QR codes. `/seating` is admin-only (RequireAdmin); the guest finder lives on `/find-my-table` (QR links use `/find-my-table?guest=<token>` to pre-select). `/rsvp` without a token redirects to `/`
   - Admin surface (`/login`, `/admin`, `/photo-gallery`) renders the header with nav; `/photo-gallery` is behind `RequireAdmin`
 - **Guest content window**: settings `contentOpenAt`/`contentCloseAt` (ISO) gate the guestbook and photo uploads: guests get 403 `GUEST_CONTENT_LOCKED` outside the window; admin requests bypass. Guest pages render a locked state with the window times
 - Photo uploads go through base64 JSON (`POST /api/upload` → `/api/photos/upload`), never multipart: the server only parses JSON bodies
