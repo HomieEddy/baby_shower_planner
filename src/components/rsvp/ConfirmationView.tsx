@@ -1,5 +1,5 @@
 import { motion } from 'motion/react';
-import { CheckCircle2, Sparkles, Calendar, Edit3, ChevronRight, XCircle } from 'lucide-react';
+import { CheckCircle2, Sparkles, Edit3, XCircle } from 'lucide-react';
 import { Guest } from '../../types';
 import { cardStagger, popIn, fadeUp } from '../shared/motionPresets';
 import { useT } from '../shared/i18n';
@@ -7,11 +7,9 @@ import { useT } from '../shared/i18n';
 export const ConfirmationView = ({
   guest,
   onEdit,
-  onViewEvent,
 }: {
   guest: Guest;
   onEdit: () => void;
-  onViewEvent: () => void;
 }) => {
   const t = useT();
   return (
@@ -123,17 +121,8 @@ export const ConfirmationView = ({
         )}
       </motion.div>
 
-      {/* Registry Link & Actions */}
+      {/* Actions */}
       <div className="space-y-4 pt-2">
-        <button
-          onClick={onViewEvent}
-          className="btn-accent w-full text-sm space-x-2 py-3.5"
-        >
-          <Calendar className="w-4 h-4" />
-          <span>{t.viewEventDetailsBtn}</span>
-          <ChevronRight className="w-4 h-4 ml-1" />
-        </button>
-
         <div className="flex items-center justify-center pt-1">
           {!guest.is_read_only ? (
             <button

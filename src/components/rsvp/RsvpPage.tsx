@@ -494,7 +494,6 @@ export const RsvpPage = () => {
               <ConfirmationView
                 guest={guest}
                 onEdit={handleEditRsvp}
-                onViewEvent={() => setOpenModal(null)}
               />
             ) : (
               /* State B: RSVP Form */
