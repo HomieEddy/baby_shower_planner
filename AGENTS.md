@@ -38,10 +38,11 @@
 ## Architecture
 - **Entry**: `src/main.tsx` → `App.tsx` with `<BrowserRouter>` and `<Routes>`
 - **Stores**: `src/stores/appStore.ts` (language), `src/stores/settingsStore.ts` (event settings)
-- **Backend**: `server.ts` (native Node HTTP server handling API + SPA fallback)
-- **DB**: **PocketBase** (`src/db/service.ts` is the complete data layer using PB JS SDK)
-  - `data/db_store.json`, `src/db/index.ts`, `src/db/schema.ts` are **removed**: PocketBase is the only DB
-  - `src/lib/pocketbase.ts`: PB client instance (server-side only)
+- **Backend**: `server.ts` (native Node HTTP server: security wrappers + request dispatch + SPA fallback)
+  - `src/server/http.ts`: HTTP framework primitives (rate limits, security headers, `sendJson`/`parseJson`, static serving) + `RouteCtx`
+  - `src/server/routes/*.ts`: per-feature route handlers (`guests`, `rsvp`, `guestbook`, `photos`, `settings`, `alerts`, `floorplan`, `gifts`, `agenda`, `checkin`, `system`)
+  - `src/server/uploadFiles.ts`: uploads-dir resolution/cleanup shared by routes + services
+- **DB**: **PocketBase** (`src/db/service.ts` is the barrel re-export; feature modules in `src/db/`: `client`, `schema`, `guests`, `rsvp`, `guestbook`, `settings`, `alerts`, `floorMap`, `photos`, `gifts`, `thankyou`, `agenda`, `checkin`, `roster`, `notify`)
 - **Seeder**: removed; no demo data. `initPocketBase()` auto-creates collections on first run; the database starts empty
 - **Validation**: Zod schemas in `src/lib/validation.ts`
 - **Theming**: CSS custom properties applied via JS (`themePresets.ts`)
@@ -58,8 +59,9 @@ src/
     photos/     photo upload + host gallery (GuestPhotoUploadPage, HostPhotoGalleryPage, PhotoCard, PhotoLightbox, PhotoSlideshow)
     layout/     Header
     shared/     cross-feature UI (Modal, ConfirmDialog, ToastContext, EmptyState, motionPresets, ui form primitives, i18n useT hook)
-  db/           PocketBase service (service.ts), no JSON/Drizzle files
-  lib/          utilities: validation, date formatting, image compression, file helpers, PB client
+  db/           PocketBase data layer (feature modules + service.ts barrel)
+  lib/          utilities: validation, date formatting, image compression, file helpers, admin fetch helpers
+  server/       server-side HTTP framework + per-feature API route handlers
   stores/       Zustand stores: appStore (language), settingsStore (event settings)
 App.tsx         root component with BrowserRouter + Routes
 types.ts        all TypeScript interfaces
@@ -95,7 +97,7 @@ Guest CRUD, RSVP (token-based), guestbook, photo upload/gallery, floor plan edit
 
 `ADMIN_TOKEN`: the admin login page validates against this value. Leave unset to disable admin protection (not recommended).
 
-Security hardening (rate limits, bot blocking, CSP/HSTS headers, prod secret validation) lives in `server.ts`: see `SECURITY.md` for the deployment runbook. Production refuses to start with missing/weak secrets.
+Security hardening (rate limits, bot blocking, CSP/HSTS headers, prod secret validation) lives in `server.ts` + `src/server/http.ts`: see `SECURITY.md` for the deployment runbook. Production refuses to start with missing/weak secrets.
 
 `.env*` is gitignored. Only `.env.example` tracked.
 
