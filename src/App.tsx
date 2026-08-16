@@ -13,6 +13,7 @@ import { HostPhotoGalleryPage } from './components/photos/HostPhotoGalleryPage';
 import { AdminLogin } from './components/admin/AdminLogin';
 import { LandingPage } from './components/landing/LandingPage';
 import { GuestPortalPage } from './components/landing/GuestPortalPage';
+import { EventDetailsPage } from './components/landing/EventDetailsPage';
 import { ToastProvider } from './components/shared/ToastContext';
 import { ConfirmProvider } from './components/shared/ConfirmDialog';
 import { useSettingsStore } from './stores/settingsStore';
@@ -78,6 +79,7 @@ function MainAppContent() {
           <Route path="/login" element={<AdminLogin />} />
           <Route path="/" element={<LandingPage />} />
           <Route path="/portal" element={<GuestPortalPage />} />
+          <Route path="/event" element={<EventDetailsPage />} />
           <Route path="/rsvp" element={<Navigate to="/" replace />} />
           <Route path="/rsvp/:token" element={<RsvpPage />} />
           <Route path="/admin" element={<RequireAdmin><AdminDashboard /></RequireAdmin>} />

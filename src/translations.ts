@@ -480,6 +480,7 @@ export interface Translations {
   invitesSentMsg: string;
   langSwitch: string;
   landingAdminBtn: string;
+  landingEventBtn: string;
   landingGuestBtn: string;
   landingHeroSubtitle: string;
   linkCopied: string;
@@ -1393,6 +1394,7 @@ export const translations: Record<Language, Translations> = {
     invitesSentMsg: "Invitations sent to {{count}} guests!",
     langSwitch: "Français (FR)",
     landingAdminBtn: "Host Login",
+    landingEventBtn: "Event Details",
     landingGuestBtn: "Guest Login",
     landingHeroSubtitle: "Log in to RSVP, find your seat, and join the celebration.",
     linkCopied: "Copied!",
@@ -2303,6 +2305,7 @@ export const translations: Record<Language, Translations> = {
     invitesSentMsg: "Invitations envoyées à {{count}} invités !",
     langSwitch: "English (EN)",
     landingAdminBtn: "Connexion Hôte",
+    landingEventBtn: "Détails de l'événement",
     landingGuestBtn: "Connexion Invité",
     landingHeroSubtitle: "Connectez-vous pour répondre, trouver votre table et célébrer avec nous.",
     linkCopied: "Copié !",

@@ -1,10 +1,16 @@
 import { test, expect } from '@playwright/test';
 
-test('landing page shows guest and host login buttons plus event details', async ({ page }) => {
+test('landing page shows guest, host, and event details entry buttons', async ({ page }) => {
   await page.goto('/');
   await expect(page.getByRole('button', { name: /Guest Login|Connexion Invité/i })).toBeVisible();
   await expect(page.getByRole('button', { name: /Host Login|Connexion Hôte/i })).toBeVisible();
-  await expect(page.getByRole('heading', { level: 1 }).first()).toBeVisible();
+  await expect(page.getByRole('button', { name: /Event Details|Détails de l'événement/i })).toBeVisible();
+  await expect(page.getByRole('heading', { level: 1 })).toHaveCount(0);
+
+  // event details live on their own page
+  await page.getByRole('button', { name: /Event Details|Détails de l'événement/i }).click();
+  await expect(page).toHaveURL(/\/event$/);
+  await expect(page.getByRole('heading', { level: 1 })).toBeVisible();
   await expect(page.getByText(/Event details coming soon|détails de l'événement arrivent bientôt/i)).toHaveCount(0);
 
   // legacy /rsvp links land on the new landing page
