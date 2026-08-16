@@ -11,6 +11,7 @@ import { GuestFinderPage } from './components/seating/GuestFinderPage';
 import { GuestPhotoUploadPage } from './components/photos/GuestPhotoUploadPage';
 import { HostPhotoGalleryPage } from './components/photos/HostPhotoGalleryPage';
 import { AdminLogin } from './components/admin/AdminLogin';
+import { LandingPage } from './components/landing/LandingPage';
 import { ToastProvider } from './components/shared/ToastContext';
 import { ConfirmProvider } from './components/shared/ConfirmDialog';
 import { useSettingsStore } from './stores/settingsStore';
@@ -74,7 +75,8 @@ function MainAppContent() {
       <main className="flex-1 max-w-5xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-10">
         <Routes>
           <Route path="/login" element={<AdminLogin />} />
-          <Route path="/rsvp" element={<RsvpPage />} />
+          <Route path="/" element={<LandingPage />} />
+          <Route path="/rsvp" element={<Navigate to="/" replace />} />
           <Route path="/rsvp/:token" element={<RsvpPage />} />
           <Route path="/admin" element={<RequireAdmin><AdminDashboard /></RequireAdmin>} />
           <Route path="/photo-gallery" element={<RequireAdmin><HostPhotoGalleryPage /></RequireAdmin>} />
@@ -85,8 +87,7 @@ function MainAppContent() {
           <Route path="/check-in" element={<GuestFinderPage />} />
           <Route path="/seating" element={<RequireAdmin><FloorPlanPage /></RequireAdmin>} />
           <Route path="/upload-photos" element={<GuestPhotoUploadPage />} />
-          <Route path="/" element={<Navigate to="/rsvp" replace />} />
-          <Route path="*" element={<Navigate to="/rsvp" replace />} />
+          <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </main>
       <footer className="mt-auto py-8 px-4 text-center text-xs text-[#5D5449]/80 border-t border-dashed border-[#CBAE94]/60 space-y-2.5">

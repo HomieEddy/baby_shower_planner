@@ -479,6 +479,10 @@ export interface Translations {
   invitesNoneToast: string;
   invitesSentMsg: string;
   langSwitch: string;
+  landingAdminBtn: string;
+  landingGuestBtn: string;
+  landingHeroSubtitle: string;
+  landingHeroTitle: string;
   linkCopied: string;
   linkOnlyHint: string;
   linksCopiedToast: string;
@@ -548,6 +552,14 @@ export interface Translations {
   posterScanTitle: string;
   posterTitle: string;
   posterWelcome: string;
+  portalBackBtn: string;
+  portalCodeNotFound: string;
+  portalContinueBtn: string;
+  portalInputLabel: string;
+  portalInvalidInput: string;
+  portalResolving: string;
+  portalSubtitle: string;
+  portalTitle: string;
   presetEnglish: string;
   presetFrench: string;
   prevSlideBtn: string;
@@ -1381,6 +1393,10 @@ export const translations: Record<Language, Translations> = {
     invitesNoneToast: "No invitations sent. Check RESEND_API_KEY.",
     invitesSentMsg: "Invitations sent to {{count}} guests!",
     langSwitch: "Français (FR)",
+    landingAdminBtn: "Host Login",
+    landingGuestBtn: "Guest Login",
+    landingHeroSubtitle: "Log in to RSVP, find your seat, and join the celebration.",
+    landingHeroTitle: "{{parents}}'s Baby Shower",
     linkCopied: "Copied!",
     linkOnlyHint: "You'll get a ready-to-send message to share yourself (WhatsApp, Messenger…).",
     linksCopiedToast: "Copied {{count}} invitation links to clipboard!",
@@ -1451,6 +1467,14 @@ export const translations: Record<Language, Translations> = {
     posterScanTitle: "Scan to Check In & Find Your Seat!",
     posterTitle: "Day-Of Guest QR Poster",
     posterWelcome: "Welcome Guests!",
+    portalBackBtn: "Back to the event page",
+    portalCodeNotFound: "We couldn't find a reservation with that code. Double-check your invitation or contact the hosts.",
+    portalContinueBtn: "Continue",
+    portalInputLabel: "Reservation code or invitation link",
+    portalInvalidInput: "Enter your 4-digit reservation code or paste your invitation link.",
+    portalResolving: "Looking up your invitation...",
+    portalSubtitle: "Enter the 4-digit code from your invitation or paste your magic link.",
+    portalTitle: "Guest Portal",
     presetEnglish: "English (EN)",
     presetFrench: "Français (FR)",
     prevSlideBtn: "Previous Slide",
@@ -2280,6 +2304,10 @@ export const translations: Record<Language, Translations> = {
     invitesNoneToast: "Aucune invitation envoyée. Vérifiez RESEND_API_KEY.",
     invitesSentMsg: "Invitations envoyées à {{count}} invités !",
     langSwitch: "English (EN)",
+    landingAdminBtn: "Connexion Hôte",
+    landingGuestBtn: "Connexion Invité",
+    landingHeroSubtitle: "Connectez-vous pour répondre, trouver votre table et célébrer avec nous.",
+    landingHeroTitle: "Baby Shower de {{parents}}",
     linkCopied: "Copié !",
     linkOnlyHint: "Vous recevrez un message prêt à envoyer à partager vous-même (WhatsApp, Messenger…).",
     linksCopiedToast: "{{count}} liens d'invitation copiés !",
@@ -2350,6 +2378,14 @@ export const translations: Record<Language, Translations> = {
     posterScanTitle: "Scannez pour vous enregistrer et trouver votre table !",
     posterTitle: "Affiche QR des invités",
     posterWelcome: "Bienvenue aux Invités !",
+    portalBackBtn: "Retour à la page de l'événement",
+    portalCodeNotFound: "Aucune réservation trouvée avec ce code. Vérifiez votre invitation ou contactez les hôtes.",
+    portalContinueBtn: "Continuer",
+    portalInputLabel: "Code de réservation ou lien d'invitation",
+    portalInvalidInput: "Entrez votre code de réservation à 4 chiffres ou collez votre lien d'invitation.",
+    portalResolving: "Recherche de votre invitation...",
+    portalSubtitle: "Entrez le code à 4 chiffres de votre invitation ou collez votre lien magique.",
+    portalTitle: "Portail Invité",
     presetEnglish: "English (EN)",
     presetFrench: "Français (FR)",
     prevSlideBtn: "Diapositive précédente",
