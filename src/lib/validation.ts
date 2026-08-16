@@ -21,12 +21,13 @@ export const EditGuestSchema = z.object({
   phone: z.string().optional(),
   delivery_channel: z.enum(['email', 'text', 'both', 'none']),
   max_party_size: z.number().min(1).max(20),
+  attending_party_size: z.number().min(0).max(20),
   rsvp_status: z.enum(['Pending', 'Attending', 'Declined']),
 });
 
 export const GuestbookEntrySchema = z.object({
-  guest_name: z.string().min(1, 'Guest name is required'),
-  message: z.string().min(1, 'Message is required'),
+  guest_name: z.string().min(1, 'Guest name is required').max(80, 'Guest name is too long'),
+  message: z.string().min(1, 'Message is required').max(2000, 'Message is too long'),
   photo_url: z.string().optional(),
 });
 

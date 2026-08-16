@@ -15,6 +15,7 @@ import { useVirtualizer } from '@tanstack/react-virtual';
 import { EmptyState } from '../shared/EmptyState';
 import { formatGuestWindow } from '../../lib/dateUtils';
 import { uploadPhotoBase64 } from '../../lib/fileUtils';
+import { compressImage } from '../../lib/imageCompressor';
 import { GuestbookEntrySchema } from '../../lib/validation';
 import { useAppStore } from '../../stores/appStore';
 import { useT } from '../shared/i18n';
@@ -93,6 +94,7 @@ export const GuestbookPage = () => {
     if (e.target.files && e.target.files[0]) {
       const file = e.target.files[0];
       setSelectedFile(file);
+      if (previewUrl) URL.revokeObjectURL(previewUrl);
       setPreviewUrl(URL.createObjectURL(file));
       toast.info(t.gbPhotoAttachedToast);
     }
@@ -101,6 +103,7 @@ export const GuestbookPage = () => {
   // Remove photo handler
   const handleRemovePhoto = () => {
     setSelectedFile(null);
+    if (previewUrl) URL.revokeObjectURL(previewUrl);
     setPreviewUrl(null);
     if (fileInputRef.current) {
       fileInputRef.current.value = '';
@@ -115,9 +118,14 @@ export const GuestbookPage = () => {
 
       let uploadedPhotoUrl = '';
 
-      // Upload photo if present
+      // Upload photo if present (compressed to keep entries light)
       if (selectedFile) {
-        uploadedPhotoUrl = await uploadPhotoBase64(selectedFile);
+        const compressed = await compressImage(selectedFile);
+        uploadedPhotoUrl = await uploadPhotoBase64(compressed.file);
+        if (!uploadedPhotoUrl) {
+          toast.error(t.gbPostErrorToast);
+          return;
+        }
       }
 
       // Submit guestbook entry
@@ -130,6 +138,14 @@ export const GuestbookPage = () => {
           photo_url: uploadedPhotoUrl,
         }),
       });
+
+      if (res.status === 403) {
+        // The window closed while this page was open.
+        const data = await res.json();
+        setLocked(true);
+        setLockInfo({ opensAt: data.opensAt, closesAt: data.closesAt });
+        return;
+      }
 
       if (res.ok) {
         setSubmitted(true);
@@ -151,6 +167,7 @@ export const GuestbookPage = () => {
   const handleResetForm = () => {
     reset({ guest_name: '', message: '' });
     setSelectedFile(null);
+    if (previewUrl) URL.revokeObjectURL(previewUrl);
     setPreviewUrl(null);
     setSubmitted(false);
   };

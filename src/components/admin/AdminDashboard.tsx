@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Guest, GuestbookEntry, EventSettings, EventAlert, GiftLog } from '../../types';
 import { HostPhotoGalleryPage } from '../photos/HostPhotoGalleryPage';
@@ -69,11 +69,18 @@ export const AdminDashboard = () => {
   const language = useAppStore((s) => s.language);
   const settings = useSettingsStore((s) => s.settings);
   const setSettings = useSettingsStore((s) => s.setSettings);
+  const fetchSettings = useSettingsStore((s) => s.fetchSettings);
   const t = useT();
   const { toast } = useToast();
 
   const [adminSubTab, setAdminSubTab] = useState<TabId>('guests');
   const [sidebarOpen, setSidebarOpen] = useState(false);
+
+  // Re-fetch settings with the admin token: the app-level fetch may have run
+  // before login and received the scrubbed public shape (no host contact).
+  useEffect(() => {
+    fetchSettings();
+  }, [fetchSettings]);
 
   const tabLabel = (id: TabId): string => {
     switch (id) {
@@ -125,7 +132,7 @@ export const AdminDashboard = () => {
       confirmText: 'Delete Alert',
     });
     if (!ok) return;
-    await fetch(`/api/alerts/${alertId}`, { method: 'DELETE' });
+    await adminFetch(`/api/alerts/${alertId}`, { method: 'DELETE' });
     refreshOverview();
     toast.info(t.alertDeletedToast);
   };
@@ -151,7 +158,7 @@ export const AdminDashboard = () => {
   const handleWipeData = async () => {
     const ok = await confirm({
       title: 'Clear All Data?',
-      message: 'This will permanently remove all guests, guestbook entries, alerts, seating maps, photos, predictions, and gifts. Event settings (parents\' names, date, venue) are preserved. This cannot be undone.',
+      message: 'This will permanently remove all guests, guestbook entries, alerts, seating maps, photos, and gifts. Event settings (parents\' names, date, venue) are preserved. This cannot be undone.',
       confirmText: 'Yes, Clear All Data',
     });
     if (!ok) return;
@@ -314,7 +321,7 @@ export const AdminDashboard = () => {
       )}
 
       {adminSubTab === 'guestbook' && (
-        <AdminGuestbookFeed entries={guestbookEntries} />
+        <AdminGuestbookFeed entries={guestbookEntries} onRefresh={refreshOverview} />
       )}
 
       {adminSubTab === 'photos' && (

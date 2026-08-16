@@ -249,6 +249,8 @@ export const RsvpPage = () => {
           toast.love(t.inviteSentChannelToast
             .replace('{{name}}', data.guest.name)
             .replace('{{channel}}', data.sent.map((c: string) => channelLabel(t, c)).join(' + ')));
+        } else if (data.failed.length > 0) {
+          toast.error(t.inviteDeliveryFailedToast.replace('{{name}}', data.guest.name));
         } else {
           toast.info(t.inviteSentLinkOnlyToast.replace('{{name}}', data.guest.name));
         }
@@ -327,7 +329,7 @@ export const RsvpPage = () => {
           toast.info(t.rsvpDeclinedToast);
         }
       } else {
-        toast.error(dataRes.error || 'Failed to submit RSVP');
+        toast.error(dataRes.error === 'RSVP_CLOSED' ? t.rsvpClosedToast : dataRes.message || dataRes.error || 'Failed to submit RSVP');
       }
     } catch (err) {
       console.error('RSVP submit error:', err);
@@ -341,7 +343,12 @@ export const RsvpPage = () => {
   const handleEditRsvp = async () => {
     if (!token) return;
     try {
-      await fetch(`/api/rsvp/${token}/reset`, { method: 'POST' });
+      const res = await fetch(`/api/rsvp/${token}/reset`, { method: 'POST' });
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        toast.error(data.error === 'RSVP_CLOSED' ? t.rsvpClosedToast : t.rsvpResetErrorToast);
+        return;
+      }
       setIsEditing(true);
       setSubmitted(false);
       toast.info(t.rsvpUnlockedToast);
@@ -352,11 +359,12 @@ export const RsvpPage = () => {
   };
 
   // Filter alerts for the current guest:
-  // 1. Guests who have DECLINED will NEVER see any broadcast alerts.
+  // 1. Guests who have DECLINED only see CANCELLATION alerts (they might
+  //    still show up otherwise).
   // 2. Filter by target_audience (PENDING vs ATTENDING vs ALL).
   const visibleAlerts = alerts.filter((a) => {
     if (guest?.rsvp_status === 'Declined') {
-      return false;
+      return a.type === 'CANCELLATION';
     }
     if (a.target_audience === 'PENDING') {
       return !guest || guest.rsvp_status === 'Pending';

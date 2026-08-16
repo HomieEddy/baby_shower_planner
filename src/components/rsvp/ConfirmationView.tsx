@@ -1,5 +1,5 @@
 import { motion } from 'motion/react';
-import { CheckCircle2, Sparkles, Calendar, Edit3, ChevronRight } from 'lucide-react';
+import { CheckCircle2, Sparkles, Calendar, Edit3, ChevronRight, XCircle } from 'lucide-react';
 import { Guest } from '../../types';
 import { cardStagger, popIn, fadeUp } from '../shared/motionPresets';
 import { useT } from '../shared/i18n';
@@ -155,8 +155,17 @@ export const ConfirmationView = ({
       <div className="pt-6 border-t border-dashed border-[#4A3F35]/20">
         <div className="label-mono mb-2">{t.currentStatusLabel}</div>
         <div className="bg-[#E9E0D2] px-5 py-2.5 rounded-full border border-[#4A3F35]/20 inline-flex items-center gap-2 text-xs font-bold text-[#4A3F35]">
-          <CheckCircle2 className="w-4 h-4 text-emerald-700" />
-          <span>{t.rsvpConfirmedLabel} <strong>Attending ({guest.attending_party_size || 1})</strong></span>
+          {guest.rsvp_status === 'Attending' ? (
+            <>
+              <CheckCircle2 className="w-4 h-4 text-emerald-700" />
+              <span>{t.rsvpConfirmedLabel} <strong>{t.statusAttendingWord} ({guest.attending_party_size || 1})</strong></span>
+            </>
+          ) : (
+            <>
+              <XCircle className="w-4 h-4 text-rose-600" />
+              <span>{t.rsvpConfirmedLabel} <strong>{t.statusDeclinedWord}</strong></span>
+            </>
+          )}
         </div>
       </div>
     </motion.div>

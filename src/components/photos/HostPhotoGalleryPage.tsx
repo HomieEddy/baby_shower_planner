@@ -4,7 +4,6 @@ import {
   Camera,
   Image as ImageIcon,
   Trash2,
-  Heart,
   QrCode,
   Play,
   Filter,
@@ -235,18 +234,23 @@ export const HostPhotoGalleryPage: React.FC = () => {
     }
   };
 
-  const handleLikePhoto = async (photoId: string, e?: React.MouseEvent) => {
-    if (e) e.stopPropagation();
-
+  const handleTogglePhotoHidden = async (photoId: string) => {
+    const photo = photos.find((p) => p.id === photoId);
+    if (!photo) return;
+    const nextVisible = photo.visible === false;
     try {
-      const res = await adminFetch(`/api/photos/${photoId}/like`, { method: 'POST' });
+      const res = await adminFetch(`/api/photos/${photoId}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ visible: nextVisible }),
+      });
       const data = await res.json();
       if (data.photo) {
         setPhotos((prev) => prev.map((p) => (p.id === photoId ? data.photo : p)));
-        toast.love(t.galleryLikedToast);
+        toast.info(nextVisible ? t.photoShownToast : t.photoHiddenToast);
       }
     } catch (err) {
-      console.error('Failed to like photo:', err);
+      console.error('Failed to toggle photo visibility:', err);
     }
   };
 
@@ -358,20 +362,6 @@ export const HostPhotoGalleryPage: React.FC = () => {
             </div>
             <div className="w-10 h-10 rounded-2xl bg-emerald-100 text-emerald-800 flex items-center justify-center">
               <Building2 className="w-5 h-5" />
-            </div>
-          </div>
-
-          <div className="bg-[#FFFDF9] p-5 rounded-2xl border border-[#CBAE94]/40 shadow-sm flex items-center justify-between">
-            <div>
-              <p className="text-[11px] font-bold uppercase tracking-wider text-[#8B735B]">
-                {t.totalGuestLikes}
-              </p>
-              <p className="text-2xl font-bold text-[#4A3F35] mt-0.5">
-                {photos.reduce((sum, p) => sum + (p.likes || 0), 0)}
-              </p>
-            </div>
-            <div className="w-10 h-10 rounded-2xl bg-rose-100 text-rose-800 flex items-center justify-center">
-              <Heart className="w-5 h-5 fill-rose-500" />
             </div>
           </div>
         </div>
@@ -550,7 +540,7 @@ export const HostPhotoGalleryPage: React.FC = () => {
                 layoutMode={layoutMode}
                 onSelect={(id) => handleToggleSelectPhoto(id)}
                 onDelete={handleDeletePhoto}
-                onLike={handleLikePhoto}
+                onToggleHidden={handleTogglePhotoHidden}
                 onClick={() => setSelectedPhotoIndex(index)}
               />
             ))}

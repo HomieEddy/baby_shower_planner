@@ -49,6 +49,32 @@ interface AdminGuestsTabProps {
 type AddGuestFormValues = z.input<typeof GuestImportSchema>;
 type EditGuestFormValues = z.input<typeof EditGuestSchema>;
 
+// CSV-aware line split: quoted fields may contain commas.
+function parseCsvLine(line: string): string[] {
+  const out: string[] = [];
+  let cur = '';
+  let inQuotes = false;
+  for (let i = 0; i < line.length; i++) {
+    const ch = line[i];
+    if (inQuotes) {
+      if (ch === '"') {
+        if (line[i + 1] === '"') { cur += '"'; i++; } else { inQuotes = false; }
+      } else {
+        cur += ch;
+      }
+    } else if (ch === '"') {
+      inQuotes = true;
+    } else if (ch === ',') {
+      out.push(cur.trim());
+      cur = '';
+    } else {
+      cur += ch;
+    }
+  }
+  out.push(cur.trim());
+  return out;
+}
+
 export const AdminGuestsTab: React.FC<AdminGuestsTabProps> = ({ language, t, guests, onRefresh }) => {
   const navigate = useNavigate();
   const { toast } = useToast();
@@ -294,7 +320,7 @@ export const AdminGuestsTab: React.FC<AdminGuestsTabProps> = ({ language, t, gue
         const line = lines[i].trim();
         if (!line) continue;
         if (i === 0 && (line.toLowerCase().includes('name') || line.toLowerCase().includes('email'))) continue;
-        const parts = line.split(',').map((p) => p.replace(/^"|"$/g, '').trim());
+        const parts = parseCsvLine(line);
         if (parts[0]) {
           parsedGuests.push({
             name: parts[0],
@@ -419,6 +445,20 @@ export const AdminGuestsTab: React.FC<AdminGuestsTabProps> = ({ language, t, gue
       else toast.info(t.invitesNoneToast);
       setSelectedIds([]);
     } catch { toast.error(t.invitesErrorToast); }
+  };
+
+  const handleSendReminders = async () => {
+    try {
+      const res = await adminFetch('/api/send-reminders', { method: 'POST' });
+      const data = await res.json();
+      if (data.sent > 0) {
+        toast.love(t.remindersSentMsg.replace('{{count}}', String(data.sent)) + (data.failed > 0 ? t.invitesFailedSuffix.replace('{{count}}', String(data.failed)) : ''));
+      } else {
+        toast.info(t.remindersNoneToast);
+      }
+    } catch {
+      toast.error(t.remindersErrorToast);
+    }
   };
 
   const handleBulkExport = () => {
@@ -609,6 +649,7 @@ export const AdminGuestsTab: React.FC<AdminGuestsTabProps> = ({ language, t, gue
             onSourceFilter={setSourceFilter}
             onExportCsv={handleExportCsv}
             onOpenImport={() => setShowCsvImportModal(true)}
+            onSendReminders={handleSendReminders}
             allSelected={selectedIds.length === filteredGuests.length && filteredGuests.length > 0}
             onToggleSelectAll={toggleSelectAll}
           />

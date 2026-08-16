@@ -8,6 +8,7 @@ import {
   Send,
   Trash2,
   X,
+  BellRing,
 } from 'lucide-react';
 import { useT } from '../shared/i18n';
 import { adminCardVariants } from '../shared/motionPresets';
@@ -70,6 +71,7 @@ export const GuestFiltersBar = ({
   onSourceFilter,
   onExportCsv,
   onOpenImport,
+  onSendReminders,
   allSelected,
   onToggleSelectAll,
 }: {
@@ -81,6 +83,7 @@ export const GuestFiltersBar = ({
   onSourceFilter: (v: 'All' | 'Host' | 'Guest-invited') => void;
   onExportCsv: () => void;
   onOpenImport: () => void;
+  onSendReminders: () => void;
   allSelected: boolean;
   onToggleSelectAll: () => void;
 }) => {
@@ -102,6 +105,10 @@ export const GuestFiltersBar = ({
         <button type="button" onClick={onOpenImport}
           className="px-3 py-1.5 rounded-full bg-white border border-[#CBAE94] text-[#8B735B] font-bold text-xs hover:bg-[#EFE6DC] transition-all flex items-center gap-1 shadow-2xs" title={t.importCsvTitle}>
           <Upload className="w-3.5 h-3.5" /><span className="hidden md:inline">{t.importCsvBtn}</span>
+        </button>
+        <button type="button" onClick={onSendReminders}
+          className="px-3 py-1.5 rounded-full bg-white border border-[#CBAE94] text-[#8B735B] font-bold text-xs hover:bg-[#EFE6DC] transition-all flex items-center gap-1 shadow-2xs" title={t.remindTitle}>
+          <BellRing className="w-3.5 h-3.5" /><span className="hidden md:inline">{t.remindBtn}</span>
         </button>
       </div>
 

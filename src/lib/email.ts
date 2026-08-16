@@ -163,6 +163,49 @@ export async function sendAlertEmail(guest: Guest, settings: EventSettings, titl
   }
 }
 
+// Seating assignment email (floor plan "share by email" action).
+export async function sendFloorPlanEmail(guest: Guest, settings: EventSettings, tableName: string, customMessage: string): Promise<boolean> {
+  const client = getClient();
+  if (!client) {
+    console.log(`[MOCK FLOOR PLAN EMAIL] To: ${guest.email} | Table: ${tableName || 'Unassigned'}`);
+    return true;
+  }
+  const fr = !isEN(guest);
+  const link = `${process.env.APP_URL || 'http://localhost:3025'}/find-my-table?guest=${guest.magic_token}`;
+  const subject = fr ? 'Votre table pour le baby shower' : 'Your table for the Baby Shower';
+  const tableLine = tableName
+    ? (fr ? `Vous êtes à la table : <strong>${tableName}</strong>.` : `You are seated at table: <strong>${tableName}</strong>.`)
+    : (fr ? "Vous n'avez pas de table attitrée." : 'You have open seating.');
+  const html = `
+    <div style="font-family: Georgia, serif; max-width: 560px; margin: 0 auto; padding: 32px 24px; background: #FDFBF7; color: #4A3F35;">
+      <div style="text-align: center; margin-bottom: 20px;">
+        <div style="font-size: 22px; font-weight: bold; color: #8B735B;">${fr ? 'Votre place' : 'Your Seat'}</div>
+      </div>
+      <div style="background: white; border-radius: 16px; padding: 24px; border: 1px solid #E8E0D4;">
+        <p style="font-size: 15px; margin: 0 0 12px;">${fr ? `Bonjour ${guest.name},` : `Hi ${guest.name},`}</p>
+        <p style="font-size: 13px; line-height: 1.6; color: #5D5449;">${tableLine}</p>
+        ${customMessage ? `<p style="font-size: 13px; line-height: 1.6; color: #5D5449; font-style: italic;">${customMessage}</p>` : ''}
+        <div style="text-align: center; margin: 20px 0;">
+          <a href="${link}" style="display: inline-block; padding: 11px 28px; background: #8B735B; color: white; text-decoration: none; border-radius: 40px; font-size: 14px; font-weight: bold;">${fr ? 'Trouver ma table' : 'Find My Table'}</a>
+        </div>
+        <p style="font-size: 11px; color: #A09080; text-align: center;">${fr ? 'Code :' : 'Code:'} <strong>${guest.code}</strong></p>
+      </div>
+    </div>`;
+  try {
+    await client.emails.send({
+      from: process.env.EMAIL_FROM || 'Baby Shower <onboarding@resend.dev>',
+      to: guest.email,
+      subject,
+      html,
+    });
+    console.log(`[RESEND] Floor plan email sent to ${guest.email}`);
+    return true;
+  } catch (err) {
+    console.error(`[RESEND] Floor plan email failed for ${guest.email}:`, err);
+    return false;
+  }
+}
+
 // Free-form thank-you note (used by the gift tracker; delivered as plain HTML paragraphs)
 export async function sendThankYouEmail(guest: Guest, text: string): Promise<boolean> {
   const client = getClient();

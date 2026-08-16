@@ -76,7 +76,8 @@ test('agenda kanban drag moves a task between columns', async ({ page }) => {
   // Status persisted server-side
   await page.waitForTimeout(1200);
   const res = await page.evaluate(async () => {
-    const r = await fetch('/api/agenda');
+    const t = sessionStorage.getItem('admin_token');
+    const r = await fetch('/api/agenda', { headers: { 'x-admin-token': t || '' } });
     return (await r.json()).tasks;
   });
   const moved = res.find((t: { title: string }) => t.title === 'Drag me task');

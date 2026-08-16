@@ -3,7 +3,7 @@ import path from 'node:path';
 import fs from 'node:fs';
 import crypto from 'node:crypto';
 import { createServer as createViteServer } from 'vite';
-import { GiftLogSchema, AgendaTaskSchema, AgendaReorderSchema, ReminderSettingsSchema } from './src/lib/validation.ts';
+import { GiftLogSchema, AgendaTaskSchema, AgendaReorderSchema, ReminderSettingsSchema, EditGuestSchema, GuestbookEntrySchema } from './src/lib/validation.ts';
 import type { EventSettings, AgendaTask } from './src/types.ts';
 import { pb } from './src/db/service';
 import {
@@ -16,6 +16,8 @@ import {
   resetTokenUsage,
   getAllGuestbookEntries,
   addGuestbookEntry,
+  setGuestbookEntryVisibility,
+  deleteGuestbookEntry,
   wipeDatabaseData,
   getSettings,
   updateSettings,
@@ -29,9 +31,8 @@ import {
   getAllPhotos,
   addPhotosBatch,
   deletePhoto,
-  likePhoto,
-  getPredictions,
-  addPrediction,
+  setPhotoVisibility,
+  getGuestPhotoUsage,
   getGifts,
   addGift,
   toggleGiftThankYou,
@@ -82,6 +83,10 @@ const BLOCK_BOTS = process.env.BLOCK_BOTS !== 'false';
 const MAX_BODY_BYTES = Number(process.env.MAX_BODY_BYTES) || 25 * 1024 * 1024;
 const GLOBAL_LIMIT = 600; // requests per minute per IP
 const LOGIN_ATTEMPT_LIMIT = 10; // failed admin-auth attempts per minute per IP
+
+// Per-guest photo quota (keyed by reservation code).
+const MAX_PHOTOS_PER_GUEST = 12;
+const MAX_PHOTOS_BYTES_PER_GUEST = 24 * 1024 * 1024; // 24 MB across all 12
 
 // Well-known crawlers / AI scrapers — they get 403 on the API. Search engines
 // are intentionally NOT in the list (robots.txt covers them).
@@ -371,7 +376,11 @@ async function requestHandler(req: http.IncomingMessage, res: http.ServerRespons
         requireAdmin();
         if (method === 'PUT') {
           const body = await parseJson(req);
-          const guest = await updateGuest(id, body);
+          const validation = EditGuestSchema.partial().safeParse(body);
+          if (!validation.success) {
+            return sendJson(res, 400, { error: validation.error.issues[0]?.message || 'Invalid guest payload' });
+          }
+          const guest = await updateGuest(id, validation.data);
           return sendJson(res, 200, { guest });
         }
         if (method === 'DELETE') {
@@ -443,8 +452,16 @@ async function requestHandler(req: http.IncomingMessage, res: http.ServerRespons
           }
         }
         if (isReset && method === 'POST') {
-          const guest = await resetTokenUsage(token);
-          return sendJson(res, 200, { success: true, guest });
+          try {
+            const guest = await resetTokenUsage(token);
+            return sendJson(res, 200, { success: true, guest });
+          } catch (err) {
+            const msg = err instanceof Error ? err.message : '';
+            if (msg === 'INVALID_TOKEN') return sendJson(res, 404, { error: 'INVALID_TOKEN', message: 'Invitation token not found' });
+            if (msg === 'RSVP_READ_ONLY') return sendJson(res, 403, { error: 'RSVP_READ_ONLY' });
+            if (msg === 'RSVP_CLOSED') return sendJson(res, 409, { error: 'RSVP_CLOSED', message: 'RSVPs are closed — the event has already passed.' });
+            throw err;
+          }
         }
         if (method === 'GET') {
           const guest = await getGuestByToken(token);
@@ -457,13 +474,21 @@ async function requestHandler(req: http.IncomingMessage, res: http.ServerRespons
           if (!['Attending', 'Declined'].includes(rsvp_status)) {
             return sendJson(res, 400, { error: 'Invalid RSVP status' });
           }
-          const updated = await submitRsvp(token, {
-            rsvp_status, attending_party_size: Number(attending_party_size) || 1,
-            dietary_restrictions: dietary_restrictions || '',
-            attendee_details,
-            attendee_names,
-          });
-          return sendJson(res, 200, { success: true, guest: updated });
+          try {
+            const updated = await submitRsvp(token, {
+              rsvp_status, attending_party_size: Number(attending_party_size) || 1,
+              dietary_restrictions: dietary_restrictions || '',
+              attendee_details,
+              attendee_names,
+            });
+            return sendJson(res, 200, { success: true, guest: updated });
+          } catch (err) {
+            const msg = err instanceof Error ? err.message : '';
+            if (msg === 'INVALID_TOKEN') return sendJson(res, 404, { error: 'INVALID_TOKEN', message: 'Invitation token not found' });
+            if (msg === 'RSVP_ALREADY_SUBMITTED') return sendJson(res, 409, { error: 'RSVP_ALREADY_SUBMITTED', message: 'This RSVP was already submitted. Edit it from the confirmation screen.' });
+            if (msg === 'RSVP_CLOSED') return sendJson(res, 409, { error: 'RSVP_CLOSED', message: 'RSVPs are closed — the event has already passed.' });
+            throw err;
+          }
         }
       }
 
@@ -474,32 +499,58 @@ async function requestHandler(req: http.IncomingMessage, res: http.ServerRespons
           return sendJson(res, 403, { error: 'GUEST_CONTENT_LOCKED', opensAt: lock.opensAt, closesAt: lock.closesAt });
         }
         if (method === 'GET') {
-          const entries = await getAllGuestbookEntries();
+          // Admins see hidden entries too (moderation); guests only visible ones.
+          const entries = await getAllGuestbookEntries(adminOnly());
           return sendJson(res, 200, { entries });
         }
         if (method === 'POST') {
           const body = await parseJson(req);
-          const { guest_name, message, photo_url } = body;
-          if (!guest_name || !message) return sendJson(res, 400, { error: 'Name and message are required' });
-          const entry = await addGuestbookEntry({ guest_name, message, photo_url });
+          const validation = GuestbookEntrySchema.safeParse({
+            guest_name: body.guest_name,
+            message: body.message,
+            photo_url: body.photo_url || undefined,
+          });
+          if (!validation.success) {
+            return sendJson(res, 400, { error: validation.error.issues[0]?.message || 'Invalid guestbook entry' });
+          }
+          // Only our own uploads dir may be referenced.
+          if (validation.data.photo_url && !validation.data.photo_url.startsWith('/uploads/')) {
+            return sendJson(res, 400, { error: 'Invalid photo URL' });
+          }
+          const entry = await addGuestbookEntry(validation.data);
           return sendJson(res, 200, { success: true, entry });
+        }
+      }
+
+      if (pathname.startsWith('/api/guestbook/')) {
+        requireAdmin();
+        const id = pathname.replace('/api/guestbook/', '');
+        if (method === 'PATCH') {
+          const body = await parseJson(req);
+          if (typeof body.visible !== 'boolean') return sendJson(res, 400, { error: 'visible (boolean) is required' });
+          const entry = await setGuestbookEntryVisibility(id, body.visible);
+          return sendJson(res, 200, { success: true, entry });
+        }
+        if (method === 'DELETE') {
+          await deleteGuestbookEntry(id);
+          return sendJson(res, 200, { success: true });
         }
       }
 
       // ─── Upload ─────────────────────────────────────
       if (pathname === '/api/upload' && method === 'POST') {
         const body = await parseJson(req);
-        if (body.photo_base64) {
-          const matches = body.photo_base64.match(/^data:([A-Za-z-+\/]+);base64,(.+)$/);
-          if (matches && matches.length === 3) {
-            const allowed: Record<string, string> = { jpeg: 'jpg', jpg: 'jpg', png: 'png', webp: 'webp', gif: 'gif', heic: 'heic' };
-            const ext = allowed[matches[1].split('/')[1]] || 'jpg';
-            const filename = `photo-${Date.now()}-${Math.round(Math.random() * 1e9)}.${ext}`;
-            fs.writeFileSync(path.join(uploadsDir, filename), Buffer.from(matches[2], 'base64'));
-            return sendJson(res, 200, { photo_url: `/uploads/${filename}` });
-          }
+        const matches = typeof body.photo_base64 === 'string'
+          ? body.photo_base64.match(/^data:([A-Za-z-+\/]+);base64,(.+)$/)
+          : null;
+        if (!matches || matches.length !== 3) {
+          return sendJson(res, 400, { error: 'photo_base64 data URL is required' });
         }
-        return sendJson(res, 200, { photo_url: body.photo_url || '/uploads/sample.jpg' });
+        const allowed: Record<string, string> = { jpeg: 'jpg', jpg: 'jpg', png: 'png', webp: 'webp', gif: 'gif', heic: 'heic' };
+        const ext = allowed[matches[1].split('/')[1]] || 'jpg';
+        const filename = `photo-${Date.now()}-${crypto.randomInt(1e9)}.${ext}`;
+        fs.writeFileSync(path.join(uploadsDir, filename), Buffer.from(matches[2], 'base64'));
+        return sendJson(res, 200, { photo_url: `/uploads/${filename}` });
       }
 
       // ─── Photos ─────────────────────────────────────
@@ -509,7 +560,8 @@ async function requestHandler(req: http.IncomingMessage, res: http.ServerRespons
           return sendJson(res, 403, { error: 'GUEST_CONTENT_LOCKED', opensAt: lock.opensAt, closesAt: lock.closesAt });
         }
         if (method === 'GET') {
-          const photos = await getAllPhotos();
+          // Admins see hidden photos too (moderation); guests only visible ones.
+          const photos = await getAllPhotos(adminOnly());
           return sendJson(res, 200, { photos });
         }
       }
@@ -520,27 +572,88 @@ async function requestHandler(req: http.IncomingMessage, res: http.ServerRespons
           return sendJson(res, 403, { error: 'GUEST_CONTENT_LOCKED', opensAt: lock.opensAt, closesAt: lock.closesAt });
         }
         const body = await parseJson(req);
-        const { uploader_name, caption, table_name, table_id, photos } = body;
-        const list = Array.isArray(photos) ? photos : [{ url: body.url || '/uploads/sample.jpg', filename: 'photo.jpg' }];
-        const created = await addPhotosBatch(list.map((p: any) => ({
-          url: p.url || '/uploads/sample.jpg', filename: p.filename || 'photo.jpg',
-          caption: caption || '', uploader_name: uploader_name || 'Guest',
-          table_name: table_name || 'Table Visitor', table_id: table_id || '',
-        })));
+        const { uploader_name, caption, table_name, table_id, reservation_code, photos } = body;
+        const list = Array.isArray(photos) ? photos : [];
+        if (list.length === 0) return sendJson(res, 400, { error: 'photos array is required' });
+        for (const p of list) {
+          if (typeof p?.url !== 'string' || !p.url.startsWith('/uploads/')) {
+            return sendJson(res, 400, { error: 'Invalid photo URL' });
+          }
+        }
+        // Files were written to disk in the previous step; remove them if the
+        // registration is rejected so uploads don't accumulate orphans.
+        const removeBatchFiles = () => {
+          for (const p of list) {
+            const f = path.basename(String(p.url));
+            const fp = path.join(uploadsDir, f);
+            try { if (f === path.basename(fp) && fs.existsSync(fp)) fs.unlinkSync(fp); } catch { /* best effort */ }
+          }
+        };
+        // Per-guest quota: uploads are attributed to a reservation code.
+        const code = typeof reservation_code === 'string' ? reservation_code.trim() : '';
+        if (!/^\d{4}$/.test(code)) {
+          removeBatchFiles();
+          return sendJson(res, 400, { error: 'INVALID_CODE', message: 'A valid 4-digit reservation code is required' });
+        }
+        const guest = await pb.collection('guests').getFirstListItem(`code="${code}"`).catch(() => null);
+        if (!guest) {
+          removeBatchFiles();
+          return sendJson(res, 400, { error: 'INVALID_CODE', message: 'Reservation code not found' });
+        }
+        const usage = await getGuestPhotoUsage(code);
+        if (usage.count + list.length > MAX_PHOTOS_PER_GUEST) {
+          removeBatchFiles();
+          return sendJson(res, 400, {
+            error: 'PHOTO_LIMIT_REACHED',
+            message: `Photo limit reached`,
+            uploaded: usage.count,
+            remaining: Math.max(0, MAX_PHOTOS_PER_GUEST - usage.count),
+            max: MAX_PHOTOS_PER_GUEST,
+          });
+        }
+        // Size the incoming files on disk (uploaded in the previous step).
+        let batchBytes = 0;
+        for (const p of list) {
+          const filename = path.basename(String(p.url));
+          const filePath = path.join(uploadsDir, filename);
+          if (!fs.existsSync(filePath)) {
+            removeBatchFiles();
+            return sendJson(res, 400, { error: 'Invalid photo URL' });
+          }
+          batchBytes += fs.statSync(filePath).size;
+        }
+        if (usage.bytes + batchBytes > MAX_PHOTOS_BYTES_PER_GUEST) {
+          removeBatchFiles();
+          return sendJson(res, 400, {
+            error: 'PHOTO_SIZE_LIMIT_REACHED',
+            message: `Total photo size limit reached`,
+            uploadedBytes: usage.bytes,
+            remainingBytes: Math.max(0, MAX_PHOTOS_BYTES_PER_GUEST - usage.bytes),
+            maxBytes: MAX_PHOTOS_BYTES_PER_GUEST,
+          });
+        }
+        const created = await addPhotosBatch(list.map((p: any) => {
+          const filename = path.basename(String(p.url));
+          return {
+            url: p.url, filename: p.filename || 'photo.jpg',
+            caption: caption || '', uploader_name: uploader_name || 'Guest',
+            table_name: table_name || 'Table Visitor', table_id: table_id || '',
+            reservation_code: code,
+            file_size: fs.statSync(path.join(uploadsDir, filename)).size,
+          };
+        }));
         return sendJson(res, 200, { success: true, count: created.length, photos: created });
       }
 
       if (pathname.startsWith('/api/photos/')) {
         const parts = pathname.replace('/api/photos/', '').split('/');
         const id = parts[0];
-        const action = parts[1];
-        if (action === 'like' && method === 'POST') {
-          const lock = await guestLock();
-          if (lock) {
-            return sendJson(res, 403, { error: 'GUEST_CONTENT_LOCKED', opensAt: lock.opensAt, closesAt: lock.closesAt });
-          }
-          const updated = await likePhoto(id);
-          return sendJson(res, 200, { success: true, photo: updated });
+        if (method === 'PATCH') {
+          requireAdmin();
+          const body = await parseJson(req);
+          if (typeof body.visible !== 'boolean') return sendJson(res, 400, { error: 'visible (boolean) is required' });
+          const photo = await setPhotoVisibility(id, body.visible);
+          return sendJson(res, 200, { success: true, photo });
         }
         if (method === 'DELETE') {
           requireAdmin();
@@ -553,6 +666,11 @@ async function requestHandler(req: http.IncomingMessage, res: http.ServerRespons
       if (pathname === '/api/settings') {
         if (method === 'GET') {
           const settings = await getSettings();
+          // Host contact details are admin-only; guests need event info + footer names.
+          if (!adminOnly()) {
+            delete (settings as Partial<EventSettings>).hostEmail;
+            delete (settings as Partial<EventSettings>).hostPhone;
+          }
           return sendJson(res, 200, { settings });
         }
         if (method === 'POST') {
@@ -606,7 +724,8 @@ async function requestHandler(req: http.IncomingMessage, res: http.ServerRespons
 
       if (pathname === '/api/floorplan/roster' && method === 'GET') {
         const guestToken = url.searchParams.get('guest') || undefined;
-        const result = await getSeatingRoster(guestToken);
+        const code = url.searchParams.get('code') || undefined;
+        const result = await getSeatingRoster(guestToken, code);
         return sendJson(res, 200, result);
       }
 
@@ -625,32 +744,13 @@ async function requestHandler(req: http.IncomingMessage, res: http.ServerRespons
         return sendJson(res, 200, { success: true, count: result.count });
       }
 
-      // ─── Predictions ────────────────────────────────
-      if (pathname === '/api/predictions') {
-        if (method === 'GET') {
-          const predictions = await getPredictions();
-          return sendJson(res, 200, { predictions });
-        }
-        if (method === 'POST') {
-          const body = await parseJson(req);
-          const { guest_name, predicted_date, predicted_weight_lbs, predicted_hair_color, predicted_eye_color, advice_for_parents } = body;
-          if (!guest_name || !predicted_date) return sendJson(res, 400, { error: 'Guest name and date are required' });
-          const newPred = await addPrediction({
-            guest_name, predicted_date, predicted_weight_lbs: Number(predicted_weight_lbs) || 7.0,
-            predicted_hair_color: predicted_hair_color || 'Brown', predicted_eye_color: predicted_eye_color || 'Brown',
-            advice_for_parents: advice_for_parents || '',
-          });
-          return sendJson(res, 200, { success: true, prediction: newPred });
-        }
-      }
-
       // ─── Gifts ──────────────────────────────────────
       if (pathname === '/api/gifts') {
+        requireAdmin();
         if (method === 'GET') {
           const gifts = await getGifts();
           return sendJson(res, 200, { gifts });
         }
-        requireAdmin();
         if (method === 'POST') {
           const body = await parseJson(req);
           const validation = GiftLogSchema.safeParse(body);
@@ -709,11 +809,11 @@ async function requestHandler(req: http.IncomingMessage, res: http.ServerRespons
 
       // ─── Agenda (host task planner) ───────────────────
       if (pathname === '/api/agenda') {
+        requireAdmin();
         if (method === 'GET') {
           const tasks = await getAgendaTasks();
           return sendJson(res, 200, { tasks });
         }
-        requireAdmin();
         if (method === 'POST') {
           const body = await parseJson(req);
           const validation = AgendaTaskSchema.safeParse(body);
@@ -781,8 +881,15 @@ async function requestHandler(req: http.IncomingMessage, res: http.ServerRespons
         const body = await parseJson(req);
         if (!body.guestId) return sendJson(res, 400, { error: 'guestId is required' });
         // body.name: check in one party member; omitted = whole party
-        const guest = await checkInGuest(body.guestId, body.name);
-        return sendJson(res, 200, { guest });
+        try {
+          const guest = await checkInGuest(body.guestId, body.name);
+          return sendJson(res, 200, { guest });
+        } catch (err) {
+          const msg = err instanceof Error ? err.message : '';
+          if (msg === 'GUEST_DECLINED') return sendJson(res, 400, { error: msg, message: 'This guest declined the invitation.' });
+          if (msg === 'NOT_IN_PARTY') return sendJson(res, 400, { error: msg, message: 'Name is not part of this party.' });
+          throw err;
+        }
       }
 
       if (pathname === '/api/check-in/undo' && method === 'POST') {
@@ -794,6 +901,7 @@ async function requestHandler(req: http.IncomingMessage, res: http.ServerRespons
       }
 
       if (pathname === '/api/check-in/stats' && method === 'GET') {
+        requireAdmin();
         const stats = await getCheckInStats();
         return sendJson(res, 200, { stats });
       }
@@ -813,7 +921,7 @@ async function requestHandler(req: http.IncomingMessage, res: http.ServerRespons
           undo: !!body.undo,
         });
         if (!result.ok) {
-          const status = result.error === 'ONLY_LEAD' ? 403 : result.error === 'NOT_IN_PARTY' ? 400 : 404;
+          const status = result.error === 'ONLY_LEAD' ? 403 : result.error === 'NOT_IN_PARTY' || result.error === 'DECLINED' ? 400 : 404;
           return sendJson(res, status, { error: result.error });
         }
         return sendJson(res, 200, { guest: result.guest });

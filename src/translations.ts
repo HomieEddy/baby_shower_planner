@@ -339,6 +339,7 @@ export interface Translations {
   fpEditCancelledToast: string;
   fpElementRemovedToast: string;
   fpEmailsSentToast: string;
+  fpNoEmailsToast: string;
   fpLandmarkAddedToast: string;
   fpNoFitTableToast: string;
   fpNoFitToast: string;
@@ -358,9 +359,16 @@ export interface Translations {
   galleryDeleteFailedToast: string;
   galleryDeletedToast: string;
   galleryFiltersResetToast: string;
-  galleryLikedToast: string;
   galleryPhotoRemovedToast: string;
   galleryPrintQrBtn2: string;
+  gbEntryDeletedToast: string;
+  gbEntryHiddenToast: string;
+  gbEntryShownToast: string;
+  moderationHiddenBadge: string;
+  moderationHideBtn: string;
+  moderationShowBtn: string;
+  photoHiddenToast: string;
+  photoShownToast: string;
   gbLeaveAnotherBtn: string;
   gbMessageLabel: string;
   gbMessagePlaceholder: string;
@@ -452,6 +460,7 @@ export interface Translations {
   inviteRemovedToast: string;
   inviteSentChannelToast: string;
   inviteSentLinkOnlyToast: string;
+  inviteDeliveryFailedToast: string;
   inviteSentModalMsg: string;
   inviteSentModalTitle: string;
   inviteTabLabel: string;
@@ -603,6 +612,7 @@ export interface Translations {
   rsvpReminderTemplate: string;
   rsvpReminderTemplateDesc: string;
   rsvpResetErrorToast: string;
+  rsvpClosedToast: string;
   rsvpResponseTitle: string;
   rsvpStatusLabel: string;
   rsvpSubmitErrorToast: string;
@@ -719,7 +729,6 @@ export interface Translations {
   totalDietaryReported: string;
   totalGiftsLabel: string;
   totalGuestInvites: string;
-  totalGuestLikes: string;
   totalGuestsLabel: string;
   totalSeatsWord: string;
   totalUploadedPhotos: string;
@@ -738,6 +747,13 @@ export interface Translations {
   undoSeatingTitle: string;
   unseatedConfirmedLabel: string;
   uploadErrorToast: string;
+  uploadBatchLimitToast: string;
+  uploadCodeLabel: string;
+  uploadCodePlaceholder: string;
+  uploadCodeRequiredToast: string;
+  uploadInvalidCodeToast: string;
+  uploadPhotoLimitToast: string;
+  uploadPhotoSizeLimitToast: string;
   uploadHeroDesc: string;
   uploadHeroTitle: string;
   uploadInvalidFileToast: string;
@@ -843,6 +859,7 @@ export interface Translations {
   dietaryOnlyBtn: string;
   showingDietaryOnlyBtn: string;
   checkinFailedToast: string;
+  checkinDeclinedError: string;
   noContactLabel: string;
   partyOfLabel: string;
   thankYouTrackerTitle: string;
@@ -1040,7 +1057,7 @@ export const translations: Record<Language, Translations> = {
     checkinDoneToast: "{{name}} is checked in!",
     checkinMeBtn: "Check Me In",
     checkinPartyLabel: "Your Party",
-    checkinSearchPh: "Search your name or 4-digit reservation code...",
+    checkinSearchPh: "Enter your 4-digit reservation code...",
     checkinYouLabel: "You",
     checkingLabel: "Checking...",
     clearAllBtn: "Clear All",
@@ -1098,7 +1115,7 @@ export const translations: Record<Language, Translations> = {
     dayOfGuestbookTab: "[04] Day-Of Digital Guestbook",
     dayOfSubtitle: "Find your name, check in, and see your assigned table on the map — the party lead can check in the whole group at once.",
     dayOfTitle: "Check In & Find Your Seat",
-    declinedNote: "* Note: Guests who have already declined will not receive broadcast alerts.",
+    declinedNote: "* Note: Guests who have already declined will only receive cancellation alerts.",
     declinedWarmText: "Sending warm wishes from afar.",
     deleteAlertTitle: "Delete alert",
     deleteAllDataTitle: "Permanently delete all guest & event data (settings kept)",
@@ -1199,7 +1216,7 @@ export const translations: Record<Language, Translations> = {
     finderMapHint: "Watch the pulsing highlight to find your table",
     finderMapLive: "Live map",
     finderNearEntrance: "Located near the Main Entrance & Photo Backdrop area",
-    finderNoMatch: "No matching guest found. Try your full name or reservation code.",
+    finderNoMatch: "No matching party found. Check the 4-digit code on your invitation.",
     finderOpenSeatingMsg: "Your name is confirmed on the guest list! Please feel free to choose any available seat in the main dining pavilion.",
     finderOpenSeatingTitle: "Open Seating / Unassigned Table",
     finderPartyLead: "Party Lead",
@@ -1224,6 +1241,7 @@ export const translations: Record<Language, Translations> = {
     fpEditCancelledToast: "Floor plan editing cancelled.",
     fpElementRemovedToast: "Removed element from floor map",
     fpEmailsSentToast: "Sent seating plan emails to {{count}} guest(s)!",
+    fpNoEmailsToast: "No seating plan emails sent — guests need an email address to receive them.",
     fpLandmarkAddedToast: "Added {{name}}",
     fpNoFitTableToast: "\"{{table}}\" only has {{free}} free seat(s), but \"{{guest}}\" needs {{needed}}.",
     fpNoFitToast: "No available table has enough contiguous open seats for remaining unseated parties.",
@@ -1243,8 +1261,15 @@ export const translations: Record<Language, Translations> = {
     galleryDeleteFailedToast: "Failed to delete some of the selected photos.",
     galleryDeletedToast: "Successfully deleted {{count}} photo(s).",
     galleryFiltersResetToast: "Search and table filters reset.",
-    galleryLikedToast: "Liked photo!",
     galleryPhotoRemovedToast: "Photo removed from memory library.",
+    gbEntryDeletedToast: "Entry deleted.",
+    gbEntryHiddenToast: "Entry hidden from guests.",
+    gbEntryShownToast: "Entry visible again.",
+    moderationHiddenBadge: "Hidden",
+    moderationHideBtn: "Hide from guests",
+    moderationShowBtn: "Show to guests",
+    photoHiddenToast: "Photo hidden from guests.",
+    photoShownToast: "Photo visible again.",
     galleryPrintQrBtn2: "Print Table QR Cards",
     gbLeaveAnotherBtn: "Leave Another Message",
     gbMessageLabel: "Message or Words of Advice",
@@ -1337,6 +1362,7 @@ export const translations: Record<Language, Translations> = {
     inviteRemovedToast: "Invitation removed",
     inviteSentChannelToast: "Invitation sent to {{name}} via {{channel}}",
     inviteSentLinkOnlyToast: "Invitation ready — share the link with {{name}}",
+    inviteDeliveryFailedToast: "Invitation created for {{name}}, but delivery failed. Share the link manually.",
     inviteSentModalMsg: "The magic link below has been logged to the system console and ready to share:",
     inviteSentModalTitle: "Invitation Created & Sent!",
     inviteTabLabel: "3. Invite a Guest",
@@ -1491,6 +1517,7 @@ export const translations: Record<Language, Translations> = {
     rsvpReminderTemplate: "⏰ RSVP Reminder",
     rsvpReminderTemplateDesc: "Target pending guests",
     rsvpResetErrorToast: "Failed to update RSVP status.",
+    rsvpClosedToast: "RSVPs are closed — the event has already passed.",
     rsvpResponseTitle: "RSVP Response",
     rsvpStatusLabel: "RSVP Status",
     rsvpSubmitErrorToast: "An error occurred while submitting your RSVP.",
@@ -1612,7 +1639,6 @@ export const translations: Record<Language, Translations> = {
     totalDietaryReported: "Total Reported Dietary Needs",
     totalGiftsLabel: "Total Gifts Received",
     totalGuestInvites: "Total guest invitations",
-    totalGuestLikes: "Total Guest Likes",
     totalGuestsLabel: "Total Guests",
     totalSeatsWord: "total seats",
     totalUploadedPhotos: "Total Uploaded Photos",
@@ -1631,6 +1657,13 @@ export const translations: Record<Language, Translations> = {
     undoSeatingTitle: "Undo seating change (Ctrl+Z)",
     unseatedConfirmedLabel: "Unseated Confirmed",
     uploadErrorToast: "Upload error: {{error}}",
+    uploadBatchLimitToast: "You can upload at most 12 photos at a time.",
+    uploadCodeLabel: "Reservation code",
+    uploadCodePlaceholder: "4-digit code from your invitation",
+    uploadCodeRequiredToast: "Enter the 4-digit reservation code from your invitation.",
+    uploadInvalidCodeToast: "Reservation code not found. Check your invitation.",
+    uploadPhotoLimitToast: "Photo limit reached: {{remaining}} of 12 left for this reservation.",
+    uploadPhotoSizeLimitToast: "Total photo size limit reached for this reservation (24 MB max).",
     uploadHeroDesc: "Snap pictures of fun games, decorations, and sweet moments at your table! All uploaded photos go directly into the hosts' private memory album.",
     uploadHeroTitle: "Capture & Share Baby Shower Memories!",
     uploadInvalidFileToast: "Invalid file type detected ({{files}}). Only photo file formats (JPEG, PNG, WEBP, HEIC, GIF) are accepted!",
@@ -1736,6 +1769,7 @@ export const translations: Record<Language, Translations> = {
     dietaryOnlyBtn: "Filter Dietary Only",
     showingDietaryOnlyBtn: "Showing Dietary Only",
     checkinFailedToast: "Check-in failed",
+    checkinDeclinedError: "This guest declined the invitation and cannot check in.",
     noContactLabel: "No contact",
     partyOfLabel: "Party of {{count}}",
     thankYouTrackerTitle: "Automated Thank You Card Tracker",
@@ -1922,7 +1956,7 @@ export const translations: Record<Language, Translations> = {
     checkinDoneToast: "{{name}} est enregistré(e) !",
     checkinMeBtn: "M'enregistrer",
     checkinPartyLabel: "Votre groupe",
-    checkinSearchPh: "Recherchez votre nom ou votre code de réservation à 4 chiffres...",
+    checkinSearchPh: "Entrez votre code de réservation à 4 chiffres...",
     checkinYouLabel: "Vous",
     checkingLabel: "Vérification...",
     clearAllBtn: "Tout effacer",
@@ -1980,7 +2014,7 @@ export const translations: Record<Language, Translations> = {
     dayOfGuestbookTab: "[04] Livre d'or du jour J",
     dayOfSubtitle: "Trouvez votre nom, enregistrez-vous et découvrez votre table sur le plan — le responsable du groupe peut tout enregistrer d'un coup.",
     dayOfTitle: "Enregistrez-vous & trouvez votre place",
-    declinedNote: "* Remarque : les invités ayant décliné ne recevront pas les alertes.",
+    declinedNote: "* Remarque : les invités ayant décliné ne recevront que les alertes d'annulation.",
     declinedWarmText: "Je vous envoie mes meilleurs vœux de loin.",
     deleteAlertTitle: "Supprimer l'alerte",
     deleteAllDataTitle: "Supprimer définitivement toutes les données invités & événement (réglages conservés)",
@@ -2081,7 +2115,7 @@ export const translations: Record<Language, Translations> = {
     finderMapHint: "Suivez le halo pulsant pour trouver votre table",
     finderMapLive: "Carte en direct",
     finderNearEntrance: "Situé près de l'entrée principale et du décor photo",
-    finderNoMatch: "Aucun invité trouvé. Essayez votre nom complet ou votre code de réservation.",
+    finderNoMatch: "Aucun groupe trouvé. Vérifiez le code à 4 chiffres sur votre invitation.",
     finderOpenSeatingMsg: "Votre nom est confirmé sur la liste des invités ! Choisissez librement une place dans le pavillon principal.",
     finderOpenSeatingTitle: "Placement libre / table non attribuée",
     finderPartyLead: "Responsable du groupe",
@@ -2106,6 +2140,7 @@ export const translations: Record<Language, Translations> = {
     fpEditCancelledToast: "Modification du plan annulée.",
     fpElementRemovedToast: "Élément retiré du plan",
     fpEmailsSentToast: "Emails du plan envoyés à {{count}} invité(s) !",
+    fpNoEmailsToast: "Aucun email de plan envoyé — les invités doivent avoir une adresse email.",
     fpLandmarkAddedToast: "{{name}} ajouté",
     fpNoFitTableToast: "« {{table}} » n'a que {{free}} place(s) libre(s), mais « {{guest}} » en demande {{needed}}.",
     fpNoFitToast: "Aucune table disponible n'a assez de places libres pour les groupes restants.",
@@ -2125,8 +2160,15 @@ export const translations: Record<Language, Translations> = {
     galleryDeleteFailedToast: "Échec de la suppression de certaines photos.",
     galleryDeletedToast: "{{count}} photo(s) supprimée(s) avec succès.",
     galleryFiltersResetToast: "Recherche et filtres réinitialisés.",
-    galleryLikedToast: "Photo aimée !",
     galleryPhotoRemovedToast: "Photo retirée de la bibliothèque.",
+    gbEntryDeletedToast: "Message supprimé.",
+    gbEntryHiddenToast: "Message masqué pour les invités.",
+    gbEntryShownToast: "Message à nouveau visible.",
+    moderationHiddenBadge: "Masqué",
+    moderationHideBtn: "Masquer aux invités",
+    moderationShowBtn: "Montrer aux invités",
+    photoHiddenToast: "Photo masquée pour les invités.",
+    photoShownToast: "Photo à nouveau visible.",
     galleryPrintQrBtn2: "Imprimer les QR de table",
     gbLeaveAnotherBtn: "Laissez un autre message",
     gbMessageLabel: "Message ou Conseils aux parents",
@@ -2219,6 +2261,7 @@ export const translations: Record<Language, Translations> = {
     inviteRemovedToast: "Invitation retirée",
     inviteSentChannelToast: "Invitation envoyée à {{name}} par {{channel}}",
     inviteSentLinkOnlyToast: "Invitation prête — partagez le lien avec {{name}}",
+    inviteDeliveryFailedToast: "Invitation créée pour {{name}}, mais l'envoi a échoué. Partagez le lien manuellement.",
     inviteSentModalMsg: "Le lien magique ci-dessous a été enregistré dans la console et est prêt à être partagé :",
     inviteSentModalTitle: "Invitation créée et envoyée !",
     inviteTabLabel: "3. Inviter un invité",
@@ -2373,6 +2416,7 @@ export const translations: Record<Language, Translations> = {
     rsvpReminderTemplate: "⏰ Rappel RSVP",
     rsvpReminderTemplateDesc: "Cibler les invités en attente",
     rsvpResetErrorToast: "Échec de la mise à jour du statut RSVP.",
+    rsvpClosedToast: "Les RSVP sont fermés — l'événement est déjà passé.",
     rsvpResponseTitle: "Réponse RSVP",
     rsvpStatusLabel: "Statut RSVP",
     rsvpSubmitErrorToast: "Une erreur est survenue lors de l'envoi de votre RSVP.",
@@ -2494,7 +2538,6 @@ export const translations: Record<Language, Translations> = {
     totalDietaryReported: "Total des régimes signalés",
     totalGiftsLabel: "Cadeaux reçus au total",
     totalGuestInvites: "Total des invitations envoyées",
-    totalGuestLikes: "J'aime des invités",
     totalGuestsLabel: "Total des invités",
     totalSeatsWord: "places au total",
     totalUploadedPhotos: "Photos téléchargées au total",
@@ -2513,6 +2556,13 @@ export const translations: Record<Language, Translations> = {
     undoSeatingTitle: "Annuler le changement de placement (Ctrl+Z)",
     unseatedConfirmedLabel: "Confirmés non placés",
     uploadErrorToast: "Erreur d'envoi : {{error}}",
+    uploadBatchLimitToast: "Vous pouvez téléverser au maximum 12 photos à la fois.",
+    uploadCodeLabel: "Code de réservation",
+    uploadCodePlaceholder: "Code à 4 chiffres de votre invitation",
+    uploadCodeRequiredToast: "Entrez le code de réservation à 4 chiffres de votre invitation.",
+    uploadInvalidCodeToast: "Code de réservation introuvable. Vérifiez votre invitation.",
+    uploadPhotoLimitToast: "Limite de photos atteinte : {{remaining}} sur 12 restantes pour cette réservation.",
+    uploadPhotoSizeLimitToast: "Limite de taille totale atteinte pour cette réservation (24 Mo max).",
     uploadHeroDesc: "Prenez des photos des jeux, décorations et moments doux à votre table ! Elles iront directement dans l'album privé des hôtes.",
     uploadHeroTitle: "Capturez & partagez les souvenirs du baby shower !",
     uploadInvalidFileToast: "Type de fichier non valide ({{files}}). Seuls les formats photo (JPEG, PNG, WEBP, HEIC, GIF) sont acceptés !",
@@ -2618,6 +2668,7 @@ export const translations: Record<Language, Translations> = {
     dietaryOnlyBtn: "Filtrer regime alimentaire",
     showingDietaryOnlyBtn: "Regime alimentaire uniquement",
     checkinFailedToast: "Echec de l'enregistrement",
+    checkinDeclinedError: "Cet invité a décliné l'invitation et ne peut pas s'enregistrer.",
     noContactLabel: "Aucun contact",
     partyOfLabel: "Groupe de {{count}}",
     thankYouTrackerTitle: "Suivi automatise des cartes de remerciement",

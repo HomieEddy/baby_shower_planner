@@ -46,6 +46,8 @@ export interface GuestbookEntry {
   guest_name: string;
   message: string;
   photo_url?: string;
+  /** False when the host hid the entry (moderation) */
+  visible?: boolean;
   created_at: string;
 }
 
@@ -180,26 +182,19 @@ export interface EventPhoto {
   uploader_name?: string;
   table_name?: string;
   table_id?: string;
+  /** Reservation code of the uploading guest (per-guest quota) */
+  reservation_code?: string;
+  /** Stored file size in bytes (per-guest quota) */
+  file_size?: number;
+  /** False when the host hid the photo (moderation) */
+  visible?: boolean;
   created_at: string;
-  likes?: number;
 }
 
 export interface AddGuestbookPayload {
   guest_name: string;
   message: string;
   photo_url?: string;
-}
-
-export interface BabyPrediction {
-  id: string;
-  guest_name: string;
-  guest_id?: string;
-  predicted_date: string; // e.g. "2026-09-18"
-  predicted_weight_lbs: number; // e.g. 7.5
-  predicted_hair_color: string; // e.g. "Brown", "Blonde", "Black"
-  predicted_eye_color: string; // e.g. "Brown", "Blue", "Green", "Hazel"
-  advice_for_parents: string;
-  created_at: string;
 }
 
 export interface GiftLog {

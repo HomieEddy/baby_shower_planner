@@ -51,7 +51,7 @@ export const GuestCheckIn = () => {
       });
       if (!res.ok) {
         const data = await res.json().catch(() => ({}));
-        toast.error(data.error || t.checkinFailedToast);
+        toast.error(data.message || data.error || t.checkinFailedToast);
         return;
       }
       toast.success(successMsg);
