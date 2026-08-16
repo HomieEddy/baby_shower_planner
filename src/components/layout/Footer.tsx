@@ -24,10 +24,7 @@ export const Footer = () => {
         >
           <Heart className="w-3 h-3 text-rose-400 fill-rose-300" />
         </motion.span>
-        {t.footerLove.replace(
-          '{{babyName}}',
-          settings?.babyName?.trim() ? `Bébé ${settings.babyName.trim()}` : t.footerCub
-        )}
+        {t.footerLove}
       </p>
       <button
         type="button"

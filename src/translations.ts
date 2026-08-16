@@ -329,7 +329,6 @@ export interface Translations {
   floorPlanSubtitleHost: string;
   foldLineLabel: string;
   footerCopyright: string;
-  footerCub: string;
   footerLove: string;
   formattedLabel: string;
   fpAllSeatedToast: string;
@@ -1244,8 +1243,7 @@ export const translations: Record<Language, Translations> = {
     floorPlanTitle: "Venue Seating & Floor Canvas",
     foldLineLabel: "Fold Line",
     footerCopyright: "© {{year}} {{parentsNames}}",
-    footerCub: "the little cub",
-    footerLove: "Made with love for {{babyName}}",
+    footerLove: "Made with love for a baby on the way",
     formattedLabel: "Formatted:",
     fpAllSeatedToast: "ℹ All confirmed attending guests are already seated!",
     fpAssignFailedToast: "Failed to assign guest",
@@ -2156,8 +2154,7 @@ export const translations: Record<Language, Translations> = {
     floorPlanTitle: "Plan de Salle & Emplacements",
     foldLineLabel: "Ligne de pli",
     footerCopyright: "© {{year}} {{parentsNames}}",
-    footerCub: "le petit ourson",
-    footerLove: "Fait avec amour pour {{babyName}}",
+    footerLove: "Fait avec amour pour un bébé à venir",
     formattedLabel: "Formaté :",
     fpAllSeatedToast: "ℹ Tous les invités confirmés sont déjà placés !",
     fpAssignFailedToast: "Échec du placement de l'invité",
