@@ -53,11 +53,14 @@ export const EventDetailsCard = ({
   hideGuestLogin = false,
   actions = null,
   showProgram = false,
+  status = null,
 }: {
   hideGuestLogin?: boolean;
   actions?: ReactNode;
   /** Slide 2 (schedule) is only for guests who confirmed they're coming. */
   showProgram?: boolean;
+  /** Guest RSVP status shown instead of the invitation kicker. */
+  status?: { label: string; tone: 'attending' | 'declined' | 'pending' } | null;
 }) => {
   const language = useAppStore((s) => s.language);
   const settings = useSettingsStore((s) => s.settings);
@@ -176,12 +179,30 @@ export const EventDetailsCard = ({
             >
               {/* ─── Slide 1: invitation details ─────────────────────── */}
               <div className="snap-center shrink-0 w-full flex flex-col items-center">
-                <p
-                  className="text-base sm:text-xl font-bold tracking-[0.18em] uppercase"
-                  style={{ ...ink, ...headingFont, opacity: 0.8 }}
-                >
-                  {t.youAreInvitedLabel}
-                </p>
+                {status ? (
+                  <span
+                    className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-white/85 border border-[#CBAE94] shadow-sm text-[11px] font-mono font-bold uppercase tracking-widest"
+                    style={ink}
+                  >
+                    <span
+                      className={`w-2 h-2 rounded-full ${
+                        status.tone === 'attending'
+                          ? 'bg-emerald-500'
+                          : status.tone === 'declined'
+                          ? 'bg-rose-500'
+                          : 'bg-amber-400'
+                      }`}
+                    />
+                    {status.label}
+                  </span>
+                ) : (
+                  <p
+                    className="text-base sm:text-xl font-bold tracking-[0.18em] uppercase"
+                    style={{ ...ink, ...headingFont, opacity: 0.8 }}
+                  >
+                    {t.youAreInvitedLabel}
+                  </p>
+                )}
 
                 <CurvedText text="Baby Shower" className="-my-2 sm:-my-3" />
 
