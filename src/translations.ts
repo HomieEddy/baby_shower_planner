@@ -482,7 +482,6 @@ export interface Translations {
   landingAdminBtn: string;
   landingGuestBtn: string;
   landingHeroSubtitle: string;
-  landingHeroTitle: string;
   linkCopied: string;
   linkOnlyHint: string;
   linksCopiedToast: string;
@@ -1396,7 +1395,6 @@ export const translations: Record<Language, Translations> = {
     landingAdminBtn: "Host Login",
     landingGuestBtn: "Guest Login",
     landingHeroSubtitle: "Log in to RSVP, find your seat, and join the celebration.",
-    landingHeroTitle: "{{parents}}'s Baby Shower",
     linkCopied: "Copied!",
     linkOnlyHint: "You'll get a ready-to-send message to share yourself (WhatsApp, Messenger…).",
     linksCopiedToast: "Copied {{count}} invitation links to clipboard!",
@@ -2307,7 +2305,6 @@ export const translations: Record<Language, Translations> = {
     landingAdminBtn: "Connexion Hôte",
     landingGuestBtn: "Connexion Invité",
     landingHeroSubtitle: "Connectez-vous pour répondre, trouver votre table et célébrer avec nous.",
-    landingHeroTitle: "Baby Shower de {{parents}}",
     linkCopied: "Copié !",
     linkOnlyHint: "Vous recevrez un message prêt à envoyer à partager vous-même (WhatsApp, Messenger…).",
     linksCopiedToast: "{{count}} liens d'invitation copiés !",
