@@ -5,7 +5,7 @@ test('landing page shows guest, host, and event details entry buttons', async ({
   await expect(page.getByRole('button', { name: /Guest Login|Connexion Invité/i })).toBeVisible();
   await expect(page.getByRole('button', { name: /Host Login|Connexion Hôte/i })).toBeVisible();
   await expect(page.getByRole('button', { name: /Event Details|Détails de l'événement/i })).toBeVisible();
-  await expect(page.getByRole('heading', { level: 1 })).toHaveCount(0);
+  await expect(page.getByRole('heading', { level: 1 })).toBeVisible();
 
   // event details live on their own page
   await page.getByRole('button', { name: /Event Details|Détails de l'événement/i }).click();
