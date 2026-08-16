@@ -145,6 +145,7 @@ export interface Translations {
   cateringNoExportToast: string;
   cateringPrintToast: string;
   cateringTitle: string;
+  celebratingLabel: string;
   channelBoth: string;
   channelEmail: string;
   channelNone: string;
@@ -179,6 +180,7 @@ export interface Translations {
   contactCardHint: string;
   contactCardTitle: string;
   contactForChannelError: string;
+  contactNotificationsBtn: string;
   contactSaveBtn: string;
   contactSaveErrorToast: string;
   contactSavedToast: string;
@@ -279,7 +281,6 @@ export interface Translations {
   eventDateLabel2: string;
   eventDetailsSoonMsg: string;
   eventDetailsSoonTitle: string;
-  eventTabLabel: string;
   eventTimeLabel: string;
   eventTimeRangeLabel: string;
   eventVenueLabel: string;
@@ -329,7 +330,6 @@ export interface Translations {
   floorPlanSubtitleHost: string;
   foldLineLabel: string;
   footerCopyright: string;
-  footerCub: string;
   footerLove: string;
   formattedLabel: string;
   fpAllSeatedToast: string;
@@ -409,6 +409,7 @@ export interface Translations {
   greenLegendHint: string;
   gridLabel: string;
   gridLayoutLabel: string;
+  guestConfirmationBtn: string;
   guestDeletedToast: string;
   guestEmailsLabel: string;
   guestListBadge: string;
@@ -452,6 +453,7 @@ export interface Translations {
   inviteFailedToast: string;
   inviteGuestHint: string;
   inviteGuestTitle: string;
+  inviteGuestsBtn: string;
   inviteLinkForLabel: string;
   inviteMessageLabel: string;
   invitationDetailsTitle: string;
@@ -463,7 +465,6 @@ export interface Translations {
   inviteDeliveryFailedToast: string;
   inviteSentModalMsg: string;
   inviteSentModalTitle: string;
-  inviteTabLabel: string;
   invitedByBadge: string;
   invitedByHostBadge: string;
   invitedGuestLabel: string;
@@ -479,6 +480,11 @@ export interface Translations {
   invitesNoneToast: string;
   invitesSentMsg: string;
   langSwitch: string;
+  landingAdminBtn: string;
+  landingEntryLabel: string;
+  landingEventBtn: string;
+  landingGuestBtn: string;
+  landingHeroSubtitle: string;
   linkCopied: string;
   linkOnlyHint: string;
   linksCopiedToast: string;
@@ -548,6 +554,14 @@ export interface Translations {
   posterScanTitle: string;
   posterTitle: string;
   posterWelcome: string;
+  portalBackBtn: string;
+  portalCodeNotFound: string;
+  portalContinueBtn: string;
+  portalInputLabel: string;
+  portalInvalidInput: string;
+  portalResolving: string;
+  portalSubtitle: string;
+  portalTitle: string;
   presetEnglish: string;
   presetFrench: string;
   prevSlideBtn: string;
@@ -592,8 +606,6 @@ export interface Translations {
   renderingCard: string;
   reservationCodeLabel: string;
   responseStatusLabel: string;
-  returnToConfirmationBtn: string;
-  returnToRsvpBtn: string;
   roomDimensions: string;
   roomDimensionsPx: string;
   roomLengthLabel: string;
@@ -616,7 +628,6 @@ export interface Translations {
   rsvpResponseTitle: string;
   rsvpStatusLabel: string;
   rsvpSubmitErrorToast: string;
-  rsvpTabLabel: string;
   rsvpUnlockedToast: string;
   saveAllSettingsBtn: string;
   saveAndCloseBtn: string;
@@ -687,9 +698,6 @@ export interface Translations {
   statusDeclinedWord: string;
   statusLabel: string;
   statusPendingWord: string;
-  step1of2Label: string;
-  step2of2Label: string;
-  step3of3Label: string;
   submitRsvpBtn: string;
   submittingRsvpBtn: string;
   suggestMatchBadge: string;
@@ -778,7 +786,6 @@ export interface Translations {
   venueTitle: string;
   viewBtn: string;
   viewEventDetailsBtn: string;
-  viewEventScheduleBtn: string;
   viewRsvpTitle: string;
   widthLabel: string;
   willNotifyLabel: string;
@@ -786,6 +793,7 @@ export interface Translations {
   wipeDbBtn: string;
   wipeDbConfirm: string;
   wrongPasswordMsg: string;
+  youAreInvitedLabel: string;
   yourInvitesTitle: string;
   yourNameOptional: string;
   yourSeatLabel: string;
@@ -896,8 +904,6 @@ export interface Translations {
   saveChangesBtn: string;
   eventBadge: string;
   eventIntro: string;
-  registryCardTitle: string;
-  registryCardTagline: string;
 }
 
 export const translations: Record<Language, Translations> = {
@@ -1046,6 +1052,7 @@ export const translations: Record<Language, Translations> = {
     cateringNoExportToast: "No attending guests to export.",
     cateringPrintToast: "Opening printer layout for Catering Report...",
     cateringTitle: "Catering & Kitchen Operations",
+    celebratingLabel: "Celebrating",
     channelBoth: "Both (Email + Text)",
     channelEmail: "Email",
     channelNone: "Link only",
@@ -1080,6 +1087,7 @@ export const translations: Record<Language, Translations> = {
     contactCardHint: "Add your email or phone so we can send you reminders and updates.",
     contactCardTitle: "Contact & notifications",
     contactForChannelError: "Add a valid email or phone for {{channel}} delivery",
+    contactNotificationsBtn: "Contact & Notifications",
     contactSaveBtn: "Save",
     contactSaveErrorToast: "Could not save your contact info",
     contactSavedToast: "Contact info saved",
@@ -1180,7 +1188,6 @@ export const translations: Record<Language, Translations> = {
     eventDateLabel2: "Event Date",
     eventDetailsSoonMsg: "The hosts are putting the finishing touches on the celebration page. Please check back later.",
     eventDetailsSoonTitle: "Event details coming soon",
-    eventTabLabel: "2. Event Info",
     eventTimeLabel: "Time",
     eventTimeRangeLabel: "Event Time Range",
     eventVenueLabel: "Venue",
@@ -1231,8 +1238,7 @@ export const translations: Record<Language, Translations> = {
     floorPlanTitle: "Venue Seating & Floor Canvas",
     foldLineLabel: "Fold Line",
     footerCopyright: "© {{year}} {{parentsNames}}",
-    footerCub: "the little cub",
-    footerLove: "Made with love for {{babyName}}",
+    footerLove: "Made with love for our baby on the way",
     formattedLabel: "Formatted:",
     fpAllSeatedToast: "ℹ All confirmed attending guests are already seated!",
     fpAssignFailedToast: "Failed to assign guest",
@@ -1312,6 +1318,7 @@ export const translations: Record<Language, Translations> = {
     gridLabel: "Grid",
     gridLayoutLabel: "Uniform Square Grid Layout",
     guestDeletedToast: "Deleted guest invitation for \"{{name}}\"",
+    guestConfirmationBtn: "Guest Confirmation",
     guestEmailsLabel: "guest email(s)",
     guestListBadge: "[GUESTLIST]",
     guestListTitle: "Invited Guests List",
@@ -1354,6 +1361,7 @@ export const translations: Record<Language, Translations> = {
     inviteFailedToast: "Could not create the invitation. Try again.",
     inviteGuestHint: "Know someone who'd love to come? Give them their own invitation — no need to ask us.",
     inviteGuestTitle: "Invite a guest",
+    inviteGuestsBtn: "Invite Guests",
     inviteLinkForLabel: "Invitation link for",
     inviteMessageLabel: "Invitation Message",
     invitationDetailsTitle: "Invitation Details",
@@ -1365,7 +1373,6 @@ export const translations: Record<Language, Translations> = {
     inviteDeliveryFailedToast: "Invitation created for {{name}}, but delivery failed. Share the link manually.",
     inviteSentModalMsg: "The magic link below has been logged to the system console and ready to share:",
     inviteSentModalTitle: "Invitation Created & Sent!",
-    inviteTabLabel: "3. Invite a Guest",
     invitedByBadge: "Invited by {{name}}",
     invitedByHostBadge: "Host",
     inviteeContactLabel: "Email or phone (optional)",
@@ -1381,6 +1388,11 @@ export const translations: Record<Language, Translations> = {
     invitesNoneToast: "No invitations sent. Check RESEND_API_KEY.",
     invitesSentMsg: "Invitations sent to {{count}} guests!",
     langSwitch: "Français (FR)",
+    landingAdminBtn: "Host Login",
+    landingEntryLabel: "Or continue with",
+    landingEventBtn: "Event Details",
+    landingGuestBtn: "Guest Login",
+    landingHeroSubtitle: "Log in to RSVP, find your seat, and join the celebration.",
     linkCopied: "Copied!",
     linkOnlyHint: "You'll get a ready-to-send message to share yourself (WhatsApp, Messenger…).",
     linksCopiedToast: "Copied {{count}} invitation links to clipboard!",
@@ -1451,6 +1463,14 @@ export const translations: Record<Language, Translations> = {
     posterScanTitle: "Scan to Check In & Find Your Seat!",
     posterTitle: "Day-Of Guest QR Poster",
     posterWelcome: "Welcome Guests!",
+    portalBackBtn: "Back to the event page",
+    portalCodeNotFound: "We couldn't find a reservation with that code. Double-check your invitation or contact the hosts.",
+    portalContinueBtn: "Continue",
+    portalInputLabel: "Reservation code or invitation link",
+    portalInvalidInput: "Enter your 4-digit reservation code or paste your invitation link.",
+    portalResolving: "Looking up your invitation...",
+    portalSubtitle: "Enter the 4-digit code from your invitation or paste your magic link.",
+    portalTitle: "Guest Portal",
     presetEnglish: "English (EN)",
     presetFrench: "Français (FR)",
     prevSlideBtn: "Previous Slide",
@@ -1496,8 +1516,6 @@ export const translations: Record<Language, Translations> = {
     renderingCard: "Rendering High-Res Card Image...",
     reservationCodeLabel: "Reservation Code:",
     responseStatusLabel: "Response Status",
-    returnToConfirmationBtn: "Return to RSVP Confirmation",
-    returnToRsvpBtn: "Return to Step 1: RSVP Form",
     roomDimensions: "Room Dimensions",
     roomDimensionsPx: "Room Dimensions (px)",
     roomLengthLabel: "Room Length:",
@@ -1521,15 +1539,12 @@ export const translations: Record<Language, Translations> = {
     rsvpResponseTitle: "RSVP Response",
     rsvpStatusLabel: "RSVP Status",
     rsvpSubmitErrorToast: "An error occurred while submitting your RSVP.",
-    rsvpTabLabel: "1. RSVP Form",
     rsvpUnlockedToast: "RSVP unlocked for updates.",
     saveAllSettingsBtn: "Save All Settings",
     saveAndCloseBtn: "Save & Close",
     saveChangesBtn: "Save Changes",
     eventBadge: "Celebrating our baby's arrival",
     eventIntro: "Join us for an afternoon of games, sweet treats, and memories as we prepare to welcome our little angel into the world!",
-    registryCardTitle: "Amazon Baby Registry",
-    registryCardTagline: "Your presence is the sweetest gift!",
     savingChangesBtn: "Saving...",
     savingSettingsBtn: "Saving...",
     scanAtEntrance: "Scan at entrance",
@@ -1597,9 +1612,6 @@ export const translations: Record<Language, Translations> = {
     statusDeclinedWord: "Declined",
     statusLabel: "Status:",
     statusPendingWord: "Pending",
-    step1of2Label: "Step 1 of 2: Guest Confirmation",
-    step2of2Label: "Step 2 of 2: Event Information",
-    step3of3Label: "Step 3 of 3: Invite Guests",
     submitRsvpBtn: "Confirm RSVP",
     submittingRsvpBtn: "Submitting...",
     suggestMatchBadge: "Best Fit",
@@ -1688,7 +1700,6 @@ export const translations: Record<Language, Translations> = {
     venueTitle: "Your Table & Seat",
     viewBtn: "View",
     viewEventDetailsBtn: "View Event Details & Google Maps",
-    viewEventScheduleBtn: "View Event Schedule & Venue",
     viewRsvpTitle: "Test / View RSVP Form",
     widthLabel: "Width",
     willNotifyLabel: "Will notify",
@@ -1696,6 +1707,7 @@ export const translations: Record<Language, Translations> = {
     wipeDbBtn: "Clear All Data",
     wipeDbConfirm: "All event data cleared. Ready to start fresh.",
     wrongPasswordMsg: "Wrong password",
+    youAreInvitedLabel: "You're invited to our",
     yourInvitesTitle: "Your invitations",
     yourNameOptional: "Your Name (Optional)",
     yourSeatLabel: "Your Seat",
@@ -1945,6 +1957,7 @@ export const translations: Record<Language, Translations> = {
     cateringNoExportToast: "Aucun invité présent à exporter.",
     cateringPrintToast: "Ouverture de la mise en page d'impression du rapport traiteur...",
     cateringTitle: "Traiteur & opérations cuisine",
+    celebratingLabel: "Célébration de",
     channelBoth: "Les deux (Courriel + SMS)",
     channelEmail: "Courriel",
     channelNone: "Lien uniquement",
@@ -1979,6 +1992,7 @@ export const translations: Record<Language, Translations> = {
     contactCardHint: "Ajoutez votre e-mail ou téléphone pour recevoir les rappels et mises à jour.",
     contactCardTitle: "Contact et notifications",
     contactForChannelError: "Ajoutez un e-mail ou téléphone valide pour l'envoi par {{channel}}",
+    contactNotificationsBtn: "Contact et notifications",
     contactSaveBtn: "Enregistrer",
     contactSaveErrorToast: "Impossible d'enregistrer vos coordonnées",
     contactSavedToast: "Coordonnées enregistrées",
@@ -2079,7 +2093,6 @@ export const translations: Record<Language, Translations> = {
     eventDateLabel2: "Date de l'événement",
     eventDetailsSoonMsg: "Les hôtes finalisent la page de célébration. Revenez plus tard.",
     eventDetailsSoonTitle: "Les détails de l'événement arrivent bientôt",
-    eventTabLabel: "2. Infos événement",
     eventTimeLabel: "Heure",
     eventTimeRangeLabel: "Plage horaire de l'événement",
     eventVenueLabel: "Lieu",
@@ -2130,8 +2143,7 @@ export const translations: Record<Language, Translations> = {
     floorPlanTitle: "Plan de Salle & Emplacements",
     foldLineLabel: "Ligne de pli",
     footerCopyright: "© {{year}} {{parentsNames}}",
-    footerCub: "le petit ourson",
-    footerLove: "Fait avec amour pour {{babyName}}",
+    footerLove: "Fait avec amour pour notre bébé à venir",
     formattedLabel: "Formaté :",
     fpAllSeatedToast: "ℹ Tous les invités confirmés sont déjà placés !",
     fpAssignFailedToast: "Échec du placement de l'invité",
@@ -2211,6 +2223,7 @@ export const translations: Record<Language, Translations> = {
     gridLabel: "Grille",
     gridLayoutLabel: "Grille carrée uniforme",
     guestDeletedToast: "Invitation de « {{name}} » supprimée",
+    guestConfirmationBtn: "Confirmation de l'invité",
     guestEmailsLabel: "email(s) d'invité(s)",
     guestListBadge: "[LISTE DES INVITÉS]",
     guestListTitle: "Liste des Invités",
@@ -2253,6 +2266,7 @@ export const translations: Record<Language, Translations> = {
     inviteFailedToast: "Impossible de créer l'invitation. Réessayez.",
     inviteGuestHint: "Vous connaissez quelqu'un qui aimerait venir ? Offrez-lui sa propre invitation — inutile de nous demander.",
     inviteGuestTitle: "Inviter un invité",
+    inviteGuestsBtn: "Inviter des invités",
     inviteLinkForLabel: "Lien d'invitation pour",
     inviteMessageLabel: "Message d'invitation",
     invitationDetailsTitle: "Détails de l'invitation",
@@ -2264,7 +2278,6 @@ export const translations: Record<Language, Translations> = {
     inviteDeliveryFailedToast: "Invitation créée pour {{name}}, mais l'envoi a échoué. Partagez le lien manuellement.",
     inviteSentModalMsg: "Le lien magique ci-dessous a été enregistré dans la console et est prêt à être partagé :",
     inviteSentModalTitle: "Invitation créée et envoyée !",
-    inviteTabLabel: "3. Inviter un invité",
     invitedByBadge: "Invité par {{name}}",
     invitedByHostBadge: "Hôte",
     invitedGuestLabel: "Invité :",
@@ -2280,6 +2293,11 @@ export const translations: Record<Language, Translations> = {
     invitesNoneToast: "Aucune invitation envoyée. Vérifiez RESEND_API_KEY.",
     invitesSentMsg: "Invitations envoyées à {{count}} invités !",
     langSwitch: "English (EN)",
+    landingAdminBtn: "Connexion Hôte",
+    landingEntryLabel: "Ou continuer avec",
+    landingEventBtn: "Détails de l'événement",
+    landingGuestBtn: "Connexion Invité",
+    landingHeroSubtitle: "Connectez-vous pour répondre, trouver votre table et célébrer avec nous.",
     linkCopied: "Copié !",
     linkOnlyHint: "Vous recevrez un message prêt à envoyer à partager vous-même (WhatsApp, Messenger…).",
     linksCopiedToast: "{{count}} liens d'invitation copiés !",
@@ -2350,6 +2368,14 @@ export const translations: Record<Language, Translations> = {
     posterScanTitle: "Scannez pour vous enregistrer et trouver votre table !",
     posterTitle: "Affiche QR des invités",
     posterWelcome: "Bienvenue aux Invités !",
+    portalBackBtn: "Retour à la page de l'événement",
+    portalCodeNotFound: "Aucune réservation trouvée avec ce code. Vérifiez votre invitation ou contactez les hôtes.",
+    portalContinueBtn: "Continuer",
+    portalInputLabel: "Code de réservation ou lien d'invitation",
+    portalInvalidInput: "Entrez votre code de réservation à 4 chiffres ou collez votre lien d'invitation.",
+    portalResolving: "Recherche de votre invitation...",
+    portalSubtitle: "Entrez le code à 4 chiffres de votre invitation ou collez votre lien magique.",
+    portalTitle: "Portail Invité",
     presetEnglish: "English (EN)",
     presetFrench: "Français (FR)",
     prevSlideBtn: "Diapositive précédente",
@@ -2395,8 +2421,6 @@ export const translations: Record<Language, Translations> = {
     renderingCard: "Génération de la carte HD...",
     reservationCodeLabel: "Code de réservation :",
     responseStatusLabel: "Statut de réponse",
-    returnToConfirmationBtn: "Retour à la confirmation RSVP",
-    returnToRsvpBtn: "Retour à l'étape 1 : Formulaire RSVP",
     roomDimensions: "Dimensions de la salle",
     roomDimensionsPx: "Dimensions de la salle (px)",
     roomLengthLabel: "Longueur de la salle :",
@@ -2420,15 +2444,12 @@ export const translations: Record<Language, Translations> = {
     rsvpResponseTitle: "Réponse RSVP",
     rsvpStatusLabel: "Statut RSVP",
     rsvpSubmitErrorToast: "Une erreur est survenue lors de l'envoi de votre RSVP.",
-    rsvpTabLabel: "1. Formulaire RSVP",
     rsvpUnlockedToast: "RSVP déverrouillé pour modifications.",
     saveAllSettingsBtn: "Enregistrer les paramètres",
     saveAndCloseBtn: "Enregistrer & Fermer",
     saveChangesBtn: "Enregistrer",
     eventBadge: "Célébrons l'arrivée de notre bébé",
     eventIntro: "Rejoignez-nous pour une après-midi de jeux, gourmandises et souvenirs en attendant l'arrivée de notre petit ange !",
-    registryCardTitle: "Registre de Bébé Amazon",
-    registryCardTagline: "Votre présence est le plus doux des cadeaux !",
     savingChangesBtn: "Enregistrement...",
     savingSettingsBtn: "Enregistrement...",
     scanAtEntrance: "À présenter à l'entrée",
@@ -2496,9 +2517,6 @@ export const translations: Record<Language, Translations> = {
     statusDeclinedWord: "Décliné",
     statusLabel: "Statut :",
     statusPendingWord: "En attente",
-    step1of2Label: "Étape 1 sur 2 : Confirmation de l'invité",
-    step2of2Label: "Étape 2 sur 2 : Informations sur l'événement",
-    step3of3Label: "Étape 3 sur 3 : Inviter des invités",
     submitRsvpBtn: "Confirmer mon RSVP",
     submittingRsvpBtn: "Envoi en cours...",
     suggestMatchBadge: "Meilleure correspondance",
@@ -2587,7 +2605,6 @@ export const translations: Record<Language, Translations> = {
     venueTitle: "Votre table & votre place",
     viewBtn: "Voir",
     viewEventDetailsBtn: "Voir les détails & Google Maps",
-    viewEventScheduleBtn: "Voir le programme & le lieu",
     viewRsvpTitle: "Tester / Voir le formulaire RSVP",
     widthLabel: "Largeur",
     willNotifyLabel: "Notifiera",
@@ -2595,6 +2612,7 @@ export const translations: Record<Language, Translations> = {
     wipeDbBtn: "Effacer toutes les données",
     wipeDbConfirm: "Toutes les données de l'événement ont été effacées.",
     wrongPasswordMsg: "Mot de passe incorrect",
+    youAreInvitedLabel: "Vous êtes invité(e) à notre",
     yourInvitesTitle: "Vos invitations",
     yourNameOptional: "Votre nom (optionnel)",
     yourSeatLabel: "Votre Siège",

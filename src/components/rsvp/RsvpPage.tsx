@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { useParams, useNavigate } from 'react-router-dom';
+import { useParams } from 'react-router-dom';
 import { useForm, useFieldArray } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -10,10 +10,9 @@ import { useCapabilities, availableChannels, channelLabel } from '../../lib/capa
 import { motion, AnimatePresence } from 'motion/react';
 import { useToast } from '../shared/ToastContext';
 import { useConfirm } from '../shared/ConfirmDialog';
-import { cardStagger, popIn, fadeUp } from '../shared/motionPresets';
 import { useT } from '../shared/i18n';
 import { useCopyFeedback } from '../shared/hooks';
-import { RsvpCarouselTabs } from './RsvpCarouselTabs';
+import { Modal } from '../shared/Modal';
 import { ConfirmationView } from './ConfirmationView';
 import { InviteSuccessModal } from './InviteSuccessModal';
 import {
@@ -21,13 +20,8 @@ import {
   XCircle,
   Users,
   Send,
-  Sparkles,
   Lightbulb,
-  Edit3,
   AlertCircle,
-  Calendar,
-  ChevronLeft,
-  ChevronRight,
   AlertTriangle,
   Bell,
   Copy,
@@ -44,19 +38,19 @@ const RsvpFormSchema = z.object({
 });
 type RsvpFormValues = z.infer<typeof RsvpFormSchema>;
 
+type OpenModal = 'confirm' | 'invite' | 'contact' | null;
+
 export const RsvpPage = () => {
   const { token } = useParams<{ token: string }>();
-  const navigate = useNavigate();
-    const t = useT();
+  const t = useT();
   const { toast } = useToast();
 
   const [guest, setGuest] = useState<Guest | null>(null);
   const [loading, setLoading] = useState(true);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
-  // Carousel Tab State ('rsvp' = Page 1 | 'event' = Page 2 | 'invite' = Page 3)
-  const [activeTab, setActiveTab] = useState<'rsvp' | 'event' | 'invite'>('rsvp');
-  const TAB_ORDER = ['rsvp', 'event', 'invite'] as const;
+  // Which action modal is open ('confirm' | 'invite' | 'contact')
+  const [openModal, setOpenModal] = useState<OpenModal>(null);
 
   // System Alerts state
   const [alerts, setAlerts] = useState<EventAlert[]>([]);
@@ -82,12 +76,6 @@ export const RsvpPage = () => {
   const [submitting, setSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
   const [isEditing, setIsEditing] = useState(false);
-
-  // Handle Tab Switching with Direction
-  const handleTabChange = (newTab: 'rsvp' | 'event' | 'invite') => {
-    if (newTab === activeTab) return;
-    setActiveTab(newTab);
-  };
 
   // Fetch alerts
   const fetchAlerts = async () => {
@@ -376,7 +364,7 @@ export const RsvpPage = () => {
   });
 
   return (
-    <div className="space-y-6 animate-in fade-in duration-300">
+    <div className="space-y-6 animate-in fade-in duration-300 -mt-6 sm:mt-0">
 
       {/* Urgent Host Broadcast Alert Banner */}
       {visibleAlerts.length > 0 && (
@@ -423,528 +411,495 @@ export const RsvpPage = () => {
         </>
       ) : (
       <>
-      {/* 3-Tab Carousel Header Navigation Control */}
-      <RsvpCarouselTabs activeTab={activeTab} onTabChange={handleTabChange} />
-
-      {/* Carousel Container with Smooth Sliding Animation. All tabs stay mounted
-          and slide via CSS transitions — no enter/exit lifecycle to get stuck. */}
-      <div className="relative overflow-hidden min-h-[450px]">
-        <div className="grid">
-          {TAB_ORDER.map((tab, i) => {
-            const isActive = activeTab === tab;
-            const activeIndex = TAB_ORDER.indexOf(activeTab);
-            return (
-            <div
-              key={tab}
-              inert={!isActive}
-              className={`[grid-area:1/1] transition-all duration-500 ease-out ${
-                isActive
-                  ? 'translate-x-0 opacity-100'
-                  : i < activeIndex
-                  ? '-translate-x-full opacity-0'
-                  : 'translate-x-full opacity-0'
-              }`}
-            >
-            {tab === 'rsvp' && (
-              <div className="card-paper p-6 sm:p-10">
-                
-                {/* Link to Event Details */}
-                <div className="mb-6 border-b border-[#4A3F35]/10 pb-4 flex items-center justify-between">
-                  <span className="text-[11px] font-mono text-[#4A3F35]/60 font-bold">
-                    {t.step1of2Label}
-                  </span>
-
-                  <button
-                    onClick={() => handleTabChange('event')}
-                    className="text-xs font-bold text-[#4A3F35] hover:text-[#D4A373] inline-flex items-center space-x-1 font-mono transition-colors py-2 px-1 -mx-1"
-                  >
-                    <span>{t.viewEventScheduleBtn}</span>
-                    <ChevronRight className="w-4 h-4" />
-                  </button>
-                </div>
-
-                {/* Loading State */}
-                {loading && (
-                  <div className="text-center py-12 space-y-3">
-                    <div className="w-8 h-8 border-3 border-[#D4A373] border-t-transparent rounded-full animate-spin mx-auto" />
-                    <p className="text-xs text-[#4A3F35] font-medium font-mono">{t.loadingInviteMsg}</p>
-                  </div>
-                )}
-
-                {/* Error / Invalid Token State */}
-                {!loading && (errorMsg || !guest) && (
-                  <div className="text-center py-8 space-y-4 max-w-md mx-auto">
-                    <div className="w-12 h-12 bg-[#E9E0D2] text-[#4A3F35] rounded-full flex items-center justify-center mx-auto border border-[#4A3F35]/20">
-                      <AlertCircle className="w-6 h-6" />
-                    </div>
-                    <h3 className="font-newsreader text-2xl font-bold text-[#4A3F35]">
-                      {t.invalidTokenTitle}
-                    </h3>
-                    <p className="text-xs sm:text-sm text-[#4A3F35]/80 leading-relaxed">
-                      {errorMsg || t.invalidTokenMsg}
-                    </p>
-                  </div>
-                )}
-
-                {/* Guest RSVP Interactive Form & Confirmation */}
-                {!loading && guest && (
-                  <div>
-                    <AnimatePresence mode="wait">
-                      
-                      {/* State A: Confirmation / Already Submitted View */}
-                      {submitted && !isEditing ? (
-                        <ConfirmationView
-                          guest={guest}
-                          onEdit={handleEditRsvp}
-                          onViewEvent={() => handleTabChange('event')}
-                        />
-                      ) : (
-
-                        /* State B: RSVP Form */
-                        <motion.div
-                          key="form"
-                          initial={{ opacity: 0, y: 15 }}
-                          animate={{ opacity: 1, y: 0 }}
-                          exit={{ opacity: 0, y: -15 }}
-                          className="space-y-8 max-w-xl mx-auto"
-                        >
-                          
-                          {/* Greeting Header */}
-                          <div className="text-center space-y-2 border-b border-dashed border-[#4A3F35]/20 pb-6">
-                            <div className="label-mono">{t.rsvpResponseTitle}</div>
-                            <h3 className="font-newsreader text-2xl sm:text-3xl font-bold text-[#4A3F35]">
-                              {t.rsvpGreeting.replace('{{name}}', guest.name)}
-                            </h3>
-                            <p className="text-sm text-[#4A3F35]/70 font-sans">
-                              {t.rsvpPrompt}
-                            </p>
-                          </div>
-
-                          {/* Form */}
-                          <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
-                            
-                            {/* Attendance Radio Cards */}
-                            <div className="space-y-3">
-                              <label className="label-mono block">
-                                {t.responseStatusLabel}
-                              </label>
-                              
-                              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                                
-                                {/* Option: Attending */}
-                                <div
-                                  onClick={() => setValue('rsvpStatus', 'Attending')}
-                                  className={`p-4 rounded-2xl border-2 cursor-pointer transition-all flex items-start space-x-3 ${
-                                    rsvpStatus === 'Attending'
-                                      ? 'border-[#4A3F35] bg-[#E9E0D2]/50 shadow-2xs'
-                                      : 'border-[#4A3F35]/20 bg-white hover:border-[#4A3F35]/40'
-                                  }`}
-                                >
-                                  <input
-                                    type="radio"
-                                    value="Attending"
-                                    {...register('rsvpStatus')}
-                                    className="mt-1 text-[#4A3F35] focus:ring-[#4A3F35]"
-                                  />
-                                  <div>
-                                    <span className="font-bold text-[#4A3F35] text-sm block">
-                                      {t.statusAttendingOption}
-                                    </span>
-                                    <span className="text-xs text-[#4A3F35]/70">
-                                      {t.attendingHappyText}
-                                    </span>
-                                  </div>
-                                </div>
-
-                                {/* Option: Declined */}
-                                <div
-                                  onClick={() => setValue('rsvpStatus', 'Declined')}
-                                  className={`p-4 rounded-2xl border-2 cursor-pointer transition-all flex items-start space-x-3 ${
-                                    rsvpStatus === 'Declined'
-                                      ? 'border-[#4A3F35] bg-[#E9E0D2]/50 shadow-2xs'
-                                      : 'border-[#4A3F35]/20 bg-white hover:border-[#4A3F35]/40'
-                                  }`}
-                                >
-                                  <input
-                                    type="radio"
-                                    value="Declined"
-                                    {...register('rsvpStatus')}
-                                    className="mt-1 text-[#4A3F35] focus:ring-[#4A3F35]"
-                                  />
-                                  <div>
-                                    <span className="font-bold text-[#4A3F35] text-sm block">
-                                      {t.statusDeclinedOption}
-                                    </span>
-                                    <span className="text-xs text-[#4A3F35]/70">
-                                      {t.declinedWarmText}
-                                    </span>
-                                  </div>
-                                </div>
-
-                              </div>
-                            </div>
-
-                             {/* Individual Attendee Names & Contact Inputs (Only when Attending) */}
-                            {rsvpStatus === 'Attending' && (
-                              <div className="space-y-4 bg-[#E9E0D2]/40 p-5 rounded-2xl border border-[#4A3F35]/20 animate-in fade-in duration-200">
-                                <div>
-                                  <label className="label-mono block mb-1">
-                                    {t.attendeeSectionTitle}
-                                  </label>
-                                  <p className="text-xs text-[#4A3F35]/70 mb-1 font-sans">
-                                    {t.attendeeSectionHint}
-                                  </p>
-                                  <p className="text-[11px] text-[#8B735B] font-medium font-sans flex items-center gap-1">
-                                    <Lightbulb className="w-3 h-3 shrink-0" />
-                                    {t.primaryGuestIncluded.replace('{{name}}', guest.name)}
-                                  </p>
-                                  <p className="text-[11px] text-[#8B735B] font-medium font-sans flex items-center gap-1">
-                                    <Lightbulb className="w-3 h-3 shrink-0" />
-                                    {t.attendeeContactHelper}
-                                  </p>
-                                </div>
-
-                                <div className="space-y-3">
-                                  {fields.map((att, index) => (
-                                    <div key={att.id} className="p-3.5 bg-white/90 rounded-xl border border-[#4A3F35]/20 space-y-2.5">
-                                      <div className="flex items-center justify-between gap-2">
-                                        <span className="text-xs font-mono font-bold text-[#8B735B] uppercase tracking-wider">
-                                          {`Party Member #${index + 1}`}
-                                        </span>
-                                        <button
-                                          type="button"
-                                          onClick={() => remove(index)}
-                                          className="p-1 text-rose-600 hover:text-rose-800 hover:bg-rose-50 rounded-lg transition-colors"
-                                          title={t.removeGuestBtn}
-                                        >
-                                          <XCircle className="w-4 h-4" />
-                                        </button>
-                                      </div>
-
-                                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                                        <div>
-                                          <input
-                                            type="text"
-                                            required
-                                            {...register(`attendees.${index}.name`)}
-                                            placeholder={t.fullNamePlaceholder}
-                                            className="w-full px-3 py-2 rounded-lg border border-[#4A3F35]/20 bg-white font-bold text-xs text-[#4A3F35] focus:outline-none focus:ring-2 focus:ring-[#4A3F35]"
-                                          />
-                                        </div>
-                                        <div>
-                                          <input
-                                            type="text"
-                                            {...register(`attendees.${index}.contact`)}
-                                            placeholder={t.attendeeContactPlaceholder}
-                                            className="w-full px-3 py-2 rounded-lg border border-[#4A3F35]/20 bg-white font-medium text-xs text-[#4A3F35] focus:outline-none focus:ring-2 focus:ring-[#4A3F35]"
-                                          />
-                                        </div>
-                                      </div>
-                                    </div>
-                                  ))}
-                                </div>
-
-                                <button
-                                  type="button"
-                                  onClick={() => append({ name: '', contact: '' })}
-                                  className="mt-2 w-full py-2.5 rounded-xl border border-dashed border-[#4A3F35]/30 bg-white/80 hover:bg-white text-xs font-bold text-[#4A3F35] transition-colors flex items-center justify-center gap-1.5"
-                                >
-                                  <Users className="w-4 h-4 text-[#8B735B]" />
-                                  <span>{t.addAnotherGuestBtn}</span>
-                                </button>
-                              </div>
-                            )}
-
-                            {/* Dietary Restrictions (Only when Attending) */}
-                            {rsvpStatus === 'Attending' && (
-                              <div className="space-y-2">
-                                <label className="label-mono block">
-                                  {t.dietaryLabel}
-                                </label>
-                                <textarea
-                                  rows={2}
-                                  {...register('dietary')}
-                                  placeholder={t.dietaryPlaceholder}
-                                  className="w-full px-4 py-3 rounded-xl border border-[#4A3F35]/20 focus:outline-none focus:ring-2 focus:ring-[#4A3F35] text-sm bg-white text-[#4A3F35]"
-                                />
-                              </div>
-                            )}
-
-                            {/* Submit Button */}
-                            <motion.button
-                              whileTap={{ scale: 0.98 }}
-                              type="submit"
-                              disabled={submitting}
-                              className="btn-accent w-full py-3.5 text-sm font-bold disabled:opacity-50"
-                            >
-                              <Send className="w-4 h-4 mr-2" />
-                              <span>{submitting ? t.submittingRsvpBtn : t.submitRsvpBtn}</span>
-                            </motion.button>
-
-                          </form>
-
-                        </motion.div>
-                      )}
-
-                    </AnimatePresence>
-                  </div>
-                )}
-
-              </div>
-            )}
-            {tab === 'event' && (
-              <div className="space-y-4">
-              {/* Back to RSVP Form header bar */}
-              <div className="bg-white border border-[#4A3F35]/15 p-3.5 rounded-2xl flex items-center justify-between">
-                <button
-                  onClick={() => handleTabChange('rsvp')}
-                  className="text-xs font-bold text-[#4A3F35] hover:text-[#D4A373] inline-flex items-center space-x-1 font-mono transition-colors"
-                >
-                  <ChevronLeft className="w-4 h-4" />
-                  <span>{t.returnToRsvpBtn}</span>
-                </button>
-                <span className="text-[11px] font-mono text-[#4A3F35]/60 font-bold">
-                  {t.step2of2Label}
-                </span>
-              </div>
-
-              <EventDetailsCard />
-
-              {/* Bottom Carousel Action */}
-              <div className="text-center pt-2">
-                <button
-                  onClick={() => handleTabChange('rsvp')}
-                  className="btn-accent px-6 py-3.5 text-sm font-bold shadow-md hover:scale-105 inline-flex items-center space-x-2"
-                >
-                  <ChevronLeft className="w-4 h-4 mr-1" />
-                  <span>{t.returnToConfirmationBtn}</span>
-                </button>
-              </div>
-              </div>
-            )}
-            {tab === 'invite' && (
-              <div className="space-y-4">
-              {/* Back to RSVP Form header bar */}
-              <div className="bg-white border border-[#4A3F35]/15 p-3.5 rounded-2xl flex items-center justify-between">
-                <button
-                  onClick={() => handleTabChange('rsvp')}
-                  className="text-xs font-bold text-[#4A3F35] hover:text-[#D4A373] inline-flex items-center space-x-1 font-mono transition-colors"
-                >
-                  <ChevronLeft className="w-4 h-4" />
-                  <span>{t.returnToRsvpBtn}</span>
-                </button>
-                <span className="text-[11px] font-mono text-[#4A3F35]/60 font-bold">
-                  {t.step3of3Label}
-                </span>
-              </div>
-
-              {/* Invite a guest */}
-              <div className="card-paper p-5 sm:p-6 space-y-4">
-                <div className="flex items-center gap-2.5">
-                  <div className="p-2 bg-[#EFE6DC] text-[#8B735B] rounded-xl border border-[#CBAE94]">
-                    <Users className="w-4 h-4" />
-                  </div>
-                  <div>
-                    <h3 className="font-sans text-base font-bold text-[#8B735B]">{t.inviteGuestTitle}</h3>
-                    <p className="text-[11px] text-[#5D5449]">{t.inviteGuestHint}</p>
-                  </div>
-                </div>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                  <div>
-                    <label className="label-mono block mb-1">{t.inviteeNameLabel} *</label>
-                    <input
-                      type="text"
-                      value={inviteName}
-                      onChange={(e) => setInviteName(e.target.value)}
-                      placeholder={t.inviteeNamePh}
-                      className="w-full px-3 py-2 rounded-lg border border-[#4A3F35]/20 bg-white text-xs text-[#4A3F35] focus:outline-none focus:ring-2 focus:ring-[#4A3F35]"
-                    />
-                  </div>
-                  <div>
-                    <label className="label-mono block mb-1">{t.inviteeContactLabel}</label>
-                    <input
-                      type="text"
-                      value={inviteContact}
-                      onChange={(e) => setInviteContact(e.target.value)}
-                      placeholder={t.inviteeContactPh}
-                      className="w-full px-3 py-2 rounded-lg border border-[#4A3F35]/20 bg-white text-xs text-[#4A3F35] focus:outline-none focus:ring-2 focus:ring-[#4A3F35]"
-                    />
-                  </div>
-                </div>
-                <div>
-                  <label className="label-mono block mb-1">{t.inviteChannelLabel}</label>
-                  <select
-                    value={inviteChannel}
-                    onChange={(e) => setInviteChannel(e.target.value as 'link-only' | 'email' | 'text' | 'both')}
-                    className="w-full px-3 py-2 rounded-lg border border-[#4A3F35]/20 bg-white text-xs font-bold text-[#4A3F35] focus:outline-none focus:ring-2 focus:ring-[#4A3F35]"
-                  >
-                    {inviteChannels.map((c) => (
-                      <option key={c} value={c}>{channelLabel(t, c)}</option>
-                    ))}
-                  </select>
-                  {inviteChannel === 'link-only' && (
-                    <p className="text-[11px] text-[#8B735B] font-medium mt-1 flex items-center gap-1">
-                      <Link2 className="w-3 h-3 shrink-0" />
-                      {t.linkOnlyHint}
-                    </p>
-                  )}
-                </div>
-                <div>
-                  <label className="label-mono block mb-1">{t.inviteeNoteLabel}</label>
-                  <input
-                    type="text"
-                    value={inviteNote}
-                    onChange={(e) => setInviteNote(e.target.value)}
-                    placeholder={t.inviteeNotePh}
-                    className="w-full px-3 py-2 rounded-lg border border-[#4A3F35]/20 bg-white text-xs text-[#4A3F35] focus:outline-none focus:ring-2 focus:ring-[#4A3F35]"
-                  />
-                </div>
-                <button
-                  onClick={handleInvite}
-                  disabled={inviting}
-                  className="btn-accent w-full py-3 text-sm font-bold disabled:opacity-50"
-                >
-                  <Send className="w-4 h-4 mr-2" />
-                  <span>{inviting ? t.sendingInviteBtn : t.createInviteBtn}</span>
-                </button>
-              </div>
-
-              {/* Your invitations */}
-              <div className="card-paper p-5 sm:p-6 space-y-3">
-                <div className="label-mono">{t.yourInvitesTitle}</div>
-                {myInvites.length === 0 ? (
-                  <p className="text-xs text-[#5D5449]/70 italic py-2">{t.noInvitesYet}</p>
-                ) : (
-                  <div className="space-y-2.5">
-                    {myInvites.map((invitee) => (
-                      <div key={invitee.id} className="p-3 bg-white rounded-xl border border-[#4A3F35]/15 space-y-2">
-                        <div className="flex items-center justify-between gap-2">
-                          <div className="min-w-0">
-                            <p className="text-xs font-bold text-[#4A3F35] truncate">{invitee.name}</p>
-                            <p className="text-[10px] font-mono text-[#8B735B] truncate">
-                              {invitee.email || invitee.phone || t.channelNone}
-                            </p>
-                            {invitee.guest_note && (
-                              <p className="text-[10px] text-[#5D5449] italic truncate">{invitee.guest_note}</p>
-                            )}
-                          </div>
-                          <span
-                            className={`px-2 py-0.5 rounded-full text-[10px] font-bold border shrink-0 ${
-                              invitee.rsvp_status === 'Attending'
-                                ? 'bg-emerald-50 text-emerald-800 border-emerald-300'
-                                : invitee.rsvp_status === 'Declined'
-                                ? 'bg-rose-50 text-rose-800 border-rose-300'
-                                : 'bg-[#E9E0D2] text-[#8B735B] border-[#CBAE94]'
-                            }`}
-                          >
-                            {statusWord(invitee.rsvp_status)}
-                          </span>
-                        </div>
-                        <div className="flex flex-wrap items-center gap-2">
-                          <button
-                            onClick={() => copyText(`${window.location.origin}/rsvp/${invitee.magic_token}`, `link-${invitee.id}`)}
-                            className="px-2.5 py-1.5 rounded-lg bg-[#E9E0D2] hover:bg-[#CBAE94] hover:text-white text-[#8B735B] text-[10px] font-bold font-mono transition-colors border border-[#CBAE94] inline-flex items-center gap-1"
-                          >
-                            {copiedKey === `link-${invitee.id}` ? <Check className="w-3 h-3 text-emerald-600" /> : <Copy className="w-3 h-3" />}
-                            <span>{copiedKey === `link-${invitee.id}` ? t.linkCopied : t.copyLink}</span>
-                          </button>
-                          <button
-                            onClick={() => copyText((invitee as Guest & { invite_message?: string }).invite_message || '', `msg-${invitee.id}`)}
-                            className="px-2.5 py-1.5 rounded-lg bg-white hover:bg-[#EFE6DC] text-[#5D5449] text-[10px] font-bold font-mono transition-colors border border-[#CBAE94] inline-flex items-center gap-1"
-                          >
-                            {copiedKey === `msg-${invitee.id}` ? <Check className="w-3 h-3 text-emerald-600" /> : <MessageSquare className="w-3 h-3" />}
-                            <span>{copiedKey === `msg-${invitee.id}` ? t.linkCopied : t.copyMessageBtn}</span>
-                          </button>
-                          <button
-                            onClick={() => handleRemoveInvite(invitee)}
-                            className="ml-auto px-2.5 py-1.5 rounded-lg bg-rose-50 hover:bg-rose-100 text-rose-700 text-[10px] font-bold font-mono transition-colors border border-rose-300 inline-flex items-center gap-1"
-                          >
-                            <Trash2 className="w-3 h-3" />
-                            <span>{t.removeInviteBtn}</span>
-                          </button>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                )}
-              </div>
-
-              {/* Bottom Carousel Action */}
-              <div className="text-center pt-2">
-                <button
-                  onClick={() => handleTabChange('rsvp')}
-                  className="btn-accent px-6 py-3.5 text-sm font-bold shadow-md hover:scale-105 inline-flex items-center space-x-2"
-                >
-                  <ChevronLeft className="w-4 h-4 mr-1" />
-                  <span>{t.returnToConfirmationBtn}</span>
-                </button>
-              </div>
-              </div>
-            )}
-            </div>
-            );
-          })}
-        </div>
-      </div>
-
-      {/* Contact & notifications (self-service) */}
-      {guest && !loading && (
-        <div className="max-w-2xl mx-auto space-y-5 pt-4">
-          <div className="card-paper p-5 sm:p-6 space-y-4">
-            <div className="flex items-center gap-2.5">
-              <div className="p-2 bg-[#EFE6DC] text-[#8B735B] rounded-xl border border-[#CBAE94]">
-                <Bell className="w-4 h-4" />
-              </div>
-              <div>
-                <h3 className="font-sans text-base font-bold text-[#8B735B]">{t.contactCardTitle}</h3>
-                <p className="text-[11px] text-[#5D5449]">{t.contactCardHint}</p>
-              </div>
-            </div>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-              <div>
-                <label className="label-mono block mb-1">{t.fieldEmail}</label>
-                <input
-                  type="email"
-                  value={contactEmail}
-                  onChange={(e) => setContactEmail(e.target.value)}
-                  className="w-full px-3 py-2 rounded-lg border border-[#4A3F35]/20 bg-white text-xs text-[#4A3F35] focus:outline-none focus:ring-2 focus:ring-[#4A3F35]"
-                />
-              </div>
-              <div>
-                <label className="label-mono block mb-1">{t.fieldPhone}</label>
-                <input
-                  type="tel"
-                  value={contactPhone}
-                  onChange={(e) => setContactPhone(e.target.value)}
-                  className="w-full px-3 py-2 rounded-lg border border-[#4A3F35]/20 bg-white text-xs text-[#4A3F35] focus:outline-none focus:ring-2 focus:ring-[#4A3F35]"
-                />
-              </div>
-            </div>
-            <div className="flex flex-wrap items-end gap-3">
-              <div className="flex-1 min-w-[200px]">
-                <label className="label-mono block mb-1">{t.notificationChoiceLabel}</label>
-                <select
-                  value={contactChannel}
-                  onChange={(e) => setContactChannel(e.target.value as 'none' | 'email' | 'text' | 'both')}
-                  className="w-full px-3 py-2 rounded-lg border border-[#4A3F35]/20 bg-white text-xs font-bold text-[#4A3F35] focus:outline-none focus:ring-2 focus:ring-[#4A3F35]"
-                >
-                  {contactChannels.map((c) => (
-                    <option key={c} value={c}>{channelLabel(t, c)}</option>
-                  ))}
-                </select>
-              </div>
+      {/* Event Details = the main page. The action buttons render inside the
+          invitation card, only for guests who arrived with a valid code/link. */}
+      <EventDetailsCard
+        hideGuestLogin
+        showProgram={guest?.rsvp_status === 'Attending'}
+        status={
+          !loading && !errorMsg && guest
+            ? {
+                label: statusWord(guest.rsvp_status),
+                tone:
+                  guest.rsvp_status === 'Attending'
+                    ? 'attending'
+                    : guest.rsvp_status === 'Declined'
+                    ? 'declined'
+                    : 'pending',
+              }
+            : null
+        }
+        actions={
+          !loading && !errorMsg && guest ? (
+            <div className="flex flex-wrap items-center justify-center gap-1 sm:gap-2">
               <button
-                onClick={handleSaveContact}
-                disabled={savingContact}
-                className="btn-accent px-5 py-2 text-xs font-bold disabled:opacity-50 inline-flex items-center"
+                type="button"
+                onClick={() => setOpenModal('confirm')}
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-white/85 border border-[#CBAE94] shadow-sm text-[11px] font-mono font-bold text-[#4A3F35] hover:bg-white hover:text-[#D4A373] transition-colors cursor-pointer"
               >
-                <Check className="w-3.5 h-3.5 mr-1.5" />
-                <span>{savingContact ? t.sendingInviteBtn : t.contactSaveBtn}</span>
+                <CheckCircle2 className="w-3.5 h-3.5 text-[#D4A373]" />
+                <span>{t.guestConfirmationBtn}</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => setOpenModal('invite')}
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-white/85 border border-[#CBAE94] shadow-sm text-[11px] font-mono font-bold text-[#4A3F35] hover:bg-white hover:text-[#D4A373] transition-colors cursor-pointer"
+              >
+                <Users className="w-3.5 h-3.5 text-[#D4A373]" />
+                <span>{t.inviteGuestsBtn}</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => setOpenModal('contact')}
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-white/85 border border-[#CBAE94] shadow-sm text-[11px] font-mono font-bold text-[#4A3F35] hover:bg-white hover:text-[#D4A373] transition-colors cursor-pointer"
+              >
+                <Bell className="w-3.5 h-3.5 text-[#D4A373]" />
+                <span>{t.contactNotificationsBtn}</span>
               </button>
             </div>
-          </div>
+          ) : null
+        }
+      />
+
+      {/* Invalid token warning */}
+      {!loading && errorMsg && (
+        <div className="max-w-2xl mx-auto p-4 rounded-2xl border-2 bg-rose-50 border-rose-400 text-rose-900 flex items-start gap-3">
+          <AlertTriangle className="w-5 h-5 shrink-0 mt-0.5" />
+          <p className="text-xs leading-relaxed font-sans">{errorMsg}</p>
         </div>
       )}
+
+      {/* ─── Guest Confirmation modal ──────────────────────────────── */}
+      <Modal
+        open={openModal === 'confirm'}
+        onClose={() => setOpenModal(null)}
+        title={<span className="label-mono">{t.rsvpResponseTitle}</span>}
+        maxWidth="xl"
+        closeOnBackdrop
+      >
+        {/* Loading State */}
+        {loading && (
+          <div className="text-center py-12 space-y-3">
+            <div className="w-8 h-8 border-3 border-[#D4A373] border-t-transparent rounded-full animate-spin mx-auto" />
+            <p className="text-xs text-[#4A3F35] font-medium font-mono">{t.loadingInviteMsg}</p>
+          </div>
+        )}
+
+        {/* Error / Invalid Token State */}
+        {!loading && (errorMsg || !guest) && (
+          <div className="text-center py-8 space-y-4 max-w-md mx-auto">
+            <div className="w-12 h-12 bg-[#E9E0D2] text-[#4A3F35] rounded-full flex items-center justify-center mx-auto border border-[#4A3F35]/20">
+              <AlertCircle className="w-6 h-6" />
+            </div>
+            <h3 className="font-newsreader text-2xl font-bold text-[#4A3F35]">
+              {t.invalidTokenTitle}
+            </h3>
+            <p className="text-xs sm:text-sm text-[#4A3F35]/80 leading-relaxed">
+              {errorMsg || t.invalidTokenMsg}
+            </p>
+          </div>
+        )}
+
+        {/* Guest RSVP Interactive Form & Confirmation */}
+        {!loading && guest && (
+          <AnimatePresence mode="wait">
+            {/* State A: Confirmation / Already Submitted View */}
+            {submitted && !isEditing ? (
+              <ConfirmationView
+                guest={guest}
+                onEdit={handleEditRsvp}
+              />
+            ) : (
+              /* State B: RSVP Form */
+              <motion.div
+                key="form"
+                initial={{ opacity: 0, y: 15 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -15 }}
+                className="space-y-8 max-w-xl mx-auto"
+              >
+                {/* Greeting Header */}
+                <div className="text-center space-y-2 border-b border-dashed border-[#4A3F35]/20 pb-6">
+                  <div className="label-mono">{t.rsvpResponseTitle}</div>
+                  <h3 className="font-newsreader text-2xl sm:text-3xl font-bold text-[#4A3F35]">
+                    {t.rsvpGreeting.replace('{{name}}', guest.name)}
+                  </h3>
+                  <p className="text-sm text-[#4A3F35]/70 font-sans">
+                    {t.rsvpPrompt}
+                  </p>
+                </div>
+
+                {/* Form */}
+                <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
+
+                  {/* Attendance Radio Cards */}
+                  <div className="space-y-3">
+                    <label className="label-mono block">
+                      {t.responseStatusLabel}
+                    </label>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+
+                      {/* Option: Attending */}
+                      <div
+                        onClick={() => setValue('rsvpStatus', 'Attending')}
+                        className={`p-4 rounded-2xl border-2 cursor-pointer transition-all flex items-start space-x-3 ${
+                          rsvpStatus === 'Attending'
+                            ? 'border-[#4A3F35] bg-[#E9E0D2]/50 shadow-2xs'
+                            : 'border-[#4A3F35]/20 bg-white hover:border-[#4A3F35]/40'
+                        }`}
+                      >
+                        <input
+                          type="radio"
+                          value="Attending"
+                          {...register('rsvpStatus')}
+                          className="mt-1 text-[#4A3F35] focus:ring-[#4A3F35]"
+                        />
+                        <div>
+                          <span className="font-bold text-[#4A3F35] text-sm block">
+                            {t.statusAttendingOption}
+                          </span>
+                          <span className="text-xs text-[#4A3F35]/70">
+                            {t.attendingHappyText}
+                          </span>
+                        </div>
+                      </div>
+
+                      {/* Option: Declined */}
+                      <div
+                        onClick={() => setValue('rsvpStatus', 'Declined')}
+                        className={`p-4 rounded-2xl border-2 cursor-pointer transition-all flex items-start space-x-3 ${
+                          rsvpStatus === 'Declined'
+                            ? 'border-[#4A3F35] bg-[#E9E0D2]/50 shadow-2xs'
+                            : 'border-[#4A3F35]/20 bg-white hover:border-[#4A3F35]/40'
+                        }`}
+                      >
+                        <input
+                          type="radio"
+                          value="Declined"
+                          {...register('rsvpStatus')}
+                          className="mt-1 text-[#4A3F35] focus:ring-[#4A3F35]"
+                        />
+                        <div>
+                          <span className="font-bold text-[#4A3F35] text-sm block">
+                            {t.statusDeclinedOption}
+                          </span>
+                          <span className="text-xs text-[#4A3F35]/70">
+                            {t.declinedWarmText}
+                          </span>
+                        </div>
+                      </div>
+
+                    </div>
+                  </div>
+
+                  {/* Individual Attendee Names & Contact Inputs (Only when Attending) */}
+                  {rsvpStatus === 'Attending' && (
+                    <div className="space-y-4 bg-[#E9E0D2]/40 p-5 rounded-2xl border border-[#4A3F35]/20 animate-in fade-in duration-200">
+                      <div>
+                        <label className="label-mono block mb-1">
+                          {t.attendeeSectionTitle}
+                        </label>
+                        <p className="text-xs text-[#4A3F35]/70 mb-1 font-sans">
+                          {t.attendeeSectionHint}
+                        </p>
+                        <p className="text-[11px] text-[#8B735B] font-medium font-sans flex items-center gap-1">
+                          <Lightbulb className="w-3 h-3 shrink-0" />
+                          {t.primaryGuestIncluded.replace('{{name}}', guest.name)}
+                        </p>
+                        <p className="text-[11px] text-[#8B735B] font-medium font-sans flex items-center gap-1">
+                          <Lightbulb className="w-3 h-3 shrink-0" />
+                          {t.attendeeContactHelper}
+                        </p>
+                      </div>
+
+                      <div className="space-y-3">
+                        {fields.map((att, index) => (
+                          <div key={att.id} className="p-3.5 bg-white/90 rounded-xl border border-[#4A3F35]/20 space-y-2.5">
+                            <div className="flex items-center justify-between gap-2">
+                              <span className="text-xs font-mono font-bold text-[#8B735B] uppercase tracking-wider">
+                                {`Party Member #${index + 1}`}
+                              </span>
+                              <button
+                                type="button"
+                                onClick={() => remove(index)}
+                                className="p-1 text-rose-600 hover:text-rose-800 hover:bg-rose-50 rounded-lg transition-colors"
+                                title={t.removeGuestBtn}
+                              >
+                                <XCircle className="w-4 h-4" />
+                              </button>
+                            </div>
+
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                              <div>
+                                <input
+                                  type="text"
+                                  required
+                                  {...register(`attendees.${index}.name`)}
+                                  placeholder={t.fullNamePlaceholder}
+                                  className="w-full px-3 py-2 rounded-lg border border-[#4A3F35]/20 bg-white font-bold text-xs text-[#4A3F35] focus:outline-none focus:ring-2 focus:ring-[#4A3F35]"
+                                />
+                              </div>
+                              <div>
+                                <input
+                                  type="text"
+                                  {...register(`attendees.${index}.contact`)}
+                                  placeholder={t.attendeeContactPlaceholder}
+                                  className="w-full px-3 py-2 rounded-lg border border-[#4A3F35]/20 bg-white font-medium text-xs text-[#4A3F35] focus:outline-none focus:ring-2 focus:ring-[#4A3F35]"
+                                />
+                              </div>
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+
+                      <button
+                        type="button"
+                        onClick={() => append({ name: '', contact: '' })}
+                        className="mt-2 w-full py-2.5 rounded-xl border border-dashed border-[#4A3F35]/30 bg-white/80 hover:bg-white text-xs font-bold text-[#4A3F35] transition-colors flex items-center justify-center gap-1.5"
+                      >
+                        <Users className="w-4 h-4 text-[#8B735B]" />
+                        <span>{t.addAnotherGuestBtn}</span>
+                      </button>
+                    </div>
+                  )}
+
+                  {/* Dietary Restrictions (Only when Attending) */}
+                  {rsvpStatus === 'Attending' && (
+                    <div className="space-y-2">
+                      <label className="label-mono block">
+                        {t.dietaryLabel}
+                      </label>
+                      <textarea
+                        rows={2}
+                        {...register('dietary')}
+                        placeholder={t.dietaryPlaceholder}
+                        className="w-full px-4 py-3 rounded-xl border border-[#4A3F35]/20 focus:outline-none focus:ring-2 focus:ring-[#4A3F35] text-sm bg-white text-[#4A3F35]"
+                      />
+                    </div>
+                  )}
+
+                  {/* Submit Button */}
+                  <motion.button
+                    whileTap={{ scale: 0.98 }}
+                    type="submit"
+                    disabled={submitting}
+                    className="btn-accent w-full py-3.5 text-sm font-bold disabled:opacity-50"
+                  >
+                    <Send className="w-4 h-4 mr-2" />
+                    <span>{submitting ? t.submittingRsvpBtn : t.submitRsvpBtn}</span>
+                  </motion.button>
+
+                </form>
+              </motion.div>
+            )}
+          </AnimatePresence>
+        )}
+      </Modal>
+
+      {/* ─── Invite Guests modal ───────────────────────────────────── */}
+      <Modal
+        open={openModal === 'invite'}
+        onClose={() => setOpenModal(null)}
+        title={t.inviteGuestTitle}
+        maxWidth="lg"
+        closeOnBackdrop
+        contentClassName="space-y-4"
+      >
+        {/* Invite a guest */}
+        <div className="card-paper p-5 sm:p-6 space-y-4">
+          <div className="flex items-center gap-2.5">
+            <div className="p-2 bg-[#EFE6DC] text-[#8B735B] rounded-xl border border-[#CBAE94]">
+              <Users className="w-4 h-4" />
+            </div>
+            <div>
+              <h3 className="font-sans text-base font-bold text-[#8B735B]">{t.inviteGuestTitle}</h3>
+              <p className="text-[11px] text-[#5D5449]">{t.inviteGuestHint}</p>
+            </div>
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div>
+              <label className="label-mono block mb-1">{t.inviteeNameLabel} *</label>
+              <input
+                type="text"
+                value={inviteName}
+                onChange={(e) => setInviteName(e.target.value)}
+                placeholder={t.inviteeNamePh}
+                className="w-full px-3 py-2 rounded-lg border border-[#4A3F35]/20 bg-white text-xs text-[#4A3F35] focus:outline-none focus:ring-2 focus:ring-[#4A3F35]"
+              />
+            </div>
+            <div>
+              <label className="label-mono block mb-1">{t.inviteeContactLabel}</label>
+              <input
+                type="text"
+                value={inviteContact}
+                onChange={(e) => setInviteContact(e.target.value)}
+                placeholder={t.inviteeContactPh}
+                className="w-full px-3 py-2 rounded-lg border border-[#4A3F35]/20 bg-white text-xs text-[#4A3F35] focus:outline-none focus:ring-2 focus:ring-[#4A3F35]"
+              />
+            </div>
+          </div>
+          <div>
+            <label className="label-mono block mb-1">{t.inviteChannelLabel}</label>
+            <select
+              value={inviteChannel}
+              onChange={(e) => setInviteChannel(e.target.value as 'link-only' | 'email' | 'text' | 'both')}
+              className="w-full px-3 py-2 rounded-lg border border-[#4A3F35]/20 bg-white text-xs font-bold text-[#4A3F35] focus:outline-none focus:ring-2 focus:ring-[#4A3F35]"
+            >
+              {inviteChannels.map((c) => (
+                <option key={c} value={c}>{channelLabel(t, c)}</option>
+              ))}
+            </select>
+            {inviteChannel === 'link-only' && (
+              <p className="text-[11px] text-[#8B735B] font-medium mt-1 flex items-center gap-1">
+                <Link2 className="w-3 h-3 shrink-0" />
+                {t.linkOnlyHint}
+              </p>
+            )}
+          </div>
+          <div>
+            <label className="label-mono block mb-1">{t.inviteeNoteLabel}</label>
+            <input
+              type="text"
+              value={inviteNote}
+              onChange={(e) => setInviteNote(e.target.value)}
+              placeholder={t.inviteeNotePh}
+              className="w-full px-3 py-2 rounded-lg border border-[#4A3F35]/20 bg-white text-xs text-[#4A3F35] focus:outline-none focus:ring-2 focus:ring-[#4A3F35]"
+            />
+          </div>
+          <button
+            onClick={handleInvite}
+            disabled={inviting}
+            className="btn-accent w-full py-3 text-sm font-bold disabled:opacity-50"
+          >
+            <Send className="w-4 h-4 mr-2" />
+            <span>{inviting ? t.sendingInviteBtn : t.createInviteBtn}</span>
+          </button>
+        </div>
+
+        {/* Your invitations */}
+        <div className="card-paper p-5 sm:p-6 space-y-3">
+          <div className="label-mono">{t.yourInvitesTitle}</div>
+          {myInvites.length === 0 ? (
+            <p className="text-xs text-[#5D5449]/70 italic py-2">{t.noInvitesYet}</p>
+          ) : (
+            <div className="space-y-2.5">
+              {myInvites.map((invitee) => (
+                <div key={invitee.id} className="p-3 bg-white rounded-xl border border-[#4A3F35]/15 space-y-2">
+                  <div className="flex items-center justify-between gap-2">
+                    <div className="min-w-0">
+                      <p className="text-xs font-bold text-[#4A3F35] truncate">{invitee.name}</p>
+                      <p className="text-[10px] font-mono text-[#8B735B] truncate">
+                        {invitee.email || invitee.phone || t.channelNone}
+                      </p>
+                      {invitee.guest_note && (
+                        <p className="text-[10px] text-[#5D5449] italic truncate">{invitee.guest_note}</p>
+                      )}
+                    </div>
+                    <span
+                      className={`px-2 py-0.5 rounded-full text-[10px] font-bold border shrink-0 ${
+                        invitee.rsvp_status === 'Attending'
+                          ? 'bg-emerald-50 text-emerald-800 border-emerald-300'
+                          : invitee.rsvp_status === 'Declined'
+                          ? 'bg-rose-50 text-rose-800 border-rose-300'
+                          : 'bg-[#E9E0D2] text-[#8B735B] border-[#CBAE94]'
+                      }`}
+                    >
+                      {statusWord(invitee.rsvp_status)}
+                    </span>
+                  </div>
+                  <div className="flex flex-wrap items-center gap-2">
+                    <button
+                      onClick={() => copyText(`${window.location.origin}/rsvp/${invitee.magic_token}`, `link-${invitee.id}`)}
+                      className="px-2.5 py-1.5 rounded-lg bg-[#E9E0D2] hover:bg-[#CBAE94] hover:text-white text-[#8B735B] text-[10px] font-bold font-mono transition-colors border border-[#CBAE94] inline-flex items-center gap-1"
+                    >
+                      {copiedKey === `link-${invitee.id}` ? <Check className="w-3 h-3 text-emerald-600" /> : <Copy className="w-3 h-3" />}
+                      <span>{copiedKey === `link-${invitee.id}` ? t.linkCopied : t.copyLink}</span>
+                    </button>
+                    <button
+                      onClick={() => copyText((invitee as Guest & { invite_message?: string }).invite_message || '', `msg-${invitee.id}`)}
+                      className="px-2.5 py-1.5 rounded-lg bg-white hover:bg-[#EFE6DC] text-[#5D5449] text-[10px] font-bold font-mono transition-colors border border-[#CBAE94] inline-flex items-center gap-1"
+                    >
+                      {copiedKey === `msg-${invitee.id}` ? <Check className="w-3 h-3 text-emerald-600" /> : <MessageSquare className="w-3 h-3" />}
+                      <span>{copiedKey === `msg-${invitee.id}` ? t.linkCopied : t.copyMessageBtn}</span>
+                    </button>
+                    <button
+                      onClick={() => handleRemoveInvite(invitee)}
+                      className="ml-auto px-2.5 py-1.5 rounded-lg bg-rose-50 hover:bg-rose-100 text-rose-700 text-[10px] font-bold font-mono transition-colors border border-rose-300 inline-flex items-center gap-1"
+                    >
+                      <Trash2 className="w-3 h-3" />
+                      <span>{t.removeInviteBtn}</span>
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      </Modal>
+
+      {/* ─── Contact & notifications modal ─────────────────────────── */}
+      <Modal
+        open={openModal === 'contact'}
+        onClose={() => setOpenModal(null)}
+        title={t.contactCardTitle}
+        maxWidth="md"
+        closeOnBackdrop
+      >
+        <div className="space-y-4">
+          <div className="flex items-center gap-2.5">
+            <div className="p-2 bg-[#EFE6DC] text-[#8B735B] rounded-xl border border-[#CBAE94]">
+              <Bell className="w-4 h-4" />
+            </div>
+            <div>
+              <h3 className="font-sans text-base font-bold text-[#8B735B]">{t.contactCardTitle}</h3>
+              <p className="text-[11px] text-[#5D5449]">{t.contactCardHint}</p>
+            </div>
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div>
+              <label className="label-mono block mb-1">{t.fieldEmail}</label>
+              <input
+                type="email"
+                value={contactEmail}
+                onChange={(e) => setContactEmail(e.target.value)}
+                className="w-full px-3 py-2 rounded-lg border border-[#4A3F35]/20 bg-white text-xs text-[#4A3F35] focus:outline-none focus:ring-2 focus:ring-[#4A3F35]"
+              />
+            </div>
+            <div>
+              <label className="label-mono block mb-1">{t.fieldPhone}</label>
+              <input
+                type="tel"
+                value={contactPhone}
+                onChange={(e) => setContactPhone(e.target.value)}
+                className="w-full px-3 py-2 rounded-lg border border-[#4A3F35]/20 bg-white text-xs text-[#4A3F35] focus:outline-none focus:ring-2 focus:ring-[#4A3F35]"
+              />
+            </div>
+          </div>
+          <div className="flex flex-wrap items-end gap-3">
+            <div className="flex-1 min-w-[200px]">
+              <label className="label-mono block mb-1">{t.notificationChoiceLabel}</label>
+              <select
+                value={contactChannel}
+                onChange={(e) => setContactChannel(e.target.value as 'none' | 'email' | 'text' | 'both')}
+                className="w-full px-3 py-2 rounded-lg border border-[#4A3F35]/20 bg-white text-xs font-bold text-[#4A3F35] focus:outline-none focus:ring-2 focus:ring-[#4A3F35]"
+              >
+                {contactChannels.map((c) => (
+                  <option key={c} value={c}>{channelLabel(t, c)}</option>
+                ))}
+              </select>
+            </div>
+            <button
+              onClick={handleSaveContact}
+              disabled={savingContact}
+              className="btn-accent px-5 py-2 text-xs font-bold disabled:opacity-50 inline-flex items-center"
+            >
+              <Check className="w-3.5 h-3.5 mr-1.5" />
+              <span>{savingContact ? t.sendingInviteBtn : t.contactSaveBtn}</span>
+            </button>
+          </div>
+        </div>
+      </Modal>
 
       {/* Invite success modal */}
       <InviteSuccessModal modal={inviteModal} onClose={() => setInviteModal(null)} />

@@ -9,6 +9,7 @@ import { pb } from './src/db/service';
 import {
   getAllGuests,
   getGuestByToken,
+  getGuestByCode,
   addGuest,
   updateGuest,
   deleteGuest,
@@ -341,6 +342,18 @@ async function requestHandler(req: http.IncomingMessage, res: http.ServerRespons
       }
 
       // ─── Guests ───────────────────────────────────────
+      // Resolve a 4-digit reservation code to the guest's magic token (guest
+      // portal login). Tightly rate limited: the code space is only 10k.
+      if (pathname === '/api/guest/resolve' && method === 'GET') {
+        const code = (url.searchParams.get('code') || '').trim();
+        if (!/^\d{4}$/.test(code)) return sendJson(res, 400, { error: 'INVALID_CODE', message: 'Reservation code must be 4 digits' });
+        const attempt = rateLimit(`code-resolve:${ip}`, 10, 60_000);
+        if (!attempt.allowed) return sendJson(res, 429, { error: 'Too many attempts. Try again later.' });
+        const guest = await getGuestByCode(code);
+        if (!guest) return sendJson(res, 404, { error: 'NOT_FOUND', message: 'Reservation code not found' });
+        return sendJson(res, 200, { magic_token: guest.magic_token });
+      }
+
       if (pathname === '/api/guests') {
         requireAdmin();
         if (method === 'GET') {

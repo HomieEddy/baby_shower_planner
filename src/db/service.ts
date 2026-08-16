@@ -292,6 +292,13 @@ export async function getGuestByToken(token: string): Promise<Guest | undefined>
   } catch { return undefined; }
 }
 
+export async function getGuestByCode(code: string): Promise<Guest | undefined> {
+  try {
+    const r = await pb.collection('guests').getFirstListItem(`code="${escFilter(code)}"`);
+    return fromRecord<Guest>(r);
+  } catch { return undefined; }
+}
+
 export async function getGuestById(id: string): Promise<Guest> {
   const r = await pb.collection('guests').getOne(id);
   return fromRecord<Guest>(r);
