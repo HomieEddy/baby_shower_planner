@@ -88,6 +88,8 @@ export const EventDetailsCard = ({
   const parents = (settings.parentsNames || settings.babyName || '').trim();
   const parentsSplit = splitParents(parents);
   const dateParts = deriveDateParts(settings.date, language);
+  // Only the start of a range (e.g. "2:00 PM – 6:00 PM" → "2:00 PM").
+  const startTimeOnly = settings.time ? settings.time.split(/[-–—]/)[0].trim() : '';
 
   // One orchestrated entrance: sections stagger in on first view (also fires
   // when the RSVP carousel's event tab slides into view). Reduced motion
@@ -259,7 +261,7 @@ export const EventDetailsCard = ({
                       </div>
                       <div className="flex-1 py-1.5 text-center border-y-2" style={{ borderColor: 'var(--accent)' }}>
                         <span className="text-base sm:text-lg font-bold tracking-wide whitespace-nowrap" style={{ ...ink, ...headingFont }}>
-                          {settings.time}
+                          {startTimeOnly}
                         </span>
                       </div>
                     </div>
@@ -271,9 +273,9 @@ export const EventDetailsCard = ({
                       <span className="text-lg sm:text-xl font-bold" style={{ ...ink, ...headingFont }}>
                         {settings.date}
                       </span>
-                      {settings.time ? (
+                      {startTimeOnly ? (
                         <span className="text-lg sm:text-xl font-bold" style={{ ...ink, ...headingFont }}>
-                          {settings.time}
+                          {startTimeOnly}
                         </span>
                       ) : null}
                     </div>
