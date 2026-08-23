@@ -111,8 +111,10 @@ async function requestHandler(req: http.IncomingMessage, res: http.ServerRespons
       return sendJson(res, 404, { error: 'Endpoint not found' });
     } catch (err: any) {
       if (err instanceof HttpError) {
+        console.warn(`[API] ${err.status} ${method} ${pathname}: ${err.message}`);
         return sendJson(res, err.status, { error: err.message });
       }
+      console.error(`[API] 500 ${method} ${pathname}:`, err);
       return sendJson(res, 500, { error: err.message || 'Server internal error' });
     }
   }

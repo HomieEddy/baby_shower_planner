@@ -5,7 +5,7 @@ import { pb } from './client';
 
 // ─── Init / Auth ───────────────────────────────────────────────────
 
-export async function initPocketBase() {
+async function authSuperuser() {
   const email = process.env.PB_ADMIN_EMAIL || 'admin@babyshower.com';
   const password = process.env.PB_ADMIN_PASSWORD || 'changeme123';
   if (!process.env.PB_ADMIN_EMAIL || !process.env.PB_ADMIN_PASSWORD) {
@@ -17,6 +17,17 @@ export async function initPocketBase() {
     await pb.admins.create({ email, password, passwordConfirm: password });
     await pb.admins.authWithPassword(email, password);
   }
+}
+
+export async function initPocketBase() {
+  await authSuperuser();
+  // Superuser tokens expire (and any PocketBase restart invalidates them); the
+  // SDK never auto-refreshes admins, so a stale token makes every admin call
+  // fail with "Only superusers can perform this action." Re-auth on a short
+  // interval to keep the token fresh. ponytail: one login per 15min is cheap.
+  setInterval(() => {
+    authSuperuser().catch((err) => console.error('[PB] Superuser re-auth failed:', err));
+  }, 15 * 60 * 1000).unref();
   await ensureCollections();
   // Drop collections from features that were removed (e.g. baby predictions)
   // so their data doesn't linger in existing databases.
