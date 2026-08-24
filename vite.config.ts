@@ -27,6 +27,11 @@ export default defineConfig(() => {
         workbox: {
           navigateFallback: '/index.html',
           globPatterns: ['**/*.{js,css,html,svg,woff2}'],
+          // The 3D view (three.js stack) is lazy-loaded on first use; keep it
+          // out of the install precache so PWA visitors don't download ~250KB
+          // (gzip) they may never open. It still loads on demand + gets cached
+          // by the browser's HTTP cache when the user actually toggles 3D.
+          globIgnores: ['**/FloorPlan3D-*.js'],
           runtimeCaching: [
             // API calls: network first, fall back to cache offline
             {

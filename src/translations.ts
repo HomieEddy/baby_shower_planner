@@ -314,6 +314,7 @@ export interface Translations {
   finderLegendYourSeat: string;
   finderLegendYourTable: string;
   finderMapHint: string;
+  finderMap3dHint: string;
   finderMapLive: string;
   finderNearEntrance: string;
   finderNoMatch: string;
@@ -784,6 +785,10 @@ export interface Translations {
   venueNameLabel2: string;
   venueSlideshowBtn: string;
   venueTitle: string;
+  view2d: string;
+  view3d: string;
+  view3dUnavailable: string;
+  view3dUnsupported: string;
   viewBtn: string;
   viewEventDetailsBtn: string;
   viewRsvpTitle: string;
@@ -1221,6 +1226,7 @@ export const translations: Record<Language, Translations> = {
     finderLegendYourSeat: "Your seat",
     finderLegendYourTable: "Your table",
     finderMapHint: "Watch the pulsing highlight to find your table",
+    finderMap3dHint: "Orbit the map to find your glowing table & green seat",
     finderMapLive: "Live map",
     finderNearEntrance: "Located near the Main Entrance & Photo Backdrop area",
     finderNoMatch: "No matching party found. Check the 4-digit code on your invitation.",
@@ -1698,6 +1704,10 @@ export const translations: Record<Language, Translations> = {
     venueNameLabel2: "Venue / Location Name",
     venueSlideshowBtn: "Venue Slideshow Mode",
     venueTitle: "Your Table & Seat",
+    view2d: "2D View",
+    view3d: "3D View",
+    view3dUnavailable: "3D view failed to load. Please re-open the map.",
+    view3dUnsupported: "3D view is not supported on this device/browser. Using the 2D layout instead.",
     viewBtn: "View",
     viewEventDetailsBtn: "View Event Details & Google Maps",
     viewRsvpTitle: "Test / View RSVP Form",
@@ -2126,6 +2136,7 @@ export const translations: Record<Language, Translations> = {
     finderLegendYourSeat: "Votre place",
     finderLegendYourTable: "Votre table",
     finderMapHint: "Suivez le halo pulsant pour trouver votre table",
+    finderMap3dHint: "Faites pivoter la vue 3D pour trouver votre table lumineuse & votre place verte",
     finderMapLive: "Carte en direct",
     finderNearEntrance: "Situé près de l'entrée principale et du décor photo",
     finderNoMatch: "Aucun groupe trouvé. Vérifiez le code à 4 chiffres sur votre invitation.",
@@ -2603,6 +2614,10 @@ export const translations: Record<Language, Translations> = {
     venueNameLabel2: "Nom du lieu",
     venueSlideshowBtn: "Mode diaporama",
     venueTitle: "Votre table & votre place",
+    view2d: "Vue 2D",
+    view3d: "Vue 3D",
+    view3dUnavailable: "Impossible de charger la vue 3D. Veuillez rouvrir le plan.",
+    view3dUnsupported: "Vue 3D non prise en charge sur cet appareil/navigateur. Utilisation du plan 2D à la place.",
     viewBtn: "Voir",
     viewEventDetailsBtn: "Voir les détails & Google Maps",
     viewRsvpTitle: "Tester / Voir le formulaire RSVP",
