@@ -784,6 +784,10 @@ export interface Translations {
   venueNameLabel2: string;
   venueSlideshowBtn: string;
   venueTitle: string;
+  view2d: string;
+  view3d: string;
+  view3dUnavailable: string;
+  view3dUnsupported: string;
   viewBtn: string;
   viewEventDetailsBtn: string;
   viewRsvpTitle: string;
@@ -1698,6 +1702,10 @@ export const translations: Record<Language, Translations> = {
     venueNameLabel2: "Venue / Location Name",
     venueSlideshowBtn: "Venue Slideshow Mode",
     venueTitle: "Your Table & Seat",
+    view2d: "2D View",
+    view3d: "3D View",
+    view3dUnavailable: "3D view failed to load. Please re-open the map.",
+    view3dUnsupported: "3D view is not supported on this device/browser. Using the 2D layout instead.",
     viewBtn: "View",
     viewEventDetailsBtn: "View Event Details & Google Maps",
     viewRsvpTitle: "Test / View RSVP Form",
@@ -2603,6 +2611,10 @@ export const translations: Record<Language, Translations> = {
     venueNameLabel2: "Nom du lieu",
     venueSlideshowBtn: "Mode diaporama",
     venueTitle: "Votre table & votre place",
+    view2d: "Vue 2D",
+    view3d: "Vue 3D",
+    view3dUnavailable: "Impossible de charger la vue 3D. Veuillez rouvrir le plan.",
+    view3dUnsupported: "Vue 3D non prise en charge sur cet appareil/navigateur. Utilisation du plan 2D à la place.",
     viewBtn: "Voir",
     viewEventDetailsBtn: "Voir les détails & Google Maps",
     viewRsvpTitle: "Tester / Voir le formulaire RSVP",
