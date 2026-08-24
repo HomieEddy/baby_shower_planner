@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo, useRef } from 'react';
+import React, { useState, useEffect, useMemo, useRef, lazy, Suspense } from 'react';
 import {
   Guest,
   FloorMapData,
@@ -11,6 +11,7 @@ import { UnassignedGuestsSidebar } from './UnassignedGuestsSidebar';
 import { SmartSuggestionsModal } from './SmartSuggestionsModal';
 import { HoverTooltip } from './HoverTooltip';
 import { FloorPlanEditor } from './FloorPlanEditor';
+import { ViewModeToggle, ViewMode } from '../shared/ViewModeToggle';
 import { motion, AnimatePresence } from 'motion/react';
 import { Modal } from '../shared/Modal';
 import { useSettingsStore } from '../../stores/settingsStore';
@@ -44,6 +45,8 @@ import { getGuestPartySize, getTableOccupiedSeats, getTableSeatedPersonNames, ge
 import { renderCustomLandmarkShape } from './renderCustomLandmarkShape';
 import { renderTableBody } from './venueShapes';
 import { useAppStore } from '../../stores/appStore';
+
+const FloorPlan3D = lazy(() => import('./FloorPlan3D').then((m) => ({ default: m.FloorPlan3D })));
 import { useT } from '../shared/i18n';
 
 export const FloorPlanPage = () => {
@@ -59,6 +62,9 @@ export const FloorPlanPage = () => {
 
   // Full-Screen Editor Modal State
   const [isEditorModalOpen, setIsEditorModalOpen] = useState(false);
+
+  // 2D / 3D rendering toggle
+  const [viewMode, setViewMode] = useState<ViewMode>('2d');
 
   // Unassigned Guests Sidebar State
   const [selectedUnassignedGuest, setSelectedUnassignedGuest] = useState<Guest | null>(null);
@@ -424,7 +430,7 @@ export const FloorPlanPage = () => {
     y: number;
   } | null>(null);
 
-  const handleTableHover = (e: any, table: TableElement, guestsList: Guest[]) => {
+  const handleTableHover = (table: TableElement, guestsList: Guest[], clientX: number, clientY: number) => {
     const occupiedSeats = getTableOccupiedSeats(table, guestsList);
     const seatedPersonNames = getTableSeatedPersonNames(table, guestsList);
 
@@ -435,13 +441,12 @@ export const FloorPlanPage = () => {
         `Seated (${seatedPersonNames.length}): ${seatedPersonNames.length > 0 ? seatedPersonNames.join(', ') : 'No guests assigned yet'}`,
         `Capacity: ${table.capacity} seats (${Math.max(0, table.capacity - occupiedSeats)} available)`,
       ],
-      x: e.evt.clientX,
-      y: e.evt.clientY,
+      x: clientX,
+      y: clientY,
     });
   };
 
-  const handleSeatHover = (e: any, table: TableElement, seatIndex: number, guestsList: Guest[]) => {
-    e.cancelBubble = true;
+  const handleSeatHover = (table: TableElement, seatIndex: number, guestsList: Guest[], clientX: number, clientY: number) => {
     const info = getSeatOccupantInfo(table, seatIndex, guestsList);
 
     if (info.isOccupied) {
@@ -479,8 +484,8 @@ export const FloorPlanPage = () => {
           ? `Groupe : ${info.partyName}`
           : `Party: ${info.partyName}`,
         details,
-        x: e.evt.clientX,
-        y: e.evt.clientY,
+        x: clientX,
+        y: clientY,
       });
     } else {
       setHoverTooltip({
@@ -496,13 +501,13 @@ export const FloorPlanPage = () => {
             ? `Statut : Libre / Non assigné`
             : `Status: Unassigned / Available Chair`,
         ],
-        x: e.evt.clientX,
-        y: e.evt.clientY,
+        x: clientX,
+        y: clientY,
       });
     }
   };
 
-  const handleLandmarkHover = (e: any, landmark: LandmarkElement) => {
+  const handleLandmarkHover = (landmark: LandmarkElement, clientX: number, clientY: number) => {
     setHoverTooltip({
       title: landmark.name,
       subtitle: `Venue Feature / Landmark`,
@@ -510,8 +515,8 @@ export const FloorPlanPage = () => {
         `Type: ${landmark.type.toUpperCase()}`,
         `Dimensions: ${landmark.width} × ${landmark.height} px`,
       ],
-      x: e.evt.clientX,
-      y: e.evt.clientY,
+      x: clientX,
+      y: clientY,
     });
   };
 
@@ -963,13 +968,16 @@ export const FloorPlanPage = () => {
                   </div>
                 </div>
 
-                <button
-                  onClick={handleOpenEditor}
-                  className="px-3 py-1.5 rounded-xl bg-[#8B735B] hover:bg-[#705C47] text-white text-xs font-bold transition-all flex items-center gap-1.5 shadow-sm shrink-0"
-                  title={t.btnFullscreenEditor}
-                >
-                  <Maximize2 className="w-3.5 h-3.5" /> <span className="hidden sm:inline">{t.btnFullscreenEditor}</span>
-                </button>
+                <div className="flex items-center gap-2 shrink-0">
+                  <ViewModeToggle value={viewMode} onChange={setViewMode} />
+                  <button
+                    onClick={handleOpenEditor}
+                    className="px-3 py-1.5 rounded-xl bg-[#8B735B] hover:bg-[#705C47] text-white text-xs font-bold transition-all flex items-center gap-1.5 shadow-sm shrink-0"
+                    title={t.btnFullscreenEditor}
+                  >
+                    <Maximize2 className="w-3.5 h-3.5" /> <span className="hidden sm:inline">{t.btnFullscreenEditor}</span>
+                  </button>
+                </div>
               </div>
 
               {/* Table Status Visualization Filter Bar */}
@@ -1030,8 +1038,50 @@ export const FloorPlanPage = () => {
               </div>
 
               {/* Canvas Outer Wrapper */}
-              <div className="w-full overflow-x-auto flex justify-center bg-[#FAF6F0] p-3 sm:p-4 rounded-2xl border border-[#CBAE94]/40 min-h-[420px] sm:min-h-[500px]">
-                {floorMap && (
+              <div className="w-full bg-[#FAF6F0] p-3 sm:p-4 rounded-2xl border border-[#CBAE94]/40 min-h-[420px] sm:min-h-[500px]">
+                {floorMap &&
+                  (viewMode === '3d' ? (
+                    <Suspense
+                      fallback={
+                        <div className="w-full h-[420px] sm:h-[500px] flex items-center justify-center text-xs font-mono font-bold text-[#8B735B]">
+                          3D…
+                        </div>
+                      }
+                    >
+                      <FloorPlan3D
+                        className="w-full h-[420px] sm:h-[500px]"
+                        floorMap={floorMap}
+                        guests={guests}
+                        selectedGuest={selectedUnassignedGuest}
+                        onTableHover={(table, x, y) => handleTableHover(table, guests, x, y)}
+                        onSeatHover={(table, idx, x, y) => handleSeatHover(table, idx, guests, x, y)}
+                        onLandmarkHover={(lm, x, y) => handleLandmarkHover(lm, x, y)}
+                        onTableClick={(table) => {
+                          if (!selectedUnassignedGuest) return;
+                          const partyNeeded = getGuestPartySize(selectedUnassignedGuest);
+                          const freeSeats = table.capacity - getTableOccupiedSeats(table, guests);
+                          if (freeSeats >= partyNeeded) {
+                            void handleMainAssignGuest(selectedUnassignedGuest.id, table.id).then(
+                              (ok) => {
+                                if (ok) setSelectedUnassignedGuest(null);
+                              }
+                            );
+                          } else {
+                            setNotification(
+                              t.fpNoFitTableToast
+                                .replace('{{table}}', table.name)
+                                .replace('{{free}}', String(freeSeats))
+                                .replace('{{guest}}', selectedUnassignedGuest.name)
+                                .replace('{{needed}}', String(partyNeeded))
+                            );
+                            setTimeout(() => setNotification(null), 4000);
+                          }
+                        }}
+                        onLeave={() => setHoverTooltip(null)}
+                      />
+                    </Suspense>
+                  ) : (
+                    <div className="w-full overflow-x-auto flex justify-center">
                   <Stage
                     ref={stageRef}
                     width={floorMap.canvasWidth * canvasScale}
@@ -1086,8 +1136,8 @@ export const FloorPlanPage = () => {
                           height={landmark.height}
                           rotation={landmark.rotation || 0}
                           draggable={false}
-                          onMouseEnter={(e) => handleLandmarkHover(e, landmark)}
-                          onMouseMove={(e) => handleLandmarkHover(e, landmark)}
+                          onMouseEnter={(e) => handleLandmarkHover(landmark, e.evt.clientX, e.evt.clientY)}
+                          onMouseMove={(e) => handleLandmarkHover(landmark, e.evt.clientX, e.evt.clientY)}
                           onMouseLeave={() => setHoverTooltip(null)}
                         >
                           {renderCustomLandmarkShape(landmark, false)}
@@ -1177,8 +1227,8 @@ export const FloorPlanPage = () => {
                                 }
                               }
                             }}
-                            onMouseEnter={(e) => handleTableHover(e, table, guests)}
-                            onMouseMove={(e) => handleTableHover(e, table, guests)}
+                            onMouseEnter={(e) => handleTableHover(table, guests, e.evt.clientX, e.evt.clientY)}
+                            onMouseMove={(e) => handleTableHover(table, guests, e.evt.clientX, e.evt.clientY)}
                             onMouseLeave={() => setHoverTooltip(null)}
                           >
                             {/* Fit Badge Label or Status Pill above table */}
@@ -1250,8 +1300,8 @@ export const FloorPlanPage = () => {
                                   fill={seatFill}
                                   stroke={seatStroke}
                                   strokeWidth={2}
-                                  onMouseEnter={(e) => handleSeatHover(e, table, idx, guests)}
-                                  onMouseMove={(e) => handleSeatHover(e, table, idx, guests)}
+                                  onMouseEnter={(e) => handleSeatHover(table, idx, guests, e.evt.clientX, e.evt.clientY)}
+                                  onMouseMove={(e) => handleSeatHover(table, idx, guests, e.evt.clientX, e.evt.clientY)}
                                   onMouseLeave={() => setHoverTooltip(null)}
                                 />
                               );
@@ -1288,6 +1338,8 @@ export const FloorPlanPage = () => {
                       })}
                     </Layer>
                   </Stage>
+                    </div>
+                  )
                 )}
               </div>
             </div>

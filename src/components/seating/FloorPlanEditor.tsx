@@ -1,3 +1,4 @@
+import { lazy, Suspense, useState } from 'react';
 import {
   Stage,
   Layer,
@@ -36,8 +37,11 @@ import { TextInput, Select } from '../shared/ui';
 import { getGuestPartySize, getTableOccupiedSeats } from './floorPlanHelpers';
 import { renderCustomLandmarkShape } from './renderCustomLandmarkShape';
 import { useFloorPlanEditor } from './floorplanHooks';
+import { ViewModeToggle, ViewMode } from '../shared/ViewModeToggle';
 import { useT } from '../shared/i18n';
 import { Language } from '../../types';
+
+const FloorPlan3D = lazy(() => import('./FloorPlan3D').then((m) => ({ default: m.FloorPlan3D })));
 
 export interface HoverTooltip {
   title: string;
@@ -57,9 +61,9 @@ interface FloorPlanEditorProps {
   onCancel: () => void;
   hoverTooltip: HoverTooltip | null;
   setHoverTooltip: (t: HoverTooltip | null) => void;
-  handleTableHover: (e: any, table: TableElement, guestsList: Guest[]) => void;
-  handleSeatHover: (e: any, table: TableElement, seatIndex: number, guestsList: Guest[]) => void;
-  handleLandmarkHover: (e: any, landmark: LandmarkElement) => void;
+  handleTableHover: (table: TableElement, guestsList: Guest[], clientX: number, clientY: number) => void;
+  handleSeatHover: (table: TableElement, seatIndex: number, guestsList: Guest[], clientX: number, clientY: number) => void;
+  handleLandmarkHover: (landmark: LandmarkElement, clientX: number, clientY: number) => void;
 }
 
 export const FloorPlanEditor = ({
@@ -77,6 +81,7 @@ export const FloorPlanEditor = ({
   handleLandmarkHover,
 }: FloorPlanEditorProps) => {
   const t = useT();
+  const [viewMode, setViewMode] = useState<ViewMode>('2d');
   const {
     draftFloorMap,
     setDraftFloorMap,
@@ -430,15 +435,48 @@ export const FloorPlanEditor = ({
           ref={modalContainerRef}
           className="lg:col-span-6 bg-[#FFFDF9] rounded-3xl p-3 lg:p-4 shadow-xl border-2 border-[#CBAE94] flex flex-col h-[70vh] lg:h-full overflow-hidden order-1 lg:order-2"
         >
-          <div className="flex items-center justify-between mb-2">
+          <div className="flex items-center justify-between mb-2 gap-2">
             <span className="text-xs font-bold text-[#8B735B] flex items-center gap-1">
               <Layers className="w-3.5 h-3.5" /> {t.fullScreenCanvasLabel}
             </span>
-            <span className="text-[11px] font-mono text-[#5D5449]">
-              {t.liveDraftStageLabel}
-            </span>
+            <div className="flex items-center gap-2">
+              <ViewModeToggle value={viewMode} onChange={setViewMode} />
+              <span className="hidden md:inline text-[11px] font-mono text-[#5D5449]">
+                {t.liveDraftStageLabel}
+              </span>
+            </div>
           </div>
 
+          {viewMode === '3d' ? (
+            <Suspense
+              fallback={
+                <div className="flex-1 w-full flex items-center justify-center text-xs font-mono font-bold text-[#8B735B]">
+                  3D…
+                </div>
+              }
+            >
+              <div className="flex-1 w-full overflow-hidden bg-[#FAF6F0] p-3 rounded-2xl border border-[#CBAE94]/40 min-h-[300px]">
+                <FloorPlan3D
+                  className="w-full h-full"
+                  floorMap={draftFloorMap}
+                  guests={draftGuests}
+                  selectedGuest={selectedGuestForSeating}
+                  onTableHover={(table, x, y) => handleTableHover(table, draftGuests, x, y)}
+                  onSeatHover={(table, idx, x, y) => handleSeatHover(table, idx, draftGuests, x, y)}
+                  onLandmarkHover={(lm, x, y) => handleLandmarkHover(lm, x, y)}
+                  onTableClick={(table) => {
+                    if (selectedGuestForSeating) {
+                      handleDraftAssignGuest(selectedGuestForSeating.id, table.id);
+                    } else {
+                      setSelectedId(table.id);
+                      setSelectedType('table');
+                    }
+                  }}
+                  onLeave={() => setHoverTooltip(null)}
+                />
+              </div>
+            </Suspense>
+          ) : (
           <div className="flex-1 w-full overflow-auto flex justify-center items-center bg-[#FAF6F0] p-3 rounded-2xl border border-[#CBAE94]/40">
             <Stage
               ref={modalStageRef}
@@ -504,8 +542,8 @@ export const FloorPlanEditor = ({
                         setSelectedId(landmark.id);
                         setSelectedType('landmark');
                       }}
-                      onMouseEnter={(e) => handleLandmarkHover(e, landmark)}
-                      onMouseMove={(e) => handleLandmarkHover(e, landmark)}
+                      onMouseEnter={(e) => handleLandmarkHover(landmark, e.evt.clientX, e.evt.clientY)}
+                      onMouseMove={(e) => handleLandmarkHover(landmark, e.evt.clientX, e.evt.clientY)}
                       onMouseLeave={() => setHoverTooltip(null)}
                     >
                       {renderCustomLandmarkShape(landmark, isSelected)}
@@ -563,8 +601,8 @@ export const FloorPlanEditor = ({
                           setSelectedType('table');
                         }
                       }}
-                      onMouseEnter={(e) => handleTableHover(e, table, draftGuests)}
-                      onMouseMove={(e) => handleTableHover(e, table, draftGuests)}
+                      onMouseEnter={(e) => handleTableHover(table, draftGuests, e.evt.clientX, e.evt.clientY)}
+                      onMouseMove={(e) => handleTableHover(table, draftGuests, e.evt.clientX, e.evt.clientY)}
                       onMouseLeave={() => setHoverTooltip(null)}
                     >
                       {/* Seat Circles around Table */}
@@ -585,8 +623,8 @@ export const FloorPlanEditor = ({
                             fill={isOccupied ? '#8B735B' : '#FFFDF9'}
                             stroke="#CBAE94"
                             strokeWidth={2}
-                            onMouseEnter={(e) => handleSeatHover(e, table, idx, draftGuests)}
-                            onMouseMove={(e) => handleSeatHover(e, table, idx, draftGuests)}
+                            onMouseEnter={(e) => handleSeatHover(table, idx, draftGuests, e.evt.clientX, e.evt.clientY)}
+                            onMouseMove={(e) => handleSeatHover(table, idx, draftGuests, e.evt.clientX, e.evt.clientY)}
                             onMouseLeave={() => setHoverTooltip(null)}
                           />
                         );
@@ -668,6 +706,7 @@ export const FloorPlanEditor = ({
               </Layer>
             </Stage>
           </div>
+          )}
         </div>
 
         {/* Right Inspector Column (col-3) */}
