@@ -102,19 +102,25 @@ const useHover = (handlers: PointerHandlers) => {
   const { onOver, onMove, onOut, onClick } = handlers;
   return {
     onPointerOver: (e: ThreeEvent<PointerEvent>) => {
+      e.stopPropagation();
       setHovered(true);
       onOver?.(e);
     },
     onPointerMove: (e: ThreeEvent<PointerEvent>) => {
+      e.stopPropagation();
       if (!hovered) setHovered(true);
       onMove?.(e);
     },
     onPointerOut: (e: ThreeEvent<PointerEvent>) => {
+      e.stopPropagation();
       setHovered(false);
       onOut?.(e);
       handlers.onLeave?.();
     },
-    onClick,
+    onClick: (e: ThreeEvent<PointerEvent>) => {
+      e.stopPropagation();
+      onClick?.(e);
+    },
   };
 };
 

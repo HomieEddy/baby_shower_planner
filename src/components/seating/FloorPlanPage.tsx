@@ -1300,8 +1300,14 @@ export const FloorPlanPage = () => {
                                   fill={seatFill}
                                   stroke={seatStroke}
                                   strokeWidth={2}
-                                  onMouseEnter={(e) => handleSeatHover(table, idx, guests, e.evt.clientX, e.evt.clientY)}
-                                  onMouseMove={(e) => handleSeatHover(table, idx, guests, e.evt.clientX, e.evt.clientY)}
+                                  onMouseEnter={(e) => {
+                                    e.cancelBubble = true;
+                                    handleSeatHover(table, idx, guests, e.evt.clientX, e.evt.clientY);
+                                  }}
+                                  onMouseMove={(e) => {
+                                    e.cancelBubble = true;
+                                    handleSeatHover(table, idx, guests, e.evt.clientX, e.evt.clientY);
+                                  }}
                                   onMouseLeave={() => setHoverTooltip(null)}
                                 />
                               );

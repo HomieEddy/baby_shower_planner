@@ -623,8 +623,14 @@ export const FloorPlanEditor = ({
                             fill={isOccupied ? '#8B735B' : '#FFFDF9'}
                             stroke="#CBAE94"
                             strokeWidth={2}
-                            onMouseEnter={(e) => handleSeatHover(table, idx, draftGuests, e.evt.clientX, e.evt.clientY)}
-                            onMouseMove={(e) => handleSeatHover(table, idx, draftGuests, e.evt.clientX, e.evt.clientY)}
+                            onMouseEnter={(e) => {
+                              e.cancelBubble = true;
+                              handleSeatHover(table, idx, draftGuests, e.evt.clientX, e.evt.clientY);
+                            }}
+                            onMouseMove={(e) => {
+                              e.cancelBubble = true;
+                              handleSeatHover(table, idx, draftGuests, e.evt.clientX, e.evt.clientY);
+                            }}
                             onMouseLeave={() => setHoverTooltip(null)}
                           />
                         );
