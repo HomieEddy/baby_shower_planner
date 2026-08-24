@@ -314,6 +314,7 @@ export interface Translations {
   finderLegendYourSeat: string;
   finderLegendYourTable: string;
   finderMapHint: string;
+  finderMap3dHint: string;
   finderMapLive: string;
   finderNearEntrance: string;
   finderNoMatch: string;
@@ -1225,6 +1226,7 @@ export const translations: Record<Language, Translations> = {
     finderLegendYourSeat: "Your seat",
     finderLegendYourTable: "Your table",
     finderMapHint: "Watch the pulsing highlight to find your table",
+    finderMap3dHint: "Orbit the map to find your glowing table & green seat",
     finderMapLive: "Live map",
     finderNearEntrance: "Located near the Main Entrance & Photo Backdrop area",
     finderNoMatch: "No matching party found. Check the 4-digit code on your invitation.",
@@ -2134,6 +2136,7 @@ export const translations: Record<Language, Translations> = {
     finderLegendYourSeat: "Votre place",
     finderLegendYourTable: "Votre table",
     finderMapHint: "Suivez le halo pulsant pour trouver votre table",
+    finderMap3dHint: "Faites pivoter la vue 3D pour trouver votre table lumineuse & votre place verte",
     finderMapLive: "Carte en direct",
     finderNearEntrance: "Situé près de l'entrée principale et du décor photo",
     finderNoMatch: "Aucun groupe trouvé. Vérifiez le code à 4 chiffres sur votre invitation.",

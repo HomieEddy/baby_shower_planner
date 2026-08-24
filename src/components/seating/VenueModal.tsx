@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { lazy, Suspense, useEffect, useMemo, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'motion/react';
 import { Stage, Layer, Group, Circle, Text } from 'react-konva';
@@ -6,6 +6,7 @@ import { renderTableBody, renderLandmark } from './venueShapes';
 import { MapPin, Users, Utensils, Info, DoorOpen, Sparkles, CheckCircle2, X } from 'lucide-react';
 import { Guest, FloorMapData } from '../../types';
 import { useT } from '../shared/i18n';
+import { ViewModeToggle, ViewMode } from '../shared/ViewModeToggle';
 import {
   getGuestPartySize,
   getAttendeeSeatIndex,
@@ -13,6 +14,8 @@ import {
   getTableOccupiedSeats,
 } from './floorPlanHelpers';
 import { FinderSelection } from './GuestFinderPage';
+
+const FloorPlan3D = lazy(() => import('./FloorPlan3D').then((m) => ({ default: m.FloorPlan3D })));
 
 interface VenueModalProps {
   open: boolean;
@@ -24,6 +27,7 @@ interface VenueModalProps {
 
 export const VenueModal = ({ open, selected, floorMap, roster, onClose }: VenueModalProps) => {
   const t = useT();
+  const [viewMode, setViewMode] = useState<ViewMode>('2d');
   const [mapWidth, setMapWidth] = useState(440);
   const mapWrapRef = useRef<HTMLDivElement>(null);
 
@@ -227,15 +231,36 @@ export const VenueModal = ({ open, selected, floorMap, roster, onClose }: VenueM
                   transition={{ delay: 0.2, type: 'spring', stiffness: 220, damping: 24 }}
                   className="bg-[#FAF6F0] p-4 rounded-2xl border-2 border-[#CBAE94]"
                 >
-                  <p className="text-xs font-bold text-[#8B735B] text-center">
-                    {t.finderTableHighlight}
-                  </p>
+                  <div className="flex items-center justify-between mb-2 gap-2">
+                    <p className="text-xs font-bold text-[#8B735B]">
+                      {t.finderTableHighlight}
+                    </p>
+                    <ViewModeToggle value={viewMode} onChange={setViewMode} />
+                  </div>
                   <p className="text-[10px] font-mono text-[#CBAE94] text-center mb-2">
-                    {t.finderMapHint}
+                    {viewMode === '3d' ? t.finderMap3dHint : t.finderMapHint}
                   </p>
 
                   <div ref={mapWrapRef} className="relative w-full overflow-x-auto flex justify-center">
-                    {floorMap && (
+                    {floorMap &&
+                      (viewMode === '3d' ? (
+                        <Suspense
+                          fallback={
+                            <div className="w-full h-[360px] sm:h-[420px] flex items-center justify-center text-xs font-mono font-bold text-[#8B735B]">
+                              3D…
+                            </div>
+                          }
+                        >
+                          <FloorPlan3D
+                            className="w-full h-[360px] sm:h-[420px]"
+                            floorMap={floorMap}
+                            guests={roster}
+                            seating={false}
+                            targetTableId={guestAssignedTable.id}
+                            targetSeatIndex={seatIndex}
+                          />
+                        </Suspense>
+                      ) : (
                       <div
                         className="relative shrink-0"
                         style={{ width: mapWidth, height: mapHeight }}
@@ -380,6 +405,7 @@ export const VenueModal = ({ open, selected, floorMap, roster, onClose }: VenueM
                           </div>
                         )}
                       </div>
+                      )
                     )}
                   </div>
 
