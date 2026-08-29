@@ -108,6 +108,7 @@ export const FloorPlanEditor = ({
     handleUpdateDraftRoomSize,
     handleUpdateRoomShape,
     handleUpdateDiameter,
+    clampCirclePos,
     handleDraftAddTable,
     handleDraftAddLandmark,
     handleDraftTableDragEnd,
@@ -564,7 +565,7 @@ export const FloorPlanEditor = ({
                 }
               }}
             >
-              {/* Layer 1: Grid + Room Boundary */}
+              {/* Layer 1: Grid + Room Boundary — grid is clipped to circle when roomShape is circle */}
               <Layer>
                 {(draftFloorMap.roomShape ?? 'rectangle') === 'circle' ? (
                   <Circle
@@ -587,24 +588,54 @@ export const FloorPlanEditor = ({
                     cornerRadius={20}
                   />
                 )}
-                {Array.from({ length: Math.ceil(draftFloorMap.canvasWidth / 55) }).map((_, i) => (
-                  <Line
-                    key={`mvgrid-${i}`}
-                    points={[(i + 1) * 55, 20, (i + 1) * 55, draftFloorMap.canvasHeight - 20]}
-                    stroke="#EFE6DC"
-                    strokeWidth={1}
-                    dash={[2, 4]}
-                  />
-                ))}
-                {Array.from({ length: Math.ceil(draftFloorMap.canvasHeight / 55) }).map((_, i) => (
-                  <Line
-                    key={`mhgrid-${i}`}
-                    points={[20, (i + 1) * 55, draftFloorMap.canvasWidth - 20, (i + 1) * 55]}
-                    stroke="#EFE6DC"
-                    strokeWidth={1}
-                    dash={[2, 4]}
-                  />
-                ))}
+                {(draftFloorMap.roomShape ?? 'rectangle') === 'circle' ? (
+                  <Group
+                    clipFunc={(ctx: any) => {
+                      const r = Math.min(draftFloorMap.canvasWidth, draftFloorMap.canvasHeight) / 2 - 10;
+                      ctx.arc(draftFloorMap.canvasWidth / 2, draftFloorMap.canvasHeight / 2, r, 0, Math.PI * 2, false);
+                    }}
+                  >
+                    {Array.from({ length: Math.ceil(draftFloorMap.canvasWidth / 55) }).map((_, i) => (
+                      <Line
+                        key={`mvgrid-${i}`}
+                        points={[(i + 1) * 55, 20, (i + 1) * 55, draftFloorMap.canvasHeight - 20]}
+                        stroke="#EFE6DC"
+                        strokeWidth={1}
+                        dash={[2, 4]}
+                      />
+                    ))}
+                    {Array.from({ length: Math.ceil(draftFloorMap.canvasHeight / 55) }).map((_, i) => (
+                      <Line
+                        key={`mhgrid-${i}`}
+                        points={[20, (i + 1) * 55, draftFloorMap.canvasWidth - 20, (i + 1) * 55]}
+                        stroke="#EFE6DC"
+                        strokeWidth={1}
+                        dash={[2, 4]}
+                      />
+                    ))}
+                  </Group>
+                ) : (
+                  <>
+                    {Array.from({ length: Math.ceil(draftFloorMap.canvasWidth / 55) }).map((_, i) => (
+                      <Line
+                        key={`mvgrid-${i}`}
+                        points={[(i + 1) * 55, 20, (i + 1) * 55, draftFloorMap.canvasHeight - 20]}
+                        stroke="#EFE6DC"
+                        strokeWidth={1}
+                        dash={[2, 4]}
+                      />
+                    ))}
+                    {Array.from({ length: Math.ceil(draftFloorMap.canvasHeight / 55) }).map((_, i) => (
+                      <Line
+                        key={`mhgrid-${i}`}
+                        points={[20, (i + 1) * 55, draftFloorMap.canvasWidth - 20, (i + 1) * 55]}
+                        stroke="#EFE6DC"
+                        strokeWidth={1}
+                        dash={[2, 4]}
+                      />
+                    ))}
+                  </>
+                )}
               </Layer>
 
               {/* Layer 2: Landmarks */}
@@ -621,6 +652,10 @@ export const FloorPlanEditor = ({
                       height={landmark.height}
                       rotation={landmark.rotation || 0}
                       draggable
+                      dragBoundFunc={(pos: any) => {
+                        const p = clampCirclePos(pos.x, pos.y, landmark.width, landmark.height, draftFloorMap);
+                        return { x: p.x, y: p.y };
+                      }}
                       onDragEnd={(e) => handleDraftLandmarkDragEnd(landmark.id, e)}
                       onClick={() => {
                         setSelectedId(landmark.id);
@@ -676,6 +711,10 @@ export const FloorPlanEditor = ({
                       height={table.height}
                       rotation={table.rotation || 0}
                       draggable
+                      dragBoundFunc={(pos: any) => {
+                        const p = clampCirclePos(pos.x, pos.y, table.width, table.height, draftFloorMap);
+                        return { x: p.x, y: p.y };
+                      }}
                       onDragEnd={(e) => handleDraftTableDragEnd(table.id, e)}
                       onClick={() => {
                         if (selectedGuestForSeating) {

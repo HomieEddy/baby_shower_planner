@@ -1113,25 +1113,55 @@ export const FloorPlanPage = () => {
                         />
                       )}
 
-                      {/* Grid background lines */}
-                      {Array.from({ length: Math.ceil(floorMap.canvasWidth / 55) }).map((_, i) => (
-                        <Line
-                          key={`vgrid-${i}`}
-                          points={[(i + 1) * 55, 20, (i + 1) * 55, floorMap.canvasHeight - 20]}
-                          stroke="#EFE6DC"
-                          strokeWidth={1}
-                          dash={[2, 4]}
-                        />
-                      ))}
-                      {Array.from({ length: Math.ceil(floorMap.canvasHeight / 55) }).map((_, i) => (
-                        <Line
-                          key={`hgrid-${i}`}
-                          points={[20, (i + 1) * 55, floorMap.canvasWidth - 20, (i + 1) * 55]}
-                          stroke="#EFE6DC"
-                          strokeWidth={1}
-                          dash={[2, 4]}
-                        />
-                      ))}
+                      {/* Grid background lines — clipped to circle when needed */}
+                      {(floorMap.roomShape ?? 'rectangle') === 'circle' ? (
+                        <Group
+                          clipFunc={(ctx: any) => {
+                            const r = Math.min(floorMap.canvasWidth, floorMap.canvasHeight) / 2 - 10;
+                            ctx.arc(floorMap.canvasWidth / 2, floorMap.canvasHeight / 2, r, 0, Math.PI * 2, false);
+                          }}
+                        >
+                          {Array.from({ length: Math.ceil(floorMap.canvasWidth / 55) }).map((_, i) => (
+                            <Line
+                              key={`vgrid-${i}`}
+                              points={[(i + 1) * 55, 20, (i + 1) * 55, floorMap.canvasHeight - 20]}
+                              stroke="#EFE6DC"
+                              strokeWidth={1}
+                              dash={[2, 4]}
+                            />
+                          ))}
+                          {Array.from({ length: Math.ceil(floorMap.canvasHeight / 55) }).map((_, i) => (
+                            <Line
+                              key={`hgrid-${i}`}
+                              points={[20, (i + 1) * 55, floorMap.canvasWidth - 20, (i + 1) * 55]}
+                              stroke="#EFE6DC"
+                              strokeWidth={1}
+                              dash={[2, 4]}
+                            />
+                          ))}
+                        </Group>
+                      ) : (
+                        <>
+                          {Array.from({ length: Math.ceil(floorMap.canvasWidth / 55) }).map((_, i) => (
+                            <Line
+                              key={`vgrid-${i}`}
+                              points={[(i + 1) * 55, 20, (i + 1) * 55, floorMap.canvasHeight - 20]}
+                              stroke="#EFE6DC"
+                              strokeWidth={1}
+                              dash={[2, 4]}
+                            />
+                          ))}
+                          {Array.from({ length: Math.ceil(floorMap.canvasHeight / 55) }).map((_, i) => (
+                            <Line
+                              key={`hgrid-${i}`}
+                              points={[20, (i + 1) * 55, floorMap.canvasWidth - 20, (i + 1) * 55]}
+                              stroke="#EFE6DC"
+                              strokeWidth={1}
+                              dash={[2, 4]}
+                            />
+                          ))}
+                        </>
+                      )}
                     </Layer>
 
                     {/* Layer 2: Venue Landmarks */}

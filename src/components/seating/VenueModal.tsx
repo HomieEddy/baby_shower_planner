@@ -1,7 +1,7 @@
 import { lazy, Suspense, useEffect, useMemo, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'motion/react';
-import { Stage, Layer, Group, Circle, Text } from 'react-konva';
+import { Stage, Layer, Group, Circle, Rect, Text, Line } from 'react-konva';
 import { renderTableBody, renderLandmark } from './venueShapes';
 import { MapPin, Users, Utensils, Info, DoorOpen, Sparkles, CheckCircle2, X } from 'lucide-react';
 import { Guest, FloorMapData } from '../../types';
@@ -267,6 +267,77 @@ export const VenueModal = ({ open, selected, floorMap, roster, onClose }: VenueM
                       >
                         <Stage width={mapWidth} height={mapHeight} scaleX={scale} scaleY={scale}>
                           <Layer>
+                            {/* Room wall — rectangle or circle */}
+                            {(floorMap.roomShape ?? 'rectangle') === 'circle' ? (
+                              <Circle
+                                x={floorMap.canvasWidth / 2}
+                                y={floorMap.canvasHeight / 2}
+                                radius={Math.min(floorMap.canvasWidth, floorMap.canvasHeight) / 2 - 10}
+                                stroke="#CBAE94"
+                                strokeWidth={2}
+                                dash={[8, 8]}
+                              />
+                            ) : (
+                              <Rect
+                                x={10}
+                                y={10}
+                                width={floorMap.canvasWidth - 20}
+                                height={floorMap.canvasHeight - 20}
+                                stroke="#CBAE94"
+                                strokeWidth={2}
+                                dash={[8, 8]}
+                                cornerRadius={20}
+                              />
+                            )}
+                            {/* Grid — clipped to circle */}
+                            {(floorMap.roomShape ?? 'rectangle') === 'circle' ? (
+                              <Group
+                                clipFunc={(ctx: any) => {
+                                  const r = Math.min(floorMap.canvasWidth, floorMap.canvasHeight) / 2 - 10;
+                                  ctx.arc(floorMap.canvasWidth / 2, floorMap.canvasHeight / 2, r, 0, Math.PI * 2, false);
+                                }}
+                              >
+                                {Array.from({ length: Math.ceil(floorMap.canvasWidth / 55) }).map((_, i) => (
+                                  <Line
+                                    key={`vgrid-${i}`}
+                                    points={[(i + 1) * 55, 20, (i + 1) * 55, floorMap.canvasHeight - 20]}
+                                    stroke="#EFE6DC"
+                                    strokeWidth={1}
+                                    dash={[2, 4]}
+                                  />
+                                ))}
+                                {Array.from({ length: Math.ceil(floorMap.canvasHeight / 55) }).map((_, i) => (
+                                  <Line
+                                    key={`hgrid-${i}`}
+                                    points={[20, (i + 1) * 55, floorMap.canvasWidth - 20, (i + 1) * 55]}
+                                    stroke="#EFE6DC"
+                                    strokeWidth={1}
+                                    dash={[2, 4]}
+                                  />
+                                ))}
+                              </Group>
+                            ) : (
+                              <>
+                                {Array.from({ length: Math.ceil(floorMap.canvasWidth / 55) }).map((_, i) => (
+                                  <Line
+                                    key={`vgrid-${i}`}
+                                    points={[(i + 1) * 55, 20, (i + 1) * 55, floorMap.canvasHeight - 20]}
+                                    stroke="#EFE6DC"
+                                    strokeWidth={1}
+                                    dash={[2, 4]}
+                                  />
+                                ))}
+                                {Array.from({ length: Math.ceil(floorMap.canvasHeight / 55) }).map((_, i) => (
+                                  <Line
+                                    key={`hgrid-${i}`}
+                                    points={[20, (i + 1) * 55, floorMap.canvasWidth - 20, (i + 1) * 55]}
+                                    stroke="#EFE6DC"
+                                    strokeWidth={1}
+                                    dash={[2, 4]}
+                                  />
+                                ))}
+                              </>
+                            )}
                             {/* Landmarks — same premium rendering as the host editor */}
                             {floorMap.landmarks.map((l) => (
                               <Group key={`gmap-${l.id}`} x={l.x} y={l.y}>
