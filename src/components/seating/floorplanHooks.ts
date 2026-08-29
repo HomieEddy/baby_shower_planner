@@ -88,6 +88,22 @@ export function useFloorPlanEditor({ floorMap, guests, notify, onSave, onCancel 
     setIsDirty(true);
   };
 
+  const handleUpdateRoomShape = (shape: 'rectangle' | 'circle') => {
+    if (shape === 'circle') {
+      const d = Math.min(draftFloorMap.canvasWidth, draftFloorMap.canvasHeight);
+      setDraftFloorMap({ ...draftFloorMap, roomShape: 'circle', canvasWidth: d, canvasHeight: d });
+    } else {
+      setDraftFloorMap({ ...draftFloorMap, roomShape: 'rectangle' });
+    }
+    setIsDirty(true);
+  };
+
+  const handleUpdateDiameter = (diameter: number) => {
+    const d = Math.max(500, Math.min(3000, diameter));
+    setDraftFloorMap({ ...draftFloorMap, roomShape: 'circle', canvasWidth: d, canvasHeight: d });
+    setIsDirty(true);
+  };
+
   const handleDraftAddTable = (shape: 'circle' | 'rectangle') => {
     const tableCount = draftFloorMap.tables.length + 1;
     const newTable: TableElement = {
@@ -311,6 +327,8 @@ export function useFloorPlanEditor({ floorMap, guests, notify, onSave, onCancel 
     setGuestFilterQuery,
     draftSelectedTable,
     handleUpdateDraftRoomSize,
+    handleUpdateRoomShape,
+    handleUpdateDiameter,
     handleDraftAddTable,
     handleDraftAddLandmark,
     handleDraftTableDragEnd,
