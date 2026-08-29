@@ -81,6 +81,8 @@ export interface FloorMapData {
   id: string;
   canvasWidth: number;
   canvasHeight: number;
+  /** Venue room shape — 'circle' renders a round boundary; defaults to 'rectangle' for existing data */
+  roomShape?: 'rectangle' | 'circle';
   tables: TableElement[];
   landmarks: LandmarkElement[];
   updatedAt: string;
