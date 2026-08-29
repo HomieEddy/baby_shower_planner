@@ -88,10 +88,45 @@ export function useFloorPlanEditor({ floorMap, guests, notify, onSave, onCancel 
     setIsDirty(true);
   };
 
+  // ponytail: wall-clamp — keeps whole element inside circular wall using half-diagonal as safe radius
+  const clampCirclePos = (x: number, y: number, w: number, h: number, map: FloorMapData) => {
+    if ((map.roomShape ?? 'rectangle') !== 'circle') return { x, y };
+    const cx = map.canvasWidth / 2;
+    const cy = map.canvasHeight / 2;
+    const roomR = Math.min(map.canvasWidth, map.canvasHeight) / 2 - 10;
+    const elemR = Math.hypot(w, h) / 2 + 18; // +18 accounts for seat ring / shadow
+    const maxDist = Math.max(0, roomR - elemR);
+    const elemCx = x + w / 2;
+    const elemCy = y + h / 2;
+    const dx = elemCx - cx;
+    const dy = elemCy - cy;
+    const dist = Math.hypot(dx, dy);
+    if (dist <= maxDist) return { x, y };
+    if (dist === 0) return { x: cx - w / 2, y: cy - h / 2 };
+    const ratio = maxDist / dist;
+    return { x: cx + dx * ratio - w / 2, y: cy + dy * ratio - h / 2 };
+  };
+
+  const clampAllToCircle = (map: FloorMapData): FloorMapData => {
+    if ((map.roomShape ?? 'rectangle') !== 'circle') return map;
+    return {
+      ...map,
+      tables: map.tables.map((t) => {
+        const p = clampCirclePos(t.x, t.y, t.width, t.height, map);
+        return p.x === t.x && p.y === t.y ? t : { ...t, x: Math.round(p.x), y: Math.round(p.y) };
+      }),
+      landmarks: map.landmarks.map((l) => {
+        const p = clampCirclePos(l.x, l.y, l.width, l.height, map);
+        return p.x === l.x && p.y === l.y ? l : { ...l, x: Math.round(p.x), y: Math.round(p.y) };
+      }),
+    };
+  };
+
   const handleUpdateRoomShape = (shape: 'rectangle' | 'circle') => {
     if (shape === 'circle') {
       const d = Math.min(draftFloorMap.canvasWidth, draftFloorMap.canvasHeight);
-      setDraftFloorMap({ ...draftFloorMap, roomShape: 'circle', canvasWidth: d, canvasHeight: d });
+      const next: FloorMapData = { ...draftFloorMap, roomShape: 'circle', canvasWidth: d, canvasHeight: d };
+      setDraftFloorMap(clampAllToCircle(next));
     } else {
       setDraftFloorMap({ ...draftFloorMap, roomShape: 'rectangle' });
     }
@@ -100,20 +135,29 @@ export function useFloorPlanEditor({ floorMap, guests, notify, onSave, onCancel 
 
   const handleUpdateDiameter = (diameter: number) => {
     const d = Math.max(500, Math.min(3000, diameter));
-    setDraftFloorMap({ ...draftFloorMap, roomShape: 'circle', canvasWidth: d, canvasHeight: d });
+    const next: FloorMapData = { ...draftFloorMap, roomShape: 'circle', canvasWidth: d, canvasHeight: d };
+    setDraftFloorMap(clampAllToCircle(next));
     setIsDirty(true);
   };
 
   const handleDraftAddTable = (shape: 'circle' | 'rectangle') => {
     const tableCount = draftFloorMap.tables.length + 1;
+    const rawX = 180 + (tableCount * 25) % 250;
+    const rawY = 180 + (tableCount * 25) % 180;
+    const w = shape === 'circle' ? 120 : 180;
+    const h = shape === 'circle' ? 120 : 95;
+    const clamped = clampCirclePos(rawX, rawY, w, h, draftFloorMap);
+    // If circular room is small and table would still be outside center, place near center
+    const finalX = Math.round(clamped.x);
+    const finalY = Math.round(clamped.y);
     const newTable: TableElement = {
       id: `tbl-${Date.now()}`,
       name: `Table ${tableCount}`,
       shape,
-      x: 180 + (tableCount * 25) % 250,
-      y: 180 + (tableCount * 25) % 180,
-      width: shape === 'circle' ? 120 : 180,
-      height: shape === 'circle' ? 120 : 95,
+      x: finalX,
+      y: finalY,
+      width: w,
+      height: h,
       capacity: 8,
       assignedGuestIds: [],
       color: '#8B735B',
@@ -131,14 +175,17 @@ export function useFloorPlanEditor({ floorMap, guests, notify, onSave, onCancel 
     type: 'entrance' | 'stage' | 'gifts' | 'photobooth' | 'bar' | 'dessert' | 'dj' | 'food',
     name: string
   ) => {
+    const w = 150;
+    const h = 60;
+    const p = clampCirclePos(120, 120, w, h, draftFloorMap);
     const newLandmark: LandmarkElement = {
       id: `lm-${Date.now()}`,
       name,
       type,
-      x: 120,
-      y: 120,
-      width: 150,
-      height: 60,
+      x: Math.round(p.x),
+      y: Math.round(p.y),
+      width: w,
+      height: h,
     };
     setDraftFloorMap({
       ...draftFloorMap,
@@ -150,20 +197,32 @@ export function useFloorPlanEditor({ floorMap, guests, notify, onSave, onCancel 
   };
 
   const handleDraftTableDragEnd = (id: string, e: any) => {
-    const updatedTables = draftFloorMap.tables.map((t) =>
-      t.id === id
-        ? { ...t, x: Math.round(e.target.x()), y: Math.round(e.target.y()) }
-        : t
+    const rawX = Math.round(e.target.x());
+    const rawY = Math.round(e.target.y());
+    const t = draftFloorMap.tables.find((x) => x.id === id);
+    const clamped = t ? clampCirclePos(rawX, rawY, t.width, t.height, draftFloorMap) : { x: rawX, y: rawY };
+    if (t && (clamped.x !== rawX || clamped.y !== rawY)) {
+      e.target.x(clamped.x);
+      e.target.y(clamped.y);
+    }
+    const updatedTables = draftFloorMap.tables.map((tbl) =>
+      tbl.id === id ? { ...tbl, x: Math.round(clamped.x), y: Math.round(clamped.y) } : tbl
     );
     setDraftFloorMap({ ...draftFloorMap, tables: updatedTables });
     setIsDirty(true);
   };
 
   const handleDraftLandmarkDragEnd = (id: string, e: any) => {
-    const updatedLandmarks = draftFloorMap.landmarks.map((l) =>
-      l.id === id
-        ? { ...l, x: Math.round(e.target.x()), y: Math.round(e.target.y()) }
-        : l
+    const rawX = Math.round(e.target.x());
+    const rawY = Math.round(e.target.y());
+    const l = draftFloorMap.landmarks.find((x) => x.id === id);
+    const clamped = l ? clampCirclePos(rawX, rawY, l.width, l.height, draftFloorMap) : { x: rawX, y: rawY };
+    if (l && (clamped.x !== rawX || clamped.y !== rawY)) {
+      e.target.x(clamped.x);
+      e.target.y(clamped.y);
+    }
+    const updatedLandmarks = draftFloorMap.landmarks.map((lm) =>
+      lm.id === id ? { ...lm, x: Math.round(clamped.x), y: Math.round(clamped.y) } : lm
     );
     setDraftFloorMap({ ...draftFloorMap, landmarks: updatedLandmarks });
     setIsDirty(true);
@@ -184,12 +243,21 @@ export function useFloorPlanEditor({ floorMap, guests, notify, onSave, onCancel 
     if (selectedType === 'table') {
       const updatedTables = draftFloorMap.tables.map((t) => {
         if (t.id === selectedId) {
+          const newW = Math.max(50, Math.round(t.width * scaleX));
+          const newH = Math.max(50, Math.round(t.height * scaleY));
+          const rawX = Math.round(node.x());
+          const rawY = Math.round(node.y());
+          const p = clampCirclePos(rawX, rawY, newW, newH, draftFloorMap);
+          if (p.x !== rawX || p.y !== rawY) {
+            node.x(p.x);
+            node.y(p.y);
+          }
           return {
             ...t,
-            x: Math.round(node.x()),
-            y: Math.round(node.y()),
-            width: Math.max(50, Math.round(t.width * scaleX)),
-            height: Math.max(50, Math.round(t.height * scaleY)),
+            x: Math.round(p.x),
+            y: Math.round(p.y),
+            width: newW,
+            height: newH,
             rotation,
           };
         }
@@ -200,12 +268,21 @@ export function useFloorPlanEditor({ floorMap, guests, notify, onSave, onCancel 
     } else if (selectedType === 'landmark') {
       const updatedLandmarks = draftFloorMap.landmarks.map((l) => {
         if (l.id === selectedId) {
+          const newW = Math.max(60, Math.round(l.width * scaleX));
+          const newH = Math.max(30, Math.round(l.height * scaleY));
+          const rawX = Math.round(node.x());
+          const rawY = Math.round(node.y());
+          const p = clampCirclePos(rawX, rawY, newW, newH, draftFloorMap);
+          if (p.x !== rawX || p.y !== rawY) {
+            node.x(p.x);
+            node.y(p.y);
+          }
           return {
             ...l,
-            x: Math.round(node.x()),
-            y: Math.round(node.y()),
-            width: Math.max(60, Math.round(l.width * scaleX)),
-            height: Math.max(30, Math.round(l.height * scaleY)),
+            x: Math.round(p.x),
+            y: Math.round(p.y),
+            width: newW,
+            height: newH,
             rotation,
           };
         }
@@ -338,5 +415,7 @@ export function useFloorPlanEditor({ floorMap, guests, notify, onSave, onCancel 
     handleDraftAssignGuest,
     handleSaveChanges,
     handleCancelEditor,
+    clampCirclePos,
+    clampAllToCircle,
   };
 }
