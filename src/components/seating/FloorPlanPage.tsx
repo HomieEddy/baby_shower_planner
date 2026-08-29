@@ -1089,19 +1089,29 @@ export const FloorPlanPage = () => {
                     scaleX={canvasScale}
                     scaleY={canvasScale}
                   >
-                    {/* Layer 1: Grid Lines */}
+                    {/* Layer 1: Grid Lines + Room Boundary */}
                     <Layer>
-                      {/* Outer boundary border */}
-                      <Rect
-                        x={10}
-                        y={10}
-                        width={floorMap.canvasWidth - 20}
-                        height={floorMap.canvasHeight - 20}
-                        stroke="#CBAE94"
-                        strokeWidth={2}
-                        dash={[8, 8]}
-                        cornerRadius={20}
-                      />
+                      {(floorMap.roomShape ?? 'rectangle') === 'circle' ? (
+                        <Circle
+                          x={floorMap.canvasWidth / 2}
+                          y={floorMap.canvasHeight / 2}
+                          radius={Math.min(floorMap.canvasWidth, floorMap.canvasHeight) / 2 - 10}
+                          stroke="#CBAE94"
+                          strokeWidth={2}
+                          dash={[8, 8]}
+                        />
+                      ) : (
+                        <Rect
+                          x={10}
+                          y={10}
+                          width={floorMap.canvasWidth - 20}
+                          height={floorMap.canvasHeight - 20}
+                          stroke="#CBAE94"
+                          strokeWidth={2}
+                          dash={[8, 8]}
+                          cornerRadius={20}
+                        />
+                      )}
 
                       {/* Grid background lines */}
                       {Array.from({ length: Math.ceil(floorMap.canvasWidth / 55) }).map((_, i) => (
