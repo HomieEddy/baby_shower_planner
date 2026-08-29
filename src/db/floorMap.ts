@@ -5,6 +5,12 @@ import { fromRecord, pb } from './client';
 import { getAllGuests } from './guests';
 import { getSettings } from './settings';
 
+function normalizeFloorMap(record: any): FloorMapData {
+  const data = fromRecord<FloorMapData>(record);
+  if (!data.roomShape) data.roomShape = 'rectangle';
+  return data;
+}
+
 export async function getFloorMap(): Promise<FloorMapData> {
   const records = await pb.collection('floor_maps').getFullList();
   if (records.length === 0) {
@@ -12,19 +18,24 @@ export async function getFloorMap(): Promise<FloorMapData> {
     const r = await pb.collection('floor_maps').create({
       canvasWidth: 850,
       canvasHeight: 520,
+      roomShape: 'rectangle',
       tables: [],
       landmarks: [],
       updatedAt: new Date().toISOString(),
     });
-    return fromRecord<FloorMapData>(r);
+    return normalizeFloorMap(r);
   }
-  return fromRecord<FloorMapData>(records[0]);
+  return normalizeFloorMap(records[0]);
 }
 
 export async function updateFloorMap(data: Partial<FloorMapData>): Promise<FloorMapData> {
   const records = await pb.collection('floor_maps').getFullList();
   const id = records[0]?.id;
-  const payload = { ...data, updatedAt: new Date().toISOString() };
+  const payload: Record<string, unknown> = { ...data, updatedAt: new Date().toISOString() };
+  // PocketBase may strip unknown top-level fields if collection is strict;
+  // roomShape column may not exist on old DBs — strip on save if needed is handled by schema migration,
+  // but keep payload tolerant. Normalize empty.
+  if (!payload.roomShape) payload.roomShape = (data.roomShape as string) || 'rectangle';
   if (data.tables) {
     for (const guest of await getAllGuests()) {
       const assigned = data.tables.find(t => t.assignedGuestIds.includes(guest.id));
@@ -33,10 +44,10 @@ export async function updateFloorMap(data: Partial<FloorMapData>): Promise<Floor
   }
   if (id) {
     const r = await pb.collection('floor_maps').update(id, payload);
-    return fromRecord<FloorMapData>(r);
+    return normalizeFloorMap(r);
   }
   const r = await pb.collection('floor_maps').create(payload);
-  return fromRecord<FloorMapData>(r);
+  return normalizeFloorMap(r);
 }
 
 export async function assignGuestToTable(guestId: string, tableId: string | null): Promise<FloorMapData> {
@@ -58,7 +69,7 @@ export async function assignGuestToTable(guestId: string, tableId: string | null
   }
   await pb.collection('guests').update(guestId, { table_id: tableId || null } as any);
   const r = await pb.collection('floor_maps').update(map.id, { tables, updatedAt: new Date().toISOString() });
-  return fromRecord<FloorMapData>(r);
+  return normalizeFloorMap(r);
 }
 
 export async function shareFloorPlanEmail(guestIds?: string[], customMessage?: string): Promise<{ count: number }> {
