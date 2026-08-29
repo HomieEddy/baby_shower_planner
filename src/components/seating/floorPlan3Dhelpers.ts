@@ -24,6 +24,12 @@ export const roomWorldSize = (floorMap: FloorMapData): { width: number; height: 
   height: floorMap.canvasHeight * WORLD_SCALE,
 });
 
+export const isRoomCircle = (floorMap: FloorMapData): boolean =>
+  floorMap.roomShape === 'circle';
+
+export const roomRadiusWorld = (floorMap: FloorMapData): number =>
+  Math.min(floorMap.canvasWidth, floorMap.canvasHeight) * WORLD_SCALE / 2;
+
 export const tableCenterWorld = (floorMap: FloorMapData, table: TableElement): WorldPoint =>
   toWorld(floorMap, table.x + table.width / 2, table.y + table.height / 2);
 

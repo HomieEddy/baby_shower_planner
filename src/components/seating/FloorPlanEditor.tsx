@@ -31,6 +31,8 @@ import {
   Trash2,
   ChevronRight,
   Check,
+  Square,
+  Circle as CircleIcon,
 } from 'lucide-react';
 import { Guest, FloorMapData, LandmarkElement, TableElement } from '../../types';
 import { TextInput, Select } from '../shared/ui';
@@ -104,6 +106,9 @@ export const FloorPlanEditor = ({
     setGuestFilterQuery,
     draftSelectedTable,
     handleUpdateDraftRoomSize,
+    handleUpdateRoomShape,
+    handleUpdateDiameter,
+    clampCirclePos,
     handleDraftAddTable,
     handleDraftAddLandmark,
     handleDraftTableDragEnd,
@@ -190,137 +195,206 @@ export const FloorPlanEditor = ({
                 <Maximize2 className="w-4 h-4" /> {t.roomDimensionsLabel}
               </h3>
               <span className="text-[11px] font-mono font-bold text-[#4A3F35] bg-[#EFE6DC] px-2 py-0.5 rounded-lg border border-[#CBAE94]/60">
-                {draftFloorMap.canvasWidth} × {draftFloorMap.canvasHeight} px
+                {(draftFloorMap.roomShape ?? 'rectangle') === 'circle'
+                  ? `Ø ${Math.min(draftFloorMap.canvasWidth, draftFloorMap.canvasHeight)} px`
+                  : `${draftFloorMap.canvasWidth} × ${draftFloorMap.canvasHeight} px`}
               </span>
             </div>
 
-            {/* Size Presets */}
-            <div>
-              <label className="text-[10px] font-mono uppercase font-bold text-[#8B735B] block mb-1">
-                {t.roomPresetsLabel}
-              </label>
-              <div className="grid grid-cols-2 gap-1.5 text-[11px] font-bold">
-                <button
-                  type="button"
-                  onClick={() => handleUpdateDraftRoomSize(750, 550)}
-                  className={`px-2 py-1.5 rounded-xl border transition-all text-left flex items-center gap-1 ${
-                    draftFloorMap.canvasWidth === 750 && draftFloorMap.canvasHeight === 550
-                      ? 'bg-[#8B735B] text-white border-[#8B735B]'
-                      : 'bg-white text-[#5D5449] border-[#CBAE94]/60 hover:bg-[#EFE6DC]'
-                  }`}
-                >
-                  <Home className="w-3 h-3" /> Small (750×550)
-                </button>
-                <button
-                  type="button"
-                  onClick={() => handleUpdateDraftRoomSize(900, 650)}
-                  className={`px-2 py-1.5 rounded-xl border transition-all text-left flex items-center gap-1 ${
-                    draftFloorMap.canvasWidth === 900 && draftFloorMap.canvasHeight === 650
-                      ? 'bg-[#8B735B] text-white border-[#8B735B]'
-                      : 'bg-white text-[#5D5449] border-[#CBAE94]/60 hover:bg-[#EFE6DC]'
-                  }`}
-                >
-                  <Landmark className="w-3 h-3" /> Standard (900×650)
-                </button>
-                <button
-                  type="button"
-                  onClick={() => handleUpdateDraftRoomSize(1200, 850)}
-                  className={`px-2 py-1.5 rounded-xl border transition-all text-left flex items-center gap-1 ${
-                    draftFloorMap.canvasWidth === 1200 && draftFloorMap.canvasHeight === 850
-                      ? 'bg-[#8B735B] text-white border-[#8B735B]'
-                      : 'bg-white text-[#5D5449] border-[#CBAE94]/60 hover:bg-[#EFE6DC]'
-                  }`}
-                >
-                  <Castle className="w-3 h-3" /> Large (1200×850)
-                </button>
-                <button
-                  type="button"
-                  onClick={() => handleUpdateDraftRoomSize(1500, 1000)}
-                  className={`px-2 py-1.5 rounded-xl border transition-all text-left flex items-center gap-1 ${
-                    draftFloorMap.canvasWidth === 1500 && draftFloorMap.canvasHeight === 1000
-                      ? 'bg-[#8B735B] text-white border-[#8B735B]'
-                      : 'bg-white text-[#5D5449] border-[#CBAE94]/60 hover:bg-[#EFE6DC]'
-                  }`}
-                >
-                  <Tent className="w-3 h-3" /> Grand (1500×1000)
-                </button>
-              </div>
-            </div>
-
-            {/* Room Custom Sliders */}
-            <div className="space-y-2 pt-1 border-t border-[#CBAE94]/30 text-xs">
-              <div>
-                <div className="flex justify-between items-center mb-1">
-                  <span className="font-bold text-[#4A3F35]">{t.roomWidthLabel}</span>
-                  <div className="flex items-center gap-1 font-mono font-bold text-[#8B735B]">
-                    <button
-                      type="button"
-                      onClick={() => handleUpdateDraftRoomSize(draftFloorMap.canvasWidth - 100, draftFloorMap.canvasHeight)}
-                      className="w-5 h-5 rounded bg-[#EFE6DC] hover:bg-[#CBAE94] flex items-center justify-center text-[#4A3F35]"
-                    >
-                      -
-                    </button>
-                    <span>{draftFloorMap.canvasWidth}px</span>
-                    <button
-                      type="button"
-                      onClick={() => handleUpdateDraftRoomSize(draftFloorMap.canvasWidth + 100, draftFloorMap.canvasHeight)}
-                      className="w-5 h-5 rounded bg-[#EFE6DC] hover:bg-[#CBAE94] flex items-center justify-center text-[#4A3F35]"
-                    >
-                      +
-                    </button>
-                  </div>
-                </div>
-                <input
-                  type="range"
-                  min={600}
-                  max={2500}
-                  step={50}
-                  value={draftFloorMap.canvasWidth}
-                  onChange={(e) => handleUpdateDraftRoomSize(parseInt(e.target.value, 10), draftFloorMap.canvasHeight)}
-                  className="w-full accent-[#8B735B]"
-                />
-              </div>
-
-              <div>
-                <div className="flex justify-between items-center mb-1">
-                  <span className="font-bold text-[#4A3F35]">{t.roomLengthLabel}</span>
-                  <div className="flex items-center gap-1 font-mono font-bold text-[#8B735B]">
-                    <button
-                      type="button"
-                      onClick={() => handleUpdateDraftRoomSize(draftFloorMap.canvasWidth, draftFloorMap.canvasHeight - 100)}
-                      className="w-5 h-5 rounded bg-[#EFE6DC] hover:bg-[#CBAE94] flex items-center justify-center text-[#4A3F35]"
-                    >
-                      -
-                    </button>
-                    <span>{draftFloorMap.canvasHeight}px</span>
-                    <button
-                      type="button"
-                      onClick={() => handleUpdateDraftRoomSize(draftFloorMap.canvasWidth, draftFloorMap.canvasHeight + 100)}
-                      className="w-5 h-5 rounded bg-[#EFE6DC] hover:bg-[#CBAE94] flex items-center justify-center text-[#4A3F35]"
-                    >
-                      +
-                    </button>
-                  </div>
-                </div>
-                <input
-                  type="range"
-                  min={400}
-                  max={2000}
-                  step={50}
-                  value={draftFloorMap.canvasHeight}
-                  onChange={(e) => handleUpdateDraftRoomSize(draftFloorMap.canvasWidth, parseInt(e.target.value, 10))}
-                  className="w-full accent-[#8B735B]"
-                />
-              </div>
-
+            {/* Room Shape Toggle */}
+            <div className="flex items-center gap-1 p-1 rounded-2xl bg-[#EFE6DC]/60 border border-[#CBAE94]/40">
               <button
                 type="button"
-                onClick={() => handleUpdateDraftRoomSize(draftFloorMap.canvasWidth + 200, draftFloorMap.canvasHeight + 150)}
-                className="w-full py-2 px-3 rounded-xl bg-[#EFE6DC] hover:bg-[#CBAE94] text-[#4A3F35] font-bold text-[11px] transition-colors flex items-center justify-center gap-1"
+                onClick={() => handleUpdateRoomShape('rectangle')}
+                className={`flex-1 py-1.5 px-2 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1 ${
+                  (draftFloorMap.roomShape ?? 'rectangle') === 'rectangle'
+                    ? 'bg-[#8B735B] text-white shadow-sm'
+                    : 'text-[#8B735B] hover:bg-white/60'
+                }`}
               >
-                <Maximize2 className="w-3.5 h-3.5 text-[#8B735B]" /> + Expand Room (+200×150px)
+                <Square className="w-3.5 h-3.5" /> Rectangle
+              </button>
+              <button
+                type="button"
+                onClick={() => handleUpdateRoomShape('circle')}
+                className={`flex-1 py-1.5 px-2 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1 ${
+                  draftFloorMap.roomShape === 'circle'
+                    ? 'bg-[#8B735B] text-white shadow-sm'
+                    : 'text-[#8B735B] hover:bg-white/60'
+                }`}
+              >
+                <CircleIcon className="w-3.5 h-3.5" /> Circle
               </button>
             </div>
+
+            {/* Size Presets */}
+            {(draftFloorMap.roomShape ?? 'rectangle') === 'circle' ? (
+              <div>
+                <label className="text-[10px] font-mono uppercase font-bold text-[#8B735B] block mb-1">
+                  {t.roomPresetsLabel}
+                </label>
+                <div className="grid grid-cols-2 gap-1.5 text-[11px] font-bold">
+                  <button type="button" onClick={() => handleUpdateDiameter(650)} className={`px-2 py-1.5 rounded-xl border transition-all text-left flex items-center gap-1 ${Math.min(draftFloorMap.canvasWidth, draftFloorMap.canvasHeight) === 650 ? 'bg-[#8B735B] text-white border-[#8B735B]' : 'bg-white text-[#5D5449] border-[#CBAE94]/60 hover:bg-[#EFE6DC]'}`}>
+                    <Home className="w-3 h-3" /> Small (Ø 650)
+                  </button>
+                  <button type="button" onClick={() => handleUpdateDiameter(850)} className={`px-2 py-1.5 rounded-xl border transition-all text-left flex items-center gap-1 ${Math.min(draftFloorMap.canvasWidth, draftFloorMap.canvasHeight) === 850 ? 'bg-[#8B735B] text-white border-[#8B735B]' : 'bg-white text-[#5D5449] border-[#CBAE94]/60 hover:bg-[#EFE6DC]'}`}>
+                    <Landmark className="w-3 h-3" /> Standard (Ø 850)
+                  </button>
+                  <button type="button" onClick={() => handleUpdateDiameter(1100)} className={`px-2 py-1.5 rounded-xl border transition-all text-left flex items-center gap-1 ${Math.min(draftFloorMap.canvasWidth, draftFloorMap.canvasHeight) === 1100 ? 'bg-[#8B735B] text-white border-[#8B735B]' : 'bg-white text-[#5D5449] border-[#CBAE94]/60 hover:bg-[#EFE6DC]'}`}>
+                    <Castle className="w-3 h-3" /> Large (Ø 1100)
+                  </button>
+                  <button type="button" onClick={() => handleUpdateDiameter(1400)} className={`px-2 py-1.5 rounded-xl border transition-all text-left flex items-center gap-1 ${Math.min(draftFloorMap.canvasWidth, draftFloorMap.canvasHeight) === 1400 ? 'bg-[#8B735B] text-white border-[#8B735B]' : 'bg-white text-[#5D5449] border-[#CBAE94]/60 hover:bg-[#EFE6DC]'}`}>
+                    <Tent className="w-3 h-3" /> Grand (Ø 1400)
+                  </button>
+                </div>
+              </div>
+            ) : (
+              <div>
+                <label className="text-[10px] font-mono uppercase font-bold text-[#8B735B] block mb-1">
+                  {t.roomPresetsLabel}
+                </label>
+                <div className="grid grid-cols-2 gap-1.5 text-[11px] font-bold">
+                  <button
+                    type="button"
+                    onClick={() => handleUpdateDraftRoomSize(750, 550)}
+                    className={`px-2 py-1.5 rounded-xl border transition-all text-left flex items-center gap-1 ${
+                      draftFloorMap.canvasWidth === 750 && draftFloorMap.canvasHeight === 550
+                        ? 'bg-[#8B735B] text-white border-[#8B735B]'
+                        : 'bg-white text-[#5D5449] border-[#CBAE94]/60 hover:bg-[#EFE6DC]'
+                    }`}
+                  >
+                    <Home className="w-3 h-3" /> Small (750×550)
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => handleUpdateDraftRoomSize(900, 650)}
+                    className={`px-2 py-1.5 rounded-xl border transition-all text-left flex items-center gap-1 ${
+                      draftFloorMap.canvasWidth === 900 && draftFloorMap.canvasHeight === 650
+                        ? 'bg-[#8B735B] text-white border-[#8B735B]'
+                        : 'bg-white text-[#5D5449] border-[#CBAE94]/60 hover:bg-[#EFE6DC]'
+                    }`}
+                  >
+                    <Landmark className="w-3 h-3" /> Standard (900×650)
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => handleUpdateDraftRoomSize(1200, 850)}
+                    className={`px-2 py-1.5 rounded-xl border transition-all text-left flex items-center gap-1 ${
+                      draftFloorMap.canvasWidth === 1200 && draftFloorMap.canvasHeight === 850
+                        ? 'bg-[#8B735B] text-white border-[#8B735B]'
+                        : 'bg-white text-[#5D5449] border-[#CBAE94]/60 hover:bg-[#EFE6DC]'
+                    }`}
+                  >
+                    <Castle className="w-3 h-3" /> Large (1200×850)
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => handleUpdateDraftRoomSize(1500, 1000)}
+                    className={`px-2 py-1.5 rounded-xl border transition-all text-left flex items-center gap-1 ${
+                      draftFloorMap.canvasWidth === 1500 && draftFloorMap.canvasHeight === 1000
+                        ? 'bg-[#8B735B] text-white border-[#8B735B]'
+                        : 'bg-white text-[#5D5449] border-[#CBAE94]/60 hover:bg-[#EFE6DC]'
+                    }`}
+                  >
+                    <Tent className="w-3 h-3" /> Grand (1500×1000)
+                  </button>
+                </div>
+              </div>
+            )}
+
+            {/* Room Custom Sliders */}
+            {(draftFloorMap.roomShape ?? 'rectangle') === 'circle' ? (
+              <div className="space-y-2 pt-1 border-t border-[#CBAE94]/30 text-xs">
+                <div>
+                  <div className="flex justify-between items-center mb-1">
+                    <span className="font-bold text-[#4A3F35]">Diameter</span>
+                    <div className="flex items-center gap-1 font-mono font-bold text-[#8B735B]">
+                      <button type="button" onClick={() => handleUpdateDiameter(Math.min(draftFloorMap.canvasWidth, draftFloorMap.canvasHeight) - 100)} className="w-5 h-5 rounded bg-[#EFE6DC] hover:bg-[#CBAE94] flex items-center justify-center text-[#4A3F35]">-</button>
+                      <span>{Math.min(draftFloorMap.canvasWidth, draftFloorMap.canvasHeight)}px</span>
+                      <button type="button" onClick={() => handleUpdateDiameter(Math.min(draftFloorMap.canvasWidth, draftFloorMap.canvasHeight) + 100)} className="w-5 h-5 rounded bg-[#EFE6DC] hover:bg-[#CBAE94] flex items-center justify-center text-[#4A3F35]">+</button>
+                    </div>
+                  </div>
+                  <input type="range" min={500} max={2500} step={50} value={Math.min(draftFloorMap.canvasWidth, draftFloorMap.canvasHeight)} onChange={(e) => handleUpdateDiameter(parseInt(e.target.value, 10))} className="w-full accent-[#8B735B]" />
+                </div>
+                <button type="button" onClick={() => handleUpdateDiameter(Math.min(draftFloorMap.canvasWidth, draftFloorMap.canvasHeight) + 150)} className="w-full py-2 px-3 rounded-xl bg-[#EFE6DC] hover:bg-[#CBAE94] text-[#4A3F35] font-bold text-[11px] transition-colors flex items-center justify-center gap-1">
+                  <Maximize2 className="w-3.5 h-3.5 text-[#8B735B]" /> + Expand Room (+150px Ø)
+                </button>
+              </div>
+            ) : (
+              <div className="space-y-2 pt-1 border-t border-[#CBAE94]/30 text-xs">
+                <div>
+                  <div className="flex justify-between items-center mb-1">
+                    <span className="font-bold text-[#4A3F35]">{t.roomWidthLabel}</span>
+                    <div className="flex items-center gap-1 font-mono font-bold text-[#8B735B]">
+                      <button
+                        type="button"
+                        onClick={() => handleUpdateDraftRoomSize(draftFloorMap.canvasWidth - 100, draftFloorMap.canvasHeight)}
+                        className="w-5 h-5 rounded bg-[#EFE6DC] hover:bg-[#CBAE94] flex items-center justify-center text-[#4A3F35]"
+                      >
+                        -
+                      </button>
+                      <span>{draftFloorMap.canvasWidth}px</span>
+                      <button
+                        type="button"
+                        onClick={() => handleUpdateDraftRoomSize(draftFloorMap.canvasWidth + 100, draftFloorMap.canvasHeight)}
+                        className="w-5 h-5 rounded bg-[#EFE6DC] hover:bg-[#CBAE94] flex items-center justify-center text-[#4A3F35]"
+                      >
+                        +
+                      </button>
+                    </div>
+                  </div>
+                  <input
+                    type="range"
+                    min={600}
+                    max={2500}
+                    step={50}
+                    value={draftFloorMap.canvasWidth}
+                    onChange={(e) => handleUpdateDraftRoomSize(parseInt(e.target.value, 10), draftFloorMap.canvasHeight)}
+                    className="w-full accent-[#8B735B]"
+                  />
+                </div>
+
+                <div>
+                  <div className="flex justify-between items-center mb-1">
+                    <span className="font-bold text-[#4A3F35]">{t.roomLengthLabel}</span>
+                    <div className="flex items-center gap-1 font-mono font-bold text-[#8B735B]">
+                      <button
+                        type="button"
+                        onClick={() => handleUpdateDraftRoomSize(draftFloorMap.canvasWidth, draftFloorMap.canvasHeight - 100)}
+                        className="w-5 h-5 rounded bg-[#EFE6DC] hover:bg-[#CBAE94] flex items-center justify-center text-[#4A3F35]"
+                      >
+                        -
+                      </button>
+                      <span>{draftFloorMap.canvasHeight}px</span>
+                      <button
+                        type="button"
+                        onClick={() => handleUpdateDraftRoomSize(draftFloorMap.canvasWidth, draftFloorMap.canvasHeight + 100)}
+                        className="w-5 h-5 rounded bg-[#EFE6DC] hover:bg-[#CBAE94] flex items-center justify-center text-[#4A3F35]"
+                      >
+                        +
+                      </button>
+                    </div>
+                  </div>
+                  <input
+                    type="range"
+                    min={400}
+                    max={2000}
+                    step={50}
+                    value={draftFloorMap.canvasHeight}
+                    onChange={(e) => handleUpdateDraftRoomSize(draftFloorMap.canvasWidth, parseInt(e.target.value, 10))}
+                    className="w-full accent-[#8B735B]"
+                  />
+                </div>
+
+                <button
+                  type="button"
+                  onClick={() => handleUpdateDraftRoomSize(draftFloorMap.canvasWidth + 200, draftFloorMap.canvasHeight + 150)}
+                  className="w-full py-2 px-3 rounded-xl bg-[#EFE6DC] hover:bg-[#CBAE94] text-[#4A3F35] font-bold text-[11px] transition-colors flex items-center justify-center gap-1"
+                >
+                  <Maximize2 className="w-3.5 h-3.5 text-[#8B735B]" /> + Expand Room (+200×150px)
+                </button>
+              </div>
+            )}
           </div>
 
           {/* Add Table Controls */}
@@ -491,18 +565,29 @@ export const FloorPlanEditor = ({
                 }
               }}
             >
-              {/* Layer 1: Grid */}
+              {/* Layer 1: Grid + Room Boundary */}
               <Layer>
-                <Rect
-                  x={10}
-                  y={10}
-                  width={draftFloorMap.canvasWidth - 20}
-                  height={draftFloorMap.canvasHeight - 20}
-                  stroke="#CBAE94"
-                  strokeWidth={2}
-                  dash={[8, 8]}
-                  cornerRadius={20}
-                />
+                {(draftFloorMap.roomShape ?? 'rectangle') === 'circle' ? (
+                  <Circle
+                    x={draftFloorMap.canvasWidth / 2}
+                    y={draftFloorMap.canvasHeight / 2}
+                    radius={Math.min(draftFloorMap.canvasWidth, draftFloorMap.canvasHeight) / 2 - 10}
+                    stroke="#CBAE94"
+                    strokeWidth={2}
+                    dash={[8, 8]}
+                  />
+                ) : (
+                  <Rect
+                    x={10}
+                    y={10}
+                    width={draftFloorMap.canvasWidth - 20}
+                    height={draftFloorMap.canvasHeight - 20}
+                    stroke="#CBAE94"
+                    strokeWidth={2}
+                    dash={[8, 8]}
+                    cornerRadius={20}
+                  />
+                )}
                 {Array.from({ length: Math.ceil(draftFloorMap.canvasWidth / 55) }).map((_, i) => (
                   <Line
                     key={`mvgrid-${i}`}
@@ -537,6 +622,10 @@ export const FloorPlanEditor = ({
                       height={landmark.height}
                       rotation={landmark.rotation || 0}
                       draggable
+                      dragBoundFunc={(pos: any) => {
+                        const p = clampCirclePos(pos.x, pos.y, landmark.width, landmark.height, draftFloorMap);
+                        return { x: p.x, y: p.y };
+                      }}
                       onDragEnd={(e) => handleDraftLandmarkDragEnd(landmark.id, e)}
                       onClick={() => {
                         setSelectedId(landmark.id);
@@ -592,6 +681,10 @@ export const FloorPlanEditor = ({
                       height={table.height}
                       rotation={table.rotation || 0}
                       draggable
+                      dragBoundFunc={(pos: any) => {
+                        const p = clampCirclePos(pos.x, pos.y, table.width, table.height, draftFloorMap);
+                        return { x: p.x, y: p.y };
+                      }}
                       onDragEnd={(e) => handleDraftTableDragEnd(table.id, e)}
                       onClick={() => {
                         if (selectedGuestForSeating) {

@@ -112,6 +112,7 @@ const COLLECTION_DEFS: CollectionDef[] = [
     schema: [
       { name: 'canvasWidth', type: 'number', options: {} },
       { name: 'canvasHeight', type: 'number', options: {} },
+      { name: 'roomShape', type: 'select', options: { values: ['rectangle', 'circle'] } },
       { name: 'tables', type: 'json', options: {} },
       { name: 'landmarks', type: 'json', options: {} },
       { name: 'updatedAt', type: 'text', options: {} },
@@ -200,6 +201,7 @@ async function ensureCollections() {
     }
   }
   await ensureCollectionFields('settings');
+  await ensureCollectionFields('floor_maps');
   await ensureCollectionFields('guests');
   await ensureCollectionFields('guestbook');
   await ensureCollectionFields('photos');
