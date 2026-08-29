@@ -6,6 +6,8 @@ import {
   WORLD_SCALE,
   toWorld,
   roomWorldSize,
+  isRoomCircle,
+  roomRadiusWorld,
   tableCenterWorld,
   tableRotationY,
   seatLocalWorld,
@@ -394,10 +396,17 @@ const Scene = (props: FloorPlan3DProps) => {
       <directionalLight position={[-scale, scale * 0.6, -scale * 0.8]} intensity={0.35} />
 
       {/* Floor */}
-      <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -0.02, 0]} receiveShadow>
-        <planeGeometry args={[roomW + 6, roomH + 6]} />
-        <meshStandardMaterial color={C.floor} />
-      </mesh>
+      {isRoomCircle(floorMap) ? (
+        <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -0.02, 0]} receiveShadow>
+          <circleGeometry args={[roomRadiusWorld(floorMap) + 3, 64]} />
+          <meshStandardMaterial color={C.floor} />
+        </mesh>
+      ) : (
+        <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -0.02, 0]} receiveShadow>
+          <planeGeometry args={[roomW + 6, roomH + 6]} />
+          <meshStandardMaterial color={C.floor} />
+        </mesh>
+      )}
       <Grid
         args={[roomW, roomH]}
         position={[0, 0.01, 0]}
