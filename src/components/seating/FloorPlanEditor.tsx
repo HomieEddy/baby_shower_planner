@@ -526,6 +526,17 @@ export const FloorPlanEditor = ({
               <Layers className="w-3.5 h-3.5" /> {t.fullScreenCanvasLabel}
             </span>
             <div className="flex items-center gap-2">
+              {selectedId && (
+                <button
+                  type="button"
+                  onClick={handleDraftDeleteSelected}
+                  className="px-2.5 py-1.5 rounded-lg bg-red-100 hover:bg-red-200 text-red-700 text-xs font-bold flex items-center gap-1 transition-colors"
+                  title={selectedType === 'landmark' ? t.deleteLandmarkBtn : t.deleteTableBtn}
+                >
+                  <Trash2 className="w-3.5 h-3.5" />
+                  <span className="hidden sm:inline">{selectedType === 'landmark' ? t.deleteLandmarkBtn : t.deleteTableBtn}</span>
+                </button>
+              )}
               <ViewModeToggle value={viewMode} onChange={setViewMode} />
               <span className="hidden md:inline text-[11px] font-mono text-[#5D5449]">
                 {t.liveDraftStageLabel}

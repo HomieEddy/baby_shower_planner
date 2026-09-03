@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Guest, FloorMapData, LandmarkElement, TableElement } from '../../types';
 import { getGuestPartySize, clampToRoundRoom } from './floorPlanHelpers';
 import { useT } from '../shared/i18n';
@@ -281,7 +281,7 @@ export function useFloorPlanEditor({ floorMap, guests, notify, onSave, onCancel 
     }
   };
 
-  const handleDraftDeleteSelected = () => {
+  const handleDraftDeleteSelected = useCallback(() => {
     if (!selectedId) return;
     if (selectedType === 'table') {
       const updatedTables = draftFloorMap.tables.filter((t) => t.id !== selectedId);
@@ -294,7 +294,21 @@ export function useFloorPlanEditor({ floorMap, guests, notify, onSave, onCancel 
     }
     setSelectedId(null);
     setSelectedType(null);
-  };
+  }, [selectedId, selectedType, draftFloorMap]);
+
+  // Delete / Backspace removes the selected table or landmark (ignored while typing).
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if ((e.key === 'Delete' || e.key === 'Backspace') && selectedId) {
+        const tag = (e.target as HTMLElement | null)?.tagName;
+        if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT') return;
+        e.preventDefault();
+        handleDraftDeleteSelected();
+      }
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [selectedId, handleDraftDeleteSelected]);
 
   const handleDraftAssignGuest = (guestId: string, tableId: string | null): boolean => {
     const guest = draftGuests.find((g) => g.id === guestId);
