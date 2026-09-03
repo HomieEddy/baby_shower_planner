@@ -4,6 +4,7 @@ import {
   Layer,
   Rect,
   Circle,
+  Ellipse,
   Text,
   Group,
   Line,
@@ -224,6 +225,17 @@ export const FloorPlanEditor = ({
                 }`}
               >
                 <CircleIcon className="w-3.5 h-3.5" /> Circle
+              </button>
+              <button
+                type="button"
+                onClick={() => handleUpdateRoomShape('ellipse')}
+                className={`flex-1 py-1.5 px-2 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1 ${
+                  draftFloorMap.roomShape === 'ellipse'
+                    ? 'bg-[#8B735B] text-white shadow-sm'
+                    : 'text-[#8B735B] hover:bg-white/60'
+                }`}
+              >
+                <CircleIcon className="w-3.5 h-3.5" /> Ellipse
               </button>
             </div>
 
@@ -572,6 +584,16 @@ export const FloorPlanEditor = ({
                     x={draftFloorMap.canvasWidth / 2}
                     y={draftFloorMap.canvasHeight / 2}
                     radius={Math.min(draftFloorMap.canvasWidth, draftFloorMap.canvasHeight) / 2 - 10}
+                    stroke="#CBAE94"
+                    strokeWidth={2}
+                    dash={[8, 8]}
+                  />
+                ) : (draftFloorMap.roomShape ?? 'rectangle') === 'ellipse' ? (
+                  <Ellipse
+                    x={draftFloorMap.canvasWidth / 2}
+                    y={draftFloorMap.canvasHeight / 2}
+                    radiusX={draftFloorMap.canvasWidth / 2 - 10}
+                    radiusY={draftFloorMap.canvasHeight / 2 - 10}
                     stroke="#CBAE94"
                     strokeWidth={2}
                     dash={[8, 8]}

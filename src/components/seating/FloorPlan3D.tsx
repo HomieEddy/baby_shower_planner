@@ -7,6 +7,7 @@ import {
   toWorld,
   roomWorldSize,
   isRoomCircle,
+  isRoomEllipse,
   roomRadiusWorld,
   tableCenterWorld,
   tableRotationY,
@@ -398,12 +399,22 @@ const Scene = (props: FloorPlan3DProps) => {
       {/* Floor */}
       {isRoomCircle(floorMap) ? (
         <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -0.02, 0]} receiveShadow>
-          <circleGeometry args={[roomRadiusWorld(floorMap) + 3, 64]} />
+          <circleGeometry args={[roomRadiusWorld(floorMap), 64]} />
+          <meshStandardMaterial color={C.floor} />
+        </mesh>
+      ) : isRoomEllipse(floorMap) ? (
+        <mesh
+          rotation={[-Math.PI / 2, 0, 0]}
+          position={[0, -0.02, 0]}
+          scale={[roomW / 2, roomH / 2, 1]}
+          receiveShadow
+        >
+          <circleGeometry args={[1, 64]} />
           <meshStandardMaterial color={C.floor} />
         </mesh>
       ) : (
         <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -0.02, 0]} receiveShadow>
-          <planeGeometry args={[roomW + 6, roomH + 6]} />
+          <planeGeometry args={[roomW, roomH]} />
           <meshStandardMaterial color={C.floor} />
         </mesh>
       )}

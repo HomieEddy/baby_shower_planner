@@ -112,7 +112,7 @@ const COLLECTION_DEFS: CollectionDef[] = [
     schema: [
       { name: 'canvasWidth', type: 'number', options: {} },
       { name: 'canvasHeight', type: 'number', options: {} },
-      { name: 'roomShape', type: 'select', options: { values: ['rectangle', 'circle'] } },
+      { name: 'roomShape', type: 'select', options: { values: ['rectangle', 'circle', 'ellipse'] } },
       { name: 'tables', type: 'json', options: {} },
       { name: 'landmarks', type: 'json', options: {} },
       { name: 'updatedAt', type: 'text', options: {} },

@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { Guest, FloorMapData, LandmarkElement, TableElement } from '../../types';
-import { getGuestPartySize } from './floorPlanHelpers';
+import { getGuestPartySize, clampToRoundRoom } from './floorPlanHelpers';
 import { useT } from '../shared/i18n';
 
 export interface FloorPlanEditorDeps {
@@ -88,27 +88,13 @@ export function useFloorPlanEditor({ floorMap, guests, notify, onSave, onCancel 
     setIsDirty(true);
   };
 
-  // ponytail: wall-clamp — keeps whole element inside circular wall using half-diagonal as safe radius
-  const clampCirclePos = (x: number, y: number, w: number, h: number, map: FloorMapData) => {
-    if ((map.roomShape ?? 'rectangle') !== 'circle') return { x, y };
-    const cx = map.canvasWidth / 2;
-    const cy = map.canvasHeight / 2;
-    const roomR = Math.min(map.canvasWidth, map.canvasHeight) / 2 - 10;
-    const elemR = Math.hypot(w, h) / 2 + 18; // +18 accounts for seat ring / shadow
-    const maxDist = Math.max(0, roomR - elemR);
-    const elemCx = x + w / 2;
-    const elemCy = y + h / 2;
-    const dx = elemCx - cx;
-    const dy = elemCy - cy;
-    const dist = Math.hypot(dx, dy);
-    if (dist <= maxDist) return { x, y };
-    if (dist === 0) return { x: cx - w / 2, y: cy - h / 2 };
-    const ratio = maxDist / dist;
-    return { x: cx + dx * ratio - w / 2, y: cy + dy * ratio - h / 2 };
-  };
+  // ponytail: wall-clamp — keeps whole element inside round(circle/ellipse) wall.
+  // Math lives in clampToRoundRoom (floorPlanHelpers) so it stays unit-testable.
+  const clampCirclePos = (x: number, y: number, w: number, h: number, map: FloorMapData) =>
+    clampToRoundRoom(x, y, w, h, map);
 
   const clampAllToCircle = (map: FloorMapData): FloorMapData => {
-    if ((map.roomShape ?? 'rectangle') !== 'circle') return map;
+    if ((map.roomShape ?? 'rectangle') !== 'circle' && map.roomShape !== 'ellipse') return map;
     return {
       ...map,
       tables: map.tables.map((t) => {
@@ -122,11 +108,13 @@ export function useFloorPlanEditor({ floorMap, guests, notify, onSave, onCancel 
     };
   };
 
-  const handleUpdateRoomShape = (shape: 'rectangle' | 'circle') => {
+  const handleUpdateRoomShape = (shape: 'rectangle' | 'circle' | 'ellipse') => {
     if (shape === 'circle') {
       const d = Math.min(draftFloorMap.canvasWidth, draftFloorMap.canvasHeight);
       const next: FloorMapData = { ...draftFloorMap, roomShape: 'circle', canvasWidth: d, canvasHeight: d };
       setDraftFloorMap(clampAllToCircle(next));
+    } else if (shape === 'ellipse') {
+      setDraftFloorMap(clampAllToCircle({ ...draftFloorMap, roomShape: 'ellipse' }));
     } else {
       setDraftFloorMap({ ...draftFloorMap, roomShape: 'rectangle' });
     }
