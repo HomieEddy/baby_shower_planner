@@ -1,4 +1,4 @@
-import { Guest, TableElement } from '../../types';
+import { Guest, TableElement, FloorMapData } from '../../types';
 
 export const getGuestPartySize = (guest: Guest): number => {
   if (!guest) return 1;
@@ -142,4 +142,37 @@ export const getTableStatus = (table: TableElement, guestsList: Guest[]): 'full'
   if (occupied >= table.capacity) return 'full';
   if (occupied > 0) return 'partial';
   return 'empty';
+};
+
+// Wall-clamp for round rooms: keeps the whole element inside the circular/elliptical
+// boundary. An ellipse degenerates to a circle when both semi-axes match, so one
+// formula covers both — project the element center onto the inner ellipse along the
+// ray from the room centre. `+18` accounts for the seat ring / drop shadow.
+export const clampToRoundRoom = (
+  x: number,
+  y: number,
+  w: number,
+  h: number,
+  map: FloorMapData
+): { x: number; y: number } => {
+  if ((map.roomShape ?? 'rectangle') !== 'circle' && map.roomShape !== 'ellipse') return { x, y };
+  const cx = map.canvasWidth / 2;
+  const cy = map.canvasHeight / 2;
+  const elemR = Math.hypot(w, h) / 2 + 18;
+  let ax: number;
+  let ay: number;
+  if (map.roomShape === 'circle') {
+    const roomR = Math.min(map.canvasWidth, map.canvasHeight) / 2 - 10;
+    ax = Math.max(0, roomR - elemR);
+    ay = ax;
+  } else {
+    ax = Math.max(0, map.canvasWidth / 2 - 10 - elemR);
+    ay = Math.max(0, map.canvasHeight / 2 - 10 - elemR);
+  }
+  const dx = x + w / 2 - cx;
+  const dy = y + h / 2 - cy;
+  const norm = Math.hypot(dx / ax, dy / ay);
+  if (norm <= 1 || norm === 0) return { x, y };
+  const ratio = 1 / norm;
+  return { x: cx + dx * ratio - w / 2, y: cy + dy * ratio - h / 2 };
 };

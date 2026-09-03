@@ -27,6 +27,9 @@ export const roomWorldSize = (floorMap: FloorMapData): { width: number; height: 
 export const isRoomCircle = (floorMap: FloorMapData): boolean =>
   floorMap.roomShape === 'circle';
 
+export const isRoomEllipse = (floorMap: FloorMapData): boolean =>
+  floorMap.roomShape === 'ellipse';
+
 export const roomRadiusWorld = (floorMap: FloorMapData): number =>
   Math.min(floorMap.canvasWidth, floorMap.canvasHeight) * WORLD_SCALE / 2;
 

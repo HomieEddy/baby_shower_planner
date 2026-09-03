@@ -20,6 +20,7 @@ import {
   Layer,
   Rect,
   Circle,
+  Ellipse,
   Text,
   Group,
   Line,
@@ -1096,6 +1097,16 @@ export const FloorPlanPage = () => {
                           x={floorMap.canvasWidth / 2}
                           y={floorMap.canvasHeight / 2}
                           radius={Math.min(floorMap.canvasWidth, floorMap.canvasHeight) / 2 - 10}
+                          stroke="#CBAE94"
+                          strokeWidth={2}
+                          dash={[8, 8]}
+                        />
+                      ) : (floorMap.roomShape ?? 'rectangle') === 'ellipse' ? (
+                        <Ellipse
+                          x={floorMap.canvasWidth / 2}
+                          y={floorMap.canvasHeight / 2}
+                          radiusX={floorMap.canvasWidth / 2 - 10}
+                          radiusY={floorMap.canvasHeight / 2 - 10}
                           stroke="#CBAE94"
                           strokeWidth={2}
                           dash={[8, 8]}
