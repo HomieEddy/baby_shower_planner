@@ -384,6 +384,11 @@ export function useFloorPlanEditor({ floorMap, guests, notify, onSave, onCancel 
     [draftFloorMap, selectedId]
   );
 
+  const draftSelectedLandmark = useMemo(
+    () => draftFloorMap.landmarks.find((l) => l.id === selectedId),
+    [draftFloorMap, selectedId]
+  );
+
   return {
     draftFloorMap,
     setDraftFloorMap,
@@ -405,6 +410,7 @@ export function useFloorPlanEditor({ floorMap, guests, notify, onSave, onCancel 
     guestFilterQuery,
     setGuestFilterQuery,
     draftSelectedTable,
+    draftSelectedLandmark,
     handleUpdateDraftRoomSize,
     handleUpdateRoomShape,
     handleUpdateDiameter,

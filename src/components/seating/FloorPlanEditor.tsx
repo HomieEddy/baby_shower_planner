@@ -106,6 +106,7 @@ export const FloorPlanEditor = ({
     guestFilterQuery,
     setGuestFilterQuery,
     draftSelectedTable,
+    draftSelectedLandmark,
     handleUpdateDraftRoomSize,
     handleUpdateRoomShape,
     handleUpdateDiameter,
@@ -843,6 +844,78 @@ export const FloorPlanEditor = ({
 
         {/* Right Inspector Column (col-3) */}
         <div className="lg:col-span-3 lg:overflow-y-auto space-y-4 pr-1 order-3">
+          {/* Venue Feature Inspector (rename / re-type a selected landmark) */}
+          {selectedType === 'landmark' && draftSelectedLandmark && (
+            <div className="bg-[#FFFDF9] rounded-3xl p-4 shadow-md border-2 border-[#CBAE94] space-y-4">
+              <div className="flex items-center justify-between border-b border-[#CBAE94]/40 pb-2">
+                <div>
+                  <span className="text-[10px] font-mono font-bold uppercase text-[#8B735B]">
+                    {t.landmarkInspectorLabel}
+                  </span>
+                  <h3 className="font-gaegu text-2xl font-bold text-[#4A3F35]">
+                    {draftSelectedLandmark.name}
+                  </h3>
+                </div>
+                <button
+                  type="button"
+                  onClick={handleDraftDeleteSelected}
+                  className="p-2 text-red-600 hover:bg-red-50 rounded-xl transition-colors"
+                  title={t.deleteLandmarkBtn}
+                >
+                  <Trash2 className="w-4 h-4" />
+                </button>
+              </div>
+
+              <div className="space-y-3 text-xs">
+                <div>
+                  <label className="label-mono block mb-1">{t.featureNameLabel}</label>
+                  <TextInput
+                    variant="soft"
+                    type="text"
+                    value={draftSelectedLandmark.name}
+                    onChange={(e) => {
+                      const newName = e.target.value;
+                      setDraftFloorMap({
+                        ...draftFloorMap,
+                        landmarks: draftFloorMap.landmarks.map((l) =>
+                          l.id === draftSelectedLandmark.id ? { ...l, name: newName } : l
+                        ),
+                      });
+                      setIsDirty(true);
+                    }}
+                  />
+                </div>
+
+                <div>
+                  <label className="label-mono block mb-1">{t.featureTypeLabel}</label>
+                  <Select
+                    variant="soft"
+                    value={draftSelectedLandmark.type}
+                    onChange={(e) => {
+                      const type = e.target.value as LandmarkElement['type'];
+                      setDraftFloorMap({
+                        ...draftFloorMap,
+                        landmarks: draftFloorMap.landmarks.map((l) =>
+                          l.id === draftSelectedLandmark.id ? { ...l, type } : l
+                        ),
+                      });
+                      setIsDirty(true);
+                    }}
+                  >
+                    <option value="entrance">{t.entranceBtn}</option>
+                    <option value="stage">{t.mainStageBtn}</option>
+                    <option value="gifts">{t.giftTableBtn}</option>
+                    <option value="restroom">{t.bathroomBtn}</option>
+                    <option value="dessert">{t.cakeStationBtn}</option>
+                    <option value="bar">{t.drinksBarBtn}</option>
+                    <option value="food">{t.foodStationBtn}</option>
+                    <option value="custom">{t.customFeatureBtn}</option>
+                  </Select>
+                </div>
+              </div>
+            </div>
+          )}
+
           {/* Seating Workflow Mode Switcher */}
           <div className="bg-[#FFFDF9] rounded-2xl p-1.5 shadow-md border-2 border-[#CBAE94] flex items-center gap-1">
             <button
