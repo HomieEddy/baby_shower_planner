@@ -22,7 +22,7 @@ import {
   MapPin,
   Award,
   Gift,
-  Sparkles,
+  Bath,
   Utensils,
   UtensilsCrossed,
   Info,
@@ -458,10 +458,10 @@ export const FloorPlanEditor = ({
               </button>
               <button
                 type="button"
-                onClick={() => handleDraftAddLandmark('stage', 'Parents Throne & Stage')}
+                onClick={() => handleDraftAddLandmark('stage', 'Main Stage')}
                 className="p-2 rounded-xl border border-[#CBAE94]/60 bg-white hover:bg-[#EFE6DC] text-left transition-colors flex items-center gap-1.5"
               >
-                <Award className="w-3.5 h-3.5 text-[#8B735B]" /> {t.parentsStageBtn}
+                <Award className="w-3.5 h-3.5 text-[#8B735B]" /> {t.mainStageBtn}
               </button>
               <button
                 type="button"
@@ -472,10 +472,10 @@ export const FloorPlanEditor = ({
               </button>
               <button
                 type="button"
-                onClick={() => handleDraftAddLandmark('photobooth', 'Bear Photo Backdrop')}
+                onClick={() => handleDraftAddLandmark('restroom', 'Bathroom')}
                 className="p-2 rounded-xl border border-[#CBAE94]/60 bg-white hover:bg-[#EFE6DC] text-left transition-colors flex items-center gap-1.5"
               >
-                <Sparkles className="w-3.5 h-3.5 text-[#8B735B]" /> {t.photoBoothBtn}
+                <Bath className="w-3.5 h-3.5 text-[#8B735B]" /> {t.bathroomBtn}
               </button>
               <button
                 type="button"

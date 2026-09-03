@@ -68,7 +68,7 @@ export interface TableElement {
 export interface LandmarkElement {
   id: string;
   name: string;
-  type: 'entrance' | 'stage' | 'gifts' | 'dessert' | 'photobooth' | 'bar' | 'dj' | 'restroom' | 'food' | 'custom';
+  type: 'entrance' | 'stage' | 'gifts' | 'dessert' | 'bar' | 'dj' | 'restroom' | 'food' | 'custom';
   x: number;
   y: number;
   width: number;

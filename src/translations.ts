@@ -830,12 +830,16 @@ export interface Translations {
   addTablesLabel: string;
   addVenueFeaturesLabel: string;
   entranceBtn: string;
-  parentsStageBtn: string;
+  mainStageBtn: string;
   giftTableBtn: string;
-  photoBoothBtn: string;
+  bathroomBtn: string;
   cakeStationBtn: string;
   drinksBarBtn: string;
   foodStationBtn: string;
+  customFeatureBtn: string;
+  featureNameLabel: string;
+  featureTypeLabel: string;
+  landmarkInspectorLabel: string;
   quickGuideLabel: string;
   quickGuideText: string;
   fullScreenCanvasLabel: string;
@@ -1749,12 +1753,16 @@ export const translations: Record<Language, Translations> = {
     addTablesLabel: "Add Tables",
     addVenueFeaturesLabel: "Add Venue Features",
     entranceBtn: "Entrance",
-    parentsStageBtn: "Parents Stage",
+    mainStageBtn: "Main Stage",
     giftTableBtn: "Gift Table",
-    photoBoothBtn: "Photo Booth",
+    bathroomBtn: "Bathroom",
     cakeStationBtn: "Cake Station",
     drinksBarBtn: "Drinks Bar",
     foodStationBtn: "Food Station",
+    customFeatureBtn: "Custom",
+    featureNameLabel: "Name",
+    featureTypeLabel: "Type",
+    landmarkInspectorLabel: "Venue Feature",
     quickGuideLabel: "Quick Guide",
     quickGuideText: "• Click elements on the canvas stage to select them. • Drag elements to position them around the venue floor. • Click {{save}} at top right when done!",
     fullScreenCanvasLabel: "Full-Screen Interactive Canvas",
@@ -2659,12 +2667,16 @@ export const translations: Record<Language, Translations> = {
     addTablesLabel: "Ajouter des tables",
     addVenueFeaturesLabel: "Ajouter des elements du lieu",
     entranceBtn: "Entree",
-    parentsStageBtn: "Scene des parents",
+    mainStageBtn: "Scene principale",
     giftTableBtn: "Table cadeaux",
-    photoBoothBtn: "Photomaton",
+    bathroomBtn: "Salle de bain",
     cakeStationBtn: "Table de gateaux",
     drinksBarBtn: "Bar a boissons",
     foodStationBtn: "Station repas",
+    customFeatureBtn: "Personnalise",
+    featureNameLabel: "Nom",
+    featureTypeLabel: "Type",
+    landmarkInspectorLabel: "Element du lieu",
     quickGuideLabel: "Guide rapide",
     quickGuideText: "• Cliquez sur les elements de la toile pour les selectionner. • Glissez-les pour les positionner dans la salle. • Cliquez sur {{save}} en haut a droite quand c'est pret !",
     fullScreenCanvasLabel: "Toile interactive plein ecran",

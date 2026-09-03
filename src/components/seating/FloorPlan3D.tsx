@@ -34,7 +34,6 @@ const LANDMARK_COLORS: Record<LandmarkElement['type'], string> = {
   stage: '#8B735B',
   gifts: '#D4A373',
   dessert: '#E9A3A3',
-  photobooth: '#4A3F35',
   bar: '#C9A227',
   dj: '#8E6BB5',
   restroom: '#7FB3D5',
@@ -331,6 +330,20 @@ interface LandmarkProps {
   onLeave?: () => void;
 }
 
+const LandmarkBox = ({ w, h, d, x = 0, y = 0, z = 0, c }: { w: number; h: number; d: number; x?: number; y?: number; z?: number; c: string }) => (
+  <mesh position={[x, y, z]} castShadow receiveShadow>
+    <boxGeometry args={[w, h, d]} />
+    <meshStandardMaterial color={c} />
+  </mesh>
+);
+
+const LandmarkCyl = ({ r, h, x = 0, y = 0, z = 0, c }: { r: number; h: number; x?: number; y?: number; z?: number; c: string }) => (
+  <mesh position={[x, y, z]} castShadow receiveShadow>
+    <cylinderGeometry args={[r, r, h, 20]} />
+    <meshStandardMaterial color={c} />
+  </mesh>
+);
+
 const Landmark3D = ({ floorMap, landmark, onLandmarkHover, onLeave }: LandmarkProps) => {
   const pos = toWorld(floorMap, landmark.x + landmark.width / 2, landmark.y + landmark.height / 2);
   const w = landmark.width * WORLD_SCALE;
@@ -340,15 +353,109 @@ const Landmark3D = ({ floorMap, landmark, onLandmarkHover, onLeave }: LandmarkPr
     onMove: (e) => onLandmarkHover?.(landmark, e.clientX, e.clientY),
     onLeave,
   });
+
+  const base = LANDMARK_COLORS[landmark.type] || '#A09080';
+  let labelY = LANDMARK_H + 0.15;
+  let body: ReactNode;
+
+  switch (landmark.type) {
+    case 'entrance': {
+      const doorH = 1.0;
+      const fT = 0.08;
+      const doorW = w - fT * 2;
+      labelY = doorH + 0.15;
+      body = (
+        <>
+          <LandmarkBox w={w + 0.1} h={0.06} d={d + 0.1} y={0.03} c="#8B735B" />
+          <LandmarkBox w={w} h={fT} d={0.12} y={doorH} c={base} />
+          <LandmarkBox w={fT} h={doorH} d={0.12} x={-w / 2 + fT / 2} y={doorH / 2} c={base} />
+          <LandmarkBox w={fT} h={doorH} d={0.12} x={w / 2 - fT / 2} y={doorH / 2} c={base} />
+          <LandmarkBox w={doorW} h={doorH - 0.06} d={0.06} y={(doorH - 0.06) / 2} z={0.02} c="#6B4F3A" />
+          <LandmarkBox w={0.04} h={0.08} d={0.04} x={doorW / 2 - 0.1} y={doorH / 2} z={0.08} c="#C9A227" />
+        </>
+      );
+      break;
+    }
+    case 'stage': {
+      const stageH = 0.18;
+      labelY = 0.8;
+      body = (
+        <>
+          <LandmarkBox w={w} h={stageH} d={d} y={stageH / 2} c={base} />
+          <LandmarkBox w={w} h={0.65} d={0.06} y={stageH + 0.325} z={-d / 2 + 0.03} c="#8B735B" />
+          <LandmarkBox w={0.12} h={0.3} d={0.12} x={-w / 2 + 0.12} y={stageH + 0.15} z={d / 2 - 0.1} c="#4A3F35" />
+          <LandmarkBox w={0.12} h={0.3} d={0.12} x={w / 2 - 0.12} y={stageH + 0.15} z={d / 2 - 0.1} c="#4A3F35" />
+        </>
+      );
+      break;
+    }
+    case 'restroom':
+      body = (
+        <>
+          <LandmarkBox w={w} h={LANDMARK_H} d={d} y={LANDMARK_H / 2} c={base} />
+          <LandmarkBox w={w * 0.3} h={LANDMARK_H - 0.1} d={0.04} x={-w * 0.2} y={(LANDMARK_H - 0.1) / 2} z={d / 2 + 0.01} c="#6B4F3A" />
+          <LandmarkBox w={0.1} h={0.12} d={0.08} x={w * 0.25} y={0.18} z={-d * 0.2} c="#FFFDF9" />
+          <LandmarkCyl r={0.07} h={0.1} x={w * 0.25} y={0.05} z={-d * 0.2} c="#FFFDF9" />
+        </>
+      );
+      break;
+    case 'gifts':
+      body = (
+        <>
+          <LandmarkBox w={w} h={0.3} d={d} y={0.15} c="#8B735B" />
+          <LandmarkBox w={w * 0.2} h={0.12} d={w * 0.2} x={-w * 0.2} y={0.36} z={-d * 0.15} c="#C53030" />
+          <LandmarkBox w={w * 0.18} h={0.1} d={w * 0.18} x={w * 0.2} y={0.35} z={d * 0.15} c={base} />
+        </>
+      );
+      break;
+    case 'dessert':
+      body = (
+        <>
+          <LandmarkBox w={w} h={0.3} d={d} y={0.15} c="#8B735B" />
+          <LandmarkCyl r={Math.min(w, d) * 0.3} h={0.14} y={0.37} c={base} />
+          <LandmarkCyl r={Math.min(w, d) * 0.2} h={0.12} y={0.5} c="#FFFDF9" />
+        </>
+      );
+      break;
+    case 'bar':
+      body = (
+        <>
+          <LandmarkBox w={w} h={0.42} d={d} y={0.21} c={base} />
+          <LandmarkBox w={w - 0.06} h={0.03} d={d - 0.06} y={0.42} c="#FFFDF9" />
+          <LandmarkCyl r={0.025} h={0.08} x={-w * 0.25} y={0.46} c="#C53030" />
+          <LandmarkCyl r={0.025} h={0.08} x={0} y={0.46} c="#4A9D6E" />
+          <LandmarkCyl r={0.025} h={0.08} x={w * 0.25} y={0.46} c="#C9A227" />
+        </>
+      );
+      break;
+    case 'food':
+      body = (
+        <>
+          <LandmarkBox w={w} h={0.3} d={d} y={0.15} c="#8B735B" />
+          <LandmarkBox w={w * 0.3} h={0.08} d={d * 0.4} x={-w * 0.2} y={0.34} c="#E8E0D4" />
+          <LandmarkBox w={w * 0.3} h={0.08} d={d * 0.4} x={w * 0.2} y={0.34} c="#E8E0D4" />
+        </>
+      );
+      break;
+    case 'dj':
+      body = (
+        <>
+          <LandmarkBox w={w} h={0.42} d={d} y={0.21} c={base} />
+          <LandmarkCyl r={Math.min(w, d) * 0.25} h={0.02} x={-w * 0.2} y={0.43} c="#4A3F35" />
+          <LandmarkCyl r={Math.min(w, d) * 0.25} h={0.02} x={w * 0.2} y={0.43} c="#4A3F35" />
+        </>
+      );
+      break;
+    default:
+      body = <LandmarkBox w={w} h={LANDMARK_H} d={d} y={LANDMARK_H / 2} c={base} />;
+  }
+
   return (
-    <group position={[pos.x, 0, pos.z]} rotation={[0, -(landmark.rotation || 0) * (Math.PI / 180), 0]}>
-      <mesh position={[0, LANDMARK_H / 2, 0]} castShadow receiveShadow {...events}>
-        <boxGeometry args={[w, LANDMARK_H, d]} />
-        <meshStandardMaterial color={LANDMARK_COLORS[landmark.type] || '#A09080'} />
-      </mesh>
+    <group position={[pos.x, 0, pos.z]} rotation={[0, -(landmark.rotation || 0) * (Math.PI / 180), 0]} {...events}>
+      {body}
       <Html
         center
-        position={[0, LANDMARK_H + 0.15, 0]}
+        position={[0, labelY, 0]}
         distanceFactor={14}
         pointerEvents="none"
         style={{ pointerEvents: 'none' }}

@@ -90,8 +90,8 @@ export function useFloorPlanEditor({ floorMap, guests, notify, onSave, onCancel 
 
   // ponytail: wall-clamp — keeps whole element inside round(circle/ellipse) wall.
   // Math lives in clampToRoundRoom (floorPlanHelpers) so it stays unit-testable.
-  const clampCirclePos = (x: number, y: number, w: number, h: number, map: FloorMapData) =>
-    clampToRoundRoom(x, y, w, h, map);
+  const clampCirclePos = (x: number, y: number, w: number, h: number, map: FloorMapData, isLandmark = false) =>
+    clampToRoundRoom(x, y, w, h, map, isLandmark);
 
   const clampAllToCircle = (map: FloorMapData): FloorMapData => {
     if ((map.roomShape ?? 'rectangle') !== 'circle' && map.roomShape !== 'ellipse') return map;
@@ -160,12 +160,12 @@ export function useFloorPlanEditor({ floorMap, guests, notify, onSave, onCancel 
   };
 
   const handleDraftAddLandmark = (
-    type: 'entrance' | 'stage' | 'gifts' | 'photobooth' | 'bar' | 'dessert' | 'dj' | 'food',
+    type: 'entrance' | 'stage' | 'gifts' | 'bar' | 'dessert' | 'dj' | 'restroom' | 'food',
     name: string
   ) => {
     const w = 150;
     const h = 60;
-    const p = clampCirclePos(120, 120, w, h, draftFloorMap);
+    const p = clampCirclePos(120, 120, w, h, draftFloorMap, true);
     const newLandmark: LandmarkElement = {
       id: `lm-${Date.now()}`,
       name,
