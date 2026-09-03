@@ -657,7 +657,7 @@ export const FloorPlanEditor = ({
                       rotation={landmark.rotation || 0}
                       draggable
                       dragBoundFunc={(pos: any) => {
-                        const p = clampCirclePos(pos.x, pos.y, landmark.width, landmark.height, draftFloorMap);
+                        const p = clampCirclePos(pos.x, pos.y, landmark.width, landmark.height, draftFloorMap, true);
                         return { x: p.x, y: p.y };
                       }}
                       onDragEnd={(e) => handleDraftLandmarkDragEnd(landmark.id, e)}

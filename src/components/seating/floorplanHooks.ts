@@ -102,7 +102,7 @@ export function useFloorPlanEditor({ floorMap, guests, notify, onSave, onCancel 
         return p.x === t.x && p.y === t.y ? t : { ...t, x: Math.round(p.x), y: Math.round(p.y) };
       }),
       landmarks: map.landmarks.map((l) => {
-        const p = clampCirclePos(l.x, l.y, l.width, l.height, map);
+        const p = clampCirclePos(l.x, l.y, l.width, l.height, map, true);
         return p.x === l.x && p.y === l.y ? l : { ...l, x: Math.round(p.x), y: Math.round(p.y) };
       }),
     };
@@ -204,7 +204,7 @@ export function useFloorPlanEditor({ floorMap, guests, notify, onSave, onCancel 
     const rawX = Math.round(e.target.x());
     const rawY = Math.round(e.target.y());
     const l = draftFloorMap.landmarks.find((x) => x.id === id);
-    const clamped = l ? clampCirclePos(rawX, rawY, l.width, l.height, draftFloorMap) : { x: rawX, y: rawY };
+    const clamped = l ? clampCirclePos(rawX, rawY, l.width, l.height, draftFloorMap, true) : { x: rawX, y: rawY };
     if (l && (clamped.x !== rawX || clamped.y !== rawY)) {
       e.target.x(clamped.x);
       e.target.y(clamped.y);
@@ -260,7 +260,7 @@ export function useFloorPlanEditor({ floorMap, guests, notify, onSave, onCancel 
           const newH = Math.max(30, Math.round(l.height * scaleY));
           const rawX = Math.round(node.x());
           const rawY = Math.round(node.y());
-          const p = clampCirclePos(rawX, rawY, newW, newH, draftFloorMap);
+          const p = clampCirclePos(rawX, rawY, newW, newH, draftFloorMap, true);
           if (p.x !== rawX || p.y !== rawY) {
             node.x(p.x);
             node.y(p.y);

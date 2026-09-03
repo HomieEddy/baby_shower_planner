@@ -153,12 +153,15 @@ export const clampToRoundRoom = (
   y: number,
   w: number,
   h: number,
-  map: FloorMapData
+  map: FloorMapData,
+  isLandmark = false
 ): { x: number; y: number } => {
   if ((map.roomShape ?? 'rectangle') !== 'circle' && map.roomShape !== 'ellipse') return { x, y };
   const cx = map.canvasWidth / 2;
   const cy = map.canvasHeight / 2;
-  const elemR = Math.hypot(w, h) / 2 + 18;
+  // Tables keep a seat-ring margin (+18); landmarks sit flush against the wall,
+  // so they use only their thinnest half-extent instead of the full half-diagonal.
+  const elemR = isLandmark ? Math.min(w, h) / 2 : Math.hypot(w, h) / 2 + 18;
   let ax: number;
   let ay: number;
   if (map.roomShape === 'circle') {
