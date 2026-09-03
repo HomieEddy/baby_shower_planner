@@ -22,7 +22,7 @@ import {
   MapPin,
   Award,
   Gift,
-  Sparkles,
+  Bath,
   Utensils,
   UtensilsCrossed,
   Info,
@@ -106,6 +106,7 @@ export const FloorPlanEditor = ({
     guestFilterQuery,
     setGuestFilterQuery,
     draftSelectedTable,
+    draftSelectedLandmark,
     handleUpdateDraftRoomSize,
     handleUpdateRoomShape,
     handleUpdateDiameter,
@@ -458,10 +459,10 @@ export const FloorPlanEditor = ({
               </button>
               <button
                 type="button"
-                onClick={() => handleDraftAddLandmark('stage', 'Parents Throne & Stage')}
+                onClick={() => handleDraftAddLandmark('stage', 'Main Stage')}
                 className="p-2 rounded-xl border border-[#CBAE94]/60 bg-white hover:bg-[#EFE6DC] text-left transition-colors flex items-center gap-1.5"
               >
-                <Award className="w-3.5 h-3.5 text-[#8B735B]" /> {t.parentsStageBtn}
+                <Award className="w-3.5 h-3.5 text-[#8B735B]" /> {t.mainStageBtn}
               </button>
               <button
                 type="button"
@@ -472,10 +473,10 @@ export const FloorPlanEditor = ({
               </button>
               <button
                 type="button"
-                onClick={() => handleDraftAddLandmark('photobooth', 'Bear Photo Backdrop')}
+                onClick={() => handleDraftAddLandmark('restroom', 'Bathroom')}
                 className="p-2 rounded-xl border border-[#CBAE94]/60 bg-white hover:bg-[#EFE6DC] text-left transition-colors flex items-center gap-1.5"
               >
-                <Sparkles className="w-3.5 h-3.5 text-[#8B735B]" /> {t.photoBoothBtn}
+                <Bath className="w-3.5 h-3.5 text-[#8B735B]" /> {t.bathroomBtn}
               </button>
               <button
                 type="button"
@@ -526,6 +527,17 @@ export const FloorPlanEditor = ({
               <Layers className="w-3.5 h-3.5" /> {t.fullScreenCanvasLabel}
             </span>
             <div className="flex items-center gap-2">
+              {selectedId && (
+                <button
+                  type="button"
+                  onClick={handleDraftDeleteSelected}
+                  className="px-2.5 py-1.5 rounded-lg bg-red-100 hover:bg-red-200 text-red-700 text-xs font-bold flex items-center gap-1 transition-colors"
+                  title={selectedType === 'landmark' ? t.deleteLandmarkBtn : t.deleteTableBtn}
+                >
+                  <Trash2 className="w-3.5 h-3.5" />
+                  <span className="hidden sm:inline">{selectedType === 'landmark' ? t.deleteLandmarkBtn : t.deleteTableBtn}</span>
+                </button>
+              )}
               <ViewModeToggle value={viewMode} onChange={setViewMode} />
               <span className="hidden md:inline text-[11px] font-mono text-[#5D5449]">
                 {t.liveDraftStageLabel}
@@ -645,7 +657,7 @@ export const FloorPlanEditor = ({
                       rotation={landmark.rotation || 0}
                       draggable
                       dragBoundFunc={(pos: any) => {
-                        const p = clampCirclePos(pos.x, pos.y, landmark.width, landmark.height, draftFloorMap);
+                        const p = clampCirclePos(pos.x, pos.y, landmark.width, landmark.height, draftFloorMap, true);
                         return { x: p.x, y: p.y };
                       }}
                       onDragEnd={(e) => handleDraftLandmarkDragEnd(landmark.id, e)}
@@ -832,6 +844,78 @@ export const FloorPlanEditor = ({
 
         {/* Right Inspector Column (col-3) */}
         <div className="lg:col-span-3 lg:overflow-y-auto space-y-4 pr-1 order-3">
+          {/* Venue Feature Inspector (rename / re-type a selected landmark) */}
+          {selectedType === 'landmark' && draftSelectedLandmark && (
+            <div className="bg-[#FFFDF9] rounded-3xl p-4 shadow-md border-2 border-[#CBAE94] space-y-4">
+              <div className="flex items-center justify-between border-b border-[#CBAE94]/40 pb-2">
+                <div>
+                  <span className="text-[10px] font-mono font-bold uppercase text-[#8B735B]">
+                    {t.landmarkInspectorLabel}
+                  </span>
+                  <h3 className="font-gaegu text-2xl font-bold text-[#4A3F35]">
+                    {draftSelectedLandmark.name}
+                  </h3>
+                </div>
+                <button
+                  type="button"
+                  onClick={handleDraftDeleteSelected}
+                  className="p-2 text-red-600 hover:bg-red-50 rounded-xl transition-colors"
+                  title={t.deleteLandmarkBtn}
+                >
+                  <Trash2 className="w-4 h-4" />
+                </button>
+              </div>
+
+              <div className="space-y-3 text-xs">
+                <div>
+                  <label className="label-mono block mb-1">{t.featureNameLabel}</label>
+                  <TextInput
+                    variant="soft"
+                    type="text"
+                    value={draftSelectedLandmark.name}
+                    onChange={(e) => {
+                      const newName = e.target.value;
+                      setDraftFloorMap({
+                        ...draftFloorMap,
+                        landmarks: draftFloorMap.landmarks.map((l) =>
+                          l.id === draftSelectedLandmark.id ? { ...l, name: newName } : l
+                        ),
+                      });
+                      setIsDirty(true);
+                    }}
+                  />
+                </div>
+
+                <div>
+                  <label className="label-mono block mb-1">{t.featureTypeLabel}</label>
+                  <Select
+                    variant="soft"
+                    value={draftSelectedLandmark.type}
+                    onChange={(e) => {
+                      const type = e.target.value as LandmarkElement['type'];
+                      setDraftFloorMap({
+                        ...draftFloorMap,
+                        landmarks: draftFloorMap.landmarks.map((l) =>
+                          l.id === draftSelectedLandmark.id ? { ...l, type } : l
+                        ),
+                      });
+                      setIsDirty(true);
+                    }}
+                  >
+                    <option value="entrance">{t.entranceBtn}</option>
+                    <option value="stage">{t.mainStageBtn}</option>
+                    <option value="gifts">{t.giftTableBtn}</option>
+                    <option value="restroom">{t.bathroomBtn}</option>
+                    <option value="dessert">{t.cakeStationBtn}</option>
+                    <option value="bar">{t.drinksBarBtn}</option>
+                    <option value="food">{t.foodStationBtn}</option>
+                    <option value="custom">{t.customFeatureBtn}</option>
+                  </Select>
+                </div>
+              </div>
+            </div>
+          )}
+
           {/* Seating Workflow Mode Switcher */}
           <div className="bg-[#FFFDF9] rounded-2xl p-1.5 shadow-md border-2 border-[#CBAE94] flex items-center gap-1">
             <button

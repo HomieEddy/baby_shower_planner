@@ -1,4 +1,4 @@
-import { Group, Circle, Rect, Text, Line, Arc } from 'react-konva';
+import { Group, Circle, Ellipse, Rect, Text, Line } from 'react-konva';
 import { TableElement, LandmarkElement } from '../../types';
 
 // ─── Premium Table Body (drop-in for basic shapes) ──────────────
@@ -47,18 +47,30 @@ export const renderLandmark = (landmark: LandmarkElement, isSelected: boolean) =
   const bg = isSelected ? 'rgba(239,230,220,1)' : 'rgba(250,246,240,1)';
 
   switch (landmark.type) {
-    case 'entrance':
+    case 'entrance': {
+      const dX = w * 0.2;
+      const dW = w * 0.6;
+      const dTop = 4;
+      const dBot = h - 16;
+      const dH = dBot - dTop;
       return (
         <Group>
           <Rect width={w} height={h} fill={bg} stroke={s} strokeWidth={sw} cornerRadius={6} shadowColor="rgba(0,0,0,0.08)" shadowBlur={4} />
-          <Rect x={4} y={4} width={w / 2 - 6} height={h - 8} fill="#E8E0D4" cornerRadius={[4, 0, 0, 4]} stroke="#D4C9B5" strokeWidth={1} />
-          <Rect x={w / 2 + 2} y={4} width={w / 2 - 6} height={h - 8} fill="#E8E0D4" cornerRadius={[0, 4, 4, 0]} stroke="#D4C9B5" strokeWidth={1} />
-          <Circle x={w / 2 - 6} y={h / 2} radius={1.5} fill="#8B735B" />
-          <Circle x={w / 2 + 6} y={h / 2} radius={1.5} fill="#8B735B" />
-          <Arc x={w / 2} y={2} innerRadius={w * 0.3} outerRadius={w * 0.3} angle={180} rotation={180} stroke="#D4C9B5" strokeWidth={1} />
+          {/* step / threshold */}
+          <Rect x={dX - 5} y={dBot} width={dW + 10} height={6} fill="#D4C9B5" cornerRadius={[2, 2, 0, 0]} />
+          {/* door frame */}
+          <Rect x={dX} y={dTop} width={dW} height={dH} fill="#8B735B" cornerRadius={3} />
+          {/* door leaf */}
+          <Rect x={dX + 4} y={dTop + 4} width={dW - 8} height={dH - 8} fill="#A98D6B" cornerRadius={2} />
+          {/* inset panels */}
+          <Rect x={dX + 10} y={dTop + 9} width={dW - 20} height={(dH - 22) * 0.42} fill="#8B735B" cornerRadius={1} />
+          <Rect x={dX + 10} y={dTop + 13 + (dH - 22) * 0.42} width={dW - 20} height={(dH - 22) * 0.42} fill="#8B735B" cornerRadius={1} />
+          {/* handle */}
+          <Circle x={dX + dW - 13} y={dTop + dH / 2} radius={2} fill="#C9A227" />
           <Text text={landmark.name} x={0} y={h - 14} width={w} align="center" fontSize={8} fontStyle="bold" fill="#4A3F35" />
         </Group>
       );
+    }
     case 'stage':
       return (
         <Group>
@@ -85,17 +97,19 @@ export const renderLandmark = (landmark: LandmarkElement, isSelected: boolean) =
           <Text text={landmark.name} x={0} y={h - 14} width={w} align="center" fontSize={8} fontStyle="bold" fill="#4A3F35" />
         </Group>
       );
-    case 'photobooth':
+    case 'restroom':
       return (
         <Group>
           <Rect width={w} height={h} fill={bg} stroke={s} strokeWidth={sw} cornerRadius={10} shadowColor="rgba(0,0,0,0.08)" shadowBlur={4} />
-          <Rect x={w / 2 - 12} y={h * 0.25} width={24} height={18} fill="#4A3F35" cornerRadius={4} />
-          <Rect x={w / 2 - 8} y={h * 0.3} width={16} height={10} fill="#FAF6F0" cornerRadius={2} />
-          <Circle x={w / 2} y={h * 0.35} radius={3} fill="#4A3F35" />
-          <Rect x={w / 2 - 3} y={h * 0.2} width={6} height={4} fill="#D4A373" cornerRadius={1} />
-          <Line points={[w / 2, h * 0.85, w / 2 - 10, h]} stroke="#8B735B" strokeWidth={2} />
-          <Line points={[w / 2, h * 0.85, w / 2 + 10, h]} stroke="#8B735B" strokeWidth={2} />
-          <Line points={[w / 2 - 10, h, w / 2 + 10, h]} stroke="#8B735B" strokeWidth={2} />
+          {/* door */}
+          <Rect x={6} y={h * 0.35} width={w * 0.26} height={h * 0.6} fill="#8B735B" cornerRadius={2} />
+          <Circle x={6 + w * 0.26 - 6} y={h * 0.65} radius={1.5} fill="#C9A227" />
+          {/* toilet: tank + bowl */}
+          <Rect x={w * 0.55} y={h * 0.18} width={w * 0.18} height={h * 0.26} fill="#FFFDF9" cornerRadius={2} stroke="#D4C9B5" strokeWidth={1} />
+          <Ellipse x={w * 0.64} y={h * 0.56} radiusX={w * 0.11} radiusY={h * 0.15} fill="#FFFDF9" stroke="#D4C9B5" strokeWidth={1} />
+          {/* sink */}
+          <Rect x={w * 0.42} y={h * 0.56} width={w * 0.2} height={h * 0.12} fill="#FFFDF9" cornerRadius={2} stroke="#D4C9B5" strokeWidth={1} />
+          <Circle x={w * 0.52} y={h * 0.63} radius={2.5} fill="#7FB3D5" />
           <Text text={landmark.name} x={0} y={h - 14} width={w} align="center" fontSize={8} fontStyle="bold" fill="#4A3F35" />
         </Group>
       );

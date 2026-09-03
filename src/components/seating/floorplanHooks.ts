@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Guest, FloorMapData, LandmarkElement, TableElement } from '../../types';
 import { getGuestPartySize, clampToRoundRoom } from './floorPlanHelpers';
 import { useT } from '../shared/i18n';
@@ -90,8 +90,8 @@ export function useFloorPlanEditor({ floorMap, guests, notify, onSave, onCancel 
 
   // ponytail: wall-clamp — keeps whole element inside round(circle/ellipse) wall.
   // Math lives in clampToRoundRoom (floorPlanHelpers) so it stays unit-testable.
-  const clampCirclePos = (x: number, y: number, w: number, h: number, map: FloorMapData) =>
-    clampToRoundRoom(x, y, w, h, map);
+  const clampCirclePos = (x: number, y: number, w: number, h: number, map: FloorMapData, isLandmark = false) =>
+    clampToRoundRoom(x, y, w, h, map, isLandmark);
 
   const clampAllToCircle = (map: FloorMapData): FloorMapData => {
     if ((map.roomShape ?? 'rectangle') !== 'circle' && map.roomShape !== 'ellipse') return map;
@@ -102,7 +102,7 @@ export function useFloorPlanEditor({ floorMap, guests, notify, onSave, onCancel 
         return p.x === t.x && p.y === t.y ? t : { ...t, x: Math.round(p.x), y: Math.round(p.y) };
       }),
       landmarks: map.landmarks.map((l) => {
-        const p = clampCirclePos(l.x, l.y, l.width, l.height, map);
+        const p = clampCirclePos(l.x, l.y, l.width, l.height, map, true);
         return p.x === l.x && p.y === l.y ? l : { ...l, x: Math.round(p.x), y: Math.round(p.y) };
       }),
     };
@@ -160,12 +160,12 @@ export function useFloorPlanEditor({ floorMap, guests, notify, onSave, onCancel 
   };
 
   const handleDraftAddLandmark = (
-    type: 'entrance' | 'stage' | 'gifts' | 'photobooth' | 'bar' | 'dessert' | 'dj' | 'food',
+    type: 'entrance' | 'stage' | 'gifts' | 'bar' | 'dessert' | 'dj' | 'restroom' | 'food',
     name: string
   ) => {
     const w = 150;
     const h = 60;
-    const p = clampCirclePos(120, 120, w, h, draftFloorMap);
+    const p = clampCirclePos(120, 120, w, h, draftFloorMap, true);
     const newLandmark: LandmarkElement = {
       id: `lm-${Date.now()}`,
       name,
@@ -204,7 +204,7 @@ export function useFloorPlanEditor({ floorMap, guests, notify, onSave, onCancel 
     const rawX = Math.round(e.target.x());
     const rawY = Math.round(e.target.y());
     const l = draftFloorMap.landmarks.find((x) => x.id === id);
-    const clamped = l ? clampCirclePos(rawX, rawY, l.width, l.height, draftFloorMap) : { x: rawX, y: rawY };
+    const clamped = l ? clampCirclePos(rawX, rawY, l.width, l.height, draftFloorMap, true) : { x: rawX, y: rawY };
     if (l && (clamped.x !== rawX || clamped.y !== rawY)) {
       e.target.x(clamped.x);
       e.target.y(clamped.y);
@@ -260,7 +260,7 @@ export function useFloorPlanEditor({ floorMap, guests, notify, onSave, onCancel 
           const newH = Math.max(30, Math.round(l.height * scaleY));
           const rawX = Math.round(node.x());
           const rawY = Math.round(node.y());
-          const p = clampCirclePos(rawX, rawY, newW, newH, draftFloorMap);
+          const p = clampCirclePos(rawX, rawY, newW, newH, draftFloorMap, true);
           if (p.x !== rawX || p.y !== rawY) {
             node.x(p.x);
             node.y(p.y);
@@ -281,7 +281,7 @@ export function useFloorPlanEditor({ floorMap, guests, notify, onSave, onCancel 
     }
   };
 
-  const handleDraftDeleteSelected = () => {
+  const handleDraftDeleteSelected = useCallback(() => {
     if (!selectedId) return;
     if (selectedType === 'table') {
       const updatedTables = draftFloorMap.tables.filter((t) => t.id !== selectedId);
@@ -294,7 +294,21 @@ export function useFloorPlanEditor({ floorMap, guests, notify, onSave, onCancel 
     }
     setSelectedId(null);
     setSelectedType(null);
-  };
+  }, [selectedId, selectedType, draftFloorMap]);
+
+  // Delete / Backspace removes the selected table or landmark (ignored while typing).
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if ((e.key === 'Delete' || e.key === 'Backspace') && selectedId) {
+        const tag = (e.target as HTMLElement | null)?.tagName;
+        if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT') return;
+        e.preventDefault();
+        handleDraftDeleteSelected();
+      }
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [selectedId, handleDraftDeleteSelected]);
 
   const handleDraftAssignGuest = (guestId: string, tableId: string | null): boolean => {
     const guest = draftGuests.find((g) => g.id === guestId);
@@ -370,6 +384,11 @@ export function useFloorPlanEditor({ floorMap, guests, notify, onSave, onCancel 
     [draftFloorMap, selectedId]
   );
 
+  const draftSelectedLandmark = useMemo(
+    () => draftFloorMap.landmarks.find((l) => l.id === selectedId),
+    [draftFloorMap, selectedId]
+  );
+
   return {
     draftFloorMap,
     setDraftFloorMap,
@@ -391,6 +410,7 @@ export function useFloorPlanEditor({ floorMap, guests, notify, onSave, onCancel 
     guestFilterQuery,
     setGuestFilterQuery,
     draftSelectedTable,
+    draftSelectedLandmark,
     handleUpdateDraftRoomSize,
     handleUpdateRoomShape,
     handleUpdateDiameter,

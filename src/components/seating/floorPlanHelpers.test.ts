@@ -43,4 +43,12 @@ describe('clampToRoundRoom', () => {
     const rad = 500 - 10 - (Math.hypot(100, 100) / 2 + 18);
     expect(Math.hypot(x + 50 - cx, y + 50 - cy)).toBeLessThanOrEqual(rad + 0.5);
   });
+
+  it('lets a landmark sit flush against the wall (no seat margin, thin half-extent)', () => {
+    const p = clampToRoundRoom(950, 290, 150, 60, map({ roomShape: 'circle', canvasWidth: 1000, canvasHeight: 1000 }), true);
+    const cx = 500;
+    const cy = 500;
+    const rad = 500 - 10 - Math.min(150, 60) / 2;
+    expect(Math.hypot(p.x + 75 - cx, p.y + 30 - cy)).toBeLessThanOrEqual(rad + 0.5);
+  });
 });
