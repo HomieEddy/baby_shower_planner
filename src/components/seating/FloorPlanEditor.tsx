@@ -4,10 +4,8 @@ import {
   Layer,
   Rect,
   Circle,
-  Ellipse,
   Text,
   Group,
-  Line,
   Transformer,
 } from 'react-konva';
 import {
@@ -46,7 +44,7 @@ import {
 } from '../../lib/tableAssignment';
 import { findNearestSeat } from './floorPlanHelpers';
 import { getPartyMembers } from '../../lib/guestAttendees';
-import { renderCustomLandmarkShape } from './renderCustomLandmarkShape';
+import { SeatRing, renderRoomBoundary, renderLandmark } from './venueShapes';
 import { useFloorPlanEditor } from './floorplanHooks';
 import { ViewModeToggle, ViewMode } from '../shared/ViewModeToggle';
 import { useT } from '../shared/i18n';
@@ -703,55 +701,7 @@ export const FloorPlanEditor = ({
             >
               {/* Layer 1: Grid + Room Boundary */}
               <Layer>
-                {(draftFloorMap.roomShape ?? 'rectangle') === 'circle' ? (
-                  <Circle
-                    x={draftFloorMap.canvasWidth / 2}
-                    y={draftFloorMap.canvasHeight / 2}
-                    radius={Math.min(draftFloorMap.canvasWidth, draftFloorMap.canvasHeight) / 2 - 10}
-                    stroke="#CBAE94"
-                    strokeWidth={2}
-                    dash={[8, 8]}
-                  />
-                ) : (draftFloorMap.roomShape ?? 'rectangle') === 'ellipse' ? (
-                  <Ellipse
-                    x={draftFloorMap.canvasWidth / 2}
-                    y={draftFloorMap.canvasHeight / 2}
-                    radiusX={draftFloorMap.canvasWidth / 2 - 10}
-                    radiusY={draftFloorMap.canvasHeight / 2 - 10}
-                    stroke="#CBAE94"
-                    strokeWidth={2}
-                    dash={[8, 8]}
-                  />
-                ) : (
-                  <Rect
-                    x={10}
-                    y={10}
-                    width={draftFloorMap.canvasWidth - 20}
-                    height={draftFloorMap.canvasHeight - 20}
-                    stroke="#CBAE94"
-                    strokeWidth={2}
-                    dash={[8, 8]}
-                    cornerRadius={20}
-                  />
-                )}
-                {Array.from({ length: Math.ceil(draftFloorMap.canvasWidth / 55) }).map((_, i) => (
-                  <Line
-                    key={`mvgrid-${i}`}
-                    points={[(i + 1) * 55, 20, (i + 1) * 55, draftFloorMap.canvasHeight - 20]}
-                    stroke="#EFE6DC"
-                    strokeWidth={1}
-                    dash={[2, 4]}
-                  />
-                ))}
-                {Array.from({ length: Math.ceil(draftFloorMap.canvasHeight / 55) }).map((_, i) => (
-                  <Line
-                    key={`mhgrid-${i}`}
-                    points={[20, (i + 1) * 55, draftFloorMap.canvasWidth - 20, (i + 1) * 55]}
-                    stroke="#EFE6DC"
-                    strokeWidth={1}
-                    dash={[2, 4]}
-                  />
-                ))}
+                {renderRoomBoundary(draftFloorMap)}
               </Layer>
 
               {/* Layer 2: Landmarks */}
@@ -781,7 +731,7 @@ export const FloorPlanEditor = ({
                       onMouseMove={(e) => handleLandmarkHover(landmark, e.evt.clientX, e.evt.clientY)}
                       onMouseLeave={() => setHoverTooltip(null)}
                     >
-                      {renderCustomLandmarkShape(landmark, isSelected)}
+                      {renderLandmark(landmark, isSelected)}
                     </Group>
                   );
                 })}
@@ -849,67 +799,65 @@ export const FloorPlanEditor = ({
                       onMouseLeave={() => setHoverTooltip(null)}
                     >
                       {/* Seat Circles around Table */}
-                      {Array.from({ length: table.capacity }).map((_, idx) => {
-                        const angle = (idx / table.capacity) * 2 * Math.PI;
-                        const radiusX = table.width / 2 + 18;
-                        const radiusY = table.height / 2 + 18;
-                        const seatX = table.width / 2 + radiusX * Math.cos(angle);
-                        const seatY = table.height / 2 + radiusY * Math.sin(angle);
-                        const occupant: SeatOccupant | null = tableSeats[idx] ?? null;
-                        const isDropTargetSeat = dropTarget?.tableId === table.id && dropTarget.seatIndex === idx;
-                        const isPickedSeat =
-                          !!occupant &&
-                          !!selectedAttendee &&
-                          occupant.guestId === selectedAttendee.guestId &&
-                          occupant.attendeeIndex === selectedAttendee.attendeeIndex;
+                      <SeatRing
+                        table={table}
+                        renderSeat={(pos, idx) => {
+                          const occupant: SeatOccupant | null = tableSeats[idx] ?? null;
+                          const isDropTargetSeat = dropTarget?.tableId === table.id && dropTarget.seatIndex === idx;
+                          const isPickedSeat =
+                            !!occupant &&
+                            !!selectedAttendee &&
+                            occupant.guestId === selectedAttendee.guestId &&
+                            occupant.attendeeIndex === selectedAttendee.attendeeIndex;
 
-                        let seatFill = occupant ? '#8B735B' : '#FFFDF9';
-                        let seatStroke = '#CBAE94';
-                        let seatRadius = 8;
-                        if (isDropTargetSeat) {
-                          seatFill = '#A7F3D0';
-                          seatStroke = '#059669';
-                          seatRadius = 10;
-                        } else if (isPickedSeat) {
-                          seatFill = '#FDE68A';
-                          seatStroke = '#D97706';
-                        } else if (selectedAttendee && !occupant) {
-                          seatFill = '#D1FAE5';
-                          seatStroke = '#059669';
-                        }
+                          let seatFill = occupant ? '#8B735B' : '#FFFDF9';
+                          let seatStroke = '#CBAE94';
+                          let seatRadius = 8;
+                          if (isDropTargetSeat) {
+                            seatFill = '#A7F3D0';
+                            seatStroke = '#059669';
+                            seatRadius = 10;
+                          } else if (isPickedSeat) {
+                            seatFill = '#FDE68A';
+                            seatStroke = '#D97706';
+                          } else if (selectedAttendee && !occupant) {
+                            seatFill = '#D1FAE5';
+                            seatStroke = '#059669';
+                          }
 
-                        return (
-                          <Circle
-                            key={`dseat-${table.id}-${idx}`}
-                            x={seatX}
-                            y={seatY}
-                            radius={seatRadius}
-                            fill={seatFill}
-                            stroke={seatStroke}
-                            strokeWidth={2}
-                            onClick={(e) => {
-                              e.cancelBubble = true;
-                              if (selectedAttendee) {
-                                handleSeatAttendee(selectedAttendee.guestId, selectedAttendee.attendeeIndex, table.id, idx);
-                                setSelectedAttendee(null);
-                              } else if (occupant) {
-                                setSelectedAttendee({ guestId: occupant.guestId, attendeeIndex: occupant.attendeeIndex });
-                              } else {
-                                setSelectedAttendee(null);
-                              }
-                            }}
-                            onMouseEnter={(e) => {
-                              e.cancelBubble = true;
-                              handleSeatHover(table, idx, draftGuests, e.evt.clientX, e.evt.clientY);
-                            }}
-                            onMouseMove={(e) => {
-                              e.cancelBubble = true;
-                              handleSeatHover(table, idx, draftGuests, e.evt.clientX, e.evt.clientY);
-                            }}
-                            onMouseLeave={() => setHoverTooltip(null)}
-                          />
-                        );
-                      })}
+                          return (
+                            <Circle
+                              key={`dseat-${table.id}-${idx}`}
+                              x={pos.x}
+                              y={pos.y}
+                              radius={seatRadius}
+                              fill={seatFill}
+                              stroke={seatStroke}
+                              strokeWidth={2}
+                              onClick={(e) => {
+                                e.cancelBubble = true;
+                                if (selectedAttendee) {
+                                  handleSeatAttendee(selectedAttendee.guestId, selectedAttendee.attendeeIndex, table.id, idx);
+                                  setSelectedAttendee(null);
+                                } else if (occupant) {
+                                  setSelectedAttendee({ guestId: occupant.guestId, attendeeIndex: occupant.attendeeIndex });
+                                } else {
+                                  setSelectedAttendee(null);
+                                }
+                              }}
+                              onMouseEnter={(e) => {
+                                e.cancelBubble = true;
+                                handleSeatHover(table, idx, draftGuests, e.evt.clientX, e.evt.clientY);
+                              }}
+                              onMouseMove={(e) => {
+                                e.cancelBubble = true;
+                                handleSeatHover(table, idx, draftGuests, e.evt.clientX, e.evt.clientY);
+                              }}
+                              onMouseLeave={() => setHoverTooltip(null)}
+                            />
+                          );
+                        }}
+                      />
                       {/* Table Base Shape */}
                       {table.shape === 'circle' ? (
                         <Circle
