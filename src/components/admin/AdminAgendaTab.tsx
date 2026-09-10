@@ -294,7 +294,7 @@ export const AdminAgendaTab: React.FC<AdminAgendaTabProps> = ({ language, t, set
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
             <label className="label-mono block mb-1">{t.agendaReminderAdvanceLabel}</label>
-            <select value={advance} onChange={(e) => setReminderForm((f) => ({ ...f, advance: e.target.value }))} className={inputCls}>
+            <select value={advance} onChange={(e) => setReminderForm((f) => ({ ...f, advance: e.target.value as (typeof ADVANCE_OPTIONS)[number] }))} className={inputCls}>
               {ADVANCE_OPTIONS.map((opt) => (
                 <option key={opt} value={opt}>{advanceLabel(t, opt)}</option>
               ))}
