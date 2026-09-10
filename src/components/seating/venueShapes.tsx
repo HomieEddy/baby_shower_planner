@@ -1,5 +1,7 @@
 import { Group, Circle, Ellipse, Rect, Text, Line } from 'react-konva';
-import { TableElement, LandmarkElement } from '../../types';
+import type { ReactNode } from 'react';
+import { TableElement, LandmarkElement, FloorMapData } from '../../types';
+import { seatRingPositions } from './floorPlanHelpers';
 
 // ─── Premium Table Body (drop-in for basic shapes) ──────────────
 
@@ -33,6 +35,68 @@ export const renderTableBody = ({ table, isSelected }: TableBodyProps) => {
       <Rect width={table.width} height={table.height} fill={fillColor} stroke={strokeColor} strokeWidth={strokeW} cornerRadius={14} />
       <Rect x={4} y={4} width={table.width - 8} height={table.height - 8} fill={fillColor === '#FFFDF9' ? '#FAF6F0' : '#F5F0E8'} cornerRadius={12} />
       <Line points={[table.width * 0.2, table.height / 2, table.width * 0.8, table.height / 2]} stroke="#E8E0D4" strokeWidth={1} dash={[4, 4]} />
+    </Group>
+  );
+};
+
+interface SeatRingProps {
+  table: TableElement;
+  renderSeat: (pos: { x: number; y: number }, index: number) => ReactNode;
+}
+
+// Chair dots around a table. Owns the geometry; the caller owns the dot so each
+// surface can style its own selection / drop-target state.
+export const SeatRing = ({ table, renderSeat }: SeatRingProps) => (
+  <Group>{seatRingPositions(table).map((pos, i) => renderSeat(pos, i))}</Group>
+);
+
+// Table name + capacity pill, shared by the host page and the guest modal.
+export const TableLabel = ({ table, occupied }: { table: TableElement; occupied: number }) => (
+  <Group>
+    <Text
+      text={table.name}
+      width={table.width}
+      height={table.height * 0.6}
+      align="center"
+      verticalAlign="middle"
+      fontSize={11}
+      fontStyle="bold"
+      fill="#4A3F35"
+      padding={4}
+    />
+    <Text
+      text={`${occupied}/${table.capacity} Seats`}
+      y={table.height * 0.58}
+      width={table.width}
+      align="center"
+      fontSize={9}
+      fontStyle="bold"
+      fill={occupied > table.capacity ? '#C53030' : '#8B735B'}
+    />
+  </Group>
+);
+
+// Room outline (rect/circle/ellipse) + the 55px background grid. Identical in
+// the host editor and the host page.
+export const renderRoomBoundary = (map: FloorMapData) => {
+  const shape = map.roomShape ?? 'rectangle';
+  const w = map.canvasWidth;
+  const h = map.canvasHeight;
+  return (
+    <Group>
+      {shape === 'circle' ? (
+        <Circle x={w / 2} y={h / 2} radius={Math.min(w, h) / 2 - 10} stroke="#CBAE94" strokeWidth={2} dash={[8, 8]} />
+      ) : shape === 'ellipse' ? (
+        <Ellipse x={w / 2} y={h / 2} radiusX={w / 2 - 10} radiusY={h / 2 - 10} stroke="#CBAE94" strokeWidth={2} dash={[8, 8]} />
+      ) : (
+        <Rect x={10} y={10} width={w - 20} height={h - 20} stroke="#CBAE94" strokeWidth={2} dash={[8, 8]} cornerRadius={20} />
+      )}
+      {Array.from({ length: Math.ceil(w / 55) }).map((_, i) => (
+        <Line key={`vgrid-${i}`} points={[(i + 1) * 55, 20, (i + 1) * 55, h - 20]} stroke="#EFE6DC" strokeWidth={1} dash={[2, 4]} />
+      ))}
+      {Array.from({ length: Math.ceil(h / 55) }).map((_, i) => (
+        <Line key={`hgrid-${i}`} points={[20, (i + 1) * 55, w - 20, (i + 1) * 55]} stroke="#EFE6DC" strokeWidth={1} dash={[2, 4]} />
+      ))}
     </Group>
   );
 };

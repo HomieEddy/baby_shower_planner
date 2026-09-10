@@ -18,12 +18,9 @@ import { useSettingsStore } from '../../stores/settingsStore';
 import {
   Stage,
   Layer,
-  Rect,
   Circle,
-  Ellipse,
   Text,
   Group,
-  Line,
 } from 'react-konva';
 import {
   Layout,
@@ -52,8 +49,7 @@ import {
   seatParty,
 } from '../../lib/tableAssignment';
 import { getSeatOccupantInfo } from './floorPlanHelpers';
-import { renderCustomLandmarkShape } from './renderCustomLandmarkShape';
-import { renderTableBody } from './venueShapes';
+import { renderTableBody, renderLandmark, SeatRing, TableLabel, renderRoomBoundary } from './venueShapes';
 import { useAppStore } from '../../stores/appStore';
 
 const FloorPlan3D = lazy(() => import('./FloorPlan3D').then((m) => ({ default: m.FloorPlan3D })));
@@ -1040,57 +1036,7 @@ export const FloorPlanPage = () => {
                   >
                     {/* Layer 1: Grid Lines + Room Boundary */}
                     <Layer>
-                      {(floorMap.roomShape ?? 'rectangle') === 'circle' ? (
-                        <Circle
-                          x={floorMap.canvasWidth / 2}
-                          y={floorMap.canvasHeight / 2}
-                          radius={Math.min(floorMap.canvasWidth, floorMap.canvasHeight) / 2 - 10}
-                          stroke="#CBAE94"
-                          strokeWidth={2}
-                          dash={[8, 8]}
-                        />
-                      ) : (floorMap.roomShape ?? 'rectangle') === 'ellipse' ? (
-                        <Ellipse
-                          x={floorMap.canvasWidth / 2}
-                          y={floorMap.canvasHeight / 2}
-                          radiusX={floorMap.canvasWidth / 2 - 10}
-                          radiusY={floorMap.canvasHeight / 2 - 10}
-                          stroke="#CBAE94"
-                          strokeWidth={2}
-                          dash={[8, 8]}
-                        />
-                      ) : (
-                        <Rect
-                          x={10}
-                          y={10}
-                          width={floorMap.canvasWidth - 20}
-                          height={floorMap.canvasHeight - 20}
-                          stroke="#CBAE94"
-                          strokeWidth={2}
-                          dash={[8, 8]}
-                          cornerRadius={20}
-                        />
-                      )}
-
-                      {/* Grid background lines */}
-                      {Array.from({ length: Math.ceil(floorMap.canvasWidth / 55) }).map((_, i) => (
-                        <Line
-                          key={`vgrid-${i}`}
-                          points={[(i + 1) * 55, 20, (i + 1) * 55, floorMap.canvasHeight - 20]}
-                          stroke="#EFE6DC"
-                          strokeWidth={1}
-                          dash={[2, 4]}
-                        />
-                      ))}
-                      {Array.from({ length: Math.ceil(floorMap.canvasHeight / 55) }).map((_, i) => (
-                        <Line
-                          key={`hgrid-${i}`}
-                          points={[20, (i + 1) * 55, floorMap.canvasWidth - 20, (i + 1) * 55]}
-                          stroke="#EFE6DC"
-                          strokeWidth={1}
-                          dash={[2, 4]}
-                        />
-                      ))}
+                      {renderRoomBoundary(floorMap)}
                     </Layer>
 
                     {/* Layer 2: Venue Landmarks */}
@@ -1109,7 +1055,7 @@ export const FloorPlanPage = () => {
                           onMouseMove={(e) => handleLandmarkHover(landmark, e.evt.clientX, e.evt.clientY)}
                           onMouseLeave={() => setHoverTooltip(null)}
                         >
-                          {renderCustomLandmarkShape(landmark, false)}
+                          {renderLandmark(landmark, false)}
                         </Group>
                       ))}
                     </Layer>
@@ -1244,72 +1190,44 @@ export const FloorPlanPage = () => {
                             )}
 
                             {/* Outer Seat Dots around Table */}
-                            {Array.from({ length: table.capacity }).map((_, idx) => {
-                              const angle = (idx / table.capacity) * 2 * Math.PI;
-                              const radiusX = table.width / 2 + 18;
-                              const radiusY = table.height / 2 + 18;
-                              const seatX = table.width / 2 + radiusX * Math.cos(angle);
-                              const seatY = table.height / 2 + radiusY * Math.sin(angle);
-                              const isOccupied = !!tableSeats[idx];
-
-                              let seatFill = isOccupied ? '#8B735B' : '#FFFDF9';
-                              let seatStroke = '#CBAE94';
-
-                              if (isUnassignedActive && !isOccupied && canFitSelected) {
-                                seatFill = '#A7F3D0';
-                                seatStroke = '#059669';
-                              }
-
-
-
-  return (
-                                <Circle
-                                  key={`seat-${table.id}-${idx}`}
-                                  x={seatX}
-                                  y={seatY}
-                                  radius={8}
-                                  fill={seatFill}
-                                  stroke={seatStroke}
-                                  strokeWidth={2}
-                                  onMouseEnter={(e) => {
-                                    e.cancelBubble = true;
-                                    handleSeatHover(table, idx, guests, e.evt.clientX, e.evt.clientY);
-                                  }}
-                                  onMouseMove={(e) => {
-                                    e.cancelBubble = true;
-                                    handleSeatHover(table, idx, guests, e.evt.clientX, e.evt.clientY);
-                                  }}
-                                  onMouseLeave={() => setHoverTooltip(null)}
-                                />
-                              );
-                            })}
+                            <SeatRing
+                              table={table}
+                              renderSeat={(pos, idx) => {
+                                const isOccupied = !!tableSeats[idx];
+                                let seatFill = isOccupied ? '#8B735B' : '#FFFDF9';
+                                let seatStroke = '#CBAE94';
+                                if (isUnassignedActive && !isOccupied && canFitSelected) {
+                                  seatFill = '#A7F3D0';
+                                  seatStroke = '#059669';
+                                }
+                                return (
+                                  <Circle
+                                    key={`seat-${table.id}-${idx}`}
+                                    x={pos.x}
+                                    y={pos.y}
+                                    radius={8}
+                                    fill={seatFill}
+                                    stroke={seatStroke}
+                                    strokeWidth={2}
+                                    onMouseEnter={(e) => {
+                                      e.cancelBubble = true;
+                                      handleSeatHover(table, idx, guests, e.evt.clientX, e.evt.clientY);
+                                    }}
+                                    onMouseMove={(e) => {
+                                      e.cancelBubble = true;
+                                      handleSeatHover(table, idx, guests, e.evt.clientX, e.evt.clientY);
+                                    }}
+                                    onMouseLeave={() => setHoverTooltip(null)}
+                                  />
+                                );
+                              }}
+                            />
 
                             {/* Table Body Shape */}
                             {renderTableBody({ table, isSelected: false })}
 
-                            {/* Table Title */}
-                            <Text
-                              text={table.name}
-                              width={table.width}
-                              height={table.height * 0.6}
-                              align="center"
-                              verticalAlign="middle"
-                              fontSize={11}
-                              fontStyle="bold"
-                              fill="#4A3F35"
-                              padding={4}
-                            />
-
-                            {/* Capacity Counter pill */}
-                            <Text
-                              text={`${occupiedSeats}/${table.capacity} Seats`}
-                              y={table.height * 0.58}
-                              width={table.width}
-                              align="center"
-                              fontSize={9}
-                              fontStyle="bold"
-                              fill={occupiedSeats > table.capacity ? '#C53030' : '#8B735B'}
-                            />
+                            {/* Table Title + Capacity */}
+                            <TableLabel table={table} occupied={occupiedSeats} />
                           </Group>
                         );
                       })}

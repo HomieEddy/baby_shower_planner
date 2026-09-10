@@ -1,8 +1,8 @@
 import { lazy, Suspense, useEffect, useMemo, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'motion/react';
-import { Stage, Layer, Group, Circle, Text } from 'react-konva';
-import { renderTableBody, renderLandmark } from './venueShapes';
+import { Stage, Layer, Group, Circle } from 'react-konva';
+import { renderTableBody, renderLandmark, SeatRing, TableLabel } from './venueShapes';
 import { MapPin, Users, Utensils, Info, DoorOpen, Sparkles, CheckCircle2, X } from 'lucide-react';
 import { Guest, FloorMapData } from '../../types';
 import { useT } from '../shared/i18n';
@@ -275,53 +275,33 @@ export const VenueModal = ({ open, selected, floorMap, roster, onClose }: VenueM
                                 premium body, title, capacity pill */}
                             {floorMap.tables.map((tbl) => {
                               const isTarget = tbl.id === guestAssignedTable.id;
-                              const capacity = tbl.capacity || 8;
                               const occupied = getTableOccupiedSeats(tbl, roster);
                               return (
                                 <Group key={`gtbl-${tbl.id}`} x={tbl.x} y={tbl.y}>
                                   {/* Outer seat dots around the table (editor geometry) */}
-                                  {Array.from({ length: capacity }).map((_, i) => {
-                                    const pos = getSeatLocalPosition(tbl, i);
-                                    const isMine = isTarget && seatIndex === i;
-                                    return (
-                                      <Circle
-                                        key={`seat-${i}`}
-                                        x={pos.x}
-                                        y={pos.y}
-                                        radius={8}
-                                        fill={isMine ? '#2E9E5B' : i < occupied ? '#8B735B' : '#FFFDF9'}
-                                        stroke={isMine ? '#1B7A43' : '#CBAE94'}
-                                        strokeWidth={2}
-                                      />
-                                    );
-                                  })}
+                                  <SeatRing
+                                    table={tbl}
+                                    renderSeat={(pos, i) => {
+                                      const isMine = isTarget && seatIndex === i;
+                                      return (
+                                        <Circle
+                                          key={`seat-${i}`}
+                                          x={pos.x}
+                                          y={pos.y}
+                                          radius={8}
+                                          fill={isMine ? '#2E9E5B' : i < occupied ? '#8B735B' : '#FFFDF9'}
+                                          stroke={isMine ? '#1B7A43' : '#CBAE94'}
+                                          strokeWidth={2}
+                                        />
+                                      );
+                                    }}
+                                  />
 
                                   {/* Premium table body */}
                                   {renderTableBody({ table: tbl, isSelected: false })}
 
-                                  {/* Table title */}
-                                  <Text
-                                    text={tbl.name}
-                                    width={tbl.width}
-                                    height={tbl.height * 0.6}
-                                    align="center"
-                                    verticalAlign="middle"
-                                    fontSize={11}
-                                    fontStyle="bold"
-                                    fill="#4A3F35"
-                                    padding={4}
-                                  />
-
-                                  {/* Capacity pill */}
-                                  <Text
-                                    text={`${occupied}/${capacity} Seats`}
-                                    y={tbl.height * 0.58}
-                                    width={tbl.width}
-                                    align="center"
-                                    fontSize={9}
-                                    fontStyle="bold"
-                                    fill={occupied > capacity ? '#C53030' : '#8B735B'}
-                                  />
+                                  {/* Table title + capacity */}
+                                  <TableLabel table={tbl} occupied={occupied} />
                                 </Group>
                               );
                             })}
