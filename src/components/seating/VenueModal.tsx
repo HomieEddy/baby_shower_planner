@@ -9,10 +9,11 @@ import { useT } from '../shared/i18n';
 import { ViewModeToggle, ViewMode } from '../shared/ViewModeToggle';
 import {
   getGuestPartySize,
-  getAttendeeSeatIndex,
   getSeatLocalPosition,
   getTableOccupiedSeats,
+  getTableSeats,
 } from './floorPlanHelpers';
+import { getPartyMembers } from '../../lib/guestAttendees';
 import { FinderSelection } from './GuestFinderPage';
 
 const FloorPlan3D = lazy(() => import('./FloorPlan3D').then((m) => ({ default: m.FloorPlan3D })));
@@ -57,17 +58,23 @@ export const VenueModal = ({ open, selected, floorMap, roster, onClose }: VenueM
     return () => window.removeEventListener('resize', measure);
   }, [selected, floorMap, open]);
 
-  const guestAssignedTable = useMemo(() => {
+  // The exact table + chair for THIS person (a party may be split across tables).
+  const guestSeat = useMemo(() => {
     if (!floorMap) return null;
-    return (
-      floorMap.tables.find((tbl) => tbl.assignedGuestIds.includes(selected.guest.id)) ?? null
-    );
-  }, [selected, floorMap]);
+    const names = getPartyMembers(selected.guest);
+    const attendeeIndex =
+      selected.attendeeName === null ? 0 : Math.max(0, names.indexOf(selected.attendeeName));
+    for (const tbl of floorMap.tables) {
+      const idx = getTableSeats(tbl, roster).findIndex(
+        (s) => s?.guestId === selected.guest.id && s.attendeeIndex === attendeeIndex
+      );
+      if (idx !== -1) return { table: tbl, seatIndex: idx };
+    }
+    return null;
+  }, [selected, floorMap, roster]);
 
-  const seatIndex = useMemo(() => {
-    if (!guestAssignedTable) return null;
-    return getAttendeeSeatIndex(guestAssignedTable, selected.guest.id, selected.attendeeName, roster);
-  }, [guestAssignedTable, selected, roster]);
+  const guestAssignedTable = guestSeat?.table ?? null;
+  const seatIndex = guestSeat?.seatIndex ?? null;
 
   const scale = floorMap ? mapWidth / floorMap.canvasWidth : 1;
   const mapHeight = floorMap ? Math.round(floorMap.canvasHeight * scale) : 280;

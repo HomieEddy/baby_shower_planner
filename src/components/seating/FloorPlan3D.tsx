@@ -13,7 +13,7 @@ import {
   tableRotationY,
   seatLocalWorld,
 } from './floorPlan3Dhelpers';
-import { getGuestPartySize, getTableOccupiedSeats } from './floorPlanHelpers';
+import { getGuestPartySize, getTableOccupiedSeats, getTableSeats } from './floorPlanHelpers';
 import { useT } from '../shared/i18n';
 
 // ─── Palette (matches the 2D floor plan) ─────────────────────────
@@ -192,6 +192,7 @@ const Table3D = ({
 }: TableProps) => {
   const center = tableCenterWorld(floorMap, table);
   const occupied = getTableOccupiedSeats(table, guests);
+  const tableSeats = getTableSeats(table, guests);
   const pSize = selectedGuest ? getGuestPartySize(selectedGuest) : 0;
   const isAssignedHere = selectedGuest ? table.assignedGuestIds.includes(selectedGuest.id) : false;
   const occupiedOther = isAssignedHere ? occupied - Math.min(pSize, occupied) : occupied;
@@ -280,7 +281,7 @@ const Table3D = ({
             fill={
               isTarget && targetSeatIndex === idx
                 ? C.mine
-                : idx < occupied
+                : tableSeats[idx]
                   ? C.occupied
                   : seating && selectedGuest && canFit
                     ? C.fit

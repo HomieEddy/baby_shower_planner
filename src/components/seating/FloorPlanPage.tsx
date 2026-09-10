@@ -1167,6 +1167,7 @@ export const FloorPlanPage = () => {
                     <Layer>
                       {floorMap.tables.map((table) => {
                         const occupiedSeats = getTableOccupiedSeats(table, guests);
+                        const tableSeats = getTableSeats(table, guests);
                         const color = table.color || '#8B735B';
 
                         const status = getTableStatus(table, guests);
@@ -1298,7 +1299,7 @@ export const FloorPlanPage = () => {
                               const radiusY = table.height / 2 + 18;
                               const seatX = table.width / 2 + radiusX * Math.cos(angle);
                               const seatY = table.height / 2 + radiusY * Math.sin(angle);
-                              const isOccupied = idx < occupiedSeats;
+                              const isOccupied = !!tableSeats[idx];
 
                               let seatFill = isOccupied ? '#8B735B' : '#FFFDF9';
                               let seatStroke = '#CBAE94';
