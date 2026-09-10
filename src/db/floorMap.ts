@@ -4,6 +4,8 @@ import type { FloorMapData, Guest, EventSettings, TableElement } from '../types'
 import { fromRecord, pb } from './client';
 import { getAllGuests } from './guests';
 import { getSettings } from './settings';
+import { composeFloorPlan } from '../lib/compose';
+import { notifyChannels } from './notify';
 import {
   getAttendeeLocations,
   materializeTableSeats,
@@ -69,18 +71,17 @@ export async function shareFloorPlanEmail(guestIds?: string[], customMessage?: s
     ? await Promise.all(guestIds.map((id) => pb.collection('guests').getOne(id).then((r) => fromRecord<Guest>(r))))
     : await getAllGuests();
   const map = await getFloorMap();
-  let settings: EventSettings | null = null;
+  let settings: Partial<EventSettings> = {};
   try { settings = await getSettings(); } catch { /* settings missing — skip send */ }
   let count = 0;
   for (const g of guests) {
-    if (!g.email || !settings) continue;
+    if (!g.email) continue;
     // The party lead's table (split parties are announced at the primary's chair).
     const locations = getAttendeeLocations(g.id, map, guests);
     const table = locations.find((l) => l.attendeeIndex === 0) ?? locations[0];
-    const { sendFloorPlanEmail } = await import('../lib/email');
-    if (await sendFloorPlanEmail(g, settings, table?.tableName || '', customMessage || '')) {
-      count++;
-    }
+    const content = composeFloorPlan(g, settings, table?.tableName || '', customMessage || '', g.language_pref);
+    const { sent } = await notifyChannels(g, content, ['email']);
+    if (sent.length > 0) count++;
   }
   return { count };
 }
