@@ -1,4 +1,4 @@
-import { lazy, Suspense, useState } from 'react';
+import { lazy, Suspense, useState, useMemo, type DragEvent, type MouseEvent } from 'react';
 import {
   Stage,
   Layer,
@@ -35,14 +35,34 @@ import {
   Square,
   Circle as CircleIcon,
 } from 'lucide-react';
-import { Guest, FloorMapData, LandmarkElement, TableElement } from '../../types';
+import { Guest, FloorMapData, LandmarkElement, SeatOccupant, TableElement } from '../../types';
 import { TextInput, Select } from '../shared/ui';
-import { getGuestPartySize, getTableOccupiedSeats } from './floorPlanHelpers';
+import {
+  getGuestPartySize,
+  getTableOccupiedSeats,
+  getTableSeats,
+  getAttendeeLocations,
+  findNearestSeat,
+  getGuestSeatedCount,
+} from './floorPlanHelpers';
+import { getPartyMembers } from '../../lib/guestAttendees';
 import { renderCustomLandmarkShape } from './renderCustomLandmarkShape';
 import { useFloorPlanEditor } from './floorplanHooks';
 import { ViewModeToggle, ViewMode } from '../shared/ViewModeToggle';
 import { useT } from '../shared/i18n';
 import { Language } from '../../types';
+
+interface AttendeeKey {
+  guestId: string;
+  attendeeIndex: number;
+}
+
+interface PaletteItem extends AttendeeKey {
+  name: string;
+  partyName: string;
+  tableName: string | null;
+  seatIndex: number | null;
+}
 
 const FloorPlan3D = lazy(() => import('./FloorPlan3D').then((m) => ({ default: m.FloorPlan3D })));
 
@@ -117,10 +137,92 @@ export const FloorPlanEditor = ({
     handleDraftLandmarkDragEnd,
     handleDraftTransformEnd,
     handleDraftDeleteSelected,
-    handleDraftAssignGuest,
+    handleSeatAttendee,
+    handleUnseatAttendee,
+    handleAutoSeatParty,
+    handleUnassignParty,
     handleSaveChanges,
     handleCancelEditor,
   } = useFloorPlanEditor({ floorMap, guests, notify, onSave, onCancel });
+
+  // Per-seat drag/tap state (DOM palette -> Konva canvas).
+  const [draggingAttendee, setDraggingAttendee] = useState<AttendeeKey | null>(null);
+  const [selectedAttendee, setSelectedAttendee] = useState<AttendeeKey | null>(null);
+  const [dropTarget, setDropTarget] = useState<{ tableId: string; seatIndex: number } | null>(null);
+
+  // Every attending person, in party order, with their current chair (if any).
+  const palette = useMemo<PaletteItem[]>(() => {
+    const items: PaletteItem[] = [];
+    for (const g of draftGuests.filter((x) => x.rsvp_status === 'Attending')) {
+      const names = getPartyMembers(g);
+      const locations = getAttendeeLocations(g.id, draftFloorMap, draftGuests);
+      names.forEach((name, attendeeIndex) => {
+        const loc = locations.find((l) => l.attendeeIndex === attendeeIndex) ?? null;
+        items.push({
+          guestId: g.id,
+          attendeeIndex,
+          name,
+          partyName: g.name,
+          tableName: loc?.tableName ?? null,
+          seatIndex: loc?.seatIndex ?? null,
+        });
+      });
+    }
+    return items;
+  }, [draftGuests, draftFloorMap]);
+
+  const paletteByParty = useMemo(() => {
+    const groups = new Map<string, PaletteItem[]>();
+    for (const item of palette) {
+      const list = groups.get(item.guestId) ?? [];
+      list.push(item);
+      groups.set(item.guestId, list);
+    }
+    return groups;
+  }, [palette]);
+
+  const handleDragStart = (e: DragEvent, key: AttendeeKey) => {
+    setDraggingAttendee(key);
+    e.dataTransfer.effectAllowed = 'move';
+    e.dataTransfer.setData('text/plain', `${key.guestId}:${key.attendeeIndex}`);
+  };
+
+  const eventToSeat = (e: DragEvent | MouseEvent) => {
+    const stage = modalStageRef.current;
+    if (!stage) return null;
+    const rect = stage.container().getBoundingClientRect();
+    const x = (e.clientX - rect.left) / modalCanvasScale;
+    const y = (e.clientY - rect.top) / modalCanvasScale;
+    return findNearestSeat(draftFloorMap, x, y);
+  };
+
+  const handleCanvasDragOver = (e: DragEvent) => {
+    if (!draggingAttendee && !e.dataTransfer.types.includes('text/plain')) return;
+    e.preventDefault();
+    e.dataTransfer.dropEffect = 'move';
+    setDropTarget(eventToSeat(e));
+  };
+
+  const handleCanvasDrop = (e: DragEvent) => {
+    e.preventDefault();
+    // Prefer state, fall back to the dataTransfer payload for very fast drags.
+    let key = draggingAttendee;
+    if (!key) {
+      const raw = e.dataTransfer.getData('text/plain');
+      const [guestId, idx] = raw.split(':');
+      if (guestId && idx !== undefined) key = { guestId, attendeeIndex: Number(idx) };
+    }
+    const seat = dropTarget ?? eventToSeat(e);
+    setDraggingAttendee(null);
+    setDropTarget(null);
+    if (key && seat) handleSeatAttendee(key.guestId, key.attendeeIndex, seat.tableId, seat.seatIndex);
+  };
+
+  const handlePaletteItemClick = (key: AttendeeKey) => {
+    setSelectedAttendee((prev) =>
+      prev && prev.guestId === key.guestId && prev.attendeeIndex === key.attendeeIndex ? null : key
+    );
+  };
 
   return (
     <div className="fixed inset-0 z-50 bg-[#FAF6F0] flex flex-col w-screen h-screen overflow-hidden animate-fadeIn">
@@ -563,8 +665,11 @@ export const FloorPlanEditor = ({
                   onSeatHover={(table, idx, x, y) => handleSeatHover(table, idx, draftGuests, x, y)}
                   onLandmarkHover={(lm, x, y) => handleLandmarkHover(lm, x, y)}
                   onTableClick={(table) => {
-                    if (selectedGuestForSeating) {
-                      handleDraftAssignGuest(selectedGuestForSeating.id, table.id);
+                    if (selectedAttendee) {
+                      handleSeatAttendee(selectedAttendee.guestId, selectedAttendee.attendeeIndex, table.id, null);
+                      setSelectedAttendee(null);
+                    } else if (selectedGuestForSeating) {
+                      handleAutoSeatParty(selectedGuestForSeating.id, table.id);
                     } else {
                       setSelectedId(table.id);
                       setSelectedType('table');
@@ -575,7 +680,14 @@ export const FloorPlanEditor = ({
               </div>
             </Suspense>
           ) : (
-          <div className="flex-1 w-full overflow-auto flex justify-center items-center bg-[#FAF6F0] p-3 rounded-2xl border border-[#CBAE94]/40">
+          <div
+            className={`flex-1 w-full overflow-auto flex justify-center items-center bg-[#FAF6F0] p-3 rounded-2xl border-2 transition-colors ${
+              draggingAttendee ? 'border-emerald-500 bg-emerald-50/40' : 'border-[#CBAE94]/40'
+            }`}
+            onDragOver={handleCanvasDragOver}
+            onDragLeave={() => setDropTarget(null)}
+            onDrop={handleCanvasDrop}
+          >
             <Stage
               ref={modalStageRef}
               width={draftFloorMap.canvasWidth * modalCanvasScale}
@@ -679,6 +791,7 @@ export const FloorPlanEditor = ({
               <Layer>
                 {draftFloorMap.tables.map((table) => {
                   const isSelected = selectedId === table.id;
+                  const tableSeats = getTableSeats(table, draftGuests);
                   const occupiedCount = getTableOccupiedSeats(table, draftGuests);
                   const isFull = occupiedCount >= table.capacity;
 
@@ -721,8 +834,11 @@ export const FloorPlanEditor = ({
                       }}
                       onDragEnd={(e) => handleDraftTableDragEnd(table.id, e)}
                       onClick={() => {
-                        if (selectedGuestForSeating) {
-                          handleDraftAssignGuest(selectedGuestForSeating.id, table.id);
+                        if (selectedAttendee) {
+                          handleSeatAttendee(selectedAttendee.guestId, selectedAttendee.attendeeIndex, table.id, null);
+                          setSelectedAttendee(null);
+                        } else if (selectedGuestForSeating) {
+                          handleAutoSeatParty(selectedGuestForSeating.id, table.id);
                         } else {
                           setSelectedId(table.id);
                           setSelectedType('table');
@@ -739,17 +855,49 @@ export const FloorPlanEditor = ({
                         const radiusY = table.height / 2 + 18;
                         const seatX = table.width / 2 + radiusX * Math.cos(angle);
                         const seatY = table.height / 2 + radiusY * Math.sin(angle);
-                        const isOccupied = idx < occupiedCount;
+                        const occupant: SeatOccupant | null = tableSeats[idx] ?? null;
+                        const isDropTargetSeat = dropTarget?.tableId === table.id && dropTarget.seatIndex === idx;
+                        const isPickedSeat =
+                          !!occupant &&
+                          !!selectedAttendee &&
+                          occupant.guestId === selectedAttendee.guestId &&
+                          occupant.attendeeIndex === selectedAttendee.attendeeIndex;
+
+                        let seatFill = occupant ? '#8B735B' : '#FFFDF9';
+                        let seatStroke = '#CBAE94';
+                        let seatRadius = 8;
+                        if (isDropTargetSeat) {
+                          seatFill = '#A7F3D0';
+                          seatStroke = '#059669';
+                          seatRadius = 10;
+                        } else if (isPickedSeat) {
+                          seatFill = '#FDE68A';
+                          seatStroke = '#D97706';
+                        } else if (selectedAttendee && !occupant) {
+                          seatFill = '#D1FAE5';
+                          seatStroke = '#059669';
+                        }
 
                         return (
                           <Circle
                             key={`dseat-${table.id}-${idx}`}
                             x={seatX}
                             y={seatY}
-                            radius={8}
-                            fill={isOccupied ? '#8B735B' : '#FFFDF9'}
-                            stroke="#CBAE94"
+                            radius={seatRadius}
+                            fill={seatFill}
+                            stroke={seatStroke}
                             strokeWidth={2}
+                            onClick={(e) => {
+                              e.cancelBubble = true;
+                              if (selectedAttendee) {
+                                handleSeatAttendee(selectedAttendee.guestId, selectedAttendee.attendeeIndex, table.id, idx);
+                                setSelectedAttendee(null);
+                              } else if (occupant) {
+                                setSelectedAttendee({ guestId: occupant.guestId, attendeeIndex: occupant.attendeeIndex });
+                              } else {
+                                setSelectedAttendee(null);
+                              }
+                            }}
                             onMouseEnter={(e) => {
                               e.cancelBubble = true;
                               handleSeatHover(table, idx, draftGuests, e.evt.clientX, e.evt.clientY);
@@ -1058,63 +1206,43 @@ export const FloorPlanEditor = ({
                     );
                   })()}
 
-                  {/* Assigned Guests List in Draft */}
+                  {/* Assigned Guests List in Draft (one row per chair) */}
                   <div className="space-y-2 pt-2 border-t border-[#CBAE94]/40">
                     <div className="flex items-center justify-between text-xs font-bold text-[#4A3F35]">
                       <span>{t.seatedGuestsPartiesLabel}</span>
                     </div>
 
-                    {draftSelectedTable.assignedGuestIds.length === 0 ? (
+                    {getTableSeats(draftSelectedTable, draftGuests).every((s) => !s) ? (
                       <p className="text-xs text-[#5D5449]/70 italic py-2">
                         {t.noDraftGuestsMsg}
                       </p>
                     ) : (
                       <div className="space-y-1.5 max-h-48 overflow-y-auto pr-1">
-                        {draftSelectedTable.assignedGuestIds.map((gId) => {
-                          const guest = draftGuests.find((g) => g.id === gId);
+                        {getTableSeats(draftSelectedTable, draftGuests).map((seat, idx) => {
+                          if (!seat) return null;
+                          const guest = draftGuests.find((g) => g.id === seat.guestId);
                           if (!guest) return null;
-                          const pSize = getGuestPartySize(guest);
-                          const hasAttendees = guest.attendee_names && guest.attendee_names.length > 0;
+                          const name = getPartyMembers(guest)[seat.attendeeIndex] ?? guest.name;
 
                           return (
                             <div
-                              key={gId}
-                              className="p-2.5 rounded-xl bg-[#EFE6DC]/50 border border-[#CBAE94]/40 text-xs space-y-1"
+                              key={`${seat.guestId}-${seat.attendeeIndex}`}
+                              className="p-2 rounded-xl bg-[#EFE6DC]/50 border border-[#CBAE94]/40 text-xs flex items-center justify-between gap-2"
                             >
-                              <div className="flex items-center justify-between">
-                                <div>
-                                  <p className="font-bold text-[#4A3F35]">{guest.name}</p>
-                                  <span className="text-[10px] text-[#8B735B] font-medium">
-                                    Party of {pSize} ({pSize} seat{pSize > 1 ? 's' : ''})
-                                  </span>
-                                </div>
-                                <button
-                                  type="button"
-                                  onClick={() => handleDraftAssignGuest(guest.id, null)}
-                                  className="text-red-500 hover:text-red-700 p-1 rounded-lg hover:bg-red-50"
-                                  title={t.unassignPartyBtn}
-                                >
-                                  <X className="w-3.5 h-3.5" />
-                                </button>
+                              <div className="min-w-0">
+                                <p className="font-bold text-[#4A3F35] truncate">{name}</p>
+                                <span className="text-[10px] text-[#8B735B] font-medium">
+                                  {t.seatedAtSeatLabel.replace('{{seat}}', String(idx + 1))} · {guest.name}
+                                </span>
                               </div>
-
-                              {hasAttendees && (
-                                <div className="pt-1 border-t border-[#CBAE94]/30 space-y-0.5">
-                                  <span className="text-[9px] font-mono font-bold uppercase text-[#8B735B]">
-                                    {t.attendingNamesLabel}
-                                  </span>
-                                  <div className="flex flex-wrap gap-1 pt-0.5">
-                                    {guest.attendee_names!.map((attName, aIdx) => (
-                                      <span
-                                        key={aIdx}
-                                        className="px-2 py-0.5 rounded-md bg-white border border-[#CBAE94]/60 text-[10px] font-medium text-[#4A3F35]"
-                                      >
-                                        • {attName}
-                                      </span>
-                                    ))}
-                                  </div>
-                                </div>
-                              )}
+                              <button
+                                type="button"
+                                onClick={() => handleUnseatAttendee(draftSelectedTable.id, idx)}
+                                className="text-red-500 hover:text-red-700 p-1 rounded-lg hover:bg-red-50 shrink-0"
+                                title={t.unseatAttendeeBtn}
+                              >
+                                <X className="w-3.5 h-3.5" />
+                              </button>
                             </div>
                           );
                         })}
@@ -1122,13 +1250,13 @@ export const FloorPlanEditor = ({
                     )}
                   </div>
 
-                  {/* Assign Confirmed Guest Selector with Capacity Gate */}
+                  {/* Auto-fill a party into this table's free chairs */}
                   <div className="space-y-2 pt-2 border-t border-[#CBAE94]/40">
                     <label className="label-mono block">{t.seatPartyHereBtn}</label>
                     <select
                       onChange={(e) => {
                         if (e.target.value) {
-                          handleDraftAssignGuest(e.target.value, draftSelectedTable.id);
+                          handleAutoSeatParty(e.target.value, draftSelectedTable.id);
                           e.target.value = '';
                         }
                       }}
@@ -1139,26 +1267,13 @@ export const FloorPlanEditor = ({
                         {t.chooseGuestOption}
                       </option>
                       {draftGuests
-                        .filter(
-                          (g) =>
-                            g.rsvp_status === 'Attending' &&
-                            (!g.table_id || g.table_id !== draftSelectedTable.id)
-                        )
+                        .filter((g) => g.rsvp_status === 'Attending')
                         .map((g) => {
                           const pSize = getGuestPartySize(g);
-                          const occCurrent = getTableOccupiedSeats(draftSelectedTable, draftGuests);
-                          const isAlreadyHere = draftSelectedTable.assignedGuestIds.includes(g.id);
-                          const occWithoutG = isAlreadyHere ? occCurrent - pSize : occCurrent;
-                          const freeSeats = draftSelectedTable.capacity - occWithoutG;
-                          const fits = pSize <= freeSeats;
-
+                          const remaining = pSize - getGuestSeatedCount(g.id, draftFloorMap, draftGuests);
                           return (
-                            <option
-                              key={g.id}
-                              value={g.id}
-                              disabled={!fits}
-                            >
-                              {g.name} (Party of {pSize}) — {fits ? `Fits (${pSize} seats needed)` : `Over capacity (${pSize} needed, ${freeSeats} free)`}
+                            <option key={g.id} value={g.id}>
+                              {g.name} (Party of {pSize}) — {remaining > 0 ? `${remaining} to seat` : t.allAttendeesSeatedMsg}
                             </option>
                           );
                         })}
@@ -1209,56 +1324,78 @@ export const FloorPlanEditor = ({
                 />
               </div>
 
-              {/* {t.confirmedAttendingLabel} Selector */}
-              <div className="space-y-1.5 max-h-56 overflow-y-auto pr-1">
+              {/* Attendee palette — drag a name onto a chair, or tap a name then a chair */}
+              <div className="space-y-2 max-h-[22rem] overflow-y-auto pr-1">
                 <span className="text-[10px] font-mono font-bold uppercase text-[#8B735B] block mb-1">
-                  {t.confirmedAttendingLabel}
+                  {t.dragAttendeeHint}
                 </span>
-                {draftGuests
-                  .filter((g) => g.rsvp_status === 'Attending')
-                  .filter((g) =>
-                    !guestFilterQuery.trim() ||
-                    g.name.toLowerCase().includes(guestFilterQuery.toLowerCase()) ||
-                    (g.attendee_names && g.attendee_names.some((n) => n.toLowerCase().includes(guestFilterQuery.toLowerCase())))
-                  )
-                  .map((g) => {
-                    const isSelected = selectedGuestForSeating?.id === g.id;
-                    const pSize = getGuestPartySize(g);
-                    const assignedTable = draftFloorMap.tables.find((t) => t.assignedGuestIds.includes(g.id));
+                {Array.from(paletteByParty.entries())
+                  .filter(([guestId, items]) => {
+                    if (!guestFilterQuery.trim()) return true;
+                    const q = guestFilterQuery.toLowerCase();
+                    const party = draftGuests.find((g) => g.id === guestId);
+                    return (
+                      (party?.name.toLowerCase().includes(q) ?? false) ||
+                      items.some((item) => item.name.toLowerCase().includes(q))
+                    );
+                  })
+                  .map(([guestId, items]) => {
+                    const guest = draftGuests.find((g) => g.id === guestId);
+                    if (!guest) return null;
+                    const seated = items.filter((i) => i.tableName !== null).length;
+                    const isSelected = selectedGuestForSeating?.id === guestId;
 
                     return (
                       <div
-                        key={g.id}
-                        onClick={() => {
-                          setSelectedGuestForSeating(g);
-                        }}
-                        className={`p-2.5 rounded-2xl border text-xs cursor-pointer transition-all ${
-                          isSelected
-                            ? 'bg-[#8B735B] text-white border-[#8B735B] shadow-md'
-                            : 'bg-white hover:bg-[#EFE6DC]/50 border-[#CBAE94]/60 text-[#4A3F35]'
+                        key={guestId}
+                        className={`p-2 rounded-2xl border text-xs transition-all ${
+                          isSelected ? 'border-[#8B735B] bg-[#EFE6DC]' : 'border-[#CBAE94]/60 bg-white'
                         }`}
                       >
-                        <div className="flex items-center justify-between font-bold">
-                          <span>{g.name}</span>
-                          <span
-                            className={`px-2 py-0.5 rounded-full text-[10px] font-mono ${
-                              isSelected
-                                ? 'bg-white/20 text-white'
-                                : 'bg-[#EFE6DC] text-[#8B735B]'
-                            }`}
-                          >
-                            Party of {pSize} ({pSize} seat{pSize > 1 ? 's' : ''})
+                        <button
+                          type="button"
+                          onClick={() => setSelectedGuestForSeating(guest)}
+                          className="w-full flex items-center justify-between font-bold text-left text-[#4A3F35]"
+                        >
+                          <span className="truncate">{guest.name}</span>
+                          <span className="ml-2 shrink-0 px-2 py-0.5 rounded-full text-[10px] font-mono bg-[#EFE6DC] text-[#8B735B]">
+                            {seated}/{getGuestPartySize(guest)}
                           </span>
-                        </div>
-                        <div className="flex items-center justify-between text-[11px] mt-1 opacity-90">
-                          <span>
-                            {g.attendee_names && g.attendee_names.length > 0
-                              ? g.attendee_names.join(', ')
-                              : t.primaryGuestLabel}
-                          </span>
-                          <span className="font-semibold">
-                                {assignedTable ? assignedTable.name : t.unassignedWord}
-                          </span>
+                        </button>
+                        <div className="flex flex-wrap gap-1 mt-1.5">
+                          {items.map((item) => {
+                            const isPicked =
+                              selectedAttendee?.guestId === item.guestId &&
+                              selectedAttendee?.attendeeIndex === item.attendeeIndex;
+                            const isSeated = item.tableName !== null;
+                            return (
+                              <button
+                                key={`${item.guestId}-${item.attendeeIndex}`}
+                                type="button"
+                                draggable
+                                onDragStart={(e) => handleDragStart(e, item)}
+                                onDragEnd={() => {
+                                  setDraggingAttendee(null);
+                                  setDropTarget(null);
+                                }}
+                                onClick={() => handlePaletteItemClick(item)}
+                                className={`px-2 py-1 rounded-lg border text-[10px] font-bold cursor-grab active:cursor-grabbing transition-all ${
+                                  isPicked
+                                    ? 'bg-amber-200 border-amber-400 text-amber-900'
+                                    : isSeated
+                                      ? 'bg-[#8B735B] text-white border-[#8B735B]'
+                                      : 'bg-emerald-50 text-emerald-900 border-emerald-300 hover:bg-emerald-100'
+                                }`}
+                                title={
+                                  isSeated
+                                    ? `${item.tableName} · ${t.seatedAtSeatLabel.replace('{{seat}}', String((item.seatIndex ?? 0) + 1))}`
+                                    : t.dragAttendeeHint
+                                }
+                              >
+                                {item.name}
+                              </button>
+                            );
+                          })}
                         </div>
                       </div>
                     );
@@ -1266,7 +1403,10 @@ export const FloorPlanEditor = ({
               </div>
 
               {/* Selected Guest Details & Table Gating Selector */}
-              {selectedGuestForSeating ? (
+              {selectedGuestForSeating ? (() => {
+                const pSize = getGuestPartySize(selectedGuestForSeating);
+                const remaining = pSize - getGuestSeatedCount(selectedGuestForSeating.id, draftFloorMap, draftGuests);
+                return (
                 <div className="p-3 bg-[#EFE6DC]/50 rounded-2xl border-2 border-[#CBAE94] space-y-3 pt-3">
                   <div className="flex items-center justify-between border-b border-[#CBAE94]/40 pb-2">
                     <div>
@@ -1277,49 +1417,53 @@ export const FloorPlanEditor = ({
                         {selectedGuestForSeating.name}
                       </h4>
                     </div>
-                    <span className="px-2.5 py-1 bg-[#8B735B] text-white rounded-full text-xs font-bold font-mono">
-                      Requires {getGuestPartySize(selectedGuestForSeating)} Seat(s)
-                    </span>
+                    <div className="flex items-center gap-1.5">
+                      <span className="px-2.5 py-1 bg-[#8B735B] text-white rounded-full text-xs font-bold font-mono">
+                        {remaining > 0
+                          ? t.remainingToSeatLabel.replace('{{count}}', String(remaining))
+                          : t.allAttendeesSeatedMsg}
+                      </span>
+                      {getGuestSeatedCount(selectedGuestForSeating.id, draftFloorMap, draftGuests) > 0 && (
+                        <button
+                          type="button"
+                          onClick={() => handleUnassignParty(selectedGuestForSeating.id)}
+                          className="px-2 py-1 rounded-lg bg-red-100 hover:bg-red-200 text-red-700 text-[10px] font-bold"
+                        >
+                          {t.unassignParty}
+                        </button>
+                      )}
+                    </div>
                   </div>
 
-                  {selectedGuestForSeating.attendee_names && selectedGuestForSeating.attendee_names.length > 0 && (
-                    <div>
-                      <span className="text-[10px] font-mono font-bold uppercase text-[#8B735B] block mb-1">
-                        {t.includedAttendeesLabel} ({selectedGuestForSeating.attendee_names.length}):
-                      </span>
-                      <div className="flex flex-wrap gap-1">
-                        {selectedGuestForSeating.attendee_names.map((name, nIdx) => (
-                          <span key={nIdx} className="px-2 py-0.5 bg-white rounded-md border border-[#CBAE94]/60 text-[10px] font-medium text-[#4A3F35]">
-                            • {name}
-                          </span>
-                        ))}
-                      </div>
+                  <div>
+                    <span className="text-[10px] font-mono font-bold uppercase text-[#8B735B] block mb-1">
+                      {t.includedAttendeesLabel} ({pSize}):
+                    </span>
+                    <div className="flex flex-wrap gap-1">
+                      {getPartyMembers(selectedGuestForSeating).map((name, nIdx) => (
+                        <span key={nIdx} className="px-2 py-0.5 bg-white rounded-md border border-[#CBAE94]/60 text-[10px] font-medium text-[#4A3F35]">
+                          • {name}
+                        </span>
+                      ))}
                     </div>
-                  )}
+                  </div>
 
-                  {/* Live Compatible Tables Grid */}
+                  {/* Live Table Grid — auto-fill the party's remaining members */}
                   <div className="space-y-2 pt-1">
                     <span className="text-[10px] font-mono font-bold uppercase text-[#8B735B] block">
                       {t.chooseVenueTableLabel}
                     </span>
                     <div className="space-y-2 max-h-52 overflow-y-auto pr-1">
                       {draftFloorMap.tables.map((table) => {
-                        const pSize = getGuestPartySize(selectedGuestForSeating);
                         const occCount = getTableOccupiedSeats(table, draftGuests);
-                        const isCurrentlyAssigned = table.assignedGuestIds.includes(selectedGuestForSeating.id);
-                        const occOther = isCurrentlyAssigned ? occCount - pSize : occCount;
-                        const availableSeats = table.capacity - occOther;
-                        const fits = availableSeats >= pSize;
+                        const free = table.capacity - occCount;
+                        const canFill = free > 0 && remaining > 0;
 
                         return (
                           <div
                             key={table.id}
                             className={`p-2.5 rounded-xl border text-xs space-y-1.5 transition-all ${
-                              isCurrentlyAssigned
-                                ? 'bg-[#EFE6DC] border-[#8B735B]'
-                                : fits
-                                ? 'bg-white border-[#10B981]/60 hover:border-[#10B981]'
-                                : 'bg-red-50/40 border-red-200 opacity-70'
+                              canFill ? 'bg-white border-[#10B981]/60 hover:border-[#10B981]' : 'bg-red-50/40 border-red-200 opacity-70'
                             }`}
                           >
                             <div className="flex items-center justify-between">
@@ -1327,34 +1471,21 @@ export const FloorPlanEditor = ({
                                 {table.name}
                               </span>
                               <span className="text-[10px] font-mono text-[#5D5449]">
-                                {occCount} / {table.capacity} Seats ({availableSeats} Free)
+                                {occCount} / {table.capacity} Seats ({free} Free)
                               </span>
                             </div>
 
-                            {isCurrentlyAssigned ? (
-                              <div className="flex items-center justify-between pt-1">
-                                <span className="text-xs font-bold text-[#8B735B]">
-                                  {language === 'FR' ? 'Placé à cette table' : t.currentlySeatedHere}
-                                </span>
-                                <button
-                                  type="button"
-                                  onClick={() => handleDraftAssignGuest(selectedGuestForSeating.id, null)}
-                                  className="px-2 py-1 rounded-lg bg-red-100 hover:bg-red-200 text-red-700 text-[10px] font-bold"
-                                >
-                                  {t.unassignParty}
-                                </button>
-                              </div>
-                            ) : fits ? (
+                            {canFill ? (
                               <button
                                 type="button"
-                                onClick={() => handleDraftAssignGuest(selectedGuestForSeating.id, table.id)}
+                                onClick={() => handleAutoSeatParty(selectedGuestForSeating.id, table.id)}
                                 className="w-full py-1.5 px-2 rounded-lg bg-[#10B981] hover:bg-[#059669] text-white text-xs font-bold shadow-md transition-all flex items-center justify-center gap-1"
                               >
-                                <Check className="w-3.5 h-3.5" /> {t.seatPartyHere} ({pSize} {language === 'FR' ? 'siège(s)' : 'seats'})
+                                <Check className="w-3.5 h-3.5" /> {t.seatPartyHere} ({Math.min(remaining, free)} {language === 'FR' ? 'siège(s)' : 'seats'})
                               </button>
                             ) : (
                               <div className="py-1 px-2 rounded-lg bg-red-100 text-red-700 text-[10px] font-bold text-center">
-                                {t.insufficientSeats} ({language === 'FR' ? `Requis : ${pSize}, Libres : ${availableSeats}` : `Needs ${pSize}, only ${availableSeats} free`})
+                                {free === 0 ? t.insufficientSeats : t.allAttendeesSeatedMsg}
                               </div>
                             )}
                           </div>
@@ -1363,7 +1494,8 @@ export const FloorPlanEditor = ({
                     </div>
                   </div>
                 </div>
-              ) : (
+                );
+              })() : (
                 <p className="text-xs text-[#5D5449]/70 italic text-center py-4 border-2 border-dashed border-[#CBAE94]/40 rounded-2xl">
                   {t.selectGuestHint}
                 </p>

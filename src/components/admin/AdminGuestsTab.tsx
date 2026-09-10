@@ -26,12 +26,13 @@ import {
   Lightbulb,
   Link2,
 } from 'lucide-react';
-import { Guest, Language, DeliveryChannel } from '../../types';
+import { Guest, Language, DeliveryChannel, FloorMapData } from '../../types';
 import { Translations } from '../../translations';
 import { adminFetch } from '../../lib/api';
 import { GuestImportSchema, EditGuestSchema } from '../../lib/validation';
 import { useCapabilities, availableChannels, channelLabel } from '../../lib/capabilities';
-import { getGuestPartySize as getPartySize } from '../seating/floorPlanHelpers';
+import { getGuestPartySize as getPartySize, getAttendeeLocations } from '../seating/floorPlanHelpers';
+import { getPartyMembers } from '../../lib/guestAttendees';
 import { useConfirm } from '../shared/ConfirmDialog';
 import { useCopyFeedback } from '../shared/hooks';
 import { Modal } from '../shared/Modal';
@@ -290,29 +291,57 @@ export const AdminGuestsTab: React.FC<AdminGuestsTabProps> = ({ language, t, gue
       toast.info(t.noExportToast);
       return;
     }
-    exportGuestsCsv(guests);
+    void exportGuestsCsv(guests);
   };
 
-  const exportGuestsCsv = (list: Guest[]) => {
-    const headers = ['Guest Name', 'Email', 'Phone', 'Delivery Channel', 'RSVP Status', 'Max Party Size', 'Attending Party Size', 'Dietary Restrictions', 'Table ID', 'Magic RSVP Token', 'Magic RSVP URL', 'Invited By'];
-    const rows = list.map((g) => {
+  // One row per individual person, with their party's reservation code and their
+  // own table/seat resolved from the floor map (split parties included).
+  const exportGuestsCsv = async (list: Guest[]) => {
+    let floorMap: FloorMapData | null = null;
+    try {
+      const res = await fetch('/api/floorplan');
+      const data = await res.json();
+      floorMap = data.floorMap ?? null;
+    } catch {
+      /* fall back to the party's legacy table_id below */
+    }
+
+    // First five columns stay import-compatible (name, email, phone, max party, channel).
+    const headers = [
+      'Guest Name', 'Email', 'Phone', 'Max Party Size', 'Delivery Channel',
+      'Reservation Code', 'Group / Party', 'Table', 'Seat', 'RSVP Status',
+      'Attending Party Size', 'Dietary Restrictions', 'Magic RSVP Token', 'Magic RSVP URL', 'Invited By',
+    ];
+    const esc = (v: unknown) => `"${String(v ?? '').replace(/"/g, '""')}"`;
+    const rows: string[][] = [];
+
+    for (const g of list) {
+      const names = getPartyMembers(g);
+      const locations = getAttendeeLocations(g.id, floorMap, list);
       const url = `${window.location.origin}/rsvp/${g.magic_token}`;
-      return [
-        `"${g.name.replace(/"/g, '""')}"`,
-        `"${(g.email || '').replace(/"/g, '""')}"`,
-        `"${(g.phone || '').replace(/"/g, '""')}"`,
-        `"${g.delivery_channel || 'none'}"`,
-        `"${g.rsvp_status}"`,
-        g.max_party_size,
-        g.attending_party_size,
-        `"${(g.dietary_restrictions || '').replace(/"/g, '""')}"`,
-        `"${g.table_id || ''}"`,
-        `"${g.magic_token}"`,
-        `"${url}"`,
-        `"${(g.invited_by_guest_name || 'Host').replace(/"/g, '""')}"`,
-      ].join(',');
-    });
-    const csvContent = 'data:text/csv;charset=utf-8,' + [headers.join(','), ...rows].join('\n');
+      names.forEach((name, i) => {
+        const loc = locations.find((l) => l.attendeeIndex === i) ?? null;
+        rows.push([
+          esc(name),
+          esc(g.email),
+          esc(g.phone),
+          String(g.max_party_size ?? ''),
+          esc(g.delivery_channel || 'none'),
+          esc(g.code),
+          esc(g.name),
+          esc(loc?.tableName ?? ''),
+          loc ? String(loc.seatIndex + 1) : '',
+          esc(g.rsvp_status),
+          String(g.attending_party_size ?? ''),
+          esc(g.dietary_restrictions || ''),
+          esc(g.magic_token),
+          esc(url),
+          esc(g.invited_by_guest_name || 'Host'),
+        ]);
+      });
+    }
+
+    const csvContent = 'data:text/csv;charset=utf-8,' + [headers.join(','), ...rows.map((r) => r.join(','))].join('\n');
     const encodedUri = encodeURI(csvContent);
     const link = document.createElement('a');
     link.setAttribute('href', encodedUri);
@@ -480,7 +509,7 @@ export const AdminGuestsTab: React.FC<AdminGuestsTabProps> = ({ language, t, gue
 
   const handleBulkExport = () => {
     if (selectedIds.length === 0) return;
-    exportGuestsCsv(guests.filter((g) => selectedIds.includes(g.id)));
+    void exportGuestsCsv(guests.filter((g) => selectedIds.includes(g.id)));
   };
 
   const handleBulkDelete = async () => {

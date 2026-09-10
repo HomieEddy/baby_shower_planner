@@ -1,6 +1,14 @@
 import { describe, it, expect } from 'vitest';
-import { FloorMapData } from '../../types';
-import { clampToRoundRoom } from './floorPlanHelpers';
+import { FloorMapData, Guest, TableElement } from '../../types';
+import {
+  clampToRoundRoom,
+  getTableSeats,
+  getTableOccupiedSeats,
+  getAttendeeSeatIndex,
+  getAttendeeSeatLocation,
+  findNearestSeat,
+  validateTables,
+} from './floorPlanHelpers';
 
 const map = (over: Partial<FloorMapData> = {}): FloorMapData => ({
   id: 'map',
@@ -9,6 +17,36 @@ const map = (over: Partial<FloorMapData> = {}): FloorMapData => ({
   tables: [],
   landmarks: [],
   updatedAt: '',
+  ...over,
+});
+
+const guest = (over: Partial<Guest> = {}): Guest => ({
+  id: 'g1',
+  name: 'Alice',
+  email: '',
+  code: '1111',
+  max_party_size: 5,
+  rsvp_status: 'Attending',
+  attending_party_size: 3,
+  attendee_names: ['Alice', 'Bob', 'Cara'],
+  dietary_restrictions: '',
+  language_pref: 'EN',
+  magic_token: '',
+  token_used: false,
+  created_at: '',
+  ...over,
+});
+
+const table = (over: Partial<TableElement> = {}): TableElement => ({
+  id: 't1',
+  name: 'Table 1',
+  shape: 'circle',
+  x: 0,
+  y: 0,
+  width: 100,
+  height: 100,
+  capacity: 4,
+  assignedGuestIds: [],
   ...over,
 });
 
@@ -50,5 +88,84 @@ describe('clampToRoundRoom', () => {
     const cy = 500;
     const rad = 500 - 10 - Math.min(150, 60) / 2;
     expect(Math.hypot(p.x + 75 - cx, p.y + 30 - cy)).toBeLessThanOrEqual(rad + 0.5);
+  });
+});
+
+describe('seat model', () => {
+  it('expands legacy assignedGuestIds into contiguous chairs', () => {
+    const seats = getTableSeats(table({ assignedGuestIds: ['g1'] }), [guest()]);
+    expect(seats.filter(Boolean)).toEqual([
+      { guestId: 'g1', attendeeIndex: 0 },
+      { guestId: 'g1', attendeeIndex: 1 },
+      { guestId: 'g1', attendeeIndex: 2 },
+    ]);
+    expect(seats).toHaveLength(4);
+    expect(getTableOccupiedSeats(table({ assignedGuestIds: ['g1'] }), [guest()])).toBe(3);
+  });
+
+  it('counts only non-null explicit seats', () => {
+    const t = table({
+      seats: [{ guestId: 'g1', attendeeIndex: 0 }, null, { guestId: 'g1', attendeeIndex: 1 }, null],
+    });
+    expect(getTableOccupiedSeats(t, [guest()])).toBe(2);
+  });
+
+  it('resolves a split attendee to the right table and chair', () => {
+    const g = guest();
+    const t1 = table({ assignedGuestIds: ['g1'], seats: [{ guestId: 'g1', attendeeIndex: 0 }, null, null, null] });
+    const t2 = table({
+      id: 't2',
+      assignedGuestIds: ['g1'],
+      seats: [null, null, { guestId: 'g1', attendeeIndex: 1 }, null],
+    });
+    expect(getAttendeeSeatIndex(t1, 'g1', 'Alice', [g])).toBe(0);
+    expect(getAttendeeSeatIndex(t2, 'g1', 'Bob', [g])).toBe(2);
+    expect(getAttendeeSeatIndex(t2, 'g1', 'Alice', [g])).toBeNull();
+    // null attendeeName -> the party lead's chair
+    expect(getAttendeeSeatIndex(t1, 'g1', null, [g])).toBe(0);
+  });
+
+  it('getAttendeeSeatLocation finds each split member on their own table', () => {
+    const g = guest();
+    const t1 = table({ assignedGuestIds: ['g1'], seats: [{ guestId: 'g1', attendeeIndex: 0 }, null, null, null] });
+    const t2 = table({ id: 't2', assignedGuestIds: ['g1'], seats: [{ guestId: 'g1', attendeeIndex: 1 }, null, null, null] });
+    const fm = map({ tables: [t1, t2] });
+    expect(getAttendeeSeatLocation('g1', 0, fm, [g])).toEqual({ table: t1, seatIndex: 0 });
+    expect(getAttendeeSeatLocation('g1', 1, fm, [g])).toEqual({ table: t2, seatIndex: 0 });
+    expect(getAttendeeSeatLocation('g1', 2, fm, [g])).toBeNull();
+  });
+
+  it('findNearestSeat snaps to the closest chair', () => {
+    const fm = map({ tables: [table({ capacity: 4 })] });
+    // seat 0 local center: (50 + (50+18), 50) = (118, 50)
+    expect(findNearestSeat(fm, 118, 50)).toEqual({ tableId: 't1', seatIndex: 0 });
+    expect(findNearestSeat(fm, 1000, 1000)).toBeNull();
+  });
+});
+
+describe('validateTables', () => {
+  it('rejects an over-capacity table', () => {
+    const t = table({
+      capacity: 1,
+      seats: [{ guestId: 'g1', attendeeIndex: 0 }, { guestId: 'g1', attendeeIndex: 1 }],
+    });
+    expect(() => validateTables([t], [guest()])).toThrow('TABLE_OVER_CAPACITY');
+  });
+
+  it('rejects an out-of-range attendee index', () => {
+    const t = table({ seats: [null, null, null, { guestId: 'g1', attendeeIndex: 7 }] });
+    expect(() => validateTables([t], [guest()])).toThrow('SEAT_INDEX_OUT_OF_RANGE');
+  });
+
+  it('rejects an attendee seated twice', () => {
+    const t1 = table({ seats: [{ guestId: 'g1', attendeeIndex: 0 }, null, null, null] });
+    const t2 = table({ id: 't2', seats: [{ guestId: 'g1', attendeeIndex: 0 }, null, null, null] });
+    expect(() => validateTables([t1, t2], [guest()])).toThrow('SEAT_DUPLICATE_ATTENDEE');
+  });
+
+  it('accepts a legally split party', () => {
+    const t1 = table({ seats: [{ guestId: 'g1', attendeeIndex: 0 }, { guestId: 'g1', attendeeIndex: 1 }, null, null] });
+    const t2 = table({ id: 't2', seats: [{ guestId: 'g1', attendeeIndex: 2 }, null, null, null] });
+    expect(() => validateTables([t1, t2], [guest()])).not.toThrow();
   });
 });

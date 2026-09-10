@@ -1,6 +1,6 @@
 import { Search, UserX, CheckCircle2, Users, Utensils, X } from 'lucide-react';
 import { Guest, FloorMapData, TableElement } from '../../types';
-import { getGuestPartySize, getTableOccupiedSeats } from './floorPlanHelpers';
+import { getGuestPartySize, getTableOccupiedSeats, getGuestSeatedCount } from './floorPlanHelpers';
 import { useT } from '../shared/i18n';
 
 interface UnassignedGuestsSidebarProps {
@@ -25,10 +25,13 @@ export const UnassignedGuestsSidebar = ({
   onAssign,
 }: UnassignedGuestsSidebarProps) => {
   const t = useT();
-  const pSize = selectedGuest ? getGuestPartySize(selectedGuest) : 0;
+  // Members of the selected party still without a chair (split-aware).
+  const pSize = selectedGuest
+    ? getGuestPartySize(selectedGuest) - getGuestSeatedCount(selectedGuest.id, floorMap, guests)
+    : 0;
 
   const matchingTables: TableElement[] = selectedGuest
-    ? (floorMap?.tables.filter((tbl) => tbl.capacity - getTableOccupiedSeats(tbl, guests) >= pSize) ?? [])
+    ? (floorMap?.tables.filter((tbl) => tbl.capacity - getTableOccupiedSeats(tbl, guests) > 0) ?? [])
     : [];
 
   return (
@@ -121,7 +124,7 @@ export const UnassignedGuestsSidebar = ({
               })}
               {matchingTables.length === 0 && (
                 <p className="text-xs text-amber-700 italic bg-amber-50 p-2 rounded-xl border border-amber-200">
-                  No single table currently has {pSize} free seats.
+                  Every table is full. Add a table or free a chair to seat the rest of this party.
                 </p>
               )}
             </div>

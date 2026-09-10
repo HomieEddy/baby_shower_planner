@@ -41,6 +41,7 @@ export async function submitRsvp(token: string, payload: SubmitRsvpPayload): Pro
     token_used: true,
   };
 
+  let keepAttendees = 0;
   if (payload.rsvp_status === 'Attending') {
     const details = Array.isArray(payload.attendee_details)
       ? payload.attendee_details.filter(d => d && typeof d.name === 'string' && d.name.trim())
@@ -59,6 +60,7 @@ export async function submitRsvp(token: string, payload: SubmitRsvpPayload): Pro
     updates.attendee_details = details.slice(0, names.length);
     updates.attendee_names = names;
     updates.attending_party_size = names.length;
+    keepAttendees = names.length;
   } else {
     updates.attendee_names = [];
     updates.attendee_details = [];
@@ -66,9 +68,8 @@ export async function submitRsvp(token: string, payload: SubmitRsvpPayload): Pro
     updates.table_id = null;
   }
   const updated = await pb.collection('guests').update(r.id, updates);
-  if (payload.rsvp_status === 'Declined') {
-    await removeGuestFromFloorMaps(r.id);
-  }
+  // Declined keeps 0; a shrunk attending party keeps only its remaining chairs.
+  await removeGuestFromFloorMaps(r.id, keepAttendees);
   return fromRecord<Guest>(updated);
 }
 

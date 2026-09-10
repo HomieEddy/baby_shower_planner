@@ -28,15 +28,26 @@ export function newReservationCode(): string {
   return crypto.randomInt(1000, 10000).toString();
 }
 
-// Remove a guest from every table on the floor map (decline, deletion).
-export async function removeGuestFromFloorMaps(guestId: string): Promise<void> {
+// Remove a guest's seats from every table (decline, deletion). `keepAttendees`
+// keeps the first N attendees seated (RSVP party shrink) and drops the rest.
+export async function removeGuestFromFloorMaps(guestId: string, keepAttendees = 0): Promise<void> {
   try {
     const maps = await pb.collection('floor_maps').getFullList();
     if (maps.length === 0) return;
     const map = maps[0];
     const tables: any[] = JSON.parse(JSON.stringify(map.tables || []));
+    const keep = Math.max(0, keepAttendees);
     for (const t of tables) {
-      t.assignedGuestIds = (t.assignedGuestIds || []).filter((gid: string) => gid !== guestId);
+      if (Array.isArray(t.seats)) {
+        t.seats = t.seats.map((s: any) =>
+          s && s.guestId === guestId && s.attendeeIndex >= keep ? null : s
+        );
+        const ids: string[] = [];
+        for (const s of t.seats) if (s && !ids.includes(s.guestId)) ids.push(s.guestId);
+        t.assignedGuestIds = ids;
+      } else {
+        t.assignedGuestIds = (t.assignedGuestIds || []).filter((gid: string) => gid !== guestId);
+      }
     }
     await pb.collection('floor_maps').update(map.id, { tables });
   } catch (err) {
