@@ -5,12 +5,11 @@ import { fromRecord, pb } from './client';
 import { getAllGuests } from './guests';
 import { getSettings } from './settings';
 import {
-  getGuestPartySize,
   getAttendeeLocations,
   materializeTableSeats,
-  rebuildAssignedGuestIds,
+  syncGuestTableIds,
   validateTables,
-} from '../components/seating/floorPlanHelpers';
+} from '../lib/tableAssignment';
 
 function normalizeFloorMap(record: any): FloorMapData {
   const data = fromRecord<FloorMapData>(record);
@@ -48,12 +47,10 @@ export async function updateFloorMap(data: Partial<FloorMapData>): Promise<Floor
     const tables: TableElement[] = data.tables.map((t) => materializeTableSeats(t, allGuests));
     validateTables(tables, allGuests);
     payload.tables = tables;
+    // Legacy scalar mirror, derived in one place (lib/tableAssignment).
+    const tableIdByGuest = new Map(syncGuestTableIds(tables, allGuests).map((g) => [g.id, g.table_id]));
     for (const guest of allGuests) {
-      // Legacy scalar mirror: the table holding the party's primary attendee, else its first table.
-      const primary = tables.find((t) => t.seats?.some((s) => s?.guestId === guest.id && s.attendeeIndex === 0));
-      const anySeat = tables.find((t) => t.seats?.some((s) => s?.guestId === guest.id));
-      const assigned = primary || anySeat;
-      await pb.collection('guests').update(guest.id, { table_id: assigned?.id || null });
+      await pb.collection('guests').update(guest.id, { table_id: tableIdByGuest.get(guest.id) || null });
     }
   }
   if (id) {
@@ -67,39 +64,6 @@ export async function updateFloorMap(data: Partial<FloorMapData>): Promise<Floor
 // Legacy whole-party helper: clears the party from every table, then fills the
 // target table's free chairs in party order. Seat-level edits go through
 // updateFloorMap (bulk) instead.
-export async function assignGuestToTable(guestId: string, tableId: string | null): Promise<FloorMapData> {
-  const allGuests = await getAllGuests();
-  const guest = allGuests.find((g) => g.id === guestId);
-  if (!guest) throw new Error('GUEST_NOT_FOUND');
-  if (tableId && guest.rsvp_status !== 'Attending') throw new Error('Only confirmed attending guests can be assigned to a table.');
-  const records = await pb.collection('floor_maps').getFullList();
-  if (records.length === 0) throw new Error('No floor map');
-  const map = records[0];
-  const tables: TableElement[] = ((map.tables as TableElement[]) || []).map((t) => materializeTableSeats(t, allGuests));
-
-  // Remove the party from every table
-  for (const t of tables) {
-    t.seats = (t.seats || []).map((s) => (s?.guestId === guestId ? null : s));
-  }
-  // Fill free chairs at the target, party order
-  if (tableId) {
-    const target = tables.find((t) => t.id === tableId);
-    if (!target) throw new Error('TABLE_NOT_FOUND');
-    const size = getGuestPartySize(guest);
-    for (let i = 0; i < size; i++) {
-      const free = (target.seats || []).findIndex((s) => s === null);
-      if (free === -1) break;
-      target.seats![free] = { guestId, attendeeIndex: i };
-    }
-  }
-
-  for (const t of tables) t.assignedGuestIds = rebuildAssignedGuestIds(t.seats || []);
-  validateTables(tables, allGuests);
-  await pb.collection('guests').update(guestId, { table_id: tableId || null } as any);
-  const r = await pb.collection('floor_maps').update(map.id, { tables, updatedAt: new Date().toISOString() });
-  return normalizeFloorMap(r);
-}
-
 export async function shareFloorPlanEmail(guestIds?: string[], customMessage?: string): Promise<{ count: number }> {
   const guests: Guest[] = guestIds?.length
     ? await Promise.all(guestIds.map((id) => pb.collection('guests').getOne(id).then((r) => fromRecord<Guest>(r))))

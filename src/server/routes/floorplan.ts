@@ -3,7 +3,6 @@
 import type { RouteCtx } from '../http';
 import { HttpError, parseJson, sendJson } from '../http';
 import {
-  assignGuestToTable,
   getFloorMap,
   getSeatingRoster,
   shareFloorPlanEmail,
@@ -17,13 +16,11 @@ const SEAT_ERRORS = new Set([
   'SEAT_INDEX_OUT_OF_RANGE',
   'SEAT_DUPLICATE_ATTENDEE',
   'TABLE_OVER_CAPACITY',
-  'TABLE_NOT_FOUND',
-  'GUEST_NOT_FOUND',
 ]);
 
 function toHttpError(err: unknown): never {
   const message = err instanceof Error ? err.message : 'INVALID_SEATING';
-  if (SEAT_ERRORS.has(message) || message.startsWith('Only confirmed attending')) {
+  if (SEAT_ERRORS.has(message)) {
     throw new HttpError(400, message);
   }
   throw err;
@@ -56,18 +53,6 @@ export async function handleFloorPlanRoutes(ctx: RouteCtx): Promise<boolean> {
     const code = url.searchParams.get('code') || undefined;
     const result = await getSeatingRoster(guestToken, code);
     return sendJson(res, 200, result);
-  }
-
-  if (pathname === '/api/floorplan/assign' && method === 'POST') {
-    ctx.requireAdmin();
-    const body = await parseJson(req);
-    if (!body.guestId) return sendJson(res, 400, { error: 'guestId is required' });
-    try {
-      const floorMap = await assignGuestToTable(body.guestId, body.tableId || null);
-      return sendJson(res, 200, { success: true, floorMap });
-    } catch (err) {
-      toHttpError(err);
-    }
   }
 
   if (pathname === '/api/floorplan/share-email' && method === 'POST') {
