@@ -2,6 +2,7 @@
 
 import type { EventSettings } from '../types';
 import { fromRecord, pb } from './client';
+import { isRehearsalActive } from './rehearsal';
 
 export async function getSettings(): Promise<EventSettings> {
   const records = await pb.collection('settings').getFullList();
@@ -18,6 +19,9 @@ export interface GuestContentLock {
 // Guestbook and photo uploads are locked until the event starts
 // (contentOpenAt) and lock again after contentCloseAt.
 export async function getGuestContentLock(now: Date = new Date()): Promise<GuestContentLock> {
+  // A rehearsal unlocks guestbook + photo uploads regardless of the host's real
+  // content window, so both flows can be smoke-tested any time of day.
+  if (isRehearsalActive()) return { locked: false };
   const settings = await getSettings().catch(() => null);
   if (!settings) return { locked: true };
   const ts = now.getTime();

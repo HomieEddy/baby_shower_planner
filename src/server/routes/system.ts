@@ -3,7 +3,14 @@
 
 import type { RouteCtx } from '../http';
 import { parseJson, sendJson } from '../http';
-import { sendInvitations, sendReminders, wipeDatabaseData } from '../../db/service';
+import {
+  getRehearsalStatus,
+  sendInvitations,
+  sendReminders,
+  startRehearsal,
+  stopRehearsal,
+  wipeDatabaseData,
+} from '../../db/service';
 
 export async function handleSystemRoutes(ctx: RouteCtx): Promise<boolean> {
   const { req, res, url, requireAdmin } = ctx;
@@ -39,6 +46,23 @@ export async function handleSystemRoutes(ctx: RouteCtx): Promise<boolean> {
     requireAdmin();
     const data = await wipeDatabaseData();
     return sendJson(res, 200, { success: true, data });
+  }
+
+  // Rehearsal mode: seed disposable demo data, then remove only what it created.
+  if (pathname === '/api/rehearsal' && method === 'GET') {
+    return sendJson(res, 200, getRehearsalStatus());
+  }
+
+  if (pathname === '/api/rehearsal/start' && method === 'POST') {
+    requireAdmin();
+    const result = await startRehearsal();
+    return sendJson(res, 200, result);
+  }
+
+  if (pathname === '/api/rehearsal/stop' && method === 'POST') {
+    requireAdmin();
+    const result = await stopRehearsal();
+    return sendJson(res, 200, result);
   }
 
   return false;

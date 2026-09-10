@@ -797,6 +797,26 @@ export interface Translations {
   widthLabel: string;
   willNotifyLabel: string;
   willNotifyOfLabel: string;
+  rehearsalActiveBanner: string;
+  rehearsalBtn: string;
+  rehearsalEndBtn: string;
+  rehearsalEndConfirm: string;
+  rehearsalEndedToast: string;
+  rehearsalFailedToast: string;
+  rehearsalEndMsg: string;
+  rehearsalEndTitle: string;
+  rehearsalFooterNote: string;
+  rehearsalOpenFinder: string;
+  rehearsalOpenGuestbook: string;
+  rehearsalOpenRegister: string;
+  rehearsalOpenRsvp: string;
+  rehearsalOpenUpload: string;
+  rehearsalQuickLinks: string;
+  rehearsalSampleCode: string;
+  rehearsalStartConfirm: string;
+  rehearsalStartMsg: string;
+  rehearsalStartedToast: string;
+  rehearsalStartTitle: string;
   wipeDbBtn: string;
   wipeDbConfirm: string;
   wrongPasswordMsg: string;
@@ -1764,6 +1784,26 @@ export const translations: Record<Language, Translations> = {
     widthLabel: "Width",
     willNotifyLabel: "Will notify",
     willNotifyOfLabel: "of",
+    rehearsalActiveBanner: "Rehearsal mode is on. The app is filled with demo data for a smoke test.",
+    rehearsalBtn: "Rehearsal",
+    rehearsalEndBtn: "End rehearsal & remove demo data",
+    rehearsalEndConfirm: "End rehearsal",
+    rehearsalEndedToast: "Rehearsal ended. Demo data removed.",
+    rehearsalFailedToast: "Could not update the rehearsal. Please try again.",
+    rehearsalEndMsg: "Removes everything created since the rehearsal started (demo guests, guestbook, photos, gifts) and restores your floor plan. Data from before the rehearsal is kept.",
+    rehearsalEndTitle: "End rehearsal?",
+    rehearsalFooterNote: "Rehearsal mode — demo data. Remove it from the admin dashboard.",
+    rehearsalOpenFinder: "Find my table / check-in",
+    rehearsalOpenGuestbook: "Guestbook",
+    rehearsalOpenRegister: "Self-registration",
+    rehearsalOpenRsvp: "Guest RSVP",
+    rehearsalOpenUpload: "Photo upload",
+    rehearsalQuickLinks: "Try a guest flow",
+    rehearsalSampleCode: "Photo upload reservation code: {{code}}",
+    rehearsalStartConfirm: "Start rehearsal",
+    rehearsalStartMsg: "Adds demo guests, seating, guestbook entries, gifts, an alert and agenda tasks so you can walk through the event. Your existing data stays put and only rehearsal data is removed when you end it.",
+    rehearsalStartedToast: "Rehearsal started. Demo data loaded.",
+    rehearsalStartTitle: "Start rehearsal?",
     wipeDbBtn: "Clear All Data",
     wipeDbConfirm: "All event data cleared. Ready to start fresh.",
     wrongPasswordMsg: "Wrong password",
@@ -2722,6 +2762,26 @@ export const translations: Record<Language, Translations> = {
     widthLabel: "Largeur",
     willNotifyLabel: "Notifiera",
     willNotifyOfLabel: "sur",
+    rehearsalActiveBanner: "Mode répétition activé. L'application contient des données de démonstration pour un test.",
+    rehearsalBtn: "Répétition",
+    rehearsalEndBtn: "Terminer la répétition et effacer les données",
+    rehearsalEndConfirm: "Terminer la répétition",
+    rehearsalEndedToast: "Répétition terminée. Données de démonstration effacées.",
+    rehearsalFailedToast: "Impossible de mettre à jour la répétition. Veuillez réessayer.",
+    rehearsalEndMsg: "Supprime tout ce qui a été créé depuis le début de la répétition (invités, livre d'or, photos, cadeaux) et restaure votre plan de salle. Les données antérieures sont conservées.",
+    rehearsalEndTitle: "Terminer la répétition ?",
+    rehearsalFooterNote: "Mode répétition — données de démonstration. Supprimez-les depuis le tableau de bord.",
+    rehearsalOpenFinder: "Trouver ma table / enregistrement",
+    rehearsalOpenGuestbook: "Livre d'or",
+    rehearsalOpenRegister: "Inscription libre",
+    rehearsalOpenRsvp: "RSVP invité",
+    rehearsalOpenUpload: "Téléverser des photos",
+    rehearsalQuickLinks: "Tester un parcours invité",
+    rehearsalSampleCode: "Code de réservation pour les photos : {{code}}",
+    rehearsalStartConfirm: "Démarrer la répétition",
+    rehearsalStartMsg: "Ajoute des invités, un plan de salle, des messages du livre d'or, des cadeaux, une alerte et des tâches de démonstration pour tester le déroulement. Vos données existantes sont conservées et seules les données de répétition sont supprimées à la fin.",
+    rehearsalStartedToast: "Répétition démarrée. Données de démonstration chargées.",
+    rehearsalStartTitle: "Démarrer la répétition ?",
     wipeDbBtn: "Effacer toutes les données",
     wipeDbConfirm: "Toutes les données de l'événement ont été effacées.",
     wrongPasswordMsg: "Mot de passe incorrect",

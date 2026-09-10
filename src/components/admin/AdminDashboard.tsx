@@ -39,6 +39,8 @@ import {
   Copy,
   Link2,
   Check,
+  FlaskConical,
+  ExternalLink,
 } from 'lucide-react';
 import { useCopyFeedback } from '../shared/hooks';
 
@@ -105,25 +107,36 @@ export const AdminDashboard = () => {
   const overviewQuery = useQuery({
     queryKey: ['admin-overview'],
     queryFn: async () => {
-      const [resGuests, resGb, resAlt, resGifts] = await Promise.all([
+      const [resGuests, resGb, resAlt, resGifts, resRehearsal] = await Promise.all([
         adminFetch('/api/guests'),
         adminFetch('/api/guestbook'),
         adminFetch('/api/alerts'),
         adminFetch('/api/gifts'),
+        fetch('/api/rehearsal'),
       ]);
       return {
         guests: ((await resGuests.json()).guests ?? []) as Guest[],
         guestbookEntries: ((await resGb.json()).entries ?? []) as GuestbookEntry[],
         alerts: ((await resAlt.json()).alerts ?? []) as EventAlert[],
         gifts: ((await resGifts.json()).gifts ?? []) as GiftLog[],
+        rehearsal: (await resRehearsal.json()) as {
+          active: boolean;
+          sample?: { name: string; code: string; magic_token: string };
+          pendingToken?: string;
+        },
       };
     },
   });
-  const { guests, guestbookEntries, alerts, gifts } = overviewQuery.data ?? {
+  const { guests, guestbookEntries, alerts, gifts, rehearsal } = overviewQuery.data ?? {
     guests: [] as Guest[],
     guestbookEntries: [] as GuestbookEntry[],
     alerts: [] as EventAlert[],
     gifts: [] as GiftLog[],
+    rehearsal: { active: false } as {
+      active: boolean;
+      sample?: { name: string; code: string; magic_token: string };
+      pendingToken?: string;
+    },
   };
   const refreshOverview = async () => { await queryClient.invalidateQueries({ queryKey: ['admin-overview'] }); };
 
@@ -193,6 +206,51 @@ export const AdminDashboard = () => {
     toast.success(t.wipeDbConfirm);
   };
 
+  const handleStartRehearsal = async () => {
+    const ok = await confirm({
+      title: t.rehearsalStartTitle,
+      message: t.rehearsalStartMsg,
+      confirmText: t.rehearsalStartConfirm,
+    });
+    if (!ok) return;
+    const res = await adminFetch('/api/rehearsal/start', { method: 'POST' });
+    if (!res.ok) {
+      toast.error(t.rehearsalFailedToast);
+      return;
+    }
+    await refreshOverview();
+    queryClient.invalidateQueries({ queryKey: ['rehearsal-status'] });
+    toast.success(t.rehearsalStartedToast);
+  };
+
+  const handleStopRehearsal = async () => {
+    const ok = await confirm({
+      title: t.rehearsalEndTitle,
+      message: t.rehearsalEndMsg,
+      confirmText: t.rehearsalEndConfirm,
+    });
+    if (!ok) return;
+    const res = await adminFetch('/api/rehearsal/stop', { method: 'POST' });
+    if (!res.ok) {
+      toast.error(t.rehearsalFailedToast);
+      return;
+    }
+    await refreshOverview();
+    queryClient.invalidateQueries({ queryKey: ['rehearsal-status'] });
+    toast.success(t.rehearsalEndedToast);
+  };
+
+  const rehearsalActive = rehearsal?.active === true;
+  const rehearsalLinks = rehearsalActive
+    ? [
+        ...(rehearsal?.pendingToken ? [{ href: `/rsvp/${rehearsal.pendingToken}`, label: t.rehearsalOpenRsvp }] : []),
+        ...(rehearsal?.sample?.magic_token ? [{ href: `/find-my-table?guest=${rehearsal.sample.magic_token}`, label: t.rehearsalOpenFinder }] : []),
+        { href: '/guestbook', label: t.rehearsalOpenGuestbook },
+        { href: '/upload-photos', label: t.rehearsalOpenUpload },
+        { href: '/register', label: t.rehearsalOpenRegister },
+      ]
+    : [];
+
 
   return (
     <motion.div
@@ -201,6 +259,48 @@ export const AdminDashboard = () => {
       animate="show"
       className="space-y-8"
     >
+
+      {rehearsalActive && (
+        <motion.div
+          variants={adminCardVariants}
+          className="rounded-2xl border-2 border-amber-400 bg-amber-50 p-4 sm:p-5 space-y-3"
+        >
+          <div className="flex flex-col sm:flex-row sm:items-start gap-3">
+            <FlaskConical className="w-5 h-5 text-amber-600 shrink-0 mt-0.5" />
+            <div className="flex-1 min-w-0">
+              <p className="font-mono font-bold text-amber-800 text-xs sm:text-sm">{t.rehearsalActiveBanner}</p>
+              {rehearsal?.sample && (
+                <p className="text-[11px] text-amber-800/90 mt-0.5">
+                  {t.rehearsalSampleCode.replace('{{code}}', rehearsal.sample.code)}
+                </p>
+              )}
+            </div>
+            <motion.button
+              whileHover={{ scale: 1.03 }}
+              whileTap={{ scale: 0.97 }}
+              onClick={handleStopRehearsal}
+              className="shrink-0 text-xs font-bold rounded-xl bg-amber-600 hover:bg-amber-700 text-white py-2 px-3 cursor-pointer"
+            >
+              {t.rehearsalEndBtn}
+            </motion.button>
+          </div>
+          <div className="flex flex-wrap items-center gap-2 pt-1 border-t border-amber-300/60">
+            <span className="label-mono text-amber-700">{t.rehearsalQuickLinks}</span>
+            {rehearsalLinks.map((link) => (
+              <a
+                key={link.href}
+                href={link.href}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-white border border-amber-300 text-[11px] font-bold text-amber-800 hover:bg-amber-100 transition-colors"
+              >
+                {link.label}
+                <ExternalLink className="w-3 h-3" />
+              </a>
+            ))}
+          </div>
+        </motion.div>
+      )}
 
       <motion.div variants={adminCardVariants} className="card-paper p-6 sm:p-8 flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
@@ -236,6 +336,18 @@ export const AdminDashboard = () => {
             {copiedKey === 'universal-url' ? <Check className="w-3.5 h-3.5 mr-1" /> : <Link2 className="w-3.5 h-3.5 mr-1" />}
             <span>{t.copyLink}</span>
           </motion.button>
+          {!rehearsalActive && (
+            <motion.button
+              whileHover={{ scale: 1.03 }}
+              whileTap={{ scale: 0.97 }}
+              onClick={handleStartRehearsal}
+              className="btn-outline-accent text-xs sm:text-sm py-2.5 px-3.5 cursor-pointer inline-flex items-center"
+              title={t.rehearsalStartTitle}
+            >
+              <FlaskConical className="w-3.5 h-3.5 mr-1" />
+              <span>{t.rehearsalBtn}</span>
+            </motion.button>
+          )}
           <motion.button
             whileHover={{ scale: 1.03 }}
             whileTap={{ scale: 0.97 }}
