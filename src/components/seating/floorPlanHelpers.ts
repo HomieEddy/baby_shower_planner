@@ -104,6 +104,23 @@ export const getGuestSeatedCount = (
   guestsList: Guest[]
 ): number => getAttendeeLocations(guestId, floorMap, guestsList).length;
 
+// Exact chair for one attendee (attendeeIndex into getPartyMembers), across tables.
+export const getAttendeeSeatLocation = (
+  guestId: string,
+  attendeeIndex: number,
+  floorMap: FloorMapData | null,
+  guestsList: Guest[]
+): { table: TableElement; seatIndex: number } | null => {
+  if (!floorMap) return null;
+  for (const table of floorMap.tables) {
+    const idx = getTableSeats(table, guestsList).findIndex(
+      (s) => s?.guestId === guestId && s.attendeeIndex === attendeeIndex
+    );
+    if (idx !== -1) return { table, seatIndex: idx };
+  }
+  return null;
+};
+
 // Refresh the legacy scalar `table_id` mirror after a seat edit: the table
 // holding the party lead (attendee 0), else the first table the party touches.
 export const syncGuestTableIds = (tables: TableElement[], guestsList: Guest[]): Guest[] =>

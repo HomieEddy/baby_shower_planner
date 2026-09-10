@@ -11,7 +11,7 @@ import {
   getGuestPartySize,
   getSeatLocalPosition,
   getTableOccupiedSeats,
-  getTableSeats,
+  getAttendeeSeatLocation,
 } from './floorPlanHelpers';
 import { getPartyMembers } from '../../lib/guestAttendees';
 import { FinderSelection } from './GuestFinderPage';
@@ -59,19 +59,13 @@ export const VenueModal = ({ open, selected, floorMap, roster, onClose }: VenueM
   }, [selected, floorMap, open]);
 
   // The exact table + chair for THIS person (a party may be split across tables).
-  const guestSeat = useMemo(() => {
-    if (!floorMap) return null;
-    const names = getPartyMembers(selected.guest);
-    const attendeeIndex =
-      selected.attendeeName === null ? 0 : Math.max(0, names.indexOf(selected.attendeeName));
-    for (const tbl of floorMap.tables) {
-      const idx = getTableSeats(tbl, roster).findIndex(
-        (s) => s?.guestId === selected.guest.id && s.attendeeIndex === attendeeIndex
-      );
-      if (idx !== -1) return { table: tbl, seatIndex: idx };
-    }
-    return null;
-  }, [selected, floorMap, roster]);
+  const attendeeNames = getPartyMembers(selected.guest);
+  const attendeeIndex =
+    selected.attendeeName === null ? 0 : Math.max(0, attendeeNames.indexOf(selected.attendeeName));
+  const guestSeat = useMemo(
+    () => getAttendeeSeatLocation(selected.guest.id, attendeeIndex, floorMap, roster),
+    [selected.guest.id, attendeeIndex, floorMap, roster]
+  );
 
   const guestAssignedTable = guestSeat?.table ?? null;
   const seatIndex = guestSeat?.seatIndex ?? null;
