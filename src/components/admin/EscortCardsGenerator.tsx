@@ -1,12 +1,22 @@
-import React, { useState } from 'react';
-import { Guest, EventSettings } from '../../types';
+import React, { useEffect, useState } from 'react';
+import { Guest, EventSettings, FloorMapData } from '../../types';
 import { Printer, Scissors, Tag, Ticket } from 'lucide-react';
 import { useT } from '../shared/i18n';
 import { usePrint } from '../shared/hooks';
+import { getAttendeeLocations } from '../seating/floorPlanHelpers';
+import { getPartyMembers } from '../../lib/guestAttendees';
 
 interface EscortCardsGeneratorProps {
   guests: Guest[];
   settings?: EventSettings | null;
+}
+
+interface CardRow {
+  guest: Guest;
+  key: string;
+  name: string;
+  tableName: string | null;
+  seatNumber: number | null;
 }
 
 export const EscortCardsGenerator: React.FC<EscortCardsGeneratorProps> = ({ guests, settings }) => {
@@ -18,18 +28,48 @@ export const EscortCardsGenerator: React.FC<EscortCardsGeneratorProps> = ({ gues
   const [customHeader, setCustomHeader] = useState(
     settings?.babyName ? `Celebrating Baby ${settings.babyName}` : 'Welcome to Our Baby Shower'
   );
+  const [floorMap, setFloorMap] = useState<FloorMapData | null>(null);
 
-  // Filter attending guests
-  const attendingGuests = guests.filter((g) => g.rsvp_status === 'Attending');
+  // Seats live on the floor map; fetch it so split parties get one card per person.
+  useEffect(() => {
+    let cancelled = false;
+    fetch('/api/floorplan')
+      .then((r) => r.json())
+      .then((d) => {
+        if (!cancelled) setFloorMap(d.floorMap ?? null);
+      })
+      .catch(() => {});
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  // One card per attending person, resolved to their own table + chair.
+  const rows: CardRow[] = guests
+    .filter((g) => g.rsvp_status === 'Attending')
+    .flatMap((g) => {
+      const names = getPartyMembers(g);
+      const locations = getAttendeeLocations(g.id, floorMap, guests);
+      return names.map((name, i) => {
+        const loc = locations.find((l) => l.attendeeIndex === i) ?? null;
+        return {
+          guest: g,
+          key: `${g.id}:${i}`,
+          name,
+          tableName: loc?.tableName ?? null,
+          seatNumber: loc ? loc.seatIndex + 1 : null,
+        };
+      });
+    });
 
   // Extract unique tables
   const uniqueTables = Array.from(
-    new Set(attendingGuests.map((g) => g.table_id || 'Unassigned'))
+    new Set(rows.map((r) => r.tableName || 'Unassigned'))
   ).sort();
 
-  const filteredGuests = attendingGuests.filter((g) => {
+  const filteredRows = rows.filter((r) => {
     if (selectedTableFilter === 'ALL') return true;
-    return (g.table_id || 'Unassigned') === selectedTableFilter;
+    return (r.tableName || 'Unassigned') === selectedTableFilter;
   });
 
   return (
@@ -56,7 +96,7 @@ export const EscortCardsGenerator: React.FC<EscortCardsGeneratorProps> = ({ gues
             className="px-5 py-3 rounded-xl bg-[#8B735B] text-white font-bold text-xs hover:bg-[#705C47] transition-all flex items-center gap-2 shadow-md cursor-pointer shrink-0"
           >
             <Printer className="w-4 h-4" />
-            <span>Print {filteredGuests.length} Cards</span>
+            <span>Print {filteredRows.length} Cards</span>
           </button>
         </div>
 
@@ -93,7 +133,7 @@ export const EscortCardsGenerator: React.FC<EscortCardsGeneratorProps> = ({ gues
               onChange={(e) => setSelectedTableFilter(e.target.value)}
               className="w-full px-3 py-2 rounded-xl border border-[#CBAE94] text-xs font-bold bg-white text-[#4A3F35]"
             >
-              <option value="ALL">{t.allTablesOption.replace('{{count}}', String(attendingGuests.length))}</option>
+              <option value="ALL">{t.allTablesOption.replace('{{count}}', String(rows.length))}</option>
               {uniqueTables.map((tbl) => (
                 <option key={tbl} value={tbl}>
                   {t.tableFilterLabel} {tbl}
@@ -130,21 +170,25 @@ export const EscortCardsGenerator: React.FC<EscortCardsGeneratorProps> = ({ gues
       <div className="card-paper p-6 sm:p-8 space-y-4">
         <div className="flex items-center justify-between border-b border-[#CBAE94]/30 pb-3 print:hidden">
           <h3 className="font-sans text-lg font-bold text-[#4A3F35]">
-            {t.printPreviewLabel} ({filteredGuests.length} items)
+            {t.printPreviewLabel} ({filteredRows.length} items)
           </h3>
           <span className="text-xs font-mono text-[#8B735B]">
             {t.paperLayoutLabel}: 2-Column Grid (Standard A4 / Letter)
           </span>
         </div>
 
-        {filteredGuests.length === 0 ? (
+        {filteredRows.length === 0 ? (
           <div className="text-center py-12 text-[#8B735B] font-sans">
                 {t.noAttendingGuestsMsg}
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 print:grid-cols-2 print:gap-4 print:p-0">
-            {filteredGuests.map((guest) => {
-              const tableNum = guest.table_id || 'Table 1';
+            {filteredRows.map((row) => {
+              const guest = row.guest;
+              const tableNum = row.tableName || t.unassignedWord;
+              const seatLine = row.seatNumber
+                ? t.seatedAtSeatLabel.replace('{{seat}}', String(row.seatNumber))
+                : '';
               const magicUrl = `${window.location.origin}/rsvp/${guest.magic_token}`;
               const qrApi = `https://api.qrserver.com/v1/create-qr-code/?size=100x100&data=${encodeURIComponent(
                 magicUrl
@@ -153,39 +197,39 @@ export const EscortCardsGenerator: React.FC<EscortCardsGeneratorProps> = ({ gues
               if (cardType === 'tent') {
                 return (
                   <div
-                    key={guest.id}
+                    key={row.key}
                     className="border-2 border-dashed border-[#CBAE94] rounded-2xl bg-[#FAF6F0] h-56 relative shadow-xs print:shadow-none print:border-solid print:border-slate-300 break-inside-avoid"
                   >
-                    {/* Top Fold (Folded Back / Front Header) — occupies the top half, centered */}
+                    {/* Top Fold (Folded Back / Front Header) â€” occupies the top half, centered */}
                     <div className="h-1/2 flex items-center justify-center opacity-75 transform rotate-180 print:rotate-180 text-center px-4">
                       <div className="space-y-1">
                         <p className="text-[10px] font-mono uppercase tracking-widest text-[#8B735B]">
                           {customHeader}
                         </p>
                         <h4 className="font-newsreader text-xl font-bold text-[#4A3F35]">
-                          {guest.name}
+                          {row.name}
                         </h4>
                       </div>
                     </div>
 
-                    {/* Fold line — a dedicated divider at the exact middle of the card */}
+                    {/* Fold line â€” a dedicated divider at the exact middle of the card */}
                     <div className="relative h-0 border-t border-dotted border-[#CBAE94] print:border-slate-300">
                       <span className="absolute -top-2 right-2 text-[9px] font-mono text-[#CBAE94] bg-[#FAF6F0] px-1 print:hidden">
                         <Scissors className="w-2.5 h-2.5 inline" /> {t.foldLineLabel}
                       </span>
                     </div>
 
-                    {/* Bottom Fold (Primary Front Facing Display) — occupies the bottom half, centered */}
+                    {/* Bottom Fold (Primary Front Facing Display) â€” occupies the bottom half, centered */}
                     <div className="h-1/2 flex items-center justify-between px-4">
                       <div className="space-y-1">
                         <p className="text-[10px] font-mono uppercase tracking-widest text-[#8B735B]">
                           {customHeader}
                         </p>
                         <h3 className="font-newsreader text-2xl font-bold text-[#4A3F35]">
-                          {guest.name}
+                          {row.name}
                         </h3>
                         <p className="text-xs font-mono font-bold text-[#8B735B]">
-                          Party of {guest.attending_party_size || 1}
+                          {seatLine}
                         </p>
                       </div>
 
@@ -211,7 +255,7 @@ export const EscortCardsGenerator: React.FC<EscortCardsGeneratorProps> = ({ gues
                 return (
                   /* Wearable Name Badge */
                   <div
-                    key={guest.id}
+                    key={row.key}
                     className="border-2 border-[#4A3F35] rounded-2xl p-5 bg-white flex flex-col justify-between h-48 relative shadow-sm print:shadow-none print:border-slate-800 break-inside-avoid"
                   >
                     <div className="text-center border-b border-[#CBAE94]/40 pb-2">
@@ -225,13 +269,13 @@ export const EscortCardsGenerator: React.FC<EscortCardsGeneratorProps> = ({ gues
                         {t.helloMyNameIsLabel}
                       </p>
                       <h2 className="font-newsreader text-3xl font-bold text-[#4A3F35] mt-1">
-                        {guest.name}
+                        {row.name}
                       </h2>
                     </div>
 
                     <div className="flex items-center justify-between border-t border-[#CBAE94]/40 pt-2 text-xs font-mono">
                       <span className="font-bold text-[#8B735B]">{t.tableFilterLabel} {tableNum}</span>
-                      <span className="text-[10px] text-[#8B735B]">Party of {guest.attending_party_size || 1}</span>
+                      <span className="text-[10px] text-[#8B735B]">{seatLine}</span>
                     </div>
                   </div>
                 );

@@ -6,6 +6,7 @@ import { getAllGuests } from './guests';
 import { getSettings } from './settings';
 import {
   getGuestPartySize,
+  getAttendeeLocations,
   materializeTableSeats,
   rebuildAssignedGuestIds,
   validateTables,
@@ -100,8 +101,8 @@ export async function assignGuestToTable(guestId: string, tableId: string | null
 }
 
 export async function shareFloorPlanEmail(guestIds?: string[], customMessage?: string): Promise<{ count: number }> {
-  const guests: any[] = guestIds?.length
-    ? await Promise.all(guestIds.map(id => pb.collection('guests').getOne(id)))
+  const guests: Guest[] = guestIds?.length
+    ? await Promise.all(guestIds.map((id) => pb.collection('guests').getOne(id).then((r) => fromRecord<Guest>(r))))
     : await getAllGuests();
   const map = await getFloorMap();
   let settings: EventSettings | null = null;
@@ -109,9 +110,11 @@ export async function shareFloorPlanEmail(guestIds?: string[], customMessage?: s
   let count = 0;
   for (const g of guests) {
     if (!g.email || !settings) continue;
-    const table = map.tables.find(t => t.assignedGuestIds.includes(g.id));
+    // The party lead's table (split parties are announced at the primary's chair).
+    const locations = getAttendeeLocations(g.id, map, guests);
+    const table = locations.find((l) => l.attendeeIndex === 0) ?? locations[0];
     const { sendFloorPlanEmail } = await import('../lib/email');
-    if (await sendFloorPlanEmail(fromRecord<Guest>(g), settings, table?.name || '', customMessage || '')) {
+    if (await sendFloorPlanEmail(g, settings, table?.tableName || '', customMessage || '')) {
       count++;
     }
   }
