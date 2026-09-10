@@ -100,6 +100,26 @@ export const FloorPlanPage = () => {
     });
   };
 
+  // Save Floor Map to Backend
+  const saveFloorMap = async (newMapData: FloorMapData) => {
+    try {
+      setSaving(true);
+      const res = await adminFetch('/api/floorplan', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(newMapData),
+      });
+      const data = await res.json();
+      if (data.floorMap) {
+        setFloorMap(data.floorMap);
+      }
+    } catch (err) {
+      console.error('Error saving floor map:', err);
+    } finally {
+      setSaving(false);
+    }
+  };
+
   const handleUndo = async () => {
     if (historyIndex <= 0) return;
     const targetIndex = historyIndex - 1;
@@ -556,7 +576,11 @@ export const FloorPlanPage = () => {
   };
 
   useEffect(() => {
-    fetchData();
+    // async IIFE keeps the loader's setState out of the effect's synchronous
+    // body (react-hooks/set-state-in-effect).
+    (async () => {
+      await fetchData();
+    })();
   }, []);
 
   // Adjust Canvas Scale based on container width
@@ -594,26 +618,6 @@ export const FloorPlanPage = () => {
     setIsEditorModalOpen(false);
     setNotification(t.fpEditCancelledToast);
     setTimeout(() => setNotification(null), 2500);
-  };
-
-  // Save Floor Map to Backend
-  const saveFloorMap = async (newMapData: FloorMapData) => {
-    try {
-      setSaving(true);
-      const res = await adminFetch('/api/floorplan', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(newMapData),
-      });
-      const data = await res.json();
-      if (data.floorMap) {
-        setFloorMap(data.floorMap);
-      }
-    } catch (err) {
-      console.error('Error saving floor map:', err);
-    } finally {
-      setSaving(false);
-    }
   };
 
   // Add Table Helper

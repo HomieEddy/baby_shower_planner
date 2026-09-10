@@ -194,7 +194,19 @@ export const HostPhotoGalleryPage: React.FC = () => {
   const { data: tables = [] } = useFloorMapTables();
 
   useEffect(() => {
-    fetchPhotos();
+    let cancelled = false;
+    (async () => {
+      try {
+        const res = await adminFetch('/api/photos');
+        const data = await res.json();
+        if (!cancelled && data.photos) setPhotos(data.photos);
+      } catch (err) {
+        console.error('Error fetching photos:', err);
+      } finally {
+        if (!cancelled) setIsLoading(false);
+      }
+    })();
+    return () => { cancelled = true; };
   }, []);
 
   // Slideshow auto-advance timer
