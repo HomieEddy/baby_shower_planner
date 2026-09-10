@@ -156,11 +156,11 @@ describe('submitRsvp approval gate', () => {
   it('blocks pending and rejected registrations', async () => {
     const { guest } = await registerGuest({ name: 'Alice', email: 'a@x.com', language_pref: 'EN', attendee_names: ['Alice'] });
     await expect(submitRsvp(guest.magic_token, { rsvp_status: 'Attending', dietary_restrictions: '' }))
-      .rejects.toThrow('PENDING_APPROVAL');
+      .rejects.toMatchObject({ code: 'PENDING_APPROVAL' });
 
     await h.pb.collection('guests').update(guest.id, { approval_status: 'rejected' });
     await expect(submitRsvp(guest.magic_token, { rsvp_status: 'Attending', dietary_restrictions: '' }))
-      .rejects.toThrow('REGISTRATION_REJECTED');
+      .rejects.toMatchObject({ code: 'REGISTRATION_REJECTED' });
   });
 
   it('allows submission once approved and unlocked', async () => {

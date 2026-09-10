@@ -3,6 +3,7 @@
 import type { GiftLog, EventSettings, Guest } from '../types';
 import { fromRecord, pb } from './client';
 import { getGiftById } from './gifts';
+import { DomainError } from '../lib/errors';
 
 function buildFallbackDraft(gift: GiftLog, settings: Partial<EventSettings>): string {
   const parents = settings.parentsNames?.trim() || 'the expecting parents';
@@ -61,7 +62,7 @@ export async function sendGiftThankYou(
   const guestRecord = gift.guest_id
     ? records.find((r) => r.id === gift.guest_id)
     : records.find((r) => r.name === gift.guest_name);
-  if (!guestRecord) throw new Error('GUEST_NOT_FOUND');
+  if (!guestRecord) throw new DomainError('GUEST_NOT_FOUND');
   const guest = fromRecord<Guest>(guestRecord);
 
   const sent: string[] = [];
@@ -77,7 +78,7 @@ export async function sendGiftThankYou(
     else failed.push('text');
   }
   if (sent.length === 0 && failed.length === 0) {
-    throw new Error(channel === 'email' || channel === 'both' ? 'NO_EMAIL' : 'NO_PHONE');
+    throw new DomainError(channel === 'email' || channel === 'both' ? 'NO_EMAIL' : 'NO_PHONE');
   }
   const now = new Date().toISOString().split('T')[0];
   await pb.collection('gifts').update(giftId, { thank_you_sent: true, thank_you_date: now });

@@ -5,6 +5,7 @@ import path from 'node:path';
 import fs from 'node:fs';
 import crypto from 'node:crypto';
 import { UPLOADS_DIR } from './uploadFiles';
+import { errorMessage, errorStatus } from '../lib/errors';
 
 export const IS_PROD = process.env.NODE_ENV === 'production';
 // Coolify proxies traffic and appends X-Forwarded-For; trust it for rate
@@ -163,6 +164,19 @@ export function sendJson(res: http.ServerResponse, statusCode: number, data: any
   res.writeHead(statusCode, { 'Content-Type': 'application/json' });
   res.end(JSON.stringify(data));
   return true;
+}
+
+// The one 403 body for the guest content window (guestbook + photos).
+export function sendGuestLocked(
+  res: http.ServerResponse,
+  lock: { opensAt?: string; closesAt?: string }
+): true {
+  return sendJson(res, errorStatus('GUEST_CONTENT_LOCKED'), {
+    error: 'GUEST_CONTENT_LOCKED',
+    message: errorMessage('GUEST_CONTENT_LOCKED'),
+    opensAt: lock.opensAt,
+    closesAt: lock.closesAt,
+  });
 }
 
 // Static assets: correct Content-Type matters (module scripts and stylesheets

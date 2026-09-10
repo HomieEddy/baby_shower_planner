@@ -5,7 +5,7 @@ import fs from 'node:fs';
 import crypto from 'node:crypto';
 
 import type { RouteCtx } from '../http';
-import { parseJson, sendJson } from '../http';
+import { parseJson, sendGuestLocked, sendJson } from '../http';
 import { getUploadFilePath, removeUploadFiles } from '../uploadFiles';
 import { pb, addPhotosBatch, deletePhoto, getAllPhotos, getGuestPhotoUsage, setPhotoVisibility } from '../../db/service';
 
@@ -36,7 +36,7 @@ export async function handlePhotoRoutes(ctx: RouteCtx): Promise<boolean> {
   if (pathname === '/api/photos') {
     const lock = await ctx.guestLock();
     if (lock) {
-      return sendJson(res, 403, { error: 'GUEST_CONTENT_LOCKED', opensAt: lock.opensAt, closesAt: lock.closesAt });
+      return sendGuestLocked(res, lock);
     }
     if (method === 'GET') {
       // Admins see hidden photos too (moderation); guests only visible ones.
@@ -48,7 +48,7 @@ export async function handlePhotoRoutes(ctx: RouteCtx): Promise<boolean> {
   if (pathname === '/api/photos/upload' && method === 'POST') {
     const lock = await ctx.guestLock();
     if (lock) {
-      return sendJson(res, 403, { error: 'GUEST_CONTENT_LOCKED', opensAt: lock.opensAt, closesAt: lock.closesAt });
+      return sendGuestLocked(res, lock);
     }
     const body = await parseJson(req);
     const { uploader_name, caption, table_name, table_id, reservation_code, photos } = body;

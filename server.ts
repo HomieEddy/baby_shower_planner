@@ -21,6 +21,7 @@ import {
   validateSecrets,
 } from './src/server/http';
 import type { RouteCtx } from './src/server/http';
+import { DomainError, domainErrorBody, errorStatus } from './src/lib/errors';
 import { handleSystemRoutes } from './src/server/routes/system';
 import { handleGuestRoutes } from './src/server/routes/guests';
 import { handleRegisterRoutes } from './src/server/routes/register';
@@ -116,8 +117,13 @@ async function requestHandler(req: http.IncomingMessage, res: http.ServerRespons
         console.warn(`[API] ${err.status} ${method} ${pathname}: ${err.message}`);
         return sendJson(res, err.status, { error: err.message });
       }
+      if (err instanceof DomainError) {
+        console.warn(`[API] ${errorStatus(err.code)} ${method} ${pathname}: ${err.code}`);
+        return sendJson(res, errorStatus(err.code), domainErrorBody(err));
+      }
+      // Unknown errors never leak internals to the client; logged server-side.
       console.error(`[API] 500 ${method} ${pathname}:`, err);
-      return sendJson(res, 500, { error: err.message || 'Server internal error' });
+      return sendJson(res, 500, { error: 'SERVER_ERROR', message: 'Something went wrong' });
     }
   }
 

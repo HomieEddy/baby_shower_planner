@@ -17,6 +17,7 @@ import { useT } from '../shared/i18n';
 import { useToast } from '../shared/ToastContext';
 import { getPartyMembers, isMemberCheckedIn, isPartyLead } from '../../lib/guestAttendees';
 import { getGuestPartySize } from '../../lib/tableAssignment';
+import { decodeApiError } from '../../lib/errors';
 import { VenueModal } from './VenueModal';
 
 // A searchable person: the primary guest or one of their party attendees.
@@ -176,7 +177,8 @@ export const GuestFinderPage: React.FC = () => {
       });
       const data = await res.json().catch(() => ({}));
       if (!res.ok) {
-        toast.error(data.error === 'DECLINED' ? t.checkinDeclinedError : data.error || 'Check-in failed');
+        const { code, message } = decodeApiError(data, res.status);
+        toast.error(code === 'DECLINED' ? t.checkinDeclinedError : message || 'Check-in failed');
         return;
       }
       const updated: Guest | undefined = data.guest;

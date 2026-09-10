@@ -1,5 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { FloorMapData, Guest, TableElement } from '../types';
+import { DomainError } from './errors';
 import {
   getTableSeats,
   getTableOccupiedSeats,
@@ -12,6 +13,17 @@ import {
   unassignParty,
   trimPartySeats,
 } from './tableAssignment';
+
+const expectCode = (fn: () => void, code: string) => {
+  try {
+    fn();
+  } catch (err) {
+    expect(err).toBeInstanceOf(DomainError);
+    expect((err as DomainError).code).toBe(code);
+    return;
+  }
+  throw new Error(`expected DomainError ${code}`);
+};
 
 const map = (over: Partial<FloorMapData> = {}): FloorMapData => ({
   id: 'map',
@@ -104,18 +116,18 @@ describe('validateTables', () => {
       capacity: 1,
       seats: [{ guestId: 'g1', attendeeIndex: 0 }, { guestId: 'g1', attendeeIndex: 1 }],
     });
-    expect(() => validateTables([t], [guest()])).toThrow('TABLE_OVER_CAPACITY');
+    expectCode(() => validateTables([t], [guest()]), 'TABLE_OVER_CAPACITY');
   });
 
   it('rejects an out-of-range attendee index', () => {
     const t = table({ seats: [null, null, null, { guestId: 'g1', attendeeIndex: 7 }] });
-    expect(() => validateTables([t], [guest()])).toThrow('SEAT_INDEX_OUT_OF_RANGE');
+    expectCode(() => validateTables([t], [guest()]), 'SEAT_INDEX_OUT_OF_RANGE');
   });
 
   it('rejects an attendee seated twice', () => {
     const t1 = table({ seats: [{ guestId: 'g1', attendeeIndex: 0 }, null, null, null] });
     const t2 = table({ id: 't2', seats: [{ guestId: 'g1', attendeeIndex: 0 }, null, null, null] });
-    expect(() => validateTables([t1, t2], [guest()])).toThrow('SEAT_DUPLICATE_ATTENDEE');
+    expectCode(() => validateTables([t1, t2], [guest()]), 'SEAT_DUPLICATE_ATTENDEE');
   });
 
   it('accepts a legally split party', () => {

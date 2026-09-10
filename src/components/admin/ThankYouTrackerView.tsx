@@ -10,6 +10,7 @@ import { Modal } from '../shared/Modal';
 import { EmptyState } from '../shared/EmptyState';
 import { Field, TextInput, Select, SearchInput } from '../shared/ui';
 import { GiftLogSchema } from '../../lib/validation';
+import { decodeApiError } from '../../lib/errors';
 import { adminFetch } from '../../lib/api';
 import { useT } from '../shared/i18n';
 import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer } from 'recharts';
@@ -152,14 +153,17 @@ export const ThankYouTrackerView: React.FC<ThankYouTrackerViewProps> = ({
         toast.love(t.thankYouSentToast);
         setActiveDraft(null);
         onRefreshData();
-      } else if (data.error === 'GUEST_NOT_FOUND') {
-        toast.error(t.guestNotFoundError);
-      } else if (data.error === 'NO_EMAIL') {
-        toast.error(t.noEmailError);
-      } else if (data.error === 'NO_PHONE') {
-        toast.error(t.noPhoneError);
       } else {
-        toast.error(t.thankYouSendErrorToast);
+        const { code } = decodeApiError(data, res.status);
+        if (code === 'GUEST_NOT_FOUND') {
+          toast.error(t.guestNotFoundError);
+        } else if (code === 'NO_EMAIL') {
+          toast.error(t.noEmailError);
+        } else if (code === 'NO_PHONE') {
+          toast.error(t.noPhoneError);
+        } else {
+          toast.error(t.thankYouSendErrorToast);
+        }
       }
     } catch (err) {
       console.error('Thank-you send failed:', err);

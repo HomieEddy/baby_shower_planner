@@ -1,7 +1,7 @@
 // Guestbook read/write (guest content window + moderation).
 
 import type { RouteCtx } from '../http';
-import { parseJson, sendJson } from '../http';
+import { parseJson, sendGuestLocked, sendJson } from '../http';
 import { GuestbookEntrySchema } from '../../lib/validation';
 import {
   addGuestbookEntry,
@@ -18,7 +18,7 @@ export async function handleGuestbookRoutes(ctx: RouteCtx): Promise<boolean> {
   if (pathname === '/api/guestbook') {
     const lock = await ctx.guestLock();
     if (lock) {
-      return sendJson(res, 403, { error: 'GUEST_CONTENT_LOCKED', opensAt: lock.opensAt, closesAt: lock.closesAt });
+      return sendGuestLocked(res, lock);
     }
     if (method === 'GET') {
       // Admins see hidden entries too (moderation); guests only visible ones.
