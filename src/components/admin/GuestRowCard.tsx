@@ -67,6 +67,11 @@ export const GuestRowCard = ({
                   {t.invitedByHostBadge}
                 </span>
               )}
+              {guest.approval_status === 'pending' && (
+                <span className="px-2 py-0.5 rounded-md bg-amber-50 border border-amber-300 text-[10px] font-mono font-bold text-amber-800">
+                  {t.approvalPendingBadge}
+                </span>
+              )}
             </div>
             <div className="text-[11px] text-[#5D5449]/70 font-mono truncate mt-0.5 flex items-center gap-2 flex-wrap">
               {guest.email ? <span className="inline-flex items-center gap-1"><Mail className="w-3 h-3 shrink-0" />{guest.email}</span> : null}

@@ -126,7 +126,7 @@ export const AdminGuestsTab: React.FC<AdminGuestsTabProps> = ({ language, t, gue
   const [editingGuest, setEditingGuest] = useState<Guest | null>(null);
   const [savingEdit, setSavingEdit] = useState(false);
 
-  const [metricModal, setMetricModal] = useState<'Attending' | 'Pending' | 'Declined' | 'Total' | null>(null);
+  const [metricModal, setMetricModal] = useState<'Attending' | 'Pending' | 'Declined' | 'Awaiting' | 'Total' | null>(null);
   const [metricListView, setMetricListView] = useState<'invites' | 'party'>('invites');
 
   const [viewingGuest, setViewingGuest] = useState<Guest | null>(null);
@@ -156,15 +156,18 @@ export const AdminGuestsTab: React.FC<AdminGuestsTabProps> = ({ language, t, gue
   const getGuestPartySize = getPartySize;
 
   const primaryGuests = guests.filter((g) => !g.is_read_only);
-  const attendingGuests = primaryGuests.filter((g) => g.rsvp_status === 'Attending');
-  const pendingGuests = primaryGuests.filter((g) => g.rsvp_status === 'Pending');
-  const declinedGuests = primaryGuests.filter((g) => g.rsvp_status === 'Declined');
+  // Self-registrations only count once approved.
+  const approvedGuests = primaryGuests.filter((g) => (g.approval_status || 'approved') === 'approved');
+  const pendingApprovals = primaryGuests.filter((g) => g.approval_status === 'pending');
+  const attendingGuests = approvedGuests.filter((g) => g.rsvp_status === 'Attending');
+  const pendingGuests = approvedGuests.filter((g) => g.rsvp_status === 'Pending');
+  const declinedGuests = approvedGuests.filter((g) => g.rsvp_status === 'Declined');
   const totalAttendingPartySize = attendingGuests.reduce((acc, g) => acc + getGuestPartySize(g), 0);
   const pendingPartySize = pendingGuests.reduce((acc, g) => acc + getGuestPartySize(g), 0);
   const declinedPartySize = declinedGuests.reduce((acc, g) => acc + getGuestPartySize(g), 0);
   const totalPartySize = guests.reduce((acc, g) => acc + getGuestPartySize(g), 0);
 
-  const dietaryList = guests
+  const dietaryList = approvedGuests
     .filter((g) => g.rsvp_status === 'Attending' && g.dietary_restrictions && g.dietary_restrictions.trim() !== '')
     .map((g) => ({
       guestName: g.name,
@@ -265,6 +268,20 @@ export const AdminGuestsTab: React.FC<AdminGuestsTabProps> = ({ language, t, gue
       }
     } catch (err) {
       console.error('Failed to delete guest:', err);
+    }
+  };
+
+  const handleApproval = async (guest: Guest, decision: 'approve' | 'reject') => {
+    try {
+      const res = await adminFetch(`/api/guests/${guest.id}/${decision}`, { method: 'POST' });
+      if (res.ok) {
+        const msg = decision === 'approve' ? t.guestApprovedToast : t.guestRejectedToast;
+        toast.love(msg.replace('{{name}}', guest.name));
+        await onRefresh();
+      }
+    } catch (err) {
+      console.error('Approval failed:', err);
+      toast.error(t.invitesErrorToast);
     }
   };
 
@@ -490,6 +507,7 @@ export const AdminGuestsTab: React.FC<AdminGuestsTabProps> = ({ language, t, gue
       case 'Attending': return attendingGuests;
       case 'Pending': return pendingGuests;
       case 'Declined': return declinedGuests;
+      case 'Awaiting': return pendingApprovals;
       case 'Total': return guests;
       default: return [];
     }
@@ -500,6 +518,7 @@ export const AdminGuestsTab: React.FC<AdminGuestsTabProps> = ({ language, t, gue
       case 'Attending': return t.statAttending;
       case 'Pending': return t.statPending;
       case 'Declined': return t.statDeclined;
+      case 'Awaiting': return t.statAwaitingApproval;
       case 'Total': return t.statTotalGuests;
       default: return '';
     }
@@ -517,7 +536,7 @@ export const AdminGuestsTab: React.FC<AdminGuestsTabProps> = ({ language, t, gue
       <div className="flex justify-end mb-3">
         <GuestMetricToggle metricMode={metricMode} onSwitch={switchMetricMode} />
       </div>
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
         <GuestMetricCard label={t.statAttending} icon={<CheckCircle2 className="w-5 h-5" />}
           value={metricMode === 'party' ? totalAttendingPartySize : attendingGuests.length}
           footer={t.statTotalAttendingParty} onClick={() => setMetricModal('Attending')} />
@@ -527,6 +546,9 @@ export const AdminGuestsTab: React.FC<AdminGuestsTabProps> = ({ language, t, gue
         <GuestMetricCard label={t.statDeclined} icon={<XCircle className="w-5 h-5 text-rose-500" />}
           value={metricMode === 'party' ? declinedPartySize : declinedGuests.length}
           footer={t.unableToAttend} iconClass="text-rose-600" onClick={() => setMetricModal('Declined')} />
+        <GuestMetricCard label={t.statAwaitingApproval} icon={<Clock className="w-5 h-5 text-amber-600" />}
+          value={pendingApprovals.length}
+          footer={t.approvalPendingBadge} iconClass="text-amber-700" onClick={() => setMetricModal('Awaiting')} />
         <GuestMetricCard label={t.statTotalGuests} icon={<Users className="w-5 h-5" />}
           value={metricMode === 'party' ? totalPartySize : guests.length}
           footer={t.totalGuestInvites} onClick={() => setMetricModal('Total')} />
@@ -631,6 +653,56 @@ export const AdminGuestsTab: React.FC<AdminGuestsTabProps> = ({ language, t, gue
           </div>
         </motion.div>
       </div>
+
+      {/* Pending self-registrations awaiting host approval */}
+      {pendingApprovals.length > 0 && (
+        <motion.div variants={adminCardVariants} className="card-paper p-6 sm:p-8 space-y-4">
+          <div className="flex items-center gap-3">
+            <div className="p-2.5 bg-amber-50 text-amber-700 rounded-2xl border border-amber-300">
+              <Clock className="w-5 h-5" />
+            </div>
+            <div>
+              <div className="label-mono">{t.approvalPendingBadge}</div>
+              <h3 className="font-sans text-xl font-bold text-[#8B735B]">{t.approvalQueueTitle}</h3>
+            </div>
+          </div>
+          <div className="grid grid-cols-1 gap-3">
+            {pendingApprovals.map((g) => (
+              <div key={g.id} className="flex flex-wrap items-center justify-between gap-3 p-4 bg-white border border-[#CBAE94]/50 rounded-2xl">
+                <div className="min-w-0">
+                  <p className="text-sm font-bold text-[#5D5449] truncate">{g.name}</p>
+                  <p className="text-[11px] font-mono text-[#5D5449]/70 truncate">
+                    {[g.email, g.phone].filter(Boolean).join(' | ') || t.channelNone}
+                    {' · '}
+                    {t.guestPartySizeLabel.replace('{{count}}', String(getGuestPartySize(g))).replace('{{max}}', String(g.max_party_size || 1))}
+                  </p>
+                  {g.dietary_restrictions ? (
+                    <p className="text-[11px] text-[#8B735B] truncate">{g.dietary_restrictions}</p>
+                  ) : null}
+                </div>
+                <div className="flex items-center gap-2 shrink-0">
+                  <button
+                    type="button"
+                    onClick={() => handleApproval(g, 'approve')}
+                    className="px-3 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold inline-flex items-center gap-1.5 transition-colors"
+                  >
+                    <CheckCircle2 className="w-3.5 h-3.5" />
+                    <span>{t.approveBtn}</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => handleApproval(g, 'reject')}
+                    className="px-3 py-1.5 rounded-xl border border-rose-300 bg-rose-50 hover:bg-rose-100 text-rose-700 text-xs font-bold inline-flex items-center gap-1.5 transition-colors"
+                  >
+                    <XCircle className="w-3.5 h-3.5" />
+                    <span>{t.rejectBtn}</span>
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+        </motion.div>
+      )}
 
       {/* Invited Guests Table Section */}
       <motion.div variants={adminCardVariants} className="card-paper p-6 sm:p-8 space-y-6">
