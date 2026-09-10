@@ -1,12 +1,7 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { Guest, FloorMapData, LandmarkElement, SeatOccupant, TableElement } from '../../types';
-import {
-  getGuestPartySize,
-  getTableSeats,
-  rebuildAssignedGuestIds,
-  syncGuestTableIds,
-  clampToRoundRoom,
-} from './floorPlanHelpers';
+import { Guest, FloorMapData, LandmarkElement, TableElement } from '../../types';
+import { clampToRoundRoom } from './floorPlanHelpers';
+import { getGuestPartySize, seatAttendee, seatParty, unseatAttendee, unassignParty } from '../../lib/tableAssignment';
 import { useT } from '../shared/i18n';
 
 export interface FloorPlanEditorDeps {
@@ -328,108 +323,46 @@ export function useFloorPlanEditor({ floorMap, guests, notify, onSave, onCancel 
     const guest = draftGuests.find((g) => g.id === guestId);
     if (!targetTable || !guest) return false;
 
-    const seatsByTable = new Map<string, (SeatOccupant | null)[]>();
-    for (const tbl of draftFloorMap.tables) seatsByTable.set(tbl.id, getTableSeats(tbl, draftGuests));
-
-    const targetSeats = seatsByTable.get(tableId)!;
-    const desired = seatIndex ?? targetSeats.findIndex((s) => s === null);
-    if (desired < 0 || desired >= targetSeats.length) {
+    const outcome = seatAttendee(draftFloorMap, draftGuests, guestId, attendeeIndex, tableId, seatIndex);
+    if (outcome.placed === 0) {
       notify(t.fpCannotSeatToast.replace('{{guest}}', guest.name).replace('{{size}}', '1').replace('{{table}}', targetTable.name).replace('{{available}}', '0'));
       return false;
     }
 
-    // Where the dragged attendee currently sits (for a swap).
-    let originTableId: string | null = null;
-    let originIndex = -1;
-    for (const [tid, seats] of seatsByTable) {
-      const i = seats.findIndex((s) => s?.guestId === guestId && s.attendeeIndex === attendeeIndex);
-      if (i !== -1) {
-        originTableId = tid;
-        originIndex = i;
-        break;
-      }
-    }
-    if (originTableId === tableId && originIndex === desired) return true; // already there
-
-    const displaced = targetSeats[desired];
-
-    // Clear the dragged attendee from every chair
-    for (const seats of seatsByTable.values()) {
-      for (let i = 0; i < seats.length; i++) {
-        if (seats[i]?.guestId === guestId && seats[i]!.attendeeIndex === attendeeIndex) seats[i] = null;
-      }
-    }
-    // Swap the displaced person back into the vacated chair when possible
-    if (displaced && !(displaced.guestId === guestId && displaced.attendeeIndex === attendeeIndex)) {
-      const originSeats = originTableId ? seatsByTable.get(originTableId) : undefined;
-      if (originSeats && originIndex >= 0 && originSeats[originIndex] === null) {
-        originSeats[originIndex] = displaced;
-      }
-    }
-    targetSeats[desired] = { guestId, attendeeIndex };
-
-    const updatedTables = draftFloorMap.tables.map((tbl) => {
-      const seats = seatsByTable.get(tbl.id)!;
-      return { ...tbl, seats, assignedGuestIds: rebuildAssignedGuestIds(seats) };
-    });
-    setDraftFloorMap({ ...draftFloorMap, tables: updatedTables });
-    setDraftGuests(syncGuestTableIds(updatedTables, draftGuests));
+    setDraftFloorMap(outcome.map);
+    setDraftGuests(outcome.guests);
     setIsDirty(true);
     notify(t.fpSeatedToast.replace('{{guest}}', guest.name).replace('{{size}}', '1').replace('{{table}}', targetTable.name));
     return true;
   };
 
   const handleUnseatAttendee = (tableId: string, seatIndex: number): void => {
-    const updatedTables = draftFloorMap.tables.map((tbl) => {
-      const seats = getTableSeats(tbl, draftGuests);
-      if (tbl.id === tableId && seatIndex >= 0 && seatIndex < seats.length) seats[seatIndex] = null;
-      return { ...tbl, seats, assignedGuestIds: rebuildAssignedGuestIds(seats) };
-    });
-    setDraftFloorMap({ ...draftFloorMap, tables: updatedTables });
-    setDraftGuests(syncGuestTableIds(updatedTables, draftGuests));
+    const outcome = unseatAttendee(draftFloorMap, draftGuests, tableId, seatIndex);
+    setDraftFloorMap(outcome.map);
+    setDraftGuests(outcome.guests);
     setIsDirty(true);
   };
 
-  // Fill a table's free chairs with a party in order (the old whole-party
-  // behaviour). Any member who doesn't fit stays unseated — the split.
+  // Fill a table's free chairs with the party's not-yet-seated members. Any
+  // member who doesn't fit stays unseated — the split.
   const handleAutoSeatParty = (guestId: string, tableId: string): boolean => {
     const guest = draftGuests.find((g) => g.id === guestId);
     const target = draftFloorMap.tables.find((t) => t.id === tableId);
     if (!guest || !target) return false;
-    const size = getGuestPartySize(guest);
 
-    const updatedTables = draftFloorMap.tables.map((tbl) => {
-      const seats = getTableSeats(tbl, draftGuests);
-      for (let i = 0; i < seats.length; i++) {
-        if (seats[i]?.guestId === guestId) seats[i] = null;
-      }
-      if (tbl.id === tableId) {
-        let placed = 0;
-        for (let i = 0; i < seats.length && placed < size; i++) {
-          if (!seats[i]) {
-            seats[i] = { guestId, attendeeIndex: placed };
-            placed++;
-          }
-        }
-      }
-      return { ...tbl, seats, assignedGuestIds: rebuildAssignedGuestIds(seats) };
-    });
-
-    setDraftFloorMap({ ...draftFloorMap, tables: updatedTables });
-    setDraftGuests(syncGuestTableIds(updatedTables, draftGuests));
+    const outcome = seatParty(draftFloorMap, draftGuests, guestId, tableId);
+    setDraftFloorMap(outcome.map);
+    setDraftGuests(outcome.guests);
     setIsDirty(true);
-    notify(t.fpSeatedToast.replace('{{guest}}', guest.name).replace('{{size}}', String(size)).replace('{{table}}', target.name));
+    notify(t.fpSeatedToast.replace('{{guest}}', guest.name).replace('{{size}}', String(getGuestPartySize(guest))).replace('{{table}}', target.name));
     return true;
   };
 
   const handleUnassignParty = (guestId: string): void => {
-    const updatedTables = draftFloorMap.tables.map((tbl) => {
-      const seats = getTableSeats(tbl, draftGuests).map((s) => (s?.guestId === guestId ? null : s));
-      return { ...tbl, seats, assignedGuestIds: rebuildAssignedGuestIds(seats) };
-    });
     const guest = draftGuests.find((g) => g.id === guestId);
-    setDraftFloorMap({ ...draftFloorMap, tables: updatedTables });
-    setDraftGuests(syncGuestTableIds(updatedTables, draftGuests));
+    const outcome = unassignParty(draftFloorMap, draftGuests, guestId);
+    setDraftFloorMap(outcome.map);
+    setDraftGuests(outcome.guests);
     setIsDirty(true);
     if (guest) notify(t.fpUnseatedToast.replace('{{guest}}', guest.name));
   };
