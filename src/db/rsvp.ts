@@ -7,6 +7,7 @@ import {
 import { getSettings } from './settings';
 import { isRehearsalActive } from './rehearsal';
 import { getGuestById, isApproved } from './guests';
+import { DomainError } from '../lib/errors';
 import { buildUniversalInviteMessage, universalRegisterUrl } from '../lib/inviteMessage';
 
 // RSVPs close the day after the event: on the day itself guests can still
@@ -28,15 +29,15 @@ export async function isRsvpClosed(): Promise<boolean> {
 
 export async function submitRsvp(token: string, payload: SubmitRsvpPayload): Promise<Guest> {
   const r = await pb.collection('guests').getFirstListItem(`magic_token="${escFilter(token)}"`).catch(() => null);
-  if (!r) throw new Error('INVALID_TOKEN');
+  if (!r) throw new DomainError('INVALID_TOKEN');
   if (r.is_read_only) return fromRecord<Guest>(r);
   if (!isApproved(fromRecord<Guest>(r))) {
-    throw new Error(r.approval_status === 'rejected' ? 'REGISTRATION_REJECTED' : 'PENDING_APPROVAL');
+    throw new DomainError(r.approval_status === 'rejected' ? 'REGISTRATION_REJECTED' : 'PENDING_APPROVAL');
   }
   // Second submission (open tabs, shared links) must not silently overwrite:
   // the client resets the token first, which is the only way to edit an RSVP.
-  if (r.token_used) throw new Error('RSVP_ALREADY_SUBMITTED');
-  if (await isRsvpClosed()) throw new Error('RSVP_CLOSED');
+  if (r.token_used) throw new DomainError('RSVP_ALREADY_SUBMITTED');
+  if (await isRsvpClosed()) throw new DomainError('RSVP_CLOSED');
 
   const updates: Record<string, unknown> = {
     rsvp_status: payload.rsvp_status,
@@ -78,12 +79,12 @@ export async function submitRsvp(token: string, payload: SubmitRsvpPayload): Pro
 
 export async function resetTokenUsage(token: string): Promise<Guest> {
   const r = await pb.collection('guests').getFirstListItem(`magic_token="${escFilter(token)}"`).catch(() => null);
-  if (!r) throw new Error('INVALID_TOKEN');
-  if (r.is_read_only) throw new Error('RSVP_READ_ONLY');
+  if (!r) throw new DomainError('INVALID_TOKEN');
+  if (r.is_read_only) throw new DomainError('RSVP_READ_ONLY');
   if (!isApproved(fromRecord<Guest>(r))) {
-    throw new Error(r.approval_status === 'rejected' ? 'REGISTRATION_REJECTED' : 'PENDING_APPROVAL');
+    throw new DomainError(r.approval_status === 'rejected' ? 'REGISTRATION_REJECTED' : 'PENDING_APPROVAL');
   }
-  if (await isRsvpClosed()) throw new Error('RSVP_CLOSED');
+  if (await isRsvpClosed()) throw new DomainError('RSVP_CLOSED');
   const updated = await pb.collection('guests').update(r.id, { token_used: false });
   return fromRecord<Guest>(updated);
 }
@@ -100,12 +101,13 @@ export type GuestContactPayload = {
 // shared link) so future reminders reach them. Stored as-is: there's no
 // email/SMS verification infra, and it's their own reminder channel.
 export async function updateGuestContact(token: string, payload: GuestContactPayload): Promise<Guest> {
-  const r = await pb.collection('guests').getFirstListItem(`magic_token="${escFilter(token)}"`);
+  const r = await pb.collection('guests').getFirstListItem(`magic_token="${escFilter(token)}"`).catch(() => null);
+  if (!r) throw new DomainError('INVALID_TOKEN');
   const channel = payload.delivery_channel || 'none';
   const email = (payload.email || '').trim();
   const phone = (payload.phone || '').trim();
-  if ((channel === 'email' || channel === 'both') && !email) throw new Error('EMAIL_REQUIRED');
-  if ((channel === 'text' || channel === 'both') && !phone) throw new Error('PHONE_REQUIRED');
+  if ((channel === 'email' || channel === 'both') && !email) throw new DomainError('EMAIL_REQUIRED');
+  if ((channel === 'text' || channel === 'both') && !phone) throw new DomainError('PHONE_REQUIRED');
   const updated = await pb.collection('guests').update(r.id, { email, phone, delivery_channel: channel });
   return fromRecord<Guest>(updated);
 }

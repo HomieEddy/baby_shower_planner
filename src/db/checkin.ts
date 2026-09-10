@@ -2,6 +2,7 @@
 
 import type { Guest } from '../types';
 import { getPartyMembers, isMemberCheckedIn, isPartyLead } from '../lib/guestAttendees';
+import { DomainError } from '../lib/errors';
 import { fromRecord, pb } from './client';
 import { scrubForGuestLookup, scrubForRoster } from './roster';
 
@@ -11,13 +12,13 @@ import { scrubForGuestLookup, scrubForRoster } from './roster';
 export async function checkInGuest(id: string, name?: string): Promise<Guest> {
   const now = new Date().toISOString();
   const guest = fromRecord<Guest>(await pb.collection('guests').getOne(id));
-  if (guest.rsvp_status === 'Declined') throw new Error('GUEST_DECLINED');
+  if (guest.rsvp_status === 'Declined') throw new DomainError('GUEST_DECLINED');
   const members = getPartyMembers(guest);
 
   if (name !== undefined) {
     const target = name.trim();
     if (!members.some((m) => m.toLowerCase() === target.toLowerCase())) {
-      throw new Error('NOT_IN_PARTY');
+      throw new DomainError('NOT_IN_PARTY');
     }
     if (isPartyLead(guest, target)) {
       const updated = await pb.collection('guests').update(id, { checked_in: true, checked_in_at: now });
