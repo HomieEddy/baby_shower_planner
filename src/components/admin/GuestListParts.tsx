@@ -31,16 +31,16 @@ export const GuestMetricCard = ({
   <motion.div
     variants={adminCardVariants}
     onClick={onClick}
-    className={`card-paper-sm p-4 sm:p-5 ${onClick ? 'cursor-pointer hover:-translate-y-0.5 transition-transform' : ''}`}
+    className={`card-paper-sm p-4 sm:p-5 min-w-0 overflow-hidden ${onClick ? 'cursor-pointer hover:-translate-y-0.5 transition-transform' : ''}`}
   >
-    <div className="flex items-center justify-between">
-      <span className="label-mono">{label}</span>
-      <span className={iconClass}>{icon}</span>
+    <div className="flex items-start justify-between gap-2 min-w-0">
+      <span className="label-mono min-w-0 break-words">{label}</span>
+      <span className={`shrink-0 ${iconClass}`}>{icon}</span>
     </div>
     <div className="mt-3">
       <span className="text-2xl sm:text-3xl font-sans font-bold text-[#8B735B]">{value}</span>
     </div>
-    <div className="mt-2 text-[11px] text-[#8B735B] font-mono font-bold">{footer}</div>
+    <div className="mt-2 text-[11px] text-[#8B735B] font-mono font-bold break-words">{footer}</div>
   </motion.div>
 );
 

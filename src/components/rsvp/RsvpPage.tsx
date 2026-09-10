@@ -3,7 +3,7 @@ import { useParams } from 'react-router-dom';
 import { useForm, useFieldArray } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { Guest, EventAlert } from '../../types';
+import { Guest, GuestInviteView, EventAlert } from '../../types';
 import { EventDetailsCard } from './EventDetailsCard';
 import { stripPrimaryAttendees, buildAttendeePayload } from '../../lib/guestAttendees';
 import { useCapabilities, availableChannels, channelLabel } from '../../lib/capabilities';
@@ -24,6 +24,7 @@ import {
   AlertCircle,
   AlertTriangle,
   Bell,
+  Clock,
   Copy,
   Check,
   MessageSquare,
@@ -135,10 +136,6 @@ export const RsvpPage = () => {
   // ─── Contact & notifications (self-service) ────────────────────
   const { data: caps } = useCapabilities();
   const contactChannels = availableChannels(caps);
-  const inviteChannels: ('link-only' | 'email' | 'text' | 'both')[] = ['link-only'];
-  if (caps?.email) inviteChannels.push('email');
-  if (caps?.sms) inviteChannels.push('text');
-  if (caps?.email && caps?.sms) inviteChannels.push('both');
 
   const [contactEmail, setContactEmail] = useState('');
   const [contactPhone, setContactPhone] = useState('');
@@ -147,12 +144,11 @@ export const RsvpPage = () => {
 
   const [inviteName, setInviteName] = useState('');
   const [inviteContact, setInviteContact] = useState('');
-  const [inviteChannel, setInviteChannel] = useState<'link-only' | 'email' | 'text' | 'both'>('link-only');
   const [inviteNote, setInviteNote] = useState('');
   const [inviting, setInviting] = useState(false);
   const [inviteModal, setInviteModal] = useState<{ name: string; url: string; message: string } | null>(null);
 
-  const [myInvites, setMyInvites] = useState<Guest[]>([]);
+  const [myInvites, setMyInvites] = useState<GuestInviteView[]>([]);
   const { copiedKey, copy: copyText } = useCopyFeedback();
   const confirm = useConfirm();
 
@@ -217,31 +213,17 @@ export const RsvpPage = () => {
       toast.error(t.inviteNameRequiredToast);
       return;
     }
-    if (inviteChannel !== 'link-only' && !inviteContact.trim()) {
-      toast.error(t.contactForChannelError.replace('{{channel}}', channelLabel(t, inviteChannel)));
-      return;
-    }
     try {
       setInviting(true);
       const res = await fetch(`/api/rsvp/${token}/invite`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name: inviteName, contact: inviteContact, channel: inviteChannel, note: inviteNote }),
+        body: JSON.stringify({ name: inviteName, contact: inviteContact, note: inviteNote }),
       });
       const data = await res.json();
       if (res.ok && data.ok) {
-        setInviteModal({ name: data.guest.name, url: data.invite_url, message: data.invite_message });
-        if (data.already_invited) {
-          toast.info(t.inviteAlreadyInvitedToast.replace('{{name}}', data.guest.name));
-        } else if (data.sent.length > 0) {
-          toast.love(t.inviteSentChannelToast
-            .replace('{{name}}', data.guest.name)
-            .replace('{{channel}}', data.sent.map((c: string) => channelLabel(t, c)).join(' + ')));
-        } else if (data.failed.length > 0) {
-          toast.error(t.inviteDeliveryFailedToast.replace('{{name}}', data.guest.name));
-        } else {
-          toast.info(t.inviteSentLinkOnlyToast.replace('{{name}}', data.guest.name));
-        }
+        setInviteModal({ name: data.invite.invitee_name, url: data.invite.invite_url, message: data.invite.invite_message });
+        toast.info(t.inviteSentLinkOnlyToast.replace('{{name}}', data.invite.invitee_name));
         setInviteName('');
         setInviteContact('');
         setInviteNote('');
@@ -257,11 +239,11 @@ export const RsvpPage = () => {
     }
   };
 
-  const handleRemoveInvite = async (invitee: Guest) => {
+  const handleRemoveInvite = async (invitee: GuestInviteView) => {
     if (!token) return;
     const ok = await confirm({
       title: t.removeInviteTitle,
-      message: t.removeInviteMsg.replace('{{name}}', invitee.name),
+      message: t.removeInviteMsg.replace('{{name}}', invitee.invitee_name),
       confirmText: t.removeInviteBtn,
     });
     if (!ok) return;
@@ -363,6 +345,9 @@ export const RsvpPage = () => {
     return true;
   });
 
+  // Self-registrations stay locked until a host approves them.
+  const notApproved = !!guest && !!guest.approval_status && guest.approval_status !== 'approved';
+
   return (
     <div className="space-y-6 animate-in fade-in duration-300 -mt-6 sm:mt-0">
 
@@ -419,18 +404,20 @@ export const RsvpPage = () => {
         status={
           !loading && !errorMsg && guest
             ? {
-                label: statusWord(guest.rsvp_status),
+                label: notApproved
+                  ? (guest.approval_status === 'rejected' ? t.approvalRejectedTitle : t.approvalPendingTitle)
+                  : statusWord(guest.rsvp_status),
                 tone:
-                  guest.rsvp_status === 'Attending'
+                  !notApproved && guest.rsvp_status === 'Attending'
                     ? 'attending'
-                    : guest.rsvp_status === 'Declined'
+                    : !notApproved && guest.rsvp_status === 'Declined'
                     ? 'declined'
                     : 'pending',
               }
             : null
         }
         actions={
-          !loading && !errorMsg && guest ? (
+          !loading && !errorMsg && guest && !notApproved ? (
             <div className="flex flex-wrap items-center justify-center gap-1 sm:gap-2">
               <button
                 type="button"
@@ -500,8 +487,23 @@ export const RsvpPage = () => {
           </div>
         )}
 
+        {/* Pending / rejected self-registration */}
+        {!loading && guest && notApproved && (
+          <div className="text-center py-8 space-y-4 max-w-md mx-auto">
+            <div className={`w-12 h-12 rounded-full flex items-center justify-center mx-auto border ${guest.approval_status === 'rejected' ? 'bg-rose-50 text-rose-600 border-rose-300' : 'bg-[#E9E0D2] text-[#4A3F35] border-[#4A3F35]/20'}`}>
+              {guest.approval_status === 'rejected' ? <AlertCircle className="w-6 h-6" /> : <Clock className="w-6 h-6" />}
+            </div>
+            <h3 className="font-newsreader text-2xl font-bold text-[#4A3F35]">
+              {guest.approval_status === 'rejected' ? t.approvalRejectedTitle : t.approvalPendingTitle}
+            </h3>
+            <p className="text-xs sm:text-sm text-[#4A3F35]/80 leading-relaxed">
+              {guest.approval_status === 'rejected' ? t.approvalRejectedMsg : t.approvalPendingMsg}
+            </p>
+          </div>
+        )}
+
         {/* Guest RSVP Interactive Form & Confirmation */}
-        {!loading && guest && (
+        {!loading && guest && !notApproved && (
           <AnimatePresence mode="wait">
             {/* State A: Confirmation / Already Submitted View */}
             {submitted && !isEditing ? (
@@ -739,24 +741,10 @@ export const RsvpPage = () => {
               />
             </div>
           </div>
-          <div>
-            <label className="label-mono block mb-1">{t.inviteChannelLabel}</label>
-            <select
-              value={inviteChannel}
-              onChange={(e) => setInviteChannel(e.target.value as 'link-only' | 'email' | 'text' | 'both')}
-              className="w-full px-3 py-2 rounded-lg border border-[#4A3F35]/20 bg-white text-xs font-bold text-[#4A3F35] focus:outline-none focus:ring-2 focus:ring-[#4A3F35]"
-            >
-              {inviteChannels.map((c) => (
-                <option key={c} value={c}>{channelLabel(t, c)}</option>
-              ))}
-            </select>
-            {inviteChannel === 'link-only' && (
-              <p className="text-[11px] text-[#8B735B] font-medium mt-1 flex items-center gap-1">
-                <Link2 className="w-3 h-3 shrink-0" />
-                {t.linkOnlyHint}
-              </p>
-            )}
-          </div>
+          <p className="text-[11px] text-[#8B735B] font-medium flex items-center gap-1">
+            <Link2 className="w-3 h-3 shrink-0" />
+            {t.linkOnlyHint}
+          </p>
           <div>
             <label className="label-mono block mb-1">{t.inviteeNoteLabel}</label>
             <input
@@ -783,57 +771,65 @@ export const RsvpPage = () => {
           {myInvites.length === 0 ? (
             <p className="text-xs text-[#5D5449]/70 italic py-2">{t.noInvitesYet}</p>
           ) : (
-            <div className="space-y-2.5">
-              {myInvites.map((invitee) => (
-                <div key={invitee.id} className="p-3 bg-white rounded-xl border border-[#4A3F35]/15 space-y-2">
-                  <div className="flex items-center justify-between gap-2">
-                    <div className="min-w-0">
-                      <p className="text-xs font-bold text-[#4A3F35] truncate">{invitee.name}</p>
-                      <p className="text-[10px] font-mono text-[#8B735B] truncate">
-                        {invitee.email || invitee.phone || t.channelNone}
-                      </p>
-                      {invitee.guest_note && (
-                        <p className="text-[10px] text-[#5D5449] italic truncate">{invitee.guest_note}</p>
-                      )}
+            <>
+              <p className="text-[11px] text-[#8B735B] font-medium">{t.invitePendingHint}</p>
+              <div className="space-y-2.5">
+                {myInvites.map((invite) => {
+                  const registered = invite.registered_guest;
+                  return (
+                    <div key={invite.id} className="p-3 bg-white rounded-xl border border-[#4A3F35]/15 space-y-2">
+                      <div className="flex items-center justify-between gap-2">
+                        <div className="min-w-0">
+                          <p className="text-xs font-bold text-[#4A3F35] truncate">{invite.invitee_name}</p>
+                          <p className="text-[10px] font-mono text-[#8B735B] truncate">
+                            {invite.contact || t.channelNone}
+                          </p>
+                          {invite.note && (
+                            <p className="text-[10px] text-[#5D5449] italic truncate">{invite.note}</p>
+                          )}
+                        </div>
+                        <span
+                          className={`px-2 py-0.5 rounded-full text-[10px] font-bold border shrink-0 ${
+                            registered
+                              ? registered.rsvp_status === 'Declined'
+                                ? 'bg-rose-50 text-rose-800 border-rose-300'
+                                : 'bg-emerald-50 text-emerald-800 border-emerald-300'
+                              : 'bg-[#E9E0D2] text-[#8B735B] border-[#CBAE94]'
+                          }`}
+                        >
+                          {registered ? t.inviteStatusRegistered : t.inviteStatusInvited}
+                        </span>
+                      </div>
+                      <div className="flex flex-wrap items-center gap-2">
+                        <button
+                          onClick={() => copyText(invite.invite_url, `link-${invite.id}`)}
+                          className="px-2.5 py-1.5 rounded-lg bg-[#E9E0D2] hover:bg-[#CBAE94] hover:text-white text-[#8B735B] text-[10px] font-bold font-mono transition-colors border border-[#CBAE94] inline-flex items-center gap-1"
+                        >
+                          {copiedKey === `link-${invite.id}` ? <Check className="w-3 h-3 text-emerald-600" /> : <Copy className="w-3 h-3" />}
+                          <span>{copiedKey === `link-${invite.id}` ? t.linkCopied : t.copyLink}</span>
+                        </button>
+                        <button
+                          onClick={() => copyText(invite.invite_message, `msg-${invite.id}`)}
+                          className="px-2.5 py-1.5 rounded-lg bg-white hover:bg-[#EFE6DC] text-[#5D5449] text-[10px] font-bold font-mono transition-colors border border-[#CBAE94] inline-flex items-center gap-1"
+                        >
+                          {copiedKey === `msg-${invite.id}` ? <Check className="w-3 h-3 text-emerald-600" /> : <MessageSquare className="w-3 h-3" />}
+                          <span>{copiedKey === `msg-${invite.id}` ? t.linkCopied : t.copyMessageBtn}</span>
+                        </button>
+                        {!registered && (
+                          <button
+                            onClick={() => handleRemoveInvite(invite)}
+                            className="ml-auto px-2.5 py-1.5 rounded-lg bg-rose-50 hover:bg-rose-100 text-rose-700 text-[10px] font-bold font-mono transition-colors border border-rose-300 inline-flex items-center gap-1"
+                          >
+                            <Trash2 className="w-3 h-3" />
+                            <span>{t.removeInviteBtn}</span>
+                          </button>
+                        )}
+                      </div>
                     </div>
-                    <span
-                      className={`px-2 py-0.5 rounded-full text-[10px] font-bold border shrink-0 ${
-                        invitee.rsvp_status === 'Attending'
-                          ? 'bg-emerald-50 text-emerald-800 border-emerald-300'
-                          : invitee.rsvp_status === 'Declined'
-                          ? 'bg-rose-50 text-rose-800 border-rose-300'
-                          : 'bg-[#E9E0D2] text-[#8B735B] border-[#CBAE94]'
-                      }`}
-                    >
-                      {statusWord(invitee.rsvp_status)}
-                    </span>
-                  </div>
-                  <div className="flex flex-wrap items-center gap-2">
-                    <button
-                      onClick={() => copyText(`${window.location.origin}/rsvp/${invitee.magic_token}`, `link-${invitee.id}`)}
-                      className="px-2.5 py-1.5 rounded-lg bg-[#E9E0D2] hover:bg-[#CBAE94] hover:text-white text-[#8B735B] text-[10px] font-bold font-mono transition-colors border border-[#CBAE94] inline-flex items-center gap-1"
-                    >
-                      {copiedKey === `link-${invitee.id}` ? <Check className="w-3 h-3 text-emerald-600" /> : <Copy className="w-3 h-3" />}
-                      <span>{copiedKey === `link-${invitee.id}` ? t.linkCopied : t.copyLink}</span>
-                    </button>
-                    <button
-                      onClick={() => copyText((invitee as Guest & { invite_message?: string }).invite_message || '', `msg-${invitee.id}`)}
-                      className="px-2.5 py-1.5 rounded-lg bg-white hover:bg-[#EFE6DC] text-[#5D5449] text-[10px] font-bold font-mono transition-colors border border-[#CBAE94] inline-flex items-center gap-1"
-                    >
-                      {copiedKey === `msg-${invitee.id}` ? <Check className="w-3 h-3 text-emerald-600" /> : <MessageSquare className="w-3 h-3" />}
-                      <span>{copiedKey === `msg-${invitee.id}` ? t.linkCopied : t.copyMessageBtn}</span>
-                    </button>
-                    <button
-                      onClick={() => handleRemoveInvite(invitee)}
-                      className="ml-auto px-2.5 py-1.5 rounded-lg bg-rose-50 hover:bg-rose-100 text-rose-700 text-[10px] font-bold font-mono transition-colors border border-rose-300 inline-flex items-center gap-1"
-                    >
-                      <Trash2 className="w-3 h-3" />
-                      <span>{t.removeInviteBtn}</span>
-                    </button>
-                  </div>
-                </div>
-              ))}
-            </div>
+                  );
+                })}
+              </div>
+            </>
           )}
         </div>
       </Modal>

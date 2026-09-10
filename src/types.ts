@@ -39,6 +39,32 @@ export interface Guest {
   invited_by_guest_name?: string;
   /** Optional note from the inviter to the host */
   guest_note?: string;
+  /** Host approval of a self-registration via the universal link. Missing/empty = approved (legacy/host-added). */
+  approval_status?: 'pending' | 'approved' | 'rejected';
+}
+
+// A lightweight share record for the universal registration link: created when
+// a guest invites someone, before that person registers. Becomes `registered`
+// (via registered_guest_id) once the invitee self-registers through the link.
+export interface GuestInvite {
+  id: string;
+  inviter_guest_id: string;
+  inviter_guest_name: string;
+  invitee_name: string;
+  /** email or phone, used for dedupe only — delivery is manual (copy/share). */
+  contact?: string;
+  note?: string;
+  /** Guest id once the invitee self-registers through this share link. */
+  registered_guest_id?: string;
+  created_at: string;
+}
+
+// A share link plus the guest it produced (once registered), for the guest's
+// "your invitations" list.
+export interface GuestInviteView extends GuestInvite {
+  invite_url: string;
+  invite_message: string;
+  registered_guest?: Guest;
 }
 
 export interface GuestbookEntry {
@@ -112,6 +138,8 @@ export interface EventSettings {
   venueName: string;
   venueAddress: string;
   registryUrl: string;
+  /** RSVP deadline (YYYY-MM-DD) shown in invitation messages */
+  rsvpDeadline?: string;
   showScheduleTime?: boolean;
   schedule?: ScheduleItem[];
   themeId?: string;
@@ -166,6 +194,19 @@ export interface AddGuestPayload {
   delivery_channel?: DeliveryChannel;
   max_party_size?: number;
   language_pref: Language;
+}
+
+// Self-registration through the universal link. The registrant confirms their
+// own guestlist up front; approval just unlocks the record (no second RSVP).
+export interface RegisterGuestPayload {
+  name: string;
+  email?: string;
+  phone?: string;
+  language_pref: Language;
+  /** Full guest list including the registrant (index 0). */
+  attendee_names?: string[];
+  attendee_details?: AttendeeInfo[];
+  dietary_restrictions?: string;
 }
 
 export interface SubmitRsvpPayload {

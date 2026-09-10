@@ -1,6 +1,6 @@
 import { createRequire } from 'node:module';
 import { Guest, EventSettings, AgendaTask } from '../types';
-import { formatTaskDue } from './dateUtils';
+import { formatDateLong, formatTaskDue } from './dateUtils';
 
 const require = createRequire(import.meta.url);
 
@@ -37,6 +37,7 @@ function buildGuestSms(guest: Guest, settings: EventSettings, type: 'invitation'
     `You're invited to ${showerLabel}!`,
     `${date} ${time}`,
     `${venue}`,
+    ...(settings.rsvpDeadline ? [`RSVP by ${formatDateLong(settings.rsvpDeadline, 'EN')}`] : []),
     `RSVP: ${link}`,
     `Code: ${guest.code}`,
   ].join('\n');

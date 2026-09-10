@@ -10,12 +10,17 @@ export {
   getGuestByCode,
   getGuestById,
   getGuestByToken,
+  getUniversalInviteMessage,
   inviteMessageFor,
+  isApproved,
+  registerGuest,
+  setApproval,
   updateGuest,
 } from './guests';
+export type { RegisterGuestResult } from './guests';
 export {
+  createInvite,
   getInvitesByGuest,
-  inviteGuest,
   isRsvpClosed,
   removeInvite,
   resetTokenUsage,

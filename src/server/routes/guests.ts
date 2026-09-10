@@ -11,7 +11,9 @@ import {
   getAllGuests,
   getGuestByCode,
   getGuestById,
+  getUniversalInviteMessage,
   inviteMessageFor,
+  setApproval,
   updateGuest,
 } from '../../db/service';
 
@@ -54,6 +56,21 @@ export async function handleGuestRoutes(ctx: RouteCtx): Promise<boolean> {
       });
       return sendJson(res, 200, result);
     }
+  }
+
+  // Universal invitation message (host copies one /register link).
+  if (pathname === '/api/guests/universal-message' && method === 'GET') {
+    requireAdmin();
+    const lang = url.searchParams.get('lang') === 'EN' ? 'EN' : 'FR';
+    return sendJson(res, 200, { message: await getUniversalInviteMessage(lang) });
+  }
+
+  // Host decision on a pending self-registration.
+  const approval = pathname.match(/^\/api\/guests\/([^/]+)\/(approve|reject)$/);
+  if (approval && method === 'POST') {
+    requireAdmin();
+    const guest = await setApproval(approval[1], approval[2] === 'approve' ? 'approved' : 'rejected');
+    return sendJson(res, 200, { guest });
   }
 
   if (pathname.startsWith('/api/guests/') && pathname !== '/api/guests/batch-import') {
