@@ -859,6 +859,11 @@ export interface Translations {
   currentlySeatedHere: string;
   noDraftGuestsMsg: string;
   attendingNamesLabel: string;
+  seatedAtSeatLabel: string;
+  unseatAttendeeBtn: string;
+  dragAttendeeHint: string;
+  allAttendeesSeatedMsg: string;
+  remainingToSeatLabel: string;
   chooseGuestOption: string;
   selectGuestHint: string;
   venueBadge: string;
@@ -1819,6 +1824,11 @@ export const translations: Record<Language, Translations> = {
     currentlySeatedHere: "Currently Seated Here",
     noDraftGuestsMsg: "No guests assigned to this table in draft.",
     attendingNamesLabel: "Attending Names:",
+    seatedAtSeatLabel: "Seat {{seat}}",
+    unseatAttendeeBtn: "Unseat",
+    dragAttendeeHint: "Drag a name onto a chair — or tap a name, then tap a chair.",
+    allAttendeesSeatedMsg: "All seated",
+    remainingToSeatLabel: "{{count}} to seat",
     chooseGuestOption: "+ Choose guest / party to seat...",
     selectGuestHint: "Select a confirmed guest above to view compatible tables and seat their party.",
     venueBadge: "Venue & Schedule",
@@ -2770,6 +2780,11 @@ export const translations: Record<Language, Translations> = {
     currentlySeatedHere: "Place a cette table",
     noDraftGuestsMsg: "Aucun invite assigne a cette table dans le brouillon.",
     attendingNamesLabel: "Noms des participants :",
+    seatedAtSeatLabel: "Place {{seat}}",
+    unseatAttendeeBtn: "Retirer de la place",
+    dragAttendeeHint: "Glissez un nom sur une chaise — ou touchez un nom, puis une chaise.",
+    allAttendeesSeatedMsg: "Tous places",
+    remainingToSeatLabel: "{{count}} a placer",
     chooseGuestOption: "+ Choisir un invite / groupe a placer...",
     selectGuestHint: "Selectionnez un invite confirme ci-dessus pour voir les tables compatibles et placer son groupe.",
     venueBadge: "Lieu & Programme",

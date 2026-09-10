@@ -76,6 +76,7 @@ export interface AttendeeLocation {
   tableId: string;
   tableName: string;
   seatIndex: number;
+  attendeeIndex: number;
 }
 
 export const getAttendeeLocations = (
@@ -88,8 +89,9 @@ export const getAttendeeLocations = (
   for (const table of floorMap.tables) {
     const seats = getTableSeats(table, guestsList);
     for (let i = 0; i < seats.length; i++) {
-      if (seats[i]?.guestId === guestId) {
-        out.push({ tableId: table.id, tableName: table.name, seatIndex: i });
+      const seat = seats[i];
+      if (seat?.guestId === guestId) {
+        out.push({ tableId: table.id, tableName: table.name, seatIndex: i, attendeeIndex: seat.attendeeIndex });
       }
     }
   }
@@ -101,6 +103,26 @@ export const getGuestSeatedCount = (
   floorMap: FloorMapData | null,
   guestsList: Guest[]
 ): number => getAttendeeLocations(guestId, floorMap, guestsList).length;
+
+// Refresh the legacy scalar `table_id` mirror after a seat edit: the table
+// holding the party lead (attendee 0), else the first table the party touches.
+export const syncGuestTableIds = (tables: TableElement[], guestsList: Guest[]): Guest[] =>
+  guestsList.map((g) => {
+    let primary: string | undefined;
+    let any: string | undefined;
+    for (const table of tables) {
+      for (const seat of getTableSeats(table, guestsList)) {
+        if (seat?.guestId !== g.id) continue;
+        if (!any) any = table.id;
+        if (seat.attendeeIndex === 0) {
+          primary = table.id;
+          break;
+        }
+      }
+      if (primary) break;
+    }
+    return { ...g, table_id: primary || any };
+  });
 
 // Nearest empty-or-any chair to a canvas point, for drag-and-drop hit-testing.
 export const findNearestSeat = (
