@@ -59,6 +59,14 @@ export interface GuestInvite {
   created_at: string;
 }
 
+// A share link plus the guest it produced (once registered), for the guest's
+// "your invitations" list.
+export interface GuestInviteView extends GuestInvite {
+  invite_url: string;
+  invite_message: string;
+  registered_guest?: Guest;
+}
+
 export interface GuestbookEntry {
   id: string;
   guest_name: string;

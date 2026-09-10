@@ -1,6 +1,6 @@
 // RSVP submission, self-service contact updates and guest-to-guest invites.
 
-import type { Guest, GuestInvite, SubmitRsvpPayload, EventSettings, Language } from '../types';
+import type { Guest, GuestInvite, GuestInviteView, SubmitRsvpPayload, EventSettings, Language } from '../types';
 import {
   escFilter, fromRecord, pb, removeGuestFromFloorMaps,
 } from './client';
@@ -105,13 +105,6 @@ export async function updateGuestContact(token: string, payload: GuestContactPay
   const updated = await pb.collection('guests').update(r.id, { email, phone, delivery_channel: channel });
   return fromRecord<Guest>(updated);
 }
-
-export type GuestInviteView = GuestInvite & {
-  invite_url: string;
-  invite_message: string;
-  /** Set once the invitee self-registers through this share link. */
-  registered_guest?: Guest;
-};
 
 export type GuestInviteResult =
   | { ok: true; invite: GuestInviteView; already_invited: boolean }

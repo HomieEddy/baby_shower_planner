@@ -27,7 +27,7 @@ export {
   submitRsvp,
   updateGuestContact,
 } from './rsvp';
-export type { GuestContactPayload, GuestInviteResult, GuestInviteView } from './rsvp';
+export type { GuestContactPayload, GuestInviteResult } from './rsvp';
 export {
   addGuestbookEntry,
   deleteGuestbookEntry,
