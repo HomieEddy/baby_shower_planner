@@ -947,6 +947,8 @@ export interface Translations {
   inviteStatusInvited: string;
   inviteStatusRegistered: string;
   invitePendingHint: string;
+  rsvpDeadlineLabel: string;
+  rsvpDeadlineHint: string;
 }
 
 export const translations: Record<Language, Translations> = {
@@ -1897,6 +1899,8 @@ export const translations: Record<Language, Translations> = {
     inviteStatusInvited: "Invited",
     inviteStatusRegistered: "Registered",
     invitePendingHint: "They'll appear here as invited until they register.",
+    rsvpDeadlineLabel: "RSVP deadline",
+    rsvpDeadlineHint: "Shown in invitation messages. Leave empty for no deadline.",
   },
   FR: {
     activeAlertsHistory: "Historique des alertes diffusées",
@@ -2845,5 +2849,7 @@ export const translations: Record<Language, Translations> = {
     inviteStatusInvited: "Invité",
     inviteStatusRegistered: "Inscrit",
     invitePendingHint: "Ils apparaîtront ici comme invités jusqu'à leur inscription.",
+    rsvpDeadlineLabel: "Date limite de confirmation",
+    rsvpDeadlineHint: "Affichée dans les messages d'invitation. Laissez vide pour aucune date limite.",
   },
 };

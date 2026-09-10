@@ -138,6 +138,8 @@ export interface EventSettings {
   venueName: string;
   venueAddress: string;
   registryUrl: string;
+  /** RSVP deadline (YYYY-MM-DD) shown in invitation messages */
+  rsvpDeadline?: string;
   showScheduleTime?: boolean;
   schedule?: ScheduleItem[];
   themeId?: string;

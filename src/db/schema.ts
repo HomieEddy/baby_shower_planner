@@ -100,6 +100,7 @@ const COLLECTION_DEFS: CollectionDef[] = [
       { name: 'venueName', type: 'text', options: {} },
       { name: 'venueAddress', type: 'text', options: {} },
       { name: 'registryUrl', type: 'url', options: {} },
+      { name: 'rsvpDeadline', type: 'text', options: {} },
       { name: 'showScheduleTime', type: 'bool', options: {} },
       { name: 'schedule', type: 'json', options: {} },
       { name: 'themeId', type: 'text', options: {} },

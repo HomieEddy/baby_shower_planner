@@ -96,13 +96,21 @@ describe('buildUniversalInviteMessage', () => {
       venueName: 'La salle St-Gilles',
       venueAddress: '226 des Alouettes H7G 3W1',
       registryUrl: 'https://www.amazon.ca/list',
+      rsvpDeadline: '2026-10-01',
     }, 'FR');
     expect(msg).toContain('Baby Shower de Eddy & Nana');
     expect(msg).toContain('7 novembre 2026');
     expect(msg).toContain('La salle St-Gilles, 226 des Alouettes H7G 3W1');
     expect(msg).toContain('https://www.amazon.ca/list');
     expect(msg).toContain('/register');
+    expect(msg).toContain('au plus tard le jeudi 1 octobre 2026');
     expect(msg).not.toMatch(/[\u2014\u2013\u2E3B]/);
+  });
+
+  it('omits the deadline sentence when unset', () => {
+    const msg = buildUniversalInviteMessage({}, 'EN');
+    expect(msg).not.toContain('attendance by');
+    expect(msg).toContain('/register');
   });
 });
 

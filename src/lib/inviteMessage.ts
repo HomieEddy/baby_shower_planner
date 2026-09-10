@@ -1,4 +1,5 @@
 import { Guest, EventSettings, Language } from '../types';
+import { formatDateLong } from './dateUtils';
 
 // Universal registration link everyone can use (host broadcasts it; guests
 // share it to invite others). Guests then self-register and wait for the host
@@ -32,6 +33,27 @@ function eventBlock(settings: Partial<EventSettings>, language: Language): strin
   return lines.filter(Boolean).join('\n');
 }
 
+// "please confirm by {deadline}" lead-in, or the plain prompt when unset.
+function confirmBlock(settings: Partial<EventSettings>, language: Language, link: string, linkVerb: 'register' | 'rsvp'): string {
+  const formatted = settings.rsvpDeadline ? formatDateLong(settings.rsvpDeadline, language) : '';
+  // FR uses the date mid-sentence ("le jeudi 1 octobre"), so lowercase the weekday.
+  const deadline = language === 'FR' && formatted ? formatted.charAt(0).toLowerCase() + formatted.slice(1) : formatted;
+  if (language === 'EN') {
+    if (!deadline) {
+      return linkVerb === 'register'
+        ? `To confirm your attendance, please register here:\n${link}`
+        : `Please confirm your attendance here:\n${link}`;
+    }
+    return `Please confirm your attendance by ${deadline}.\n${linkVerb === 'register' ? 'Register here' : 'RSVP here'}:\n${link}`;
+  }
+  if (!deadline) {
+    return linkVerb === 'register'
+      ? `Pour confirmer votre présence, veuillez vous inscrire ici :\n${link}`
+      : `Pour confirmer votre présence, veuillez répondre ici :\n${link}`;
+  }
+  return `Veuillez confirmer votre présence au plus tard le ${deadline}.\n${linkVerb === 'register' ? 'Inscrivez-vous ici' : 'Répondez ici'} :\n${link}`;
+}
+
 function giftBlock(settings: Partial<EventSettings>, language: Language): string {
   const registry = settings.registryUrl || '';
   if (!registry) return '';
@@ -55,7 +77,7 @@ export function buildInviteMessage(guest: Guest, settings: Partial<EventSettings
       title(settings, 'EN'),
       'A little flower is on the way, and we can\'t wait to celebrate with you.',
       eventBlock(settings, 'EN'),
-      `Please confirm your attendance here:\n${link}`,
+      confirmBlock(settings, 'EN', link, 'rsvp'),
       `Your reservation code: ${guest.code}\nIt will let you find your table at the event.`,
       giftBlock(settings, 'EN'),
       closingBlock(settings, 'EN'),
@@ -65,7 +87,7 @@ export function buildInviteMessage(guest: Guest, settings: Partial<EventSettings
     title(settings, 'FR'),
     'Une petite fleur est en chemin et nous avons très hâte de célébrer son arrivée avec vous.',
     eventBlock(settings, 'FR'),
-    `Pour confirmer votre présence, veuillez répondre ici :\n${link}`,
+    confirmBlock(settings, 'FR', link, 'rsvp'),
     `Votre code de réservation : ${guest.code}\nIl vous permettra de retrouver votre table lors de l'événement.`,
     giftBlock(settings, 'FR'),
     closingBlock(settings, 'FR'),
@@ -81,7 +103,7 @@ export function buildUniversalInviteMessage(settings: Partial<EventSettings>, la
       title(settings, 'EN'),
       'A little flower is on the way, and we can\'t wait to celebrate with you.',
       eventBlock(settings, 'EN'),
-      `To confirm your attendance, please register here:\n${link}`,
+      confirmBlock(settings, 'EN', link, 'register'),
       'When you register, you can enter your name and the names of everyone joining you, including your partner and children. Once your registration is complete, you will receive a 4-digit code to find your table at the event.',
       'If anything changes after you register, we will send you a notification.',
       giftBlock(settings, 'EN'),
@@ -92,7 +114,7 @@ export function buildUniversalInviteMessage(settings: Partial<EventSettings>, la
     title(settings, 'FR'),
     'Une petite fleur est en chemin et nous avons très hâte de célébrer son arrivée avec vous.',
     eventBlock(settings, 'FR'),
-    `Pour confirmer votre présence, veuillez vous inscrire ici :\n${link}`,
+    confirmBlock(settings, 'FR', link, 'register'),
     'Lors de votre inscription, vous pourrez indiquer votre nom ainsi que le nom de toutes les personnes qui vous accompagnent, conjoint(e) et enfants inclus. Une fois votre inscription complétée, vous recevrez un code à 4 chiffres qui vous permettra de retrouver votre table lors de l\'événement.',
     'Après votre inscription, si des changements surviennent, vous recevrez une notification.',
     giftBlock(settings, 'FR'),
