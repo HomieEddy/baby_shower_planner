@@ -54,6 +54,13 @@ export const getSeatLocalPosition = (
   };
 };
 
+// Every chair center around a table, in seat order. The single geometry the
+// editor, host page and guest modal all draw from.
+export const seatRingPositions = (table: TableElement): { x: number; y: number }[] => {
+  const capacity = Math.max(1, table.capacity || 8);
+  return Array.from({ length: capacity }, (_, i) => getSeatLocalPosition(table, i));
+};
+
 export const getSeatOccupantInfo = (
   table: TableElement,
   seatIndex: number,

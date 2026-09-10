@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import { FloorMapData, TableElement } from '../../types';
-import { clampToRoundRoom, findNearestSeat } from './floorPlanHelpers';
+import { clampToRoundRoom, findNearestSeat, getSeatLocalPosition, seatRingPositions } from './floorPlanHelpers';
 
 const map = (over: Partial<FloorMapData> = {}): FloorMapData => ({
   id: 'map',
@@ -72,5 +72,33 @@ describe('findNearestSeat', () => {
     // seat 0 local center: (50 + (50+18), 50) = (118, 50)
     expect(findNearestSeat(fm, 118, 50)).toEqual({ tableId: 't1', seatIndex: 0 });
     expect(findNearestSeat(fm, 1000, 1000)).toBeNull();
+  });
+});
+
+describe('getSeatLocalPosition', () => {
+  it('starts at 3 o\'clock and goes clockwise on the seat ring', () => {
+    const t = table({ width: 100, height: 100, capacity: 4 });
+    // seat 0 = 3 o'clock: center + (w/2 + 18) on x
+    expect(getSeatLocalPosition(t, 0)).toEqual({ x: 118, y: 50 });
+    // seat 1 = bottom (clockwise in canvas coords)
+    expect(getSeatLocalPosition(t, 1).x).toBeCloseTo(50);
+    expect(getSeatLocalPosition(t, 1).y).toBeCloseTo(118);
+  });
+
+  it('scales the ring with an elliptical table', () => {
+    const t = table({ width: 200, height: 100, capacity: 4 });
+    // radiusX = 100 + 18, radiusY = 50 + 18
+    expect(getSeatLocalPosition(t, 0)).toEqual({ x: 218, y: 50 });
+    expect(getSeatLocalPosition(t, 1).y).toBeCloseTo(50 + 68);
+  });
+});
+
+describe('seatRingPositions', () => {
+  it('returns exactly capacity positions in seat order', () => {
+    const t = table({ width: 100, height: 100, capacity: 6 });
+    const positions = seatRingPositions(t);
+    expect(positions).toHaveLength(6);
+    expect(positions[0]).toEqual(getSeatLocalPosition(t, 0));
+    expect(positions[5]).toEqual(getSeatLocalPosition(t, 5));
   });
 });
