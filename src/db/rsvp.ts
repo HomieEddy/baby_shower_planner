@@ -5,12 +5,15 @@ import {
   escFilter, fromRecord, pb, removeGuestFromFloorMaps,
 } from './client';
 import { getSettings } from './settings';
+import { isRehearsalActive } from './rehearsal';
 import { getGuestById, isApproved } from './guests';
 import { buildUniversalInviteMessage, universalRegisterUrl } from '../lib/inviteMessage';
 
 // RSVPs close the day after the event: on the day itself guests can still
 // respond (people check invites on their phones while arriving).
 export async function isRsvpClosed(): Promise<boolean> {
+  // Rehearsal keeps RSVP open so the submission flow is always testable.
+  if (isRehearsalActive()) return false;
   try {
     const settings = await getSettings();
     if (!settings.date) return false;

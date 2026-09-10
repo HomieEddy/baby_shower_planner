@@ -55,3 +55,4 @@ export { checkInGuest, getCheckInStats, selfCheckIn, undoCheckIn } from './check
 export type { SelfCheckInResult } from './checkin';
 export { sendInvitations, sendReminders } from './notify';
 export { getSeatingRoster } from './roster';
+export { isRehearsalActive, startRehearsal, stopRehearsal } from './rehearsal';
