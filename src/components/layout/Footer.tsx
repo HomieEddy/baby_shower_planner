@@ -1,5 +1,6 @@
 import { motion } from 'motion/react';
-import { Heart } from 'lucide-react';
+import { useQuery } from '@tanstack/react-query';
+import { Heart, FlaskConical } from 'lucide-react';
 import { useSettingsStore } from '../../stores/settingsStore';
 import { useAppStore } from '../../stores/appStore';
 import { useT } from '../shared/i18n';
@@ -8,9 +9,23 @@ export const Footer = () => {
   const t = useT();
   const settings = useSettingsStore((s) => s.settings);
   const language = useAppStore((s) => s.language);
+  const { data: rehearsal } = useQuery({
+    queryKey: ['rehearsal-status'],
+    queryFn: async () => (await fetch('/api/rehearsal')).json() as Promise<{ active: boolean }>,
+    refetchInterval: 30_000,
+  });
 
   return (
     <footer className="mt-auto py-2.5 px-4 text-center text-[10px] text-[#5D5449]/80 border-t border-dashed border-[#CBAE94]/60 space-y-1">
+      {rehearsal?.active && (
+        <p
+          role="status"
+          className="inline-flex items-center gap-1.5 mb-1 px-3 py-1 rounded-full bg-amber-100 border border-amber-400 text-amber-800 font-mono font-bold uppercase tracking-widest text-[9px]"
+        >
+          <FlaskConical className="w-3 h-3" />
+          {t.rehearsalFooterNote}
+        </p>
+      )}
       <p className="font-mono text-[10px] uppercase tracking-widest text-[#8B735B] font-bold">
         {t.footerCopyright
           .replace('{{year}}', String(new Date().getFullYear()))
