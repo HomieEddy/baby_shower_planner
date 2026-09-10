@@ -2,6 +2,7 @@
 
 import type { RouteCtx } from '../http';
 import { parseJson, sendJson } from '../http';
+import { DomainError } from '../../lib/errors';
 import { GiftLogSchema } from '../../lib/validation';
 import {
   addGift,
@@ -72,11 +73,10 @@ export async function handleGiftRoutes(ctx: RouteCtx): Promise<boolean> {
       const result = await sendGiftThankYou(id, channel, text.trim());
       return sendJson(res, 200, { success: true, ...result });
     } catch (err) {
-      const message = err instanceof Error ? err.message : 'SEND_FAILED';
-      if (message === 'GUEST_NOT_FOUND' || message === 'NO_EMAIL' || message === 'NO_PHONE') {
-        return sendJson(res, 400, { error: message });
-      }
-      return sendJson(res, 500, { error: 'SEND_FAILED' });
+      // GUEST_NOT_FOUND / NO_EMAIL / NO_PHONE propagate as DomainError (400);
+      // an unexpected send failure is a 500.
+      if (err instanceof DomainError) throw err;
+      throw new DomainError('SEND_FAILED');
     }
   }
 

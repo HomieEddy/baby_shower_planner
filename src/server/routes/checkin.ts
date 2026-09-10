@@ -2,6 +2,7 @@
 
 import type { RouteCtx } from '../http';
 import { parseJson, sendJson } from '../http';
+import { errorMessage, errorStatus } from '../../lib/errors';
 import { checkInGuest, getCheckInStats, selfCheckIn, undoCheckIn } from '../../db/service';
 
 export async function handleCheckInRoutes(ctx: RouteCtx): Promise<boolean> {
@@ -14,15 +15,9 @@ export async function handleCheckInRoutes(ctx: RouteCtx): Promise<boolean> {
     const body = await parseJson(req);
     if (!body.guestId) return sendJson(res, 400, { error: 'guestId is required' });
     // body.name: check in one party member; omitted = whole party
-    try {
-      const guest = await checkInGuest(body.guestId, body.name);
-      return sendJson(res, 200, { guest });
-    } catch (err) {
-      const msg = err instanceof Error ? err.message : '';
-      if (msg === 'GUEST_DECLINED') return sendJson(res, 400, { error: msg, message: 'This guest declined the invitation.' });
-      if (msg === 'NOT_IN_PARTY') return sendJson(res, 400, { error: msg, message: 'Name is not part of this party.' });
-      throw err;
-    }
+    // GUEST_DECLINED / NOT_IN_PARTY propagate as DomainError.
+    const guest = await checkInGuest(body.guestId, body.name);
+    return sendJson(res, 200, { guest });
   }
 
   if (pathname === '/api/check-in/undo' && method === 'POST') {
@@ -53,8 +48,7 @@ export async function handleCheckInRoutes(ctx: RouteCtx): Promise<boolean> {
       undo: !!body.undo,
     });
     if (!result.ok) {
-      const status = result.error === 'ONLY_LEAD' ? 403 : result.error === 'NOT_IN_PARTY' || result.error === 'DECLINED' ? 400 : 404;
-      return sendJson(res, status, { error: result.error });
+      return sendJson(res, errorStatus(result.error), { error: result.error, message: errorMessage(result.error) });
     }
     return sendJson(res, 200, { guest: result.guest });
   }

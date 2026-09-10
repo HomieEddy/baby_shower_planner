@@ -4,6 +4,7 @@
 import type { RouteCtx } from '../http';
 import { parseJson, sendJson } from '../http';
 import { GuestRsvpSchema } from '../../lib/validation';
+import { errorMessage, errorStatus } from '../../lib/errors';
 import {
   createInvite,
   getGuestByToken,
@@ -46,8 +47,7 @@ export async function handleRsvpRoutes(ctx: RouteCtx): Promise<boolean> {
       name: body.name, contact: body.contact, note: body.note,
     });
     if (!result.ok) {
-      const msg = result.error === 'NAME_REQUIRED' ? 'Invitee name is required' : 'Invalid invitation token';
-      return sendJson(res, result.error === 'INVALID_TOKEN' ? 404 : 400, { error: result.error, message: msg });
+      return sendJson(res, errorStatus(result.error), { error: result.error, message: errorMessage(result.error) });
     }
     return sendJson(res, 200, result);
   }
@@ -61,30 +61,14 @@ export async function handleRsvpRoutes(ctx: RouteCtx): Promise<boolean> {
     if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
       return sendJson(res, 400, { error: 'Invalid email address' });
     }
-    try {
-      const guest = await updateGuestContact(token, { email, phone, delivery_channel });
-      return sendJson(res, 200, { success: true, guest });
-    } catch (err) {
-      const msg = err instanceof Error && err.message === 'EMAIL_REQUIRED' ? 'Email is required for email delivery'
-        : err instanceof Error && err.message === 'PHONE_REQUIRED' ? 'Phone number is required for SMS delivery'
-        : 'Invalid invitation token';
-      return sendJson(res, err instanceof Error && (err.message === 'EMAIL_REQUIRED' || err.message === 'PHONE_REQUIRED') ? 400 : 404, { error: 'CONTACT_UPDATE_FAILED', message: msg });
-    }
+    // INVALID_TOKEN / EMAIL_REQUIRED / PHONE_REQUIRED propagate as DomainError.
+    const guest = await updateGuestContact(token, { email, phone, delivery_channel });
+    return sendJson(res, 200, { success: true, guest });
   }
 
   if (isReset && method === 'POST') {
-    try {
-      const guest = await resetTokenUsage(token);
-      return sendJson(res, 200, { success: true, guest });
-    } catch (err) {
-      const msg = err instanceof Error ? err.message : '';
-      if (msg === 'INVALID_TOKEN') return sendJson(res, 404, { error: 'INVALID_TOKEN', message: 'Invitation token not found' });
-      if (msg === 'RSVP_READ_ONLY') return sendJson(res, 403, { error: 'RSVP_READ_ONLY' });
-      if (msg === 'PENDING_APPROVAL') return sendJson(res, 409, { error: 'PENDING_APPROVAL', message: 'This registration is awaiting host approval.' });
-      if (msg === 'REGISTRATION_REJECTED') return sendJson(res, 403, { error: 'REGISTRATION_REJECTED', message: 'This registration was not approved.' });
-      if (msg === 'RSVP_CLOSED') return sendJson(res, 409, { error: 'RSVP_CLOSED', message: 'RSVPs are closed — the event has already passed.' });
-      throw err;
-    }
+    const guest = await resetTokenUsage(token);
+    return sendJson(res, 200, { success: true, guest });
   }
 
   if (method === 'GET') {
@@ -100,24 +84,14 @@ export async function handleRsvpRoutes(ctx: RouteCtx): Promise<boolean> {
       return sendJson(res, 400, { error: 'Invalid RSVP', message: parsed.error.issues[0]?.message || 'Invalid RSVP payload' });
     }
     const { rsvp_status, attending_party_size, dietary_restrictions, attendee_details, attendee_names } = parsed.data;
-    try {
-      const updated = await submitRsvp(token, {
-        rsvp_status,
-        attending_party_size: attending_party_size ?? 1,
-        dietary_restrictions: dietary_restrictions || '',
-        attendee_details,
-        attendee_names,
-      });
-      return sendJson(res, 200, { success: true, guest: updated });
-    } catch (err) {
-      const msg = err instanceof Error ? err.message : '';
-      if (msg === 'INVALID_TOKEN') return sendJson(res, 404, { error: 'INVALID_TOKEN', message: 'Invitation token not found' });
-      if (msg === 'RSVP_ALREADY_SUBMITTED') return sendJson(res, 409, { error: 'RSVP_ALREADY_SUBMITTED', message: 'This RSVP was already submitted. Edit it from the confirmation screen.' });
-      if (msg === 'PENDING_APPROVAL') return sendJson(res, 409, { error: 'PENDING_APPROVAL', message: 'This registration is awaiting host approval.' });
-      if (msg === 'REGISTRATION_REJECTED') return sendJson(res, 403, { error: 'REGISTRATION_REJECTED', message: 'This registration was not approved.' });
-      if (msg === 'RSVP_CLOSED') return sendJson(res, 409, { error: 'RSVP_CLOSED', message: 'RSVPs are closed — the event has already passed.' });
-      throw err;
-    }
+    const updated = await submitRsvp(token, {
+      rsvp_status,
+      attending_party_size: attending_party_size ?? 1,
+      dietary_restrictions: dietary_restrictions || '',
+      attendee_details,
+      attendee_names,
+    });
+    return sendJson(res, 200, { success: true, guest: updated });
   }
 
   return false;
