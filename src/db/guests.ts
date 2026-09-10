@@ -1,9 +1,10 @@
 // Guest admin CRUD + batch import. RSVP/submission logic lives in `rsvp.ts`.
 
 import type { Guest, AddGuestPayload, RegisterGuestPayload, EventSettings, Language } from '../types';
-import { buildInviteMessage, buildUniversalInviteMessage } from '../lib/inviteMessage';
+import { buildInviteMessage, buildUniversalInviteMessage, composeInvitation } from '../lib/compose';
 import { escFilter, fromRecord, newMagicToken, newReservationCode, pb, removeGuestFromFloorMaps } from './client';
 import { getSettings } from './settings';
+import { notifyGuest } from './notify';
 
 // Missing/empty approval_status = approved: legacy host-added guests and
 // pre-feature records must keep working.
@@ -139,18 +140,9 @@ export async function setApproval(id: string, decision: 'approved' | 'rejected')
   const updated = await pb.collection('guests').update(id, { approval_status: decision });
   const guest = fromRecord<Guest>(updated);
   if (decision === 'approved' && guest.delivery_channel && guest.delivery_channel !== 'none') {
-    let settings: EventSettings | null = null;
+    let settings: Partial<EventSettings> = {};
     try { settings = await getSettings(); } catch { /* settings missing — skip send */ }
-    if (settings) {
-      if ((guest.delivery_channel === 'email' || guest.delivery_channel === 'both') && guest.email) {
-        const { sendInvitationEmail } = await import('../lib/email');
-        await sendInvitationEmail(guest, settings);
-      }
-      if ((guest.delivery_channel === 'text' || guest.delivery_channel === 'both') && guest.phone) {
-        const { sendInvitationSms } = await import('../lib/sms');
-        await sendInvitationSms(guest, settings);
-      }
-    }
+    await notifyGuest(guest, composeInvitation(guest, settings, guest.language_pref));
   }
   return guest;
 }

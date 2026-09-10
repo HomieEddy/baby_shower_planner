@@ -3,6 +3,7 @@
 import type { RouteCtx } from '../http';
 import { parseJson, sendJson } from '../http';
 import { AgendaReorderSchema, AgendaTaskSchema } from '../../lib/validation';
+import { composeAgenda } from '../../lib/compose';
 import type { AgendaTask } from '../../types';
 import {
   addAgendaTask,
@@ -56,13 +57,14 @@ export async function handleAgendaRoutes(ctx: RouteCtx): Promise<boolean> {
       status: 'todo', position: 0, reminder_sent: false, created_at: '',
     };
     const results: Record<string, boolean> = {};
+    const content = composeAgenda(settings, sampleTask);
     if (channels.email && settings.hostEmail) {
-      const { sendAgendaReminderEmail } = await import('../../lib/email');
-      results.email = await sendAgendaReminderEmail(settings.hostEmail, sampleTask, settings);
+      const { sendEmail } = await import('../../lib/email');
+      results.email = await sendEmail(settings.hostEmail, content);
     }
     if (channels.sms && settings.hostPhone) {
-      const { sendAgendaReminderSms } = await import('../../lib/sms');
-      results.sms = await sendAgendaReminderSms(settings.hostPhone, sampleTask, settings);
+      const { sendSms } = await import('../../lib/sms');
+      results.sms = await sendSms(settings.hostPhone, content);
     }
     return sendJson(res, 200, { success: true, results });
   }

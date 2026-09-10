@@ -69,7 +69,7 @@ vi.mock('./settings', () => ({ getSettings: async () => ({ date: '', language: '
 
 import { registerGuest, isApproved, getUniversalInviteMessage } from './guests';
 import { createInvite, submitRsvp } from './rsvp';
-import { buildUniversalInviteMessage } from '../lib/inviteMessage';
+import { buildUniversalInviteMessage } from '../lib/compose';
 
 beforeEach(() => h.reset());
 

@@ -4,6 +4,8 @@ import type { EventAlert, AlertType, EventSettings } from '../types';
 import { fromRecord, pb } from './client';
 import { getAllGuests } from './guests';
 import { getSettings } from './settings';
+import { composeAlert } from '../lib/compose';
+import { notifyGuest } from './notify';
 
 export async function getAlerts(): Promise<EventAlert[]> {
   const records = await pb.collection('alerts').getFullList({ sort: '-created_at' });
@@ -26,22 +28,13 @@ export async function createAlert(payload: { type: AlertType; title: string; mes
     if (target === 'ATTENDING') return g.rsvp_status === 'Attending';
     return true;
   });
-  let settings: EventSettings | null = null;
+  let settings: Partial<EventSettings> = {};
   try { settings = await getSettings(); } catch { /* settings missing — skip send */ }
   let notified = 0;
   for (const g of recipientGuests) {
-    const channel = g.delivery_channel || 'none';
-    if (channel === 'none' || !settings) continue; // link-only: nothing to send
-    let ok = false;
-    if ((channel === 'email' || channel === 'both') && g.email) {
-      const { sendAlertEmail } = await import('../lib/email');
-      ok = (await sendAlertEmail(g, settings, payload.title, payload.message)) || ok;
-    }
-    if ((channel === 'text' || channel === 'both') && g.phone) {
-      const { sendAlertSms } = await import('../lib/sms');
-      ok = (await sendAlertSms(g, settings, payload.title, payload.message)) || ok;
-    }
-    if (ok) notified++;
+    // Link-only guests resolve to no channels inside notifyGuest.
+    const { sent } = await notifyGuest(g, composeAlert(g, settings, payload.title, payload.message, g.language_pref));
+    if (sent.length > 0) notified++;
   }
   await pb.collection('alerts').update(r.id, { notified_guests_count: notified });
   return { alert: fromRecord<EventAlert>({ ...r, notified_guests_count: notified }), notified_count: notified };

@@ -8,7 +8,7 @@ import { getSettings } from './settings';
 import { isRehearsalActive } from './rehearsal';
 import { getGuestById, isApproved } from './guests';
 import { DomainError } from '../lib/errors';
-import { buildUniversalInviteMessage, universalRegisterUrl } from '../lib/inviteMessage';
+import { buildUniversalInviteMessage, universalRegisterUrl } from '../lib/compose';
 
 // RSVPs close the day after the event: on the day itself guests can still
 // respond (people check invites on their phones while arriving).

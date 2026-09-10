@@ -2,6 +2,7 @@
 
 import type { AgendaTask, AgendaStatus, EventSettings } from '../types';
 import { isInReminderWindow, taskDueAt, REMINDER_ADVANCE_MS } from '../lib/dateUtils';
+import { composeAgenda } from '../lib/compose';
 import { fromRecord, pb } from './client';
 import { getSettings } from './settings';
 
@@ -81,14 +82,15 @@ export async function runAgendaReminderSweep(now: Date = new Date()): Promise<{ 
   const due = await getTasksDueForReminder(now.getTime(), advanceMs);
   let reminded = 0, failed = 0;
   for (const task of due) {
+    const content = composeAgenda(settings, task);
     let ok = true;
     if (channels.email && settings.hostEmail) {
-      const { sendAgendaReminderEmail } = await import('../lib/email');
-      ok = await sendAgendaReminderEmail(settings.hostEmail, task, settings) && ok;
+      const { sendEmail } = await import('../lib/email');
+      ok = await sendEmail(settings.hostEmail, content) && ok;
     }
     if (channels.sms && settings.hostPhone) {
-      const { sendAgendaReminderSms } = await import('../lib/sms');
-      ok = await sendAgendaReminderSms(settings.hostPhone, task, settings) && ok;
+      const { sendSms } = await import('../lib/sms');
+      ok = await sendSms(settings.hostPhone, content) && ok;
     }
     if (ok) {
       await markAgendaTaskReminded(task.id);

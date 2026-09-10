@@ -4,6 +4,8 @@ import type { GiftLog, EventSettings, Guest } from '../types';
 import { fromRecord, pb } from './client';
 import { getGiftById } from './gifts';
 import { DomainError } from '../lib/errors';
+import { composeThankYou } from '../lib/compose';
+import { notifyChannels, type Channel } from './notify';
 
 function buildFallbackDraft(gift: GiftLog, settings: Partial<EventSettings>): string {
   const parents = settings.parentsNames?.trim() || 'the expecting parents';
@@ -65,18 +67,10 @@ export async function sendGiftThankYou(
   if (!guestRecord) throw new DomainError('GUEST_NOT_FOUND');
   const guest = fromRecord<Guest>(guestRecord);
 
-  const sent: string[] = [];
-  const failed: string[] = [];
-  if ((channel === 'email' || channel === 'both') && guest.email) {
-    const { sendThankYouEmail } = await import('../lib/email');
-    if (await sendThankYouEmail(guest, text)) sent.push('email');
-    else failed.push('email');
-  }
-  if ((channel === 'text' || channel === 'both') && guest.phone) {
-    const { sendThankYouSms } = await import('../lib/sms');
-    if (await sendThankYouSms(guest, text)) sent.push('text');
-    else failed.push('text');
-  }
+  const channels: Channel[] = [];
+  if (channel === 'email' || channel === 'both') channels.push('email');
+  if (channel === 'text' || channel === 'both') channels.push('text');
+  const { sent, failed } = await notifyChannels(guest, composeThankYou(guest, text, guest.language_pref), channels);
   if (sent.length === 0 && failed.length === 0) {
     throw new DomainError(channel === 'email' || channel === 'both' ? 'NO_EMAIL' : 'NO_PHONE');
   }
