@@ -5,6 +5,7 @@ import {
   getTableSeats,
   getTableOccupiedSeats,
   getAttendeeSeatIndex,
+  getAttendeeSeatLocation,
   findNearestSeat,
   validateTables,
 } from './floorPlanHelpers';
@@ -122,6 +123,16 @@ describe('seat model', () => {
     expect(getAttendeeSeatIndex(t2, 'g1', 'Alice', [g])).toBeNull();
     // null attendeeName -> the party lead's chair
     expect(getAttendeeSeatIndex(t1, 'g1', null, [g])).toBe(0);
+  });
+
+  it('getAttendeeSeatLocation finds each split member on their own table', () => {
+    const g = guest();
+    const t1 = table({ assignedGuestIds: ['g1'], seats: [{ guestId: 'g1', attendeeIndex: 0 }, null, null, null] });
+    const t2 = table({ id: 't2', assignedGuestIds: ['g1'], seats: [{ guestId: 'g1', attendeeIndex: 1 }, null, null, null] });
+    const fm = map({ tables: [t1, t2] });
+    expect(getAttendeeSeatLocation('g1', 0, fm, [g])).toEqual({ table: t1, seatIndex: 0 });
+    expect(getAttendeeSeatLocation('g1', 1, fm, [g])).toEqual({ table: t2, seatIndex: 0 });
+    expect(getAttendeeSeatLocation('g1', 2, fm, [g])).toBeNull();
   });
 
   it('findNearestSeat snaps to the closest chair', () => {
