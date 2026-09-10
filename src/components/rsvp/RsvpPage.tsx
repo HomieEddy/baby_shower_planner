@@ -6,6 +6,7 @@ import { z } from 'zod';
 import { Guest, GuestInviteView, EventAlert } from '../../types';
 import { EventDetailsCard } from './EventDetailsCard';
 import { stripPrimaryAttendees, buildAttendeePayload } from '../../lib/guestAttendees';
+import { decodeApiError } from '../../lib/errors';
 import { useCapabilities, availableChannels, channelLabel } from '../../lib/capabilities';
 import { motion, AnimatePresence } from 'motion/react';
 import { useToast } from '../shared/ToastContext';
@@ -299,7 +300,8 @@ export const RsvpPage = () => {
           toast.info(t.rsvpDeclinedToast);
         }
       } else {
-        toast.error(dataRes.error === 'RSVP_CLOSED' ? t.rsvpClosedToast : dataRes.message || dataRes.error || 'Failed to submit RSVP');
+        const { code, message } = decodeApiError(dataRes, res.status);
+        toast.error(code === 'RSVP_CLOSED' ? t.rsvpClosedToast : message || 'Failed to submit RSVP');
       }
     } catch (err) {
       console.error('RSVP submit error:', err);
@@ -316,7 +318,8 @@ export const RsvpPage = () => {
       const res = await fetch(`/api/rsvp/${token}/reset`, { method: 'POST' });
       if (!res.ok) {
         const data = await res.json().catch(() => ({}));
-        toast.error(data.error === 'RSVP_CLOSED' ? t.rsvpClosedToast : t.rsvpResetErrorToast);
+        const { code } = decodeApiError(data, res.status);
+        toast.error(code === 'RSVP_CLOSED' ? t.rsvpClosedToast : t.rsvpResetErrorToast);
         return;
       }
       setIsEditing(true);

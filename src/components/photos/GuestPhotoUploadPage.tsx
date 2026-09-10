@@ -16,6 +16,7 @@ import {
   KeyRound,
 } from 'lucide-react';
 import { EventPhoto } from '../../types';
+import { decodeApiError } from '../../lib/errors';
 import { compressImage, formatFileSize } from '../../lib/imageCompressor';
 import { useToast } from '../shared/ToastContext';
 import { formatGuestWindow } from '../../lib/dateUtils';
@@ -237,26 +238,30 @@ export const GuestPhotoUploadPage = () => {
       });
 
       const data = await res.json();
+      const { code, message, data: errData } = decodeApiError(data, res.status);
 
-      if (res.status === 403 && data.error === 'GUEST_CONTENT_LOCKED') {
+      if (res.status === 403 && code === 'GUEST_CONTENT_LOCKED') {
         // The window closed while this page was open.
         setIsUploading(false);
         setLocked(true);
-        setLockInfo({ opensAt: data.opensAt, closesAt: data.closesAt });
+        setLockInfo({
+          opensAt: typeof errData.opensAt === 'string' ? errData.opensAt : undefined,
+          closesAt: typeof errData.closesAt === 'string' ? errData.closesAt : undefined,
+        });
         return;
       }
 
       if (!res.ok) {
-        if (data.error === 'INVALID_CODE') {
+        if (code === 'INVALID_CODE') {
           throw new Error(t.uploadInvalidCodeToast);
         }
-        if (data.error === 'PHOTO_LIMIT_REACHED') {
-          throw new Error(t.uploadPhotoLimitToast.replace('{{remaining}}', String(data.remaining ?? 0)));
+        if (code === 'PHOTO_LIMIT_REACHED') {
+          throw new Error(t.uploadPhotoLimitToast.replace('{{remaining}}', String(errData.remaining ?? 0)));
         }
-        if (data.error === 'PHOTO_SIZE_LIMIT_REACHED') {
+        if (code === 'PHOTO_SIZE_LIMIT_REACHED') {
           throw new Error(t.uploadPhotoSizeLimitToast);
         }
-        throw new Error(data.error || 'Upload failed');
+        throw new Error(message || 'Upload failed');
       }
 
       setUploadProgress(100);
