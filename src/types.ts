@@ -77,6 +77,13 @@ export interface GuestbookEntry {
   created_at: string;
 }
 
+// One named person seated in a chair. `attendeeIndex` indexes getPartyMembers(guest)
+// (0 = the primary guest), so split parties resolve each person to an exact chair.
+export interface SeatOccupant {
+  guestId: string;
+  attendeeIndex: number;
+}
+
 export interface TableElement {
   id: string;
   name: string;
@@ -88,6 +95,8 @@ export interface TableElement {
   rotation?: number;
   capacity: number;
   assignedGuestIds: string[];
+  /** Chair occupants; index = chair position around the table (null = empty). Absent on legacy tables. */
+  seats?: (SeatOccupant | null)[];
   color?: string;
 }
 

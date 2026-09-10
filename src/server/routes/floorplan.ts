@@ -1,7 +1,7 @@
 // Floor plan admin editing/assignment plus the public day-of seating roster.
 
 import type { RouteCtx } from '../http';
-import { parseJson, sendJson } from '../http';
+import { HttpError, parseJson, sendJson } from '../http';
 import {
   assignGuestToTable,
   getFloorMap,
@@ -9,6 +9,25 @@ import {
   shareFloorPlanEmail,
   updateFloorMap,
 } from '../../db/service';
+
+// Seat-validation failures are client errors (400), everything else is a 500.
+const SEAT_ERRORS = new Set([
+  'SEAT_UNKNOWN_GUEST',
+  'SEAT_GUEST_NOT_ATTENDING',
+  'SEAT_INDEX_OUT_OF_RANGE',
+  'SEAT_DUPLICATE_ATTENDEE',
+  'TABLE_OVER_CAPACITY',
+  'TABLE_NOT_FOUND',
+  'GUEST_NOT_FOUND',
+]);
+
+function toHttpError(err: unknown): never {
+  const message = err instanceof Error ? err.message : 'INVALID_SEATING';
+  if (SEAT_ERRORS.has(message) || message.startsWith('Only confirmed attending')) {
+    throw new HttpError(400, message);
+  }
+  throw err;
+}
 
 export async function handleFloorPlanRoutes(ctx: RouteCtx): Promise<boolean> {
   const { req, res, url } = ctx;
@@ -23,8 +42,12 @@ export async function handleFloorPlanRoutes(ctx: RouteCtx): Promise<boolean> {
     if (method === 'POST') {
       ctx.requireAdmin();
       const body = await parseJson(req);
-      const floorMap = await updateFloorMap(body);
-      return sendJson(res, 200, { success: true, floorMap });
+      try {
+        const floorMap = await updateFloorMap(body);
+        return sendJson(res, 200, { success: true, floorMap });
+      } catch (err) {
+        toHttpError(err);
+      }
     }
   }
 
@@ -39,8 +62,12 @@ export async function handleFloorPlanRoutes(ctx: RouteCtx): Promise<boolean> {
     ctx.requireAdmin();
     const body = await parseJson(req);
     if (!body.guestId) return sendJson(res, 400, { error: 'guestId is required' });
-    const floorMap = await assignGuestToTable(body.guestId, body.tableId || null);
-    return sendJson(res, 200, { success: true, floorMap });
+    try {
+      const floorMap = await assignGuestToTable(body.guestId, body.tableId || null);
+      return sendJson(res, 200, { success: true, floorMap });
+    } catch (err) {
+      toHttpError(err);
+    }
   }
 
   if (pathname === '/api/floorplan/share-email' && method === 'POST') {
