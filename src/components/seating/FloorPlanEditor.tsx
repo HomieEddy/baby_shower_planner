@@ -197,16 +197,21 @@ export const FloorPlanEditor = ({
   };
 
   const handleCanvasDragOver = (e: DragEvent) => {
-    if (!draggingAttendee) return;
+    if (!draggingAttendee && !e.dataTransfer.types.includes('text/plain')) return;
     e.preventDefault();
     e.dataTransfer.dropEffect = 'move';
-    const seat = eventToSeat(e);
-    setDropTarget(seat);
+    setDropTarget(eventToSeat(e));
   };
 
   const handleCanvasDrop = (e: DragEvent) => {
     e.preventDefault();
-    const key = draggingAttendee;
+    // Prefer state, fall back to the dataTransfer payload for very fast drags.
+    let key = draggingAttendee;
+    if (!key) {
+      const raw = e.dataTransfer.getData('text/plain');
+      const [guestId, idx] = raw.split(':');
+      if (guestId && idx !== undefined) key = { guestId, attendeeIndex: Number(idx) };
+    }
     const seat = dropTarget ?? eventToSeat(e);
     setDraggingAttendee(null);
     setDropTarget(null);
