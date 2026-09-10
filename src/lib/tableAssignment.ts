@@ -6,6 +6,7 @@
 
 import { FloorMapData, Guest, SeatOccupant, TableElement } from '../types';
 import { getPartyMembers } from './guestAttendees';
+import { DomainError } from './errors';
 
 export const getGuestPartySize = (guest: Guest): number => {
   if (!guest) return 1;
@@ -155,19 +156,19 @@ export const validateTables = (tables: TableElement[], guestsList: Guest[]): voi
   for (const table of tables) {
     const capacity = Math.max(1, table.capacity || 8);
     if (table.seats && table.seats.filter(Boolean).length > capacity) {
-      throw new Error('TABLE_OVER_CAPACITY');
+      throw new DomainError('TABLE_OVER_CAPACITY');
     }
     for (const seat of getTableSeats(table, guestsList)) {
       if (!seat) continue;
       const guest = guestsList.find((g) => g.id === seat.guestId);
-      if (!guest) throw new Error('SEAT_UNKNOWN_GUEST');
-      if (guest.rsvp_status !== 'Attending') throw new Error('SEAT_GUEST_NOT_ATTENDING');
+      if (!guest) throw new DomainError('SEAT_UNKNOWN_GUEST');
+      if (guest.rsvp_status !== 'Attending') throw new DomainError('SEAT_GUEST_NOT_ATTENDING');
       const size = getGuestPartySize(guest);
       if (!Number.isInteger(seat.attendeeIndex) || seat.attendeeIndex < 0 || seat.attendeeIndex >= size) {
-        throw new Error('SEAT_INDEX_OUT_OF_RANGE');
+        throw new DomainError('SEAT_INDEX_OUT_OF_RANGE');
       }
       const key = `${seat.guestId}:${seat.attendeeIndex}`;
-      if (seen.has(key)) throw new Error('SEAT_DUPLICATE_ATTENDEE');
+      if (seen.has(key)) throw new DomainError('SEAT_DUPLICATE_ATTENDEE');
       seen.add(key);
     }
   }
