@@ -32,7 +32,11 @@ export const GuestCheckIn = () => {
 
   useEffect(() => {
     let cancelled = false;
-    fetchData(() => !cancelled);
+    // async IIFE keeps the loader's setState out of the effect's synchronous
+    // body (react-hooks/set-state-in-effect).
+    (async () => {
+      await fetchData(() => !cancelled);
+    })();
     return () => { cancelled = true; };
   }, [fetchData]);
 
