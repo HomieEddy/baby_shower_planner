@@ -2,6 +2,7 @@
 // full data wipe.
 
 import { pb } from './client';
+import { removeUploadFiles } from '../server/uploadFiles';
 
 // ─── Init / Auth ───────────────────────────────────────────────────
 
@@ -257,13 +258,51 @@ async function ensureCollectionFields(colName: string) {
 
 // ─── Wipe ─────────────────────────────────────────────────────────
 
+// Uploaded files referenced by a photo/guestbook record, so deleting the record
+// also cleans the file off disk (otherwise wipe leaves orphans).
+function uploadUrlsFrom(name: string, record: Record<string, unknown>): string[] {
+  const candidates: unknown[] = [];
+  if (name === 'photos') candidates.push(record.url);
+  if (name === 'guestbook') candidates.push(record.photo_url);
+  return candidates.filter(
+    (u): u is string => typeof u === 'string' && u.startsWith('/uploads/')
+  );
+}
+
 export async function wipeDatabaseData() {
+  const urls: string[] = [];
   for (const name of COLLECTION_DEFS.map(c => c.name)) {
     if (name === 'settings') continue; // event settings survive a wipe
     const records = await pb.collection(name).getFullList({ requestKey: null });
     for (const r of records) {
+      urls.push(...uploadUrlsFrom(name, r));
       await pb.collection(name).delete(r.id);
     }
   }
+  removeUploadFiles(urls);
   return { success: true };
+}
+
+// Delete only records created at/after `since` (rehearsal data), leaving
+// pre-existing real data intact. Settings and floor_maps are skipped — callers
+// snapshot/restore the map themselves.
+// ponytail: creation-time cutoff, not a per-row flag; every synced collection
+// stamps created_at app-side, so no schema change is needed.
+export async function deleteRecordsSince(since: string): Promise<number> {
+  let deleted = 0;
+  const urls: string[] = [];
+  for (const name of COLLECTION_DEFS.map(c => c.name)) {
+    if (name === 'settings' || name === 'floor_maps') continue;
+    const records = await pb.collection(name).getFullList({ requestKey: null });
+    for (const r of records) {
+      const created = String(r.created_at || r.created || '');
+      if (created && created >= since) {
+        urls.push(...uploadUrlsFrom(name, r));
+        await pb.collection(name).delete(r.id);
+        deleted++;
+      }
+    }
+  }
+  removeUploadFiles(urls);
+  return deleted;
 }
