@@ -13,7 +13,7 @@ import {
 import { Modal } from '../shared/Modal';
 import { useT } from '../shared/i18n';
 import { Guest } from '../../types';
-import { getGuestPartySize } from '../seating/floorPlanHelpers';
+import { getGuestPartySize } from '../../lib/tableAssignment';
 import { channelLabel } from '../../lib/capabilities';
 
 interface GuestListModalProps {

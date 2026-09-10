@@ -3,7 +3,7 @@ import { Guest, EventSettings, FloorMapData } from '../../types';
 import { Printer, Scissors, Tag, Ticket } from 'lucide-react';
 import { useT } from '../shared/i18n';
 import { usePrint } from '../shared/hooks';
-import { getAttendeeLocations } from '../seating/floorPlanHelpers';
+import { getAttendeeLocations } from '../../lib/tableAssignment';
 import { getPartyMembers } from '../../lib/guestAttendees';
 
 interface EscortCardsGeneratorProps {

@@ -13,7 +13,7 @@ import {
   tableRotationY,
   seatLocalWorld,
 } from './floorPlan3Dhelpers';
-import { getGuestPartySize, getTableOccupiedSeats, getTableSeats } from './floorPlanHelpers';
+import { getGuestPartySize, getTableOccupiedSeats, getTableSeats } from '../../lib/tableAssignment';
 import { useT } from '../shared/i18n';
 
 // ─── Palette (matches the 2D floor plan) ─────────────────────────

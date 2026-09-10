@@ -16,7 +16,7 @@ import { Guest, FloorMapData } from '../../types';
 import { useT } from '../shared/i18n';
 import { useToast } from '../shared/ToastContext';
 import { getPartyMembers, isMemberCheckedIn, isPartyLead } from '../../lib/guestAttendees';
-import { getGuestPartySize } from './floorPlanHelpers';
+import { getGuestPartySize } from '../../lib/tableAssignment';
 import { VenueModal } from './VenueModal';
 
 // A searchable person: the primary guest or one of their party attendees.

@@ -1,6 +1,6 @@
 import { Search, UserX, CheckCircle2, Users, Utensils, X } from 'lucide-react';
 import { Guest, FloorMapData, TableElement } from '../../types';
-import { getGuestPartySize, getTableOccupiedSeats, getGuestSeatedCount } from './floorPlanHelpers';
+import { getGuestPartySize, getTableOccupiedSeats, getGuestSeatedCount } from '../../lib/tableAssignment';
 import { useT } from '../shared/i18n';
 
 interface UnassignedGuestsSidebarProps {
