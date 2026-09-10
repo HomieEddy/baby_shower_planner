@@ -23,6 +23,7 @@ import {
 import type { RouteCtx } from './src/server/http';
 import { handleSystemRoutes } from './src/server/routes/system';
 import { handleGuestRoutes } from './src/server/routes/guests';
+import { handleRegisterRoutes } from './src/server/routes/register';
 import { handleRsvpRoutes } from './src/server/routes/rsvp';
 import { handleGuestbookRoutes } from './src/server/routes/guestbook';
 import { handlePhotoRoutes } from './src/server/routes/photos';
@@ -38,6 +39,7 @@ const PORT = Number(process.env.PORT) || 3025;
 // Ordered per-feature dispatchers; each returns true only when it responded.
 const API_HANDLERS: Array<(ctx: RouteCtx) => Promise<boolean>> = [
   handleSystemRoutes,
+  handleRegisterRoutes,
   handleGuestRoutes,
   handleRsvpRoutes,
   handleGuestbookRoutes,
