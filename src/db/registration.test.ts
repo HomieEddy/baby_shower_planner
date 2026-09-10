@@ -67,7 +67,7 @@ vi.mock('./client', () => ({
 
 vi.mock('./settings', () => ({ getSettings: async () => ({ date: '', language: 'EN' }) }));
 
-import { registerGuest, isApproved } from './guests';
+import { registerGuest, isApproved, getUniversalInviteMessage } from './guests';
 import { createInvite, submitRsvp } from './rsvp';
 import { buildUniversalInviteMessage } from '../lib/inviteMessage';
 
@@ -105,6 +105,15 @@ describe('buildUniversalInviteMessage', () => {
     expect(msg).toContain('/register');
     expect(msg).toContain('au plus tard le jeudi 1 octobre 2026');
     expect(msg).not.toMatch(/[\u2014\u2013\u2E3B]/);
+  });
+
+  it('getUniversalInviteMessage returns the requested language', async () => {
+    const en = await getUniversalInviteMessage('EN');
+    const fr = await getUniversalInviteMessage('FR');
+    expect(en).toContain('A little flower is on the way');
+    expect(en).not.toContain('petite fleur');
+    expect(fr).toContain('Une petite fleur est en chemin');
+    expect(fr).not.toContain('A little flower');
   });
 
   it('omits the deadline sentence when unset', () => {
