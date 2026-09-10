@@ -5,6 +5,12 @@ import { buildInviteMessage } from '../lib/inviteMessage';
 import { escFilter, fromRecord, newMagicToken, newReservationCode, pb, removeGuestFromFloorMaps } from './client';
 import { getSettings } from './settings';
 
+// Missing/empty approval_status = approved: legacy host-added guests and
+// pre-feature records must keep working.
+export function isApproved(guest: Pick<Guest, 'approval_status'>): boolean {
+  return !guest.approval_status || guest.approval_status === 'approved';
+}
+
 export async function getAllGuests(): Promise<Guest[]> {
   const records = await pb.collection('guests').getFullList({ sort: '-created_at' });
   return records.map(r => fromRecord<Guest>(r));

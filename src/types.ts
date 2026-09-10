@@ -39,6 +39,24 @@ export interface Guest {
   invited_by_guest_name?: string;
   /** Optional note from the inviter to the host */
   guest_note?: string;
+  /** Host approval of a self-registration via the universal link. Missing/empty = approved (legacy/host-added). */
+  approval_status?: 'pending' | 'approved' | 'rejected';
+}
+
+// A lightweight share record for the universal registration link: created when
+// a guest invites someone, before that person registers. Becomes `registered`
+// (via registered_guest_id) once the invitee self-registers through the link.
+export interface GuestInvite {
+  id: string;
+  inviter_guest_id: string;
+  inviter_guest_name: string;
+  invitee_name: string;
+  /** email or phone, used for dedupe only — delivery is manual (copy/share). */
+  contact?: string;
+  note?: string;
+  /** Guest id once the invitee self-registers through this share link. */
+  registered_guest_id?: string;
+  created_at: string;
 }
 
 export interface GuestbookEntry {
