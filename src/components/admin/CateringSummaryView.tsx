@@ -1,10 +1,12 @@
-import React, { useState } from 'react';
-import { Guest } from '../../types';
+import React, { useEffect, useState } from 'react';
+import { Guest, FloorMapData } from '../../types';
 import { Utensils, Printer, AlertTriangle, CheckCircle2, Users, FileSpreadsheet, ArrowUpDown, ChevronUp, ChevronDown, BarChart3 } from 'lucide-react';
 import { useToast } from '../shared/ToastContext';
 import { useT } from '../shared/i18n';
 import { usePrint } from '../shared/hooks';
 import { SearchInput } from '../shared/ui';
+import { getAttendeeLocations } from '../seating/floorPlanHelpers';
+import { getPartyMembers } from '../../lib/guestAttendees';
 import {
   useReactTable,
   getCoreRowModel,
@@ -26,16 +28,54 @@ const hasDietaryRestriction = (g: Guest) => {
   return r.length > 0 && r !== 'none';
 };
 
+interface CateringRow {
+  id: string;
+  guest: Guest;
+  name: string;
+  tableName: string | null;
+  seatNumber: number | null;
+}
+
 export const CateringSummaryView: React.FC<CateringSummaryViewProps> = ({ guests }) => {
     const t = useT();
   const { toast } = useToast();
   const [searchTerm, setSearchTerm] = useState('');
   const [filterDietaryOnly, setFilterDietaryOnly] = useState(false);
   const [sorting, setSorting] = useState<SortingState>([]);
+  const [floorMap, setFloorMap] = useState<FloorMapData | null>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    fetch('/api/floorplan')
+      .then((r) => r.json())
+      .then((d) => {
+        if (!cancelled) setFloorMap(d.floorMap ?? null);
+      })
+      .catch(() => {});
+    return () => {
+      cancelled = true;
+    };
+  }, []);
 
   // Filter attending guests only for catering
   const attendingGuests = guests.filter((g) => g.rsvp_status === 'Attending');
   const totalHeadcount = attendingGuests.reduce((acc, g) => acc + partySize(g), 0);
+
+  // One row per individual person, each with their group's code and own table/seat.
+  const individuals: CateringRow[] = attendingGuests.flatMap((g) => {
+    const names = getPartyMembers(g);
+    const locations = getAttendeeLocations(g.id, floorMap, guests);
+    return names.map((name, i) => {
+      const loc = locations.find((l) => l.attendeeIndex === i) ?? null;
+      return {
+        id: `${g.id}:${i}`,
+        guest: g,
+        name,
+        tableName: loc?.tableName ?? null,
+        seatNumber: loc ? loc.seatIndex + 1 : null,
+      };
+    });
+  });
 
   // Analyze Dietary Restrictions
   const guestsWithDietary = attendingGuests.filter(hasDietaryRestriction);
@@ -92,33 +132,47 @@ export const CateringSummaryView: React.FC<CateringSummaryViewProps> = ({ guests
     .slice(0, 6);
 
   // Filtered List for Table
-  const filteredList = attendingGuests.filter((g) => {
+  const filteredList = individuals.filter((r) => {
+    const g = r.guest;
+    const q = searchTerm.toLowerCase();
     const matchesSearch =
-      g.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      (g.dietary_restrictions || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
-      (g.table_id || '').toLowerCase().includes(searchTerm.toLowerCase());
+      r.name.toLowerCase().includes(q) ||
+      g.name.toLowerCase().includes(q) ||
+      (g.code || '').toLowerCase().includes(q) ||
+      (g.dietary_restrictions || '').toLowerCase().includes(q) ||
+      (r.tableName || '').toLowerCase().includes(q);
     const matchesDietary = !filterDietaryOnly || hasDietaryRestriction(g);
     return matchesSearch && matchesDietary;
   });
 
-  const columnHelper = createColumnHelper<Guest>();
+  const columnHelper = createColumnHelper<CateringRow>();
 
   const columns = [
-    columnHelper.accessor((g) => g.name, {
+    columnHelper.accessor((r) => r.name, {
       id: 'name',
       header: () => <span>{t.guestNameCol}</span>,
       cell: (info) => <span className="font-bold text-[#4A3F35]">{info.getValue()}</span>,
     }),
-    columnHelper.accessor((g) => partySize(g), {
+    columnHelper.accessor((r) => r.guest.name, {
+      id: 'group',
+      header: () => <span>{t.groupCol}</span>,
+      cell: (info) => <span className="text-[#5D5449]">{info.getValue()}</span>,
+    }),
+    columnHelper.accessor((r) => r.guest.code, {
+      id: 'code',
+      header: () => <span>{t.reservationCodeCol}</span>,
+      cell: (info) => <span className="font-mono text-[#4A3F35]">{info.getValue()}</span>,
+    }),
+    columnHelper.accessor((r) => partySize(r.guest), {
       id: 'partySize',
       header: () => <span>{t.partySizeCol}</span>,
       cell: (info) => <span className="font-mono text-[#4A3F35]">{info.getValue()} guest(s)</span>,
     }),
-    columnHelper.accessor((g) => (g.dietary_restrictions || '').trim(), {
+    columnHelper.accessor((r) => (r.guest.dietary_restrictions || '').trim(), {
       id: 'dietary',
       header: () => <span>{t.dietaryCol}</span>,
       cell: (info) => {
-        const g = info.row.original;
+        const g = info.row.original.guest;
         const hasRestriction = hasDietaryRestriction(g);
         return hasRestriction ? (
           <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-amber-100 text-amber-900 font-bold border border-amber-300">
@@ -130,10 +184,19 @@ export const CateringSummaryView: React.FC<CateringSummaryViewProps> = ({ guests
         );
       },
     }),
-    columnHelper.accessor((g) => g.table_id || '', {
+    columnHelper.accessor((r) => r.tableName || '', {
       id: 'tableId',
       header: () => <span>{t.tableIdCol}</span>,
-      cell: (info) => <span className="font-mono text-[#4A3F35]">{info.getValue() || t.unassignedWord}</span>,
+      cell: (info) => {
+        const r = info.row.original;
+        return (
+          <span className="font-mono text-[#4A3F35]">
+            {r.tableName
+              ? `${r.tableName}${r.seatNumber ? ` · ${t.seatedAtSeatLabel.replace('{{seat}}', String(r.seatNumber))}` : ''}`
+              : t.unassignedWord}
+          </span>
+        );
+      },
     }),
   ];
 
@@ -152,14 +215,18 @@ export const CateringSummaryView: React.FC<CateringSummaryViewProps> = ({ guests
       return;
     }
 
-    const headers = ['Guest Name', 'Attending Party Size', 'Dietary Restrictions & Allergies', 'Table ID', 'Contact Email', 'Contact Phone'];
-    const rows = attendingGuests.map((g) => [
-      `"${g.name.replace(/"/g, '""')}"`,
-      partySize(g),
-      `"${(g.dietary_restrictions || 'None').replace(/"/g, '""')}"`,
-      `"${g.table_id || t.unassignedWord}"`,
-      `"${(g.email || '').replace(/"/g, '""')}"`,
-      `"${(g.phone || '').replace(/"/g, '""')}"`,
+    const headers = ['Individual Guest', 'Group / Party', 'Reservation Code', 'Attending Party Size', 'Dietary Restrictions & Allergies', 'Table', 'Seat', 'Contact Email', 'Contact Phone'];
+    const esc = (v: unknown) => `"${String(v ?? '').replace(/"/g, '""')}"`;
+    const rows = individuals.map((r) => [
+      esc(r.name),
+      esc(r.guest.name),
+      esc(r.guest.code),
+      partySize(r.guest),
+      esc(r.guest.dietary_restrictions || 'None'),
+      esc(r.tableName || t.unassignedWord),
+      r.seatNumber ?? '',
+      esc(r.guest.email),
+      esc(r.guest.phone),
     ]);
 
     const csvContent = 'data:text/csv;charset=utf-8,' + [headers.join(','), ...rows.map((r) => r.join(','))].join('\n');

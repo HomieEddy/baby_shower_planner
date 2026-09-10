@@ -712,6 +712,8 @@ export interface Translations {
   tabHostSettings: string;
   tabUrgentAlerts: string;
   tableIdCol: string;
+  groupCol: string;
+  reservationCodeCol: string;
   tableLabel: string;
   tableNameLabel: string;
   tableSignageLabel: string;
@@ -1677,6 +1679,8 @@ export const translations: Record<Language, Translations> = {
     tabHostSettings: "Host Event Settings",
     tabUrgentAlerts: "Broadcast Alerts",
     tableIdCol: "Table ID",
+    groupCol: "Group / Party",
+    reservationCodeCol: "Reservation Code",
     tableLabel: "Table:",
     tableNameLabel: "Table Name",
     tableSignageLabel: "TABLE SIGNAGE UTILITY",
@@ -2633,6 +2637,8 @@ export const translations: Record<Language, Translations> = {
     tabHostSettings: "Configuration Hôte",
     tabUrgentAlerts: "Alertes Flash",
     tableIdCol: "ID de table",
+    groupCol: "Groupe / Partie",
+    reservationCodeCol: "Code de réservation",
     tableLabel: "Table :",
     tableNameLabel: "Nom de la table",
     tableSignageLabel: "UTILITAIRE D'AFFICHE DE TABLE",
