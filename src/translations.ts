@@ -913,6 +913,40 @@ export interface Translations {
   saveChangesBtn: string;
   eventBadge: string;
   eventIntro: string;
+  registerTitle: string;
+  registerSubtitle: string;
+  landingRegisterBtn: string;
+  registerFormTitle: string;
+  registerHint: string;
+  registerMembersTitle: string;
+  registerMemberPh: string;
+  registerSubmitBtn: string;
+  registerSubmittingBtn: string;
+  registerSuccessTitle: string;
+  registerSuccessMsg: string;
+  registerPendingTitle: string;
+  registerPendingMsg: string;
+  registerAlreadyTitle: string;
+  registerAlreadyMsg: string;
+  registerRejectedTitle: string;
+  registerRejectedMsg: string;
+  registerErrorToast: string;
+  registerNameRequiredToast: string;
+  approvalPendingTitle: string;
+  approvalPendingMsg: string;
+  approvalRejectedTitle: string;
+  approvalRejectedMsg: string;
+  statAwaitingApproval: string;
+  approvalQueueTitle: string;
+  approvalQueueEmpty: string;
+  approveBtn: string;
+  rejectBtn: string;
+  guestApprovedToast: string;
+  guestRejectedToast: string;
+  approvalPendingBadge: string;
+  inviteStatusInvited: string;
+  inviteStatusRegistered: string;
+  invitePendingHint: string;
 }
 
 export const translations: Record<Language, Translations> = {
@@ -1829,6 +1863,40 @@ export const translations: Record<Language, Translations> = {
     noGuestsYetMsg: "Your invitation list is empty! Add guests using the form above.",
     noGuestsMatchTitle: "No Guests Found",
     noGuestsMatchMsg: "No guests matched your current search query or filter.",
+    registerTitle: "Join the Baby Shower",
+    registerSubtitle: "Register your group and we'll confirm your spots.",
+    landingRegisterBtn: "Register",
+    registerFormTitle: "Register your group",
+    registerHint: "Add everyone in your group. The host will review your registration.",
+    registerMembersTitle: "Group members",
+    registerMemberPh: "Full name",
+    registerSubmitBtn: "Send registration",
+    registerSubmittingBtn: "Sending...",
+    registerSuccessTitle: "Registration received!",
+    registerSuccessMsg: "Your reservation code is {{code}}. The host will review your registration — check your status anytime from the guest portal.",
+    registerPendingTitle: "Awaiting host approval",
+    registerPendingMsg: "Your registration has been received and is waiting for the host to confirm it.",
+    registerAlreadyTitle: "Already registered",
+    registerAlreadyMsg: "This contact is already on the list. Use your reservation code at the guest portal to check your status.",
+    registerRejectedTitle: "Registration not approved",
+    registerRejectedMsg: "Unfortunately the host could not approve this registration. Please contact the host if you think this is a mistake.",
+    registerErrorToast: "Could not send your registration. Please try again.",
+    registerNameRequiredToast: "Please enter your name.",
+    approvalPendingTitle: "Awaiting host approval",
+    approvalPendingMsg: "Your registration is pending. You'll be able to confirm once the host approves it.",
+    approvalRejectedTitle: "Registration not approved",
+    approvalRejectedMsg: "The host did not approve this registration.",
+    statAwaitingApproval: "Awaiting approval",
+    approvalQueueTitle: "Pending registrations",
+    approvalQueueEmpty: "No registrations are awaiting approval.",
+    approveBtn: "Approve",
+    rejectBtn: "Reject",
+    guestApprovedToast: "{{name}} approved.",
+    guestRejectedToast: "{{name}} rejected.",
+    approvalPendingBadge: "Pending approval",
+    inviteStatusInvited: "Invited",
+    inviteStatusRegistered: "Registered",
+    invitePendingHint: "They'll appear here as invited until they register.",
   },
   FR: {
     activeAlertsHistory: "Historique des alertes diffusées",
@@ -2742,5 +2810,40 @@ export const translations: Record<Language, Translations> = {
     noGuestsYetTitle: "Aucune invitation d'invite",
     noGuestsYetMsg: "Votre liste d'invites est vide ! Ajoutez des invites avec le formulaire ci-dessus.",
     noGuestsMatchTitle: "Aucun invite trouve",
-    noGuestsMatchMsg: "Aucun invite ne correspond a votre recherche ou filtre actuel.", },
+    noGuestsMatchMsg: "Aucun invite ne correspond a votre recherche ou filtre actuel.",
+    registerTitle: "Rejoignez le baby shower",
+    registerSubtitle: "Inscrivez votre groupe et nous confirmerons vos places.",
+    landingRegisterBtn: "S'inscrire",
+    registerFormTitle: "Inscrivez votre groupe",
+    registerHint: "Ajoutez toutes les personnes de votre groupe. L'hôte examinera votre inscription.",
+    registerMembersTitle: "Membres du groupe",
+    registerMemberPh: "Nom complet",
+    registerSubmitBtn: "Envoyer l'inscription",
+    registerSubmittingBtn: "Envoi...",
+    registerSuccessTitle: "Inscription reçue !",
+    registerSuccessMsg: "Votre code de réservation est {{code}}. L'hôte examinera votre inscription — consultez votre statut à tout moment depuis le portail invité.",
+    registerPendingTitle: "En attente de l'approbation de l'hôte",
+    registerPendingMsg: "Votre inscription a bien été reçue et attend la confirmation de l'hôte.",
+    registerAlreadyTitle: "Déjà inscrit",
+    registerAlreadyMsg: "Ce contact figure déjà sur la liste. Utilisez votre code de réservation sur le portail invité pour vérifier votre statut.",
+    registerRejectedTitle: "Inscription non approuvée",
+    registerRejectedMsg: "Malheureusement, l'hôte n'a pas pu approuver cette inscription. Contactez l'hôte si vous pensez qu'il s'agit d'une erreur.",
+    registerErrorToast: "Impossible d'envoyer votre inscription. Veuillez réessayer.",
+    registerNameRequiredToast: "Veuillez saisir votre nom.",
+    approvalPendingTitle: "En attente de l'approbation de l'hôte",
+    approvalPendingMsg: "Votre inscription est en attente. Vous pourrez confirmer dès que l'hôte l'aura approuvée.",
+    approvalRejectedTitle: "Inscription non approuvée",
+    approvalRejectedMsg: "L'hôte n'a pas approuvé cette inscription.",
+    statAwaitingApproval: "En attente d'approbation",
+    approvalQueueTitle: "Inscriptions en attente",
+    approvalQueueEmpty: "Aucune inscription en attente d'approbation.",
+    approveBtn: "Approuver",
+    rejectBtn: "Refuser",
+    guestApprovedToast: "{{name}} approuvé.",
+    guestRejectedToast: "{{name}} refusé.",
+    approvalPendingBadge: "Approbation en attente",
+    inviteStatusInvited: "Invité",
+    inviteStatusRegistered: "Inscrit",
+    invitePendingHint: "Ils apparaîtront ici comme invités jusqu'à leur inscription.",
+  },
 };
