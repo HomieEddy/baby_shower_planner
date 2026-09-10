@@ -36,7 +36,11 @@ import {
   X,
   ChevronRight,
   CalendarDays,
+  Copy,
+  Link2,
+  Check,
 } from 'lucide-react';
+import { useCopyFeedback } from '../shared/hooks';
 
 const TABS = [
   { id: 'guests', icon: Users },
@@ -125,6 +129,28 @@ export const AdminDashboard = () => {
 
   const confirm = useConfirm();
 
+  // Universal invitation: one /register link for the host to share.
+  const { copiedKey, copy } = useCopyFeedback();
+  const universalUrl = `${window.location.origin}/register`;
+  const handleCopyUniversalMessage = async () => {
+    try {
+      const res = await adminFetch(`/api/guests/universal-message?lang=${language}`);
+      const data = await res.json();
+      if (data.message) {
+        await copy(data.message, 'universal-msg');
+        toast.love(t.messageCopiedToast);
+      } else {
+        toast.error(t.copyFailedToast);
+      }
+    } catch {
+      toast.error(t.copyFailedToast);
+    }
+  };
+  const handleCopyUniversalUrl = async () => {
+    await copy(universalUrl, 'universal-url');
+    toast.love(t.linkCopied);
+  };
+
   const handleDeleteAlertRequest = async (alertId: string) => {
     const ok = await confirm({
       title: 'Delete Broadcast Alert?',
@@ -190,6 +216,26 @@ export const AdminDashboard = () => {
         </div>
 
         <div className="flex flex-wrap items-center gap-3">
+          <motion.button
+            whileHover={{ scale: 1.03 }}
+            whileTap={{ scale: 0.97 }}
+            onClick={handleCopyUniversalMessage}
+            className="btn-accent text-xs sm:text-sm py-2.5 px-3.5 cursor-pointer inline-flex items-center"
+            title={t.copyMessageBtn}
+          >
+            {copiedKey === 'universal-msg' ? <Check className="w-3.5 h-3.5 mr-1" /> : <Copy className="w-3.5 h-3.5 mr-1" />}
+            <span>{t.copyMessageBtn}</span>
+          </motion.button>
+          <motion.button
+            whileHover={{ scale: 1.03 }}
+            whileTap={{ scale: 0.97 }}
+            onClick={handleCopyUniversalUrl}
+            className="btn-outline-accent text-xs sm:text-sm py-2.5 px-3.5 cursor-pointer inline-flex items-center"
+            title={t.copyLink}
+          >
+            {copiedKey === 'universal-url' ? <Check className="w-3.5 h-3.5 mr-1" /> : <Link2 className="w-3.5 h-3.5 mr-1" />}
+            <span>{t.copyLink}</span>
+          </motion.button>
           <motion.button
             whileHover={{ scale: 1.03 }}
             whileTap={{ scale: 0.97 }}

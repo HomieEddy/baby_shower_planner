@@ -949,6 +949,7 @@ export interface Translations {
   invitePendingHint: string;
   rsvpDeadlineLabel: string;
   rsvpDeadlineHint: string;
+  copyFailedToast: string;
 }
 
 export const translations: Record<Language, Translations> = {
@@ -1901,6 +1902,7 @@ export const translations: Record<Language, Translations> = {
     invitePendingHint: "They'll appear here as invited until they register.",
     rsvpDeadlineLabel: "RSVP deadline",
     rsvpDeadlineHint: "Shown in invitation messages. Leave empty for no deadline.",
+    copyFailedToast: "Could not copy",
   },
   FR: {
     activeAlertsHistory: "Historique des alertes diffusées",
@@ -2851,5 +2853,6 @@ export const translations: Record<Language, Translations> = {
     invitePendingHint: "Ils apparaîtront ici comme invités jusqu'à leur inscription.",
     rsvpDeadlineLabel: "Date limite de confirmation",
     rsvpDeadlineHint: "Affichée dans les messages d'invitation. Laissez vide pour aucune date limite.",
+    copyFailedToast: "Impossible de copier",
   },
 };
