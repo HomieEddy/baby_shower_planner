@@ -87,6 +87,23 @@ describe('buildUniversalInviteMessage', () => {
     expect(buildUniversalInviteMessage({}, 'EN')).toContain('/register');
     expect(buildUniversalInviteMessage({}, 'EN', 'inv1')).toContain('ref=inv1');
   });
+
+  it('renders event details and registry, without em-dashes', () => {
+    const msg = buildUniversalInviteMessage({
+      parentsNames: 'Eddy & Nana',
+      date: '7 novembre 2026',
+      time: '18 h à 22 h',
+      venueName: 'La salle St-Gilles',
+      venueAddress: '226 des Alouettes H7G 3W1',
+      registryUrl: 'https://www.amazon.ca/list',
+    }, 'FR');
+    expect(msg).toContain('Baby Shower de Eddy & Nana');
+    expect(msg).toContain('7 novembre 2026');
+    expect(msg).toContain('La salle St-Gilles, 226 des Alouettes H7G 3W1');
+    expect(msg).toContain('https://www.amazon.ca/list');
+    expect(msg).toContain('/register');
+    expect(msg).not.toMatch(/[\u2014\u2013\u2E3B]/);
+  });
 });
 
 describe('registerGuest', () => {
