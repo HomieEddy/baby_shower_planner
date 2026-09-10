@@ -1,7 +1,9 @@
-// Collection schema definitions, auto-creation/migration on first run, and the
-// full data wipe.
+// Collection auto-creation/migration on first run, and the full data wipe.
+// The field definitions themselves are derived from the domain schemas in
+// src/db/collectionDefs.ts.
 
 import { pb } from './client';
+import { COLLECTION_DEFS, toFields } from './collectionDefs';
 import { removeUploadFiles } from '../server/uploadFiles';
 
 // ─── Init / Auth ───────────────────────────────────────────────────
@@ -37,176 +39,6 @@ export async function initPocketBase() {
   }
 }
 
-const COLLECTION_DEFS: CollectionDef[] = [
-  {
-    name: 'guests', type: 'base',
-    schema: [
-      { name: 'name', type: 'text', required: true, options: {} },
-      { name: 'email', type: 'text', options: {} },
-      { name: 'phone', type: 'text', options: {} },
-      { name: 'delivery_channel', type: 'select', options: { values: ['email', 'text', 'both', 'none'] }, required: true },
-      { name: 'code', type: 'text', required: true, options: {} },
-      { name: 'max_party_size', type: 'number', options: { min: 1 } },
-      { name: 'rsvp_status', type: 'select', options: { values: ['Pending', 'Attending', 'Declined'] }, required: true },
-      { name: 'attending_party_size', type: 'number', options: { min: 0 } },
-      { name: 'attendee_names', type: 'json', options: {} },
-      { name: 'attendee_details', type: 'json', options: {} },
-      { name: 'dietary_restrictions', type: 'text', options: {} },
-      { name: 'language_pref', type: 'select', options: { values: ['EN', 'FR'] }, required: true },
-      { name: 'magic_token', type: 'text', required: true, options: {} },
-      { name: 'token_used', type: 'bool', options: {} },
-      { name: 'table_id', type: 'text', options: {} },
-      { name: 'is_read_only', type: 'bool', options: {} },
-      { name: 'confirmed_by_guest_name', type: 'text', options: {} },
-      { name: 'main_guest_id', type: 'text', options: {} },
-      { name: 'checked_in', type: 'bool', options: {} },
-      { name: 'checked_in_at', type: 'text', options: {} },
-      { name: 'checked_in_names', type: 'json', options: {} },
-      { name: 'invited_by_guest_id', type: 'text', options: {} },
-      { name: 'invited_by_guest_name', type: 'text', options: {} },
-      { name: 'guest_note', type: 'text', options: {} },
-      { name: 'approval_status', type: 'select', options: { values: ['pending', 'approved', 'rejected'] } },
-      { name: 'created_at', type: 'text', options: {} },
-    ],
-  },
-  {
-    name: 'invites', type: 'base',
-    schema: [
-      { name: 'inviter_guest_id', type: 'text', options: {} },
-      { name: 'inviter_guest_name', type: 'text', options: {} },
-      { name: 'invitee_name', type: 'text', options: {} },
-      { name: 'contact', type: 'text', options: {} },
-      { name: 'note', type: 'text', options: {} },
-      { name: 'registered_guest_id', type: 'text', options: {} },
-      { name: 'created_at', type: 'text', options: {} },
-    ],
-  },
-  {
-    name: 'guestbook', type: 'base',
-    schema: [
-      { name: 'guest_name', type: 'text', required: true, options: {} },
-      { name: 'message', type: 'text', required: true, options: {} },
-      { name: 'photo_url', type: 'text', options: {} },
-      { name: 'visible', type: 'bool', options: {} },
-      { name: 'created_at', type: 'text', options: {} },
-    ],
-  },
-  {
-    name: 'settings', type: 'base',
-    schema: [
-      { name: 'babyName', type: 'text', options: {} },
-      { name: 'parentsNames', type: 'text', options: {} },
-      { name: 'date', type: 'text', options: {} },
-      { name: 'time', type: 'text', options: {} },
-      { name: 'venueName', type: 'text', options: {} },
-      { name: 'venueAddress', type: 'text', options: {} },
-      { name: 'registryUrl', type: 'url', options: {} },
-      { name: 'rsvpDeadline', type: 'text', options: {} },
-      { name: 'showScheduleTime', type: 'bool', options: {} },
-      { name: 'schedule', type: 'json', options: {} },
-      { name: 'themeId', type: 'text', options: {} },
-      { name: 'customTheme', type: 'json', options: {} },
-      { name: 'contentOpenAt', type: 'text', options: {} },
-      { name: 'contentCloseAt', type: 'text', options: {} },
-    ],
-  },
-  {
-    name: 'alerts', type: 'base',
-    schema: [
-      { name: 'type', type: 'select', options: { values: ['DATE_CHANGE', 'VENUE_CHANGE', 'CANCELLATION', 'CUSTOM', 'REMINDER'] }, required: true },
-      { name: 'title', type: 'text', required: true, options: {} },
-      { name: 'message', type: 'text', required: true, options: {} },
-      { name: 'active', type: 'bool', options: {} },
-      { name: 'notified_guests_count', type: 'number', options: {} },
-      { name: 'target_audience', type: 'select', options: { values: ['ALL', 'PENDING', 'ATTENDING'] } },
-      { name: 'created_at', type: 'text', options: {} },
-    ],
-  },
-  {
-    name: 'floor_maps', type: 'base',
-    schema: [
-      { name: 'canvasWidth', type: 'number', options: {} },
-      { name: 'canvasHeight', type: 'number', options: {} },
-      { name: 'roomShape', type: 'select', options: { values: ['rectangle', 'circle', 'ellipse'] } },
-      { name: 'tables', type: 'json', options: {} },
-      { name: 'landmarks', type: 'json', options: {} },
-      { name: 'updatedAt', type: 'text', options: {} },
-    ],
-  },
-  {
-    name: 'photos', type: 'base',
-    schema: [
-      { name: 'url', type: 'text', required: true, options: {} },
-      { name: 'filename', type: 'text', options: {} },
-      { name: 'caption', type: 'text', options: {} },
-      { name: 'uploader_name', type: 'text', options: {} },
-      { name: 'table_name', type: 'text', options: {} },
-      { name: 'table_id', type: 'text', options: {} },
-      { name: 'reservation_code', type: 'text', options: {} },
-      { name: 'file_size', type: 'number', options: {} },
-      { name: 'visible', type: 'bool', options: {} },
-      { name: 'created_at', type: 'text', options: {} },
-    ],
-  },
-  {
-    name: 'gifts', type: 'base',
-    schema: [
-      { name: 'guest_name', type: 'text', required: true, options: {} },
-      { name: 'guest_id', type: 'text', options: {} },
-      { name: 'gift_description', type: 'text', required: true, options: {} },
-      { name: 'category', type: 'select', options: { values: ['Clothing', 'Nursery', 'Toys', 'Feeding', 'Diapering', 'Other'] } },
-      { name: 'thank_you_sent', type: 'bool', options: {} },
-      { name: 'thank_you_date', type: 'text', options: {} },
-      { name: 'created_at', type: 'text', options: {} },
-    ],
-  },
-  {
-    name: 'agenda_tasks', type: 'base',
-    schema: [
-      { name: 'title', type: 'text', required: true, options: {} },
-      { name: 'description', type: 'text', options: {} },
-      { name: 'due_date', type: 'text', options: {} },
-      { name: 'due_time', type: 'text', options: {} },
-      { name: 'status', type: 'select', options: { values: ['todo', 'in_progress', 'done'] }, required: true },
-      { name: 'position', type: 'number', options: {} },
-      { name: 'reminder_sent', type: 'bool', options: {} },
-      { name: 'created_at', type: 'text', options: {} },
-    ],
-  },
-];
-
-// PB >= 0.23 expects `fields` (not the legacy `schema` key) and since 0.31
-// field options are flattened onto the field object (e.g. `values`, `maxSelect`).
-type FieldDef = {
-  name: string;
-  type: string;
-  required?: boolean;
-  options?: Record<string, unknown>;
-};
-
-type CollectionDef = {
-  name: string;
-  type: 'base';
-  schema: FieldDef[];
-};
-
-function toFields(schema: FieldDef[]): Record<string, unknown>[] {
-  return schema.map((f) => {
-    const field: Record<string, unknown> = {
-      name: f.name,
-      type: f.type,
-      required: !!f.required,
-    };
-    if (f.type === 'select') {
-      field.maxSelect = 1;
-      field.values = f.options?.values ?? [];
-    } else {
-      Object.assign(field, f.options ?? {});
-    }
-    return field;
-  });
-}
-
 async function ensureCollections() {
   const existing = await pb.collections.getFullList();
   const names = existing.map(c => c.name);
@@ -215,11 +47,11 @@ async function ensureCollections() {
       await pb.collections.create({ name: def.name, type: def.type, fields: toFields(def.schema) });
     }
   }
-  await ensureCollectionFields('settings');
-  await ensureCollectionFields('floor_maps');
-  await ensureCollectionFields('guests');
-  await ensureCollectionFields('guestbook');
-  await ensureCollectionFields('photos');
+  // Every collection gets migrated, so a new field in the domain schema always
+  // reaches existing databases on the next boot.
+  for (const def of COLLECTION_DEFS) {
+    await ensureCollectionFields(def.name);
+  }
 }
 
 // Add fields added after a collection already exists (e.g. contentOpenAt/contentCloseAt,
