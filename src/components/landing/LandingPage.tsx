@@ -1,6 +1,6 @@
 import { motion } from 'motion/react';
 import { useNavigate } from 'react-router-dom';
-import { UserRound, ShieldCheck, CalendarDays, Baby } from 'lucide-react';
+import { UserRound, ShieldCheck, CalendarDays, Baby, Users } from 'lucide-react';
 import { useSettingsStore } from '../../stores/settingsStore';
 import { useAppStore } from '../../stores/appStore';
 import { useT } from '../shared/i18n';
@@ -30,6 +30,14 @@ export const LandingPage = () => {
 
       {/* Card */}
       <div className="bg-white rounded-2xl border border-[#CBAE94]/40 p-8 shadow-sm space-y-3">
+        <button
+          type="button"
+          onClick={() => navigate('/register')}
+          className="w-full py-2.5 rounded-xl bg-[#D4A373] text-white font-bold text-sm hover:bg-[#C08D5C] transition-colors flex items-center justify-center gap-2 cursor-pointer"
+        >
+          <Users className="w-4 h-4" />
+          {t.landingRegisterBtn}
+        </button>
         <button
           type="button"
           onClick={() => navigate('/portal')}
