@@ -1,11 +1,12 @@
 // RSVP submission, self-service contact updates and guest-to-guest invites.
 
-import type { Guest, SubmitRsvpPayload, EventSettings } from '../types';
+import type { Guest, GuestInvite, SubmitRsvpPayload, EventSettings, Language } from '../types';
 import {
-  escFilter, fromRecord, newMagicToken, newReservationCode, pb, removeGuestFromFloorMaps,
+  escFilter, fromRecord, pb, removeGuestFromFloorMaps,
 } from './client';
 import { getSettings } from './settings';
-import { deleteGuest, inviteMessageFor } from './guests';
+import { getGuestById, isApproved } from './guests';
+import { buildUniversalInviteMessage, universalRegisterUrl } from '../lib/inviteMessage';
 
 // RSVPs close the day after the event: on the day itself guests can still
 // respond (people check invites on their phones while arriving).
@@ -26,6 +27,9 @@ export async function submitRsvp(token: string, payload: SubmitRsvpPayload): Pro
   const r = await pb.collection('guests').getFirstListItem(`magic_token="${escFilter(token)}"`).catch(() => null);
   if (!r) throw new Error('INVALID_TOKEN');
   if (r.is_read_only) return fromRecord<Guest>(r);
+  if (!isApproved(fromRecord<Guest>(r))) {
+    throw new Error(r.approval_status === 'rejected' ? 'REGISTRATION_REJECTED' : 'PENDING_APPROVAL');
+  }
   // Second submission (open tabs, shared links) must not silently overwrite:
   // the client resets the token first, which is the only way to edit an RSVP.
   if (r.token_used) throw new Error('RSVP_ALREADY_SUBMITTED');
@@ -72,6 +76,9 @@ export async function resetTokenUsage(token: string): Promise<Guest> {
   const r = await pb.collection('guests').getFirstListItem(`magic_token="${escFilter(token)}"`).catch(() => null);
   if (!r) throw new Error('INVALID_TOKEN');
   if (r.is_read_only) throw new Error('RSVP_READ_ONLY');
+  if (!isApproved(fromRecord<Guest>(r))) {
+    throw new Error(r.approval_status === 'rejected' ? 'REGISTRATION_REJECTED' : 'PENDING_APPROVAL');
+  }
   if (await isRsvpClosed()) throw new Error('RSVP_CLOSED');
   const updated = await pb.collection('guests').update(r.id, { token_used: false });
   return fromRecord<Guest>(updated);
@@ -99,112 +106,89 @@ export async function updateGuestContact(token: string, payload: GuestContactPay
   return fromRecord<Guest>(updated);
 }
 
-export type GuestInviteResult =
-  | { ok: true; guest: Guest; magic_token: string; invite_url: string; invite_message: string; already_invited: boolean; sent: string[]; failed: string[] }
-  | { ok: false; error: 'INVALID_TOKEN' | 'NAME_REQUIRED' | 'CONTACT_REQUIRED' };
+export type GuestInviteView = GuestInvite & {
+  invite_url: string;
+  invite_message: string;
+  /** Set once the invitee self-registers through this share link. */
+  registered_guest?: Guest;
+};
 
-// A guest invites someone from their own reservation page. The invitee gets a
-// real guest record + magic link immediately (host retains control: it's an
-// ordinary guest, editable/deletable in the admin). If the contact matches an
-// existing guest, we return that guest's link instead of duplicating.
-export async function inviteGuest(token: string, payload: { name: string; contact?: string; channel?: 'link-only' | 'email' | 'text' | 'both'; note?: string }): Promise<GuestInviteResult> {
+export type GuestInviteResult =
+  | { ok: true; invite: GuestInviteView; already_invited: boolean }
+  | { ok: false; error: 'INVALID_TOKEN' | 'NAME_REQUIRED' };
+
+async function inviteView(record: Record<string, unknown>, language: Language): Promise<GuestInviteView> {
+  const invite = fromRecord<GuestInvite>(record);
+  let settings: Partial<EventSettings> = {};
+  try { settings = await getSettings(); } catch { /* settings optional */ }
+  const registered_guest = invite.registered_guest_id
+    ? await getGuestById(invite.registered_guest_id).catch(() => undefined)
+    : undefined;
+  return {
+    ...invite,
+    invite_url: universalRegisterUrl(invite.id),
+    invite_message: buildUniversalInviteMessage(settings, language, invite.id),
+    registered_guest,
+  };
+}
+
+// A guest invites someone from their reservation page: no guest record is
+// created, just a share link (with provenance) the inviter copies/sends. The
+// invitee appears in "your invitations" as pending until they self-register.
+export async function createInvite(token: string, payload: { name: string; contact?: string; note?: string }): Promise<GuestInviteResult> {
   const inviter = await pb.collection('guests').getFirstListItem(`magic_token="${escFilter(token)}"`).catch(() => null);
   if (!inviter) return { ok: false, error: 'INVALID_TOKEN' };
   const name = (payload.name || '').trim();
   if (!name) return { ok: false, error: 'NAME_REQUIRED' };
 
-  const contact = (payload.contact || '').trim();
-  const channel = payload.channel || 'link-only';
-  const isEmail = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(contact);
-  const phone = !isEmail ? contact : '';
-  const email = isEmail ? contact : '';
-  if (channel !== 'link-only' && !contact) return { ok: false, error: 'CONTACT_REQUIRED' };
-  // The contact must actually serve the chosen channel — otherwise the invitee
-  // would get a guest record that can never be reached.
-  if ((channel === 'email' || channel === 'both') && !isEmail) return { ok: false, error: 'CONTACT_REQUIRED' };
-  if (channel === 'text' && isEmail) return { ok: false, error: 'CONTACT_REQUIRED' };
-
-  // Dedupe on contact (email preferred, falls back to phone) — reuse the link.
-  if (contact) {
-    const existing = await pb.collection('guests').getList(1, 1, {
-      filter: email ? `email="${escFilter(email)}"` : `phone="${escFilter(phone)}"`,
-    });
-    if (existing.items.length > 0) {
-      const g = fromRecord<Guest>(existing.items[0]);
-      return {
-        ok: true, guest: g, magic_token: g.magic_token,
-        invite_url: `${process.env.APP_URL || 'http://localhost:3025'}/rsvp/${g.magic_token}`,
-        invite_message: await inviteMessageFor(g),
-        already_invited: true, sent: [], failed: [],
-      };
-    }
-  }
-
-  const magic_token = newMagicToken();
-  const code = newReservationCode();
   const inviterGuest = fromRecord<Guest>(inviter);
-  const delivery_channel: 'email' | 'text' | 'both' | 'none' =
-    channel === 'email' ? 'email' : channel === 'text' ? 'text' : channel === 'both' ? 'both' : 'none';
-  const guest = await pb.collection('guests').create({
-    name, email, phone,
-    delivery_channel,
-    code, max_party_size: 1, rsvp_status: 'Pending',
-    attending_party_size: 1,
-    attendee_names: [name],
-    attendee_details: [{ name, contact: contact || '' }],
-    dietary_restrictions: '', language_pref: inviterGuest.language_pref || 'FR',
-    magic_token, token_used: false, created_at: new Date().toISOString(),
-    is_read_only: false,
-    invited_by_guest_id: inviter.id,
-    invited_by_guest_name: inviterGuest.name,
-    guest_note: (payload.note || '').trim(),
-  });
-  const g = fromRecord<Guest>(guest);
-  const invite_url = `${process.env.APP_URL || 'http://localhost:3025'}/rsvp/${magic_token}`;
+  const language: Language = inviterGuest.language_pref === 'EN' ? 'EN' : 'FR';
+  const contact = (payload.contact || '').trim();
+  const note = (payload.note || '').trim();
 
-  // Deliver via the app when a channel + contact was given; otherwise the
-  // inviter shares the link themselves.
-  const sent: string[] = [];
-  const failed: string[] = [];
-  if (channel !== 'link-only') {
-    let settings: EventSettings | null = null;
-    try { settings = await getSettings(); } catch { /* settings missing — skip send */ }
-    if (settings) {
-      if ((channel === 'email' || channel === 'both') && email) {
-        const { sendInvitationEmail } = await import('../lib/email');
-        if (await sendInvitationEmail(g, settings)) sent.push('email'); else failed.push('email');
-      }
-      if ((channel === 'text' || channel === 'both') && phone) {
-        const { sendInvitationSms } = await import('../lib/sms');
-        if (await sendInvitationSms(g, settings)) sent.push('text'); else failed.push('text');
-      }
+  // Same contact already invited by this guest → reuse that share link.
+  if (contact) {
+    const dup = await pb.collection('invites').getList(1, 1, {
+      filter: `inviter_guest_id="${inviter.id}" && contact="${escFilter(contact)}"`,
+      sort: '-created_at',
+    });
+    if (dup.items.length > 0) {
+      return { ok: true, invite: await inviteView(dup.items[0], language), already_invited: true };
     }
   }
 
-  return {
-    ok: true, guest: g, magic_token, invite_url,
-    invite_message: await inviteMessageFor(g),
-    already_invited: false, sent, failed,
-  };
+  const created = await pb.collection('invites').create({
+    inviter_guest_id: inviter.id,
+    inviter_guest_name: inviterGuest.name,
+    invitee_name: name,
+    contact,
+    note,
+    created_at: new Date().toISOString(),
+  });
+  return { ok: true, invite: await inviteView(created, language), already_invited: false };
 }
 
-// Invitations this guest created (name, status, link + message for re-sharing).
-export async function getInvitesByGuest(token: string): Promise<Guest[]> {
+// Shares this guest created — pending ("invited") or already registered.
+export async function getInvitesByGuest(token: string): Promise<GuestInviteView[]> {
   const inviter = await pb.collection('guests').getFirstListItem(`magic_token="${escFilter(token)}"`).catch(() => null);
   if (!inviter) return [];
-  const records = await pb.collection('guests').getFullList({
-    filter: `invited_by_guest_id="${inviter.id}"`,
+  const inviterGuest = fromRecord<Guest>(inviter);
+  const language: Language = inviterGuest.language_pref === 'EN' ? 'EN' : 'FR';
+  const records = await pb.collection('invites').getFullList({
+    filter: `inviter_guest_id="${inviter.id}"`,
     sort: '-created_at',
   });
-  return records.map(r => fromRecord<Guest>(r));
+  return Promise.all(records.map(r => inviteView(r, language)));
 }
 
-// Guests may remove their own invites (host can always re-add/revert in admin).
+// Guests may remove their own pending shares; a registered invitee is a real
+// guest now (host deletes those in the admin).
 export async function removeInvite(token: string, inviteId: string): Promise<boolean> {
   const inviter = await pb.collection('guests').getFirstListItem(`magic_token="${escFilter(token)}"`).catch(() => null);
   if (!inviter) return false;
-  const invite = await pb.collection('guests').getOne(inviteId).catch(() => null);
-  if (!invite || String(invite.invited_by_guest_id || '') !== inviter.id) return false;
-  await deleteGuest(inviteId);
+  const invite = await pb.collection('invites').getOne(inviteId).catch(() => null);
+  if (!invite || String(invite.inviter_guest_id || '') !== inviter.id) return false;
+  if (invite.registered_guest_id) return false;
+  await pb.collection('invites').delete(inviteId);
   return true;
 }

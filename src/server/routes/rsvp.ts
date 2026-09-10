@@ -4,10 +4,9 @@
 import type { RouteCtx } from '../http';
 import { parseJson, sendJson } from '../http';
 import {
+  createInvite,
   getGuestByToken,
   getInvitesByGuest,
-  inviteGuest,
-  inviteMessageFor,
   removeInvite,
   resetTokenUsage,
   submitRsvp,
@@ -37,19 +36,16 @@ export async function handleRsvpRoutes(ctx: RouteCtx): Promise<boolean> {
 
   if (isInvitesList && method === 'GET') {
     const invites = await getInvitesByGuest(token);
-    const withMessages = await Promise.all(invites.map(async (g) => ({ ...g, invite_message: await inviteMessageFor(g) })));
-    return sendJson(res, 200, { invites: withMessages });
+    return sendJson(res, 200, { invites });
   }
 
   if (isInvite && method === 'POST') {
     const body = await parseJson(req);
-    const result = await inviteGuest(token, {
-      name: body.name, contact: body.contact, channel: body.channel, note: body.note,
+    const result = await createInvite(token, {
+      name: body.name, contact: body.contact, note: body.note,
     });
     if (!result.ok) {
-      const msg = result.error === 'NAME_REQUIRED' ? 'Invitee name is required'
-        : result.error === 'CONTACT_REQUIRED' ? 'Contact is required for that delivery channel'
-        : 'Invalid invitation token';
+      const msg = result.error === 'NAME_REQUIRED' ? 'Invitee name is required' : 'Invalid invitation token';
       return sendJson(res, result.error === 'INVALID_TOKEN' ? 404 : 400, { error: result.error, message: msg });
     }
     return sendJson(res, 200, result);
@@ -83,6 +79,8 @@ export async function handleRsvpRoutes(ctx: RouteCtx): Promise<boolean> {
       const msg = err instanceof Error ? err.message : '';
       if (msg === 'INVALID_TOKEN') return sendJson(res, 404, { error: 'INVALID_TOKEN', message: 'Invitation token not found' });
       if (msg === 'RSVP_READ_ONLY') return sendJson(res, 403, { error: 'RSVP_READ_ONLY' });
+      if (msg === 'PENDING_APPROVAL') return sendJson(res, 409, { error: 'PENDING_APPROVAL', message: 'This registration is awaiting host approval.' });
+      if (msg === 'REGISTRATION_REJECTED') return sendJson(res, 403, { error: 'REGISTRATION_REJECTED', message: 'This registration was not approved.' });
       if (msg === 'RSVP_CLOSED') return sendJson(res, 409, { error: 'RSVP_CLOSED', message: 'RSVPs are closed — the event has already passed.' });
       throw err;
     }
@@ -112,6 +110,8 @@ export async function handleRsvpRoutes(ctx: RouteCtx): Promise<boolean> {
       const msg = err instanceof Error ? err.message : '';
       if (msg === 'INVALID_TOKEN') return sendJson(res, 404, { error: 'INVALID_TOKEN', message: 'Invitation token not found' });
       if (msg === 'RSVP_ALREADY_SUBMITTED') return sendJson(res, 409, { error: 'RSVP_ALREADY_SUBMITTED', message: 'This RSVP was already submitted. Edit it from the confirmation screen.' });
+      if (msg === 'PENDING_APPROVAL') return sendJson(res, 409, { error: 'PENDING_APPROVAL', message: 'This registration is awaiting host approval.' });
+      if (msg === 'REGISTRATION_REJECTED') return sendJson(res, 403, { error: 'REGISTRATION_REJECTED', message: 'This registration was not approved.' });
       if (msg === 'RSVP_CLOSED') return sendJson(res, 409, { error: 'RSVP_CLOSED', message: 'RSVPs are closed — the event has already passed.' });
       throw err;
     }

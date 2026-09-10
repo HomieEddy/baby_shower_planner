@@ -10,19 +10,24 @@ export {
   getGuestByCode,
   getGuestById,
   getGuestByToken,
+  getUniversalInviteMessage,
   inviteMessageFor,
+  isApproved,
+  registerGuest,
+  setApproval,
   updateGuest,
 } from './guests';
+export type { RegisterGuestResult } from './guests';
 export {
+  createInvite,
   getInvitesByGuest,
-  inviteGuest,
   isRsvpClosed,
   removeInvite,
   resetTokenUsage,
   submitRsvp,
   updateGuestContact,
 } from './rsvp';
-export type { GuestContactPayload, GuestInviteResult } from './rsvp';
+export type { GuestContactPayload, GuestInviteResult, GuestInviteView } from './rsvp';
 export {
   addGuestbookEntry,
   deleteGuestbookEntry,

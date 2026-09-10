@@ -186,6 +186,19 @@ export interface AddGuestPayload {
   language_pref: Language;
 }
 
+// Self-registration through the universal link. The registrant confirms their
+// own guestlist up front; approval just unlocks the record (no second RSVP).
+export interface RegisterGuestPayload {
+  name: string;
+  email?: string;
+  phone?: string;
+  language_pref: Language;
+  /** Full guest list including the registrant (index 0). */
+  attendee_names?: string[];
+  attendee_details?: AttendeeInfo[];
+  dietary_restrictions?: string;
+}
+
 export interface SubmitRsvpPayload {
   rsvp_status: 'Attending' | 'Declined';
   attending_party_size?: number;

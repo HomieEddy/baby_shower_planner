@@ -1,7 +1,7 @@
 // Guest admin CRUD + batch import. RSVP/submission logic lives in `rsvp.ts`.
 
-import type { Guest, AddGuestPayload, EventSettings } from '../types';
-import { buildInviteMessage } from '../lib/inviteMessage';
+import type { Guest, AddGuestPayload, RegisterGuestPayload, EventSettings, Language } from '../types';
+import { buildInviteMessage, buildUniversalInviteMessage } from '../lib/inviteMessage';
 import { escFilter, fromRecord, newMagicToken, newReservationCode, pb, removeGuestFromFloorMaps } from './client';
 import { getSettings } from './settings';
 
@@ -73,6 +73,93 @@ export async function addGuest(payload: AddGuestPayload): Promise<{ guest: Guest
   });
   const g = fromRecord<Guest>(guest);
   return { guest: g, magic_token, invite_message: await inviteMessageFor(g) };
+}
+
+// Universal-link self-registration. The registrant confirms their whole party
+// up front, so the record is created already "Attending" and token_used — but
+// pending host approval, which is what unlocks the magic link.
+export type RegisterGuestResult = { guest: Guest; already_registered: boolean };
+
+export async function registerGuest(payload: RegisterGuestPayload, refId?: string): Promise<RegisterGuestResult> {
+  const name = (payload.name || '').trim();
+  const email = (payload.email || '').trim();
+  const phone = (payload.phone || '').trim();
+
+  // One contact = one guest record (and one magic link); re-registration just
+  // returns the existing record + its current status.
+  const existing = email || phone
+    ? await pb.collection('guests').getList(1, 1, { filter: email ? `email="${escFilter(email)}"` : `phone="${escFilter(phone)}"` })
+    : { items: [] };
+  if (existing.items.length > 0) {
+    return { guest: fromRecord<Guest>(existing.items[0]), already_registered: true };
+  }
+
+  const details = Array.isArray(payload.attendee_details)
+    ? payload.attendee_details.filter(d => d && typeof d.name === 'string' && d.name.trim()).map(d => ({ name: d.name.trim(), contact: (d.contact || '').trim() }))
+    : [];
+  let names = Array.isArray(payload.attendee_names)
+    ? payload.attendee_names.filter(n => typeof n === 'string' && n.trim()).map(n => n.trim())
+    : [];
+  if (names.length === 0) names = details.map(d => d.name);
+  if (names.length === 0) names = [name];
+  names = names.slice(0, 20);
+  const partySize = names.length;
+  const finalDetails = details.length > 0 ? details.slice(0, partySize) : names.map(n => ({ name: n, contact: '' }));
+
+  // Provenance from the inviter's share link, when present.
+  const invite = refId ? await pb.collection('invites').getOne(refId).catch(() => null) : null;
+
+  const delivery_channel = email && phone ? 'both' : email ? 'email' : phone ? 'text' : 'none';
+  const magic_token = newMagicToken();
+  const code = newReservationCode();
+  const created = await pb.collection('guests').create({
+    name, email, phone, delivery_channel, code,
+    max_party_size: partySize, attending_party_size: partySize,
+    rsvp_status: 'Attending', token_used: true,
+    attendee_names: names, attendee_details: finalDetails,
+    dietary_restrictions: (payload.dietary_restrictions || '').trim(),
+    language_pref: payload.language_pref === 'EN' ? 'EN' : 'FR',
+    magic_token, created_at: new Date().toISOString(),
+    is_read_only: false,
+    approval_status: 'pending',
+    invited_by_guest_id: invite?.inviter_guest_id || '',
+    invited_by_guest_name: invite?.inviter_guest_name || '',
+    guest_note: invite?.note || '',
+  });
+  const guest = fromRecord<Guest>(created);
+  if (invite) {
+    await pb.collection('invites').update(invite.id, { registered_guest_id: guest.id }).catch(() => { /* non-fatal */ });
+  }
+  return { guest, already_registered: false };
+}
+
+// Host decision on a self-registration. Approving delivers the magic link on
+// the guest's chosen channel (best effort); rejecting keeps the record.
+export async function setApproval(id: string, decision: 'approved' | 'rejected'): Promise<Guest> {
+  const updated = await pb.collection('guests').update(id, { approval_status: decision });
+  const guest = fromRecord<Guest>(updated);
+  if (decision === 'approved' && guest.delivery_channel && guest.delivery_channel !== 'none') {
+    let settings: EventSettings | null = null;
+    try { settings = await getSettings(); } catch { /* settings missing — skip send */ }
+    if (settings) {
+      if ((guest.delivery_channel === 'email' || guest.delivery_channel === 'both') && guest.email) {
+        const { sendInvitationEmail } = await import('../lib/email');
+        await sendInvitationEmail(guest, settings);
+      }
+      if ((guest.delivery_channel === 'text' || guest.delivery_channel === 'both') && guest.phone) {
+        const { sendInvitationSms } = await import('../lib/sms');
+        await sendInvitationSms(guest, settings);
+      }
+    }
+  }
+  return guest;
+}
+
+// Host-facing universal share message (no ref — plain /register link).
+export async function getUniversalInviteMessage(language: Language = 'FR'): Promise<string> {
+  let settings: Partial<EventSettings> = {};
+  try { settings = await getSettings(); } catch { /* settings not seeded yet */ }
+  return buildUniversalInviteMessage(settings, language);
 }
 
 export async function updateGuest(id: string, updates: Partial<Guest>): Promise<Guest> {
