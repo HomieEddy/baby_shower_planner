@@ -1,6 +1,6 @@
 import { Resend } from 'resend';
 import { Guest, EventSettings, AgendaTask } from '../types';
-import { formatTaskDue } from './dateUtils';
+import { formatDateLong, formatTaskDue } from './dateUtils';
 
 let resend: Resend | null = null;
 
@@ -20,6 +20,8 @@ function buildGuestEmail(guest: Guest, settings: EventSettings): { subject: stri
   const venue = settings.venueName || '';
   const venueAddress = settings.venueAddress || '';
   const link = `${process.env.APP_URL || 'http://localhost:3025'}/rsvp/${guest.magic_token}`;
+  const deadlineRaw = settings.rsvpDeadline ? formatDateLong(settings.rsvpDeadline, fr ? 'FR' : 'EN') : '';
+  const deadline = fr && deadlineRaw ? deadlineRaw.charAt(0).toLowerCase() + deadlineRaw.slice(1) : deadlineRaw;
   const showerLabel = host ? `${host}'s Baby Shower` : 'the Baby Shower';
   const showerLabelFr = host ? `le baby shower de ${host}` : 'le baby shower';
 
@@ -42,6 +44,7 @@ function buildGuestEmail(guest: Guest, settings: EventSettings): { subject: stri
           <tr><td style="padding: 4px 0; color: #8B735B;">${fr ? 'Heure' : 'Time'}</td><td style="padding: 4px 0;"><strong>${time}</strong></td></tr>
           <tr><td style="padding: 4px 0; color: #8B735B; vertical-align: top;">${fr ? 'Lieu' : 'Venue'}</td><td style="padding: 4px 0;"><strong>${venue}</strong><br/><span style="color: #A09080;">${venueAddress}</span></td></tr>
         </table>
+        ${deadline ? `<p style="font-size: 13px; color: #8B735B; text-align: center; margin: 0 0 4px;">${fr ? 'Merci de confirmer votre présence avant le' : 'Please confirm your attendance by'} <strong style="color: #4A3F35;">${deadline}</strong>.</p>` : ''}
         <div style="text-align: center; margin: 24px 0;">
           <a href="${link}" style="display: inline-block; padding: 12px 32px; background: #8B735B; color: white; text-decoration: none; border-radius: 40px; font-size: 15px; font-weight: bold;">${fr ? 'Répondre' : 'RSVP Now'}</a>
         </div>
