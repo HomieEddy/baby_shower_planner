@@ -224,7 +224,7 @@ export const AdminDashboard = () => {
             title={t.copyMessageBtn}
           >
             {copiedKey === 'universal-msg' ? <Check className="w-3.5 h-3.5 mr-1" /> : <Copy className="w-3.5 h-3.5 mr-1" />}
-            <span>{t.copyMessageBtn}</span>
+            <span>{t.copyMessageBtn} ({language})</span>
           </motion.button>
           <motion.button
             whileHover={{ scale: 1.03 }}
