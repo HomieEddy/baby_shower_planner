@@ -17,9 +17,21 @@ let active = false;
 let startedAt = '';
 let savedMap: { id: string; data: Record<string, unknown> } | null = null;
 let rehearsalMapId: string | null = null;
+let lastSeed: { sample: { name: string; code: string; magic_token: string }; pendingToken: string } | null = null;
 
 export function isRehearsalActive(): boolean {
   return active;
+}
+
+// Current status + the seeded sample links (so the admin banner survives a
+// page refresh while a rehearsal is running).
+export function getRehearsalStatus(): {
+  active: boolean;
+  sample?: { name: string; code: string; magic_token: string };
+  pendingToken?: string;
+} {
+  if (!active || !lastSeed) return { active };
+  return { active, sample: lastSeed.sample, pendingToken: lastSeed.pendingToken };
 }
 
 interface DemoGuestSpec {
@@ -242,11 +254,14 @@ export async function startRehearsal(): Promise<{
   await seedMisc();
 
   const sample = guestsBySlug.amelia;
+  lastSeed = {
+    sample: { name: sample.name, code: sample.code, magic_token: sample.magic_token },
+    pendingToken: guestsBySlug.jules.magic_token,
+  };
   return {
     active: true,
     startedAt,
-    sample: { name: sample.name, code: sample.code, magic_token: sample.magic_token },
-    pendingToken: guestsBySlug.jules.magic_token,
+    ...lastSeed,
     counts: { guests: DEMO_GUESTS.length, tables },
   };
 }
@@ -262,6 +277,7 @@ async function runStopCleanup(): Promise<number> {
   savedMap = null;
   rehearsalMapId = null;
   startedAt = '';
+  lastSeed = null;
   return deleted;
 }
 

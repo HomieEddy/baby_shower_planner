@@ -4,7 +4,7 @@
 import type { RouteCtx } from '../http';
 import { parseJson, sendJson } from '../http';
 import {
-  isRehearsalActive,
+  getRehearsalStatus,
   sendInvitations,
   sendReminders,
   startRehearsal,
@@ -50,7 +50,7 @@ export async function handleSystemRoutes(ctx: RouteCtx): Promise<boolean> {
 
   // Rehearsal mode: seed disposable demo data, then remove only what it created.
   if (pathname === '/api/rehearsal' && method === 'GET') {
-    return sendJson(res, 200, { active: isRehearsalActive() });
+    return sendJson(res, 200, getRehearsalStatus());
   }
 
   if (pathname === '/api/rehearsal/start' && method === 'POST') {
