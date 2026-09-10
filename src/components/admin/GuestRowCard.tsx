@@ -10,7 +10,7 @@ import {
 } from 'lucide-react';
 import { Guest } from '../../types';
 import { channelLabel } from '../../lib/capabilities';
-import { getGuestPartySize } from '../seating/floorPlanHelpers';
+import { getGuestPartySize } from '../../lib/tableAssignment';
 import { useT } from '../shared/i18n';
 
 interface GuestRowCardProps {

@@ -5,7 +5,7 @@ import { useToast } from '../shared/ToastContext';
 import { useT } from '../shared/i18n';
 import { usePrint } from '../shared/hooks';
 import { SearchInput } from '../shared/ui';
-import { getAttendeeLocations } from '../seating/floorPlanHelpers';
+import { getAttendeeLocations } from '../../lib/tableAssignment';
 import { getPartyMembers } from '../../lib/guestAttendees';
 import {
   useReactTable,

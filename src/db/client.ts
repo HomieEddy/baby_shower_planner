@@ -3,6 +3,8 @@
 
 import PocketBase from 'pocketbase/cjs';
 import crypto from 'node:crypto';
+import type { TableElement } from '../types';
+import { trimPartySeats } from '../lib/tableAssignment';
 
 const PB_URL = process.env.POCKETBASE_URL || process.env.VITE_POCKETBASE_URL || 'http://127.0.0.1:8090';
 export const pb = new PocketBase(PB_URL);
@@ -30,25 +32,13 @@ export function newReservationCode(): string {
 
 // Remove a guest's seats from every table (decline, deletion). `keepAttendees`
 // keeps the first N attendees seated (RSVP party shrink) and drops the rest.
+// The pure trim lives in lib/tableAssignment; this is only the PB adapter.
 export async function removeGuestFromFloorMaps(guestId: string, keepAttendees = 0): Promise<void> {
   try {
     const maps = await pb.collection('floor_maps').getFullList();
     if (maps.length === 0) return;
     const map = maps[0];
-    const tables: any[] = JSON.parse(JSON.stringify(map.tables || []));
-    const keep = Math.max(0, keepAttendees);
-    for (const t of tables) {
-      if (Array.isArray(t.seats)) {
-        t.seats = t.seats.map((s: any) =>
-          s && s.guestId === guestId && s.attendeeIndex >= keep ? null : s
-        );
-        const ids: string[] = [];
-        for (const s of t.seats) if (s && !ids.includes(s.guestId)) ids.push(s.guestId);
-        t.assignedGuestIds = ids;
-      } else {
-        t.assignedGuestIds = (t.assignedGuestIds || []).filter((gid: string) => gid !== guestId);
-      }
-    }
+    const tables = trimPartySeats((map.tables as TableElement[]) || [], guestId, keepAttendees);
     await pb.collection('floor_maps').update(map.id, { tables });
   } catch (err) {
     console.error('Failed to update floor map:', err);

@@ -42,9 +42,9 @@ import {
   getTableOccupiedSeats,
   getTableSeats,
   getAttendeeLocations,
-  findNearestSeat,
   getGuestSeatedCount,
-} from './floorPlanHelpers';
+} from '../../lib/tableAssignment';
+import { findNearestSeat } from './floorPlanHelpers';
 import { getPartyMembers } from '../../lib/guestAttendees';
 import { renderCustomLandmarkShape } from './renderCustomLandmarkShape';
 import { useFloorPlanEditor } from './floorplanHooks';

@@ -31,7 +31,7 @@ import { Translations } from '../../translations';
 import { adminFetch } from '../../lib/api';
 import { GuestImportSchema, EditGuestSchema } from '../../lib/validation';
 import { useCapabilities, availableChannels, channelLabel } from '../../lib/capabilities';
-import { getGuestPartySize as getPartySize, getAttendeeLocations } from '../seating/floorPlanHelpers';
+import { getGuestPartySize as getPartySize, getAttendeeLocations } from '../../lib/tableAssignment';
 import { getPartyMembers } from '../../lib/guestAttendees';
 import { useConfirm } from '../shared/ConfirmDialog';
 import { useCopyFeedback } from '../shared/hooks';

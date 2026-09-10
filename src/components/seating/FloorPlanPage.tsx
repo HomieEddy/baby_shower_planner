@@ -45,14 +45,13 @@ import {
 import {
   getGuestPartySize,
   getTableOccupiedSeats,
-  getTableSeatedPersonNames,
-  getSeatOccupantInfo,
-  getTableStatus,
   getTableSeats,
+  getTableSeatedPersonNames,
+  getTableStatus,
   getGuestSeatedCount,
-  rebuildAssignedGuestIds,
-  syncGuestTableIds,
-} from './floorPlanHelpers';
+  seatParty,
+} from '../../lib/tableAssignment';
+import { getSeatOccupantInfo } from './floorPlanHelpers';
 import { renderCustomLandmarkShape } from './renderCustomLandmarkShape';
 import { renderTableBody } from './venueShapes';
 import { useAppStore } from '../../stores/appStore';
@@ -307,29 +306,13 @@ export const FloorPlanPage = () => {
       return;
     }
 
-    const updatedTables = floorMap.tables.map((tbl) => {
-      const seats = getTableSeats(tbl, guests);
-      return { ...tbl, seats, assignedGuestIds: [...tbl.assignedGuestIds] };
-    });
-
+    let updatedMap = floorMap;
+    let updatedGuests = guests;
     for (const sug of toApply) {
-      const targetTbl = updatedTables.find((t) => t.id === sug.table.id);
-      if (!targetTbl) continue;
-      const seats = (targetTbl.seats ?? []).map((s) => s);
-      targetTbl.seats = seats;
-      const size = getGuestPartySize(sug.guest);
-      let placed = 0;
-      for (let i = 0; i < seats.length && placed < size; i++) {
-        if (!seats[i]) {
-          seats[i] = { guestId: sug.guest.id, attendeeIndex: placed };
-          placed++;
-        }
-      }
-      targetTbl.assignedGuestIds = rebuildAssignedGuestIds(seats);
+      const outcome = seatParty(updatedMap, updatedGuests, sug.guest.id, sug.table.id);
+      updatedMap = outcome.map;
+      updatedGuests = outcome.guests;
     }
-
-    const updatedGuests = syncGuestTableIds(updatedTables, guests);
-    const updatedMap = { ...floorMap, tables: updatedTables };
 
     // Push snapshot to history stack
     pushSeatingHistory(updatedMap, updatedGuests);
@@ -357,53 +340,12 @@ export const FloorPlanPage = () => {
     const guest = guests.find((g) => g.id === guestId);
     if (!guest) return false;
 
-    const partySize = getGuestPartySize(guest);
     const targetTable = tableId ? floorMap.tables.find((t) => t.id === tableId) : undefined;
     if (tableId && !targetTable) return false;
 
-    // Members already placed on other tables must keep their attendeeIndex.
-    const seatedElsewhere = new Set<number>();
-    for (const tbl of floorMap.tables) {
-      if (tbl.id === tableId) continue;
-      for (const seat of getTableSeats(tbl, guests)) {
-        if (seat?.guestId === guestId) seatedElsewhere.add(seat.attendeeIndex);
-      }
-    }
-    const toPlace = Array.from({ length: partySize }, (_, i) => i).filter((i) => !seatedElsewhere.has(i));
-
-    if (tableId && targetTable) {
-      const free = targetTable.capacity - getTableOccupiedSeats(targetTable, guests);
-      if (free <= 0) {
-        setNotification(
-          t.fpNoFitTableToast.replace('{{table}}', targetTable.name).replace('{{free}}', '0').replace('{{guest}}', guest.name).replace('{{needed}}', String(toPlace.length))
-        );
-        setTimeout(() => setNotification(null), 4000);
-        return false;
-      }
-    }
-
-    const updatedTables = floorMap.tables.map((tbl) => {
-      const seats = getTableSeats(tbl, guests);
-      // Clear this party from the target (or everywhere when unseating)
-      if (tableId === null || tbl.id === tableId) {
-        for (let i = 0; i < seats.length; i++) {
-          if (seats[i]?.guestId === guestId) seats[i] = null;
-        }
-      }
-      if (tbl.id === tableId) {
-        let placed = 0;
-        for (let i = 0; i < seats.length && placed < toPlace.length; i++) {
-          if (!seats[i]) {
-            seats[i] = { guestId, attendeeIndex: toPlace[placed] };
-            placed++;
-          }
-        }
-      }
-      return { ...tbl, seats, assignedGuestIds: rebuildAssignedGuestIds(seats) };
-    });
-
-    const updatedGuests = syncGuestTableIds(updatedTables, guests);
-    const updatedMap = { ...floorMap, tables: updatedTables };
+    const outcome = seatParty(floorMap, guests, guestId, tableId);
+    const updatedMap = outcome.map;
+    const updatedGuests = outcome.guests;
 
     // Record history snapshot
     pushSeatingHistory(updatedMap, updatedGuests);
@@ -418,10 +360,15 @@ export const FloorPlanPage = () => {
     }
 
     if (tableId && targetTable) {
-      const seatedHere = updatedTables.find((tbl) => tbl.id === tableId)?.assignedGuestIds.includes(guestId) ?? false;
+      const seatedHere = updatedMap.tables.find((tbl) => tbl.id === tableId)?.assignedGuestIds.includes(guestId) ?? false;
       if (seatedHere) {
-        setNotification(t.fpSeatedToast.replace('{{guest}}', guest.name).replace('{{size}}', String(Math.min(partySize, targetTable.capacity))).replace('{{table}}', targetTable.name));
+        setNotification(t.fpSeatedToast.replace('{{guest}}', guest.name).replace('{{size}}', String(Math.min(getGuestPartySize(guest), targetTable.capacity))).replace('{{table}}', targetTable.name));
         setTimeout(() => setNotification(null), 3000);
+      } else if (outcome.unplaced > 0) {
+        setNotification(
+          t.fpNoFitTableToast.replace('{{table}}', targetTable.name).replace('{{free}}', '0').replace('{{guest}}', guest.name).replace('{{needed}}', String(outcome.unplaced))
+        );
+        setTimeout(() => setNotification(null), 4000);
       }
     } else {
       setNotification(t.fpUnseatedToast.replace('{{guest}}', guest.name));

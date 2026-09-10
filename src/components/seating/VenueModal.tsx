@@ -7,12 +7,8 @@ import { MapPin, Users, Utensils, Info, DoorOpen, Sparkles, CheckCircle2, X } fr
 import { Guest, FloorMapData } from '../../types';
 import { useT } from '../shared/i18n';
 import { ViewModeToggle, ViewMode } from '../shared/ViewModeToggle';
-import {
-  getGuestPartySize,
-  getSeatLocalPosition,
-  getTableOccupiedSeats,
-  getAttendeeSeatLocation,
-} from './floorPlanHelpers';
+import { getGuestPartySize, getTableOccupiedSeats, getAttendeeSeatLocation } from '../../lib/tableAssignment';
+import { getSeatLocalPosition } from './floorPlanHelpers';
 import { getPartyMembers } from '../../lib/guestAttendees';
 import { FinderSelection } from './GuestFinderPage';
 

@@ -37,7 +37,7 @@ export {
 export { getGuestContentLock, getSettings, updateSettings } from './settings';
 export type { GuestContentLock } from './settings';
 export { createAlert, deleteAlert, getAlerts } from './alerts';
-export { assignGuestToTable, getFloorMap, shareFloorPlanEmail, updateFloorMap } from './floorMap';
+export { getFloorMap, shareFloorPlanEmail, updateFloorMap } from './floorMap';
 export { addPhotosBatch, deletePhoto, getAllPhotos, getGuestPhotoUsage, setPhotoVisibility } from './photos';
 export { addGift, deleteGift, getGiftById, getGifts, toggleGiftThankYou } from './gifts';
 export { generateThankYouDraft, sendGiftThankYou } from './thankyou';
