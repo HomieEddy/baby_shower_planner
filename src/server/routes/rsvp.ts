@@ -3,6 +3,7 @@
 
 import type { RouteCtx } from '../http';
 import { parseJson, sendJson } from '../http';
+import { GuestRsvpSchema } from '../../lib/validation';
 import {
   createInvite,
   getGuestByToken,
@@ -94,13 +95,15 @@ export async function handleRsvpRoutes(ctx: RouteCtx): Promise<boolean> {
 
   if (method === 'POST') {
     const body = await parseJson(req);
-    const { rsvp_status, attending_party_size, dietary_restrictions, attendee_details, attendee_names } = body;
-    if (!['Attending', 'Declined'].includes(rsvp_status)) {
-      return sendJson(res, 400, { error: 'Invalid RSVP status' });
+    const parsed = GuestRsvpSchema.safeParse(body);
+    if (!parsed.success) {
+      return sendJson(res, 400, { error: 'Invalid RSVP', message: parsed.error.issues[0]?.message || 'Invalid RSVP payload' });
     }
+    const { rsvp_status, attending_party_size, dietary_restrictions, attendee_details, attendee_names } = parsed.data;
     try {
       const updated = await submitRsvp(token, {
-        rsvp_status, attending_party_size: Number(attending_party_size) || 1,
+        rsvp_status,
+        attending_party_size: attending_party_size ?? 1,
         dietary_restrictions: dietary_restrictions || '',
         attendee_details,
         attendee_names,

@@ -5,7 +5,7 @@
 - **react-router-dom v7**: client-side routing via `<BrowserRouter>` + `<Routes>`
 - **Zustand**: state management (`src/stores/`)
 - **@tanstack/react-query**: data fetching (`['admin-overview']` etc.); mutations invalidate queries
-- **react-hook-form + @hookform/resolvers**: forms validated with the Zod schemas in `src/lib/validation.ts`
+- **react-hook-form + @hookform/resolvers**: forms validated with the Zod schemas in `src/lib/validation.ts`, derived from the domain schemas in `src/lib/domain.ts` (the single source for every domain shape: types, forms, and PB collections)
 - **i18next / react-i18next**: engine behind `useT()` (`src/components/shared/i18n.ts`); call sites keep the `t.key` API
 - **date-fns**: EN/FR date handling in `src/lib/dateUtils.ts`
 - **@tanstack/react-table** (v8): the catering manifest table
@@ -42,9 +42,9 @@
   - `src/server/http.ts`: HTTP framework primitives (rate limits, security headers, `sendJson`/`parseJson`, static serving) + `RouteCtx`
   - `src/server/routes/*.ts`: per-feature route handlers (`guests`, `rsvp`, `guestbook`, `photos`, `settings`, `alerts`, `floorplan`, `gifts`, `agenda`, `checkin`, `system`)
   - `src/server/uploadFiles.ts`: uploads-dir resolution/cleanup shared by routes + services
-- **DB**: **PocketBase** (`src/db/service.ts` is the barrel re-export; feature modules in `src/db/`: `client`, `schema`, `guests`, `rsvp`, `guestbook`, `settings`, `alerts`, `floorMap`, `photos`, `gifts`, `thankyou`, `agenda`, `checkin`, `roster`, `notify`)
+- **DB**: **PocketBase** (`src/db/service.ts` is the barrel re-export; feature modules in `src/db/`: `client`, `schema`, `collectionDefs`, `guests`, `rsvp`, `guestbook`, `settings`, `alerts`, `floorMap`, `photos`, `gifts`, `thankyou`, `agenda`, `checkin`, `roster`, `notify`)
 - **Seeder**: removed; no demo data. `initPocketBase()` auto-creates collections on first run; the database starts empty
-- **Validation**: Zod schemas in `src/lib/validation.ts`
+- **Validation**: Zod schemas in `src/lib/domain.ts` (collection shapes, single source) + `src/lib/validation.ts` (forms/payloads derived from them); PB field defs derive from the domain schemas in `src/db/collectionDefs.ts`
 - **Theming**: CSS custom properties applied via JS (`themePresets.ts`)
 - **Uploads**: saved to `public/uploads/` via base64 POST to `/api/upload`
 
