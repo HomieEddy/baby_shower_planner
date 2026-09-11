@@ -11,7 +11,7 @@ import { useCapabilities, availableChannels, channelLabel } from '../../lib/capa
 import { motion, AnimatePresence } from 'motion/react';
 import { useToast } from '../shared/ToastContext';
 import { useConfirm } from '../shared/ConfirmDialog';
-import { useT } from '../shared/i18n';
+import { useT, useTf } from '../shared/i18n';
 import { useCopyFeedback } from '../shared/hooks';
 import { Modal } from '../shared/Modal';
 import { ConfirmationView } from './ConfirmationView';
@@ -45,6 +45,7 @@ type OpenModal = 'confirm' | 'invite' | 'contact' | null;
 export const RsvpPage = () => {
   const { token } = useParams<{ token: string }>();
   const t = useT();
+  const tf = useTf();
   const { toast } = useToast();
 
   const [guest, setGuest] = useState<Guest | null>(null);
@@ -179,11 +180,11 @@ export const RsvpPage = () => {
   const handleSaveContact = async () => {
     if (!token) return;
     if ((contactChannel === 'email' || contactChannel === 'both') && !contactEmail.trim()) {
-      toast.error(t.contactForChannelError.replace('{{channel}}', t.channelEmail));
+      toast.error(tf('contactForChannelError', { channel: t.channelEmail }));
       return;
     }
     if ((contactChannel === 'text' || contactChannel === 'both') && !contactPhone.trim()) {
-      toast.error(t.contactForChannelError.replace('{{channel}}', t.channelText));
+      toast.error(tf('contactForChannelError', { channel: t.channelText }));
       return;
     }
     try {
@@ -224,7 +225,7 @@ export const RsvpPage = () => {
       const data = await res.json();
       if (res.ok && data.ok) {
         setInviteModal({ name: data.invite.invitee_name, url: data.invite.invite_url, message: data.invite.invite_message });
-        toast.info(t.inviteSentLinkOnlyToast.replace('{{name}}', data.invite.invitee_name));
+        toast.info(tf('inviteSentLinkOnlyToast', { name: data.invite.invitee_name }));
         setInviteName('');
         setInviteContact('');
         setInviteNote('');
@@ -244,7 +245,7 @@ export const RsvpPage = () => {
     if (!token) return;
     const ok = await confirm({
       title: t.removeInviteTitle,
-      message: t.removeInviteMsg.replace('{{name}}', invitee.invitee_name),
+      message: tf('removeInviteMsg', { name: invitee.invitee_name }),
       confirmText: t.removeInviteBtn,
     });
     if (!ok) return;
@@ -527,7 +528,7 @@ export const RsvpPage = () => {
                 <div className="text-center space-y-2 border-b border-dashed border-[#4A3F35]/20 pb-6">
                   <div className="label-mono">{t.rsvpResponseTitle}</div>
                   <h3 className="font-newsreader text-2xl sm:text-3xl font-bold text-[#4A3F35]">
-                    {t.rsvpGreeting.replace('{{name}}', guest.name)}
+                    {tf('rsvpGreeting', { name: guest.name })}
                   </h3>
                   <p className="text-sm text-[#4A3F35]/70 font-sans">
                     {t.rsvpPrompt}
@@ -610,7 +611,7 @@ export const RsvpPage = () => {
                         </p>
                         <p className="text-[11px] text-[#8B735B] font-medium font-sans flex items-center gap-1">
                           <Lightbulb className="w-3 h-3 shrink-0" />
-                          {t.primaryGuestIncluded.replace('{{name}}', guest.name)}
+                          {tf('primaryGuestIncluded', { name: guest.name })}
                         </p>
                         <p className="text-[11px] text-[#8B735B] font-medium font-sans flex items-center gap-1">
                           <Lightbulb className="w-3 h-3 shrink-0" />

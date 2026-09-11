@@ -6,7 +6,7 @@ import { useSearchParams, useNavigate } from 'react-router-dom';
 import { motion } from 'motion/react';
 import { ArrowLeft, CheckCircle2, Clock, Send, Users, XCircle } from 'lucide-react';
 import { EventDetailsCard } from '../rsvp/EventDetailsCard';
-import { useT } from '../shared/i18n';
+import { useT, useTf } from '../shared/i18n';
 import { useToast } from '../shared/ToastContext';
 import { useAppStore } from '../../stores/appStore';
 import { fadeUp } from '../shared/motionPresets';
@@ -29,6 +29,7 @@ type RegisterResult = { guest: Guest; already: boolean };
 // group here. The record lands as pending until a host approves it.
 export const RegisterPage = () => {
   const t = useT();
+  const tf = useTf();
   const { toast } = useToast();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
@@ -131,7 +132,7 @@ export const RegisterPage = () => {
             <p className="text-xs sm:text-sm text-[#4A3F35]/75 leading-relaxed font-sans">
               {approval === 'rejected' ? t.registerRejectedMsg
                 : result.already ? t.registerAlreadyMsg
-                : t.registerSuccessMsg.replace('{{code}}', result.guest.code)}
+                : tf('registerSuccessMsg', { code: result.guest.code })}
             </p>
           </div>
           <div className="flex flex-wrap items-center justify-center gap-2 pt-1">

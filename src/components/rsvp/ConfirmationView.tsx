@@ -2,7 +2,7 @@ import { motion } from 'motion/react';
 import { CheckCircle2, Sparkles, Edit3, XCircle } from 'lucide-react';
 import { Guest } from '../../types';
 import { cardStagger, popIn, fadeUp } from '../shared/motionPresets';
-import { useT } from '../shared/i18n';
+import { useT, useTf } from '../shared/i18n';
 
 export const ConfirmationView = ({
   guest,
@@ -12,6 +12,7 @@ export const ConfirmationView = ({
   onEdit: () => void;
 }) => {
   const t = useT();
+  const tf = useTf();
   return (
     <motion.div
       key="confirmation"
@@ -50,7 +51,7 @@ export const ConfirmationView = ({
         </h3>
         {guest.is_read_only && (
           <p className="text-xs text-[#5D5449] font-medium pt-1 max-w-md mx-auto">
-            {t.readOnlyNotice.replace('{{name}}', guest.confirmed_by_guest_name || 'the main guest')}
+            {tf('readOnlyNotice', { name: guest.confirmed_by_guest_name || 'the main guest' })}
           </p>
         )}
       </motion.div>
@@ -134,7 +135,7 @@ export const ConfirmationView = ({
             </button>
           ) : (
             <p className="text-xs font-mono text-[#5D5449]">
-              {t.readOnlyContactHostNote.replace('{{name}}', guest.confirmed_by_guest_name || 'the main guest')}
+              {tf('readOnlyContactHostNote', { name: guest.confirmed_by_guest_name || 'the main guest' })}
             </p>
           )}
         </div>

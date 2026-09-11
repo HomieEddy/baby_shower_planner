@@ -1,7 +1,7 @@
 import { Wand2, Sparkles } from 'lucide-react';
 import { Guest, TableElement } from '../../types';
 import { Modal } from '../shared/Modal';
-import { useT } from '../shared/i18n';
+import { useT, useTf } from '../shared/i18n';
 
 export interface SmartSuggestion {
   id: string;
@@ -33,6 +33,7 @@ export const SmartSuggestionsModal = ({
   onClose,
 }: SmartSuggestionsModalProps) => {
   const t = useT();
+  const tf = useTf();
   return (
     <Modal open={open} onClose={onClose} maxWidth="xl"
       panelClassName="flex flex-col max-h-[90vh]"
@@ -55,7 +56,7 @@ export const SmartSuggestionsModal = ({
       {/* Suggestions Count & Actions */}
       <div className="flex items-center justify-between text-xs bg-[#EFE6DC]/60 p-3 rounded-2xl border border-[#CBAE94]/40">
         <span className="font-bold text-[#4A3F35]">
-          {t.seatingProposalsCount.replace('{{count}}', String(suggestions.length))}
+          {tf('seatingProposalsCount', { count: String(suggestions.length) })}
         </span>
         <div className="flex items-center gap-2">
           <button
@@ -140,7 +141,7 @@ export const SmartSuggestionsModal = ({
           className="px-5 py-2.5 rounded-xl bg-gradient-to-r from-amber-700 to-emerald-700 hover:brightness-110 text-white text-xs font-bold shadow-md transition-all flex items-center gap-2 disabled:opacity-40 disabled:cursor-not-allowed"
         >
           <Sparkles className="w-4 h-4 text-amber-200" />
-          {t.applySeatingBtn.replace('{{count}}', String(selectedIds.size))}
+          {tf('applySeatingBtn', { count: String(selectedIds.size) })}
         </button>
       </div>
     </Modal>

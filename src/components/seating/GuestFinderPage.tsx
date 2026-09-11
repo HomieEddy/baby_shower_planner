@@ -13,7 +13,7 @@ import {
   UserCheck,
 } from 'lucide-react';
 import { Guest, FloorMapData } from '../../types';
-import { useT } from '../shared/i18n';
+import { useT, useTf } from '../shared/i18n';
 import { useToast } from '../shared/ToastContext';
 import { getPartyMembers, isMemberCheckedIn, isPartyLead } from '../../lib/guestAttendees';
 import { getGuestPartySize } from '../../lib/tableAssignment';
@@ -67,6 +67,7 @@ const item = {
 
 export const GuestFinderPage: React.FC = () => {
   const t = useT();
+  const tf = useTf();
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [searchParams] = useSearchParams();
@@ -200,7 +201,7 @@ export const GuestFinderPage: React.FC = () => {
           prev && prev.guest.id === updated.id ? { ...prev, guest: updated } : prev
         );
       }
-      toast.success(t.checkinDoneToast.replace('{{name}}', targetName ?? identifiedName));
+      toast.success(tf('checkinDoneToast', { name: targetName ?? identifiedName }));
       // The arrival moment: show the venue full-screen after checking in.
       if (!undo) setVenueOpen(true);
     } finally {
@@ -367,12 +368,10 @@ export const GuestFinderPage: React.FC = () => {
                   </motion.div>
                   <div>
                     <h3 className="font-gaegu text-3xl font-bold text-[#4A3F35]">
-                      {t.finderWelcome.replace('{{name}}', selected.displayName)}
+                      {tf('finderWelcome', { name: selected.displayName })}
                     </h3>
                     <p className="text-xs text-[#8B735B] font-bold font-mono">
-                      {t.finderCodeParty
-                        .replace('{{code}}', selected.guest.code)
-                        .replace('{{count}}', String(getGuestPartySize(selected.guest)))}
+                      {tf('finderCodeParty', { code: selected.guest.code, count: String(getGuestPartySize(selected.guest)) })}
                     </p>
                   </div>
                 </motion.div>

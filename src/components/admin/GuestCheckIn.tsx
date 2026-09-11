@@ -4,11 +4,12 @@ import { adminFetch } from '../../lib/api';
 import { getPartyMembers, isMemberCheckedIn } from '../../lib/guestAttendees';
 import { useToast } from '../shared/ToastContext';
 import { CheckCircle2, RotateCcw, Users, UserCheck, UserX, ChevronDown, ChevronRight } from 'lucide-react';
-import { useT } from '../shared/i18n';
+import { useT, useTf } from '../shared/i18n';
 import { SearchInput } from '../shared/ui';
 
 export const GuestCheckIn = () => {
   const t = useT();
+  const tf = useTf();
   const { toast } = useToast();
   const [guests, setGuests] = useState<Guest[]>([]);
   const [search, setSearch] = useState('');
@@ -164,7 +165,7 @@ export const GuestCheckIn = () => {
                         )}
                       </div>
                       <div className="text-[11px] text-[#A09080] font-mono">
-                        {guest.email || guest.phone || t.noContactLabel} · {t.partyOfLabel.replace('{{count}}', String(guest.attending_party_size || guest.max_party_size))}
+                        {guest.email || guest.phone || t.noContactLabel} · {tf('partyOfLabel', { count: String(guest.attending_party_size || guest.max_party_size) })}
                         {guest.checked_in_at && ` · ${new Date(guest.checked_in_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`}
                       </div>
                     </div>

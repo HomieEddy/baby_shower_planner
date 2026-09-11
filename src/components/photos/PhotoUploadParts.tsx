@@ -11,7 +11,7 @@ import {
 import { EventPhoto } from '../../types';
 import { formatFileSize } from '../../lib/imageCompressor';
 import { cardStagger, cardItem, popIn } from '../shared/motionPresets';
-import { useT } from '../shared/i18n';
+import { useT, useTf } from '../shared/i18n';
 import { OptimizedFileItem } from './GuestPhotoUploadPage';
 
 export const PhotoDropzone = ({
@@ -134,6 +134,7 @@ export const UploadSuccessScreen = ({
   onUploadMore: () => void;
 }) => {
   const t = useT();
+  const tf = useTf();
   return (
     <motion.div
       className="bg-[#FFFDF9] rounded-3xl p-8 shadow-xl border border-[#CBAE94] text-center space-y-6"
@@ -160,7 +161,7 @@ export const UploadSuccessScreen = ({
           {t.thankYouSharingTitle}
         </h2>
         <p className="text-xs sm:text-sm text-[#8B735B] mt-2 max-w-md mx-auto">
-          {t.uploadSuccessMsg.replace('{{count}}', String(uploadedPhotos.length))}
+          {tf('uploadSuccessMsg', { count: String(uploadedPhotos.length) })}
         </p>
       </div>
 

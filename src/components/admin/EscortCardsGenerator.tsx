@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import { Guest, EventSettings, FloorMapData } from '../../types';
 import { Printer, Scissors, Tag, Ticket } from 'lucide-react';
-import { useT } from '../shared/i18n';
+import { useT, useTf } from '../shared/i18n';
 import { usePrint } from '../shared/hooks';
 import { getAttendeeLocations } from '../../lib/tableAssignment';
 import { getPartyMembers } from '../../lib/guestAttendees';
@@ -21,6 +21,7 @@ interface CardRow {
 
 export const EscortCardsGenerator: React.FC<EscortCardsGeneratorProps> = ({ guests, settings }) => {
     const t = useT();
+    const tf = useTf();
   const print = usePrint();
   const [cardType, setCardType] = useState<'tent' | 'nametag'>('tent');
   const [selectedTableFilter, setSelectedTableFilter] = useState<string>('ALL');
@@ -133,7 +134,7 @@ export const EscortCardsGenerator: React.FC<EscortCardsGeneratorProps> = ({ gues
               onChange={(e) => setSelectedTableFilter(e.target.value)}
               className="w-full px-3 py-2 rounded-xl border border-[#CBAE94] text-xs font-bold bg-white text-[#4A3F35]"
             >
-              <option value="ALL">{t.allTablesOption.replace('{{count}}', String(rows.length))}</option>
+              <option value="ALL">{tf('allTablesOption', { count: String(rows.length) })}</option>
               {uniqueTables.map((tbl) => (
                 <option key={tbl} value={tbl}>
                   {t.tableFilterLabel} {tbl}
@@ -187,7 +188,7 @@ export const EscortCardsGenerator: React.FC<EscortCardsGeneratorProps> = ({ gues
               const guest = row.guest;
               const tableNum = row.tableName || t.unassignedWord;
               const seatLine = row.seatNumber
-                ? t.seatedAtSeatLabel.replace('{{seat}}', String(row.seatNumber))
+                ? tf('seatedAtSeatLabel', { seat: String(row.seatNumber) })
                 : '';
               const magicUrl = `${window.location.origin}/rsvp/${guest.magic_token}`;
               const qrApi = `https://api.qrserver.com/v1/create-qr-code/?size=100x100&data=${encodeURIComponent(

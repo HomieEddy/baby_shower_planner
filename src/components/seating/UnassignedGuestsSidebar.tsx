@@ -1,7 +1,7 @@
 import { Search, UserX, CheckCircle2, Users, Utensils, X } from 'lucide-react';
 import { Guest, FloorMapData, TableElement } from '../../types';
 import { getGuestPartySize, getTableOccupiedSeats, getGuestSeatedCount } from '../../lib/tableAssignment';
-import { useT } from '../shared/i18n';
+import { useT, useTf } from '../shared/i18n';
 
 interface UnassignedGuestsSidebarProps {
   unassignedGuests: Guest[];
@@ -25,6 +25,7 @@ export const UnassignedGuestsSidebar = ({
   onAssign,
 }: UnassignedGuestsSidebarProps) => {
   const t = useT();
+  const tf = useTf();
   // Members of the selected party still without a chair (split-aware).
   const pSize = selectedGuest
     ? getGuestPartySize(selectedGuest) - getGuestSeatedCount(selectedGuest.id, floorMap, guests)
@@ -51,7 +52,7 @@ export const UnassignedGuestsSidebar = ({
           </div>
         </div>
         <span className="px-2.5 py-1 rounded-full bg-[#EFE6DC] text-[#8B735B] text-xs font-mono font-bold border border-[#CBAE94]">
-          {t.unseatedCountLabel.replace('{{count}}', String(unassignedGuests.length))}
+          {tf('unseatedCountLabel', { count: String(unassignedGuests.length) })}
         </span>
       </div>
 

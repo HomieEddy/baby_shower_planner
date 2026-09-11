@@ -22,7 +22,7 @@ import { useToast } from '../shared/ToastContext';
 import { LockedNotice } from '../shared/LockedNotice';
 import { uploadPhotoBase64 } from '../../lib/fileUtils';
 import { useAppStore } from '../../stores/appStore';
-import { useT } from '../shared/i18n';
+import { useT, useTf } from '../shared/i18n';
 import { useFloorMapTables } from '../shared/hooks';
 import { isValidCode } from '../../lib/validation';
 import { PhotoDropzone, PhotoFileCard, UploadSuccessScreen } from './PhotoUploadParts';
@@ -40,6 +40,7 @@ export interface OptimizedFileItem {
 export const GuestPhotoUploadPage = () => {
   const language = useAppStore((s) => s.language);
   const t = useT();
+  const tf = useTf();
   const [searchParams] = useSearchParams();
   const initialTableId = searchParams.get('tableId') || undefined;
   const { toast } = useToast();
@@ -126,7 +127,7 @@ export const GuestPhotoUploadPage = () => {
     });
 
     if (invalidFiles.length > 0) {
-      setFileError(t.uploadInvalidFileToast.replace('{{files}}', invalidFiles.slice(0, 2).join(', ')));
+      setFileError(tf('uploadInvalidFileToast', { files: invalidFiles.slice(0, 2).join(', ') }));
     }
 
     // Per-guest quota is 12 photos — cap the batch client-side too.
@@ -255,7 +256,7 @@ export const GuestPhotoUploadPage = () => {
           throw new Error(t.uploadInvalidCodeToast);
         }
         if (code === 'PHOTO_LIMIT_REACHED') {
-          throw new Error(t.uploadPhotoLimitToast.replace('{{remaining}}', String(errData.remaining ?? 0)));
+          throw new Error(tf('uploadPhotoLimitToast', { remaining: String(errData.remaining ?? 0) }));
         }
         if (code === 'PHOTO_SIZE_LIMIT_REACHED') {
           throw new Error(t.uploadPhotoSizeLimitToast);
@@ -267,7 +268,7 @@ export const GuestPhotoUploadPage = () => {
       setUploadedPhotos(data.photos || []);
       setUploadSuccess(true);
       setIsUploading(false);
-      toast.success(t.uploadSuccessToast.replace('{{count}}', String(data.photos?.length || 1)));
+      toast.success(tf('uploadSuccessToast', { count: String(data.photos?.length || 1) }));
 
       // Clean preview object URLs
       fileItems.forEach((item) => URL.revokeObjectURL(item.previewUrl));
@@ -276,7 +277,7 @@ export const GuestPhotoUploadPage = () => {
       setIsUploading(false);
       const errMsg = err.message || 'An error occurred during upload. Please try again.';
       setFileError(errMsg);
-      toast.error(t.uploadErrorToast.replace('{{error}}', errMsg));
+      toast.error(tf('uploadErrorToast', { error: errMsg }));
     }
   };
 

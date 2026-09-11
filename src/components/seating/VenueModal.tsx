@@ -5,7 +5,7 @@ import { Stage, Layer, Group, Circle } from 'react-konva';
 import { renderTableBody, renderLandmark, SeatRing, TableLabel } from './venueShapes';
 import { MapPin, Users, Utensils, Info, DoorOpen, Sparkles, CheckCircle2, X } from 'lucide-react';
 import { Guest, FloorMapData } from '../../types';
-import { useT } from '../shared/i18n';
+import { useT, useTf } from '../shared/i18n';
 import { ViewModeToggle, ViewMode } from '../shared/ViewModeToggle';
 import { getGuestPartySize, getTableOccupiedSeats, getAttendeeSeatLocation } from '../../lib/tableAssignment';
 import { getSeatLocalPosition } from './floorPlanHelpers';
@@ -24,6 +24,7 @@ interface VenueModalProps {
 
 export const VenueModal = ({ open, selected, floorMap, roster, onClose }: VenueModalProps) => {
   const t = useT();
+  const tf = useTf();
   const [viewMode, setViewMode] = useState<ViewMode>('2d');
   const [mapWidth, setMapWidth] = useState(440);
   const mapWrapRef = useRef<HTMLDivElement>(null);
@@ -131,9 +132,7 @@ export const VenueModal = ({ open, selected, floorMap, roster, onClose }: VenueM
                     {t.venueTitle}
                   </h3>
                   <p className="text-[11px] font-mono font-bold text-[#8B735B] truncate">
-                    {selected.displayName} · {t.finderCodeParty
-                      .replace('{{code}}', selected.guest.code)
-                      .replace('{{count}}', String(getGuestPartySize(selected.guest)))}
+                    {selected.displayName} · {tf('finderCodeParty', { code: selected.guest.code, count: String(getGuestPartySize(selected.guest)) })}
                   </p>
                 </div>
               </div>
@@ -179,10 +178,7 @@ export const VenueModal = ({ open, selected, floorMap, roster, onClose }: VenueM
                     <div className="space-y-1.5 text-xs text-[#5D5449]">
                       <p className="flex items-center gap-2 font-bold">
                         <Users className="w-4 h-4 text-[#8B735B]" />
-                        {t.finderSeatedWithParty.replace(
-                          '{{count}}',
-                          String(getGuestPartySize(selected.guest))
-                        )}
+                        {tf('finderSeatedWithParty', { count: String(getGuestPartySize(selected.guest)) })}
                       </p>
                       <p className="flex items-center gap-2 font-bold">
                         <MapPin className="w-4 h-4 text-[#8B735B]" />
@@ -196,10 +192,7 @@ export const VenueModal = ({ open, selected, floorMap, roster, onClose }: VenueM
                           transition={{ delay: 0.5 }}
                         >
                           <Utensils className="w-4 h-4" />
-                          {t.finderDietaryNote.replace(
-                            '{{dietary}}',
-                            selected.guest.dietary_restrictions
-                          )}
+                          {tf('finderDietaryNote', { dietary: selected.guest.dietary_restrictions })}
                         </motion.p>
                       )}
                     </div>

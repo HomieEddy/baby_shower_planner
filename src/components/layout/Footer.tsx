@@ -3,10 +3,11 @@ import { useQuery } from '@tanstack/react-query';
 import { Heart, FlaskConical } from 'lucide-react';
 import { useSettings } from '../../lib/settingsQuery';
 import { useAppStore } from '../../stores/appStore';
-import { useT } from '../shared/i18n';
+import { useT, useTf } from '../shared/i18n';
 
 export const Footer = () => {
   const t = useT();
+  const tf = useTf();
   const settings = useSettings();
   const language = useAppStore((s) => s.language);
   const { data: rehearsal } = useQuery({
@@ -27,9 +28,7 @@ export const Footer = () => {
         </p>
       )}
       <p className="font-mono text-[10px] uppercase tracking-widest text-[#8B735B] font-bold">
-        {t.footerCopyright
-          .replace('{{year}}', String(new Date().getFullYear()))
-          .replace('{{parentsNames}}', settings?.parentsNames?.trim() || 'Bébé Baby Shower')}
+        {tf('footerCopyright', { year: String(new Date().getFullYear()), parentsNames: settings?.parentsNames?.trim() || 'Bébé Baby Shower' })}
       </p>
       <p className="flex items-center justify-center gap-1.5 text-[10px] text-[#5D5449]/70">
         <motion.span

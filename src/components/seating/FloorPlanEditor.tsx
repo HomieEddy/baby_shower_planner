@@ -47,7 +47,7 @@ import { getPartyMembers } from '../../lib/guestAttendees';
 import { SeatRing, renderRoomBoundary, renderLandmark } from './venueShapes';
 import { useFloorPlanEditor } from './floorplanHooks';
 import { ViewModeToggle, ViewMode } from '../shared/ViewModeToggle';
-import { useT } from '../shared/i18n';
+import { useT, useTf } from '../shared/i18n';
 import { Language } from '../../types';
 
 interface AttendeeKey {
@@ -102,6 +102,7 @@ export const FloorPlanEditor = ({
   handleLandmarkHover,
 }: FloorPlanEditorProps) => {
   const t = useT();
+  const tf = useTf();
   const [viewMode, setViewMode] = useState<ViewMode>('2d');
   const {
     draftFloorMap,
@@ -252,7 +253,7 @@ export const FloorPlanEditor = ({
           <div className="text-center">
             <span className="text-[10px] font-mono font-bold uppercase text-[#8B735B]">{t.draftCapacityLabel}</span>
             <p className="text-xs font-bold text-[#4A3F35]">
-              {t.seatsTotalLabel.replace('{{count}}', String(draftFloorMap.tables.reduce((s, t) => s + t.capacity, 0)))}
+              {tf('seatsTotalLabel', { count: String(draftFloorMap.tables.reduce((s, t) => s + t.capacity, 0)) })}
             </p>
           </div>
           <div className="h-6 w-px bg-[#CBAE94]/40" />
@@ -1180,7 +1181,7 @@ export const FloorPlanEditor = ({
                               <div className="min-w-0">
                                 <p className="font-bold text-[#4A3F35] truncate">{name}</p>
                                 <span className="text-[10px] text-[#8B735B] font-medium">
-                                  {t.seatedAtSeatLabel.replace('{{seat}}', String(idx + 1))} · {guest.name}
+                                  {tf('seatedAtSeatLabel', { seat: String(idx + 1) })} · {guest.name}
                                 </span>
                               </div>
                               <button
@@ -1336,7 +1337,7 @@ export const FloorPlanEditor = ({
                                 }`}
                                 title={
                                   isSeated
-                                    ? `${item.tableName} · ${t.seatedAtSeatLabel.replace('{{seat}}', String((item.seatIndex ?? 0) + 1))}`
+                                    ? `${item.tableName} · ${tf('seatedAtSeatLabel', { seat: String((item.seatIndex ?? 0) + 1) })}`
                                     : t.dragAttendeeHint
                                 }
                               >
@@ -1368,7 +1369,7 @@ export const FloorPlanEditor = ({
                     <div className="flex items-center gap-1.5">
                       <span className="px-2.5 py-1 bg-[#8B735B] text-white rounded-full text-xs font-bold font-mono">
                         {remaining > 0
-                          ? t.remainingToSeatLabel.replace('{{count}}', String(remaining))
+                          ? tf('remainingToSeatLabel', { count: String(remaining) })
                           : t.allAttendeesSeatedMsg}
                       </span>
                       {getGuestSeatedCount(selectedGuestForSeating.id, draftFloorMap, draftGuests) > 0 && (

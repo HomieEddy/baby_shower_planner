@@ -11,7 +11,7 @@ import {
   Loader2,
 } from 'lucide-react';
 import { Modal } from '../shared/Modal';
-import { useT } from '../shared/i18n';
+import { useT, useTf } from '../shared/i18n';
 import { Guest } from '../../types';
 import { getGuestPartySize } from '../../lib/tableAssignment';
 import { channelLabel } from '../../lib/capabilities';
@@ -139,6 +139,7 @@ export const GuestDetailsModal = ({
   onDelete,
 }: GuestDetailsModalProps) => {
   const t = useT();
+  const tf = useTf();
   if (!guest) return null;
 
   const initials = guest.name.split(' ').map((w) => w[0]).filter(Boolean).slice(0, 2).join('').toUpperCase();
@@ -199,7 +200,7 @@ export const GuestDetailsModal = ({
         </div>
 
         <div className="space-y-1.5">
-          <label className="label-mono block text-xs font-bold text-[#8B735B]">{t.includedAttendeesLabel.replace('{{count}}', String(members.length))}</label>
+          <label className="label-mono block text-xs font-bold text-[#8B735B]">{tf('includedAttendeesLabel', { count: String(members.length) })}</label>
           <div className="flex flex-wrap gap-1.5">
             {members.map((n, i) => (
               <span key={i} className="px-2 py-0.5 rounded-lg bg-[#EFE6DC] border border-[#CBAE94] text-[11px] font-mono text-[#8B735B]">{n}</span>
