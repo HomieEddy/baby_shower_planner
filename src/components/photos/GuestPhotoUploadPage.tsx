@@ -268,7 +268,7 @@ export const GuestPhotoUploadPage = () => {
       setUploadedPhotos(data.photos || []);
       setUploadSuccess(true);
       setIsUploading(false);
-      toast.success(tf('uploadSuccessToast', { count: String(data.photos?.length || 1) }));
+      toast.success(tf('uploadSuccessToast', { count: data.photos?.length || 1 }));
 
       // Clean preview object URLs
       fileItems.forEach((item) => URL.revokeObjectURL(item.previewUrl));

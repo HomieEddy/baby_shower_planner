@@ -390,7 +390,7 @@ export const AdminGuestsTab: React.FC<AdminGuestsTabProps> = ({ language, t, gue
       });
       if (res.ok) {
         const data = await res.json();
-        toast.love(tf('csvImportedToast', { count: String(data.count) }));
+        toast.love(tf('csvImportedToast', { count: data.count }));
         setShowCsvImportModal(false);
         setRawCsvText('');
         onRefresh();
@@ -488,7 +488,7 @@ export const AdminGuestsTab: React.FC<AdminGuestsTabProps> = ({ language, t, gue
         body: JSON.stringify({ guestIds: selectedIds }),
       });
       const data = await res.json();
-      if (data.sent > 0) toast.love(tf('invitesSentMsg', { count: String(data.sent) }) + (data.failed > 0 ? tf('invitesFailedSuffix', { count: String(data.failed) }) : ''));
+      if (data.sent > 0) toast.love(tf('invitesSentMsg', { count: data.sent }) + (data.failed > 0 ? tf('invitesFailedSuffix', { count: String(data.failed) }) : ''));
       else toast.info(t.invitesNoneToast);
       setSelectedIds([]);
     } catch { toast.error(t.invitesErrorToast); }
@@ -499,7 +499,7 @@ export const AdminGuestsTab: React.FC<AdminGuestsTabProps> = ({ language, t, gue
       const res = await adminFetch('/api/send-reminders', { method: 'POST' });
       const data = await res.json();
       if (data.sent > 0) {
-        toast.love(tf('remindersSentMsg', { count: String(data.sent) }) + (data.failed > 0 ? tf('invitesFailedSuffix', { count: String(data.failed) }) : ''));
+        toast.love(tf('remindersSentMsg', { count: data.sent }) + (data.failed > 0 ? tf('invitesFailedSuffix', { count: String(data.failed) }) : ''));
       } else {
         toast.info(t.remindersNoneToast);
       }
@@ -517,7 +517,7 @@ export const AdminGuestsTab: React.FC<AdminGuestsTabProps> = ({ language, t, gue
     if (selectedIds.length === 0) return;
     const ok = await confirm({
       title: t.bulkDeleteConfirmTitle,
-      message: tf('bulkDeleteConfirmMsg', { count: String(selectedIds.length) }),
+      message: tf('bulkDeleteConfirmMsg', { count: selectedIds.length }),
       confirmText: t.bulkDeleteBtn,
     });
     if (!ok) return;

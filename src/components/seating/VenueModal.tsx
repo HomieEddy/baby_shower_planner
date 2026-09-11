@@ -178,7 +178,7 @@ export const VenueModal = ({ open, selected, floorMap, roster, onClose }: VenueM
                     <div className="space-y-1.5 text-xs text-[#5D5449]">
                       <p className="flex items-center gap-2 font-bold">
                         <Users className="w-4 h-4 text-[#8B735B]" />
-                        {tf('finderSeatedWithParty', { count: String(getGuestPartySize(selected.guest)) })}
+                        {tf('finderSeatedWithParty', { count: getGuestPartySize(selected.guest) })}
                       </p>
                       <p className="flex items-center gap-2 font-bold">
                         <MapPin className="w-4 h-4 text-[#8B735B]" />

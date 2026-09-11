@@ -253,7 +253,7 @@ export const FloorPlanEditor = ({
           <div className="text-center">
             <span className="text-[10px] font-mono font-bold uppercase text-[#8B735B]">{t.draftCapacityLabel}</span>
             <p className="text-xs font-bold text-[#4A3F35]">
-              {tf('seatsTotalLabel', { count: String(draftFloorMap.tables.reduce((s, t) => s + t.capacity, 0)) })}
+              {tf('seatsTotalLabel', { count: draftFloorMap.tables.reduce((s, t) => s + t.capacity, 0) })}
             </p>
           </div>
           <div className="h-6 w-px bg-[#CBAE94]/40" />

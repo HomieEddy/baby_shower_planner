@@ -56,7 +56,7 @@ export const SmartSuggestionsModal = ({
       {/* Suggestions Count & Actions */}
       <div className="flex items-center justify-between text-xs bg-[#EFE6DC]/60 p-3 rounded-2xl border border-[#CBAE94]/40">
         <span className="font-bold text-[#4A3F35]">
-          {tf('seatingProposalsCount', { count: String(suggestions.length) })}
+          {tf('seatingProposalsCount', { count: suggestions.length })}
         </span>
         <div className="flex items-center gap-2">
           <button
@@ -141,7 +141,7 @@ export const SmartSuggestionsModal = ({
           className="px-5 py-2.5 rounded-xl bg-gradient-to-r from-amber-700 to-emerald-700 hover:brightness-110 text-white text-xs font-bold shadow-md transition-all flex items-center gap-2 disabled:opacity-40 disabled:cursor-not-allowed"
         >
           <Sparkles className="w-4 h-4 text-amber-200" />
-          {tf('applySeatingBtn', { count: String(selectedIds.size) })}
+          {tf('applySeatingBtn', { count: selectedIds.size })}
         </button>
       </div>
     </Modal>

@@ -21,6 +21,29 @@ describe('i18n interpolation', () => {
   });
 });
 
+describe('plural selection', () => {
+  it('picks singular for 1 and plural for 2 (EN)', () => {
+    const one = i18n.t('applySeatingBtn', { count: 1, lng: 'en' });
+    const many = i18n.t('applySeatingBtn', { count: 2, lng: 'en' });
+    expect(one).not.toBe(many);
+    expect(one).toContain('1');
+    expect(many).toContain('2');
+    expect(one).not.toMatch(/\{\{\w+\}\}/);
+    expect(many).not.toMatch(/\{\{\w+\}\}/);
+  });
+
+  it('French treats 0 and 1 as singular, 2 as plural', () => {
+    const zero = i18n.t('applySeatingBtn', { count: 0, lng: 'fr' });
+    const one = i18n.t('applySeatingBtn', { count: 1, lng: 'fr' });
+    const many = i18n.t('applySeatingBtn', { count: 2, lng: 'fr' });
+    // Singular form ("placement") for 0 and 1; plural ("placements") for 2.
+    expect(zero).toContain('placement');
+    expect(zero).not.toContain('placements');
+    expect(one).not.toContain('placements');
+    expect(many).toContain('placements');
+  });
+});
+
 // Guards the refactor: placeholders are filled by useTf, so no call site should
 // substitute `{{...}}` by hand again.
 describe('no manual placeholder substitution', () => {

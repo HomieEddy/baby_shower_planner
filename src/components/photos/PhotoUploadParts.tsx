@@ -161,7 +161,7 @@ export const UploadSuccessScreen = ({
           {t.thankYouSharingTitle}
         </h2>
         <p className="text-xs sm:text-sm text-[#8B735B] mt-2 max-w-md mx-auto">
-          {tf('uploadSuccessMsg', { count: String(uploadedPhotos.length) })}
+          {tf('uploadSuccessMsg', { count: uploadedPhotos.length })}
         </p>
       </div>
 

@@ -134,7 +134,7 @@ export const EscortCardsGenerator: React.FC<EscortCardsGeneratorProps> = ({ gues
               onChange={(e) => setSelectedTableFilter(e.target.value)}
               className="w-full px-3 py-2 rounded-xl border border-[#CBAE94] text-xs font-bold bg-white text-[#4A3F35]"
             >
-              <option value="ALL">{tf('allTablesOption', { count: String(rows.length) })}</option>
+              <option value="ALL">{tf('allTablesOption', { count: rows.length })}</option>
               {uniqueTables.map((tbl) => (
                 <option key={tbl} value={tbl}>
                   {t.tableFilterLabel} {tbl}
