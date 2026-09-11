@@ -67,7 +67,7 @@ vi.mock('./client', () => ({
 
 vi.mock('./settings', () => ({ getSettings: async () => ({ date: '', language: 'EN' }) }));
 
-import { registerGuest, isApproved, getUniversalInviteMessage } from './guests';
+import { registerGuest, isApproved, getUniversalInviteMessage, getGuestByToken } from './guests';
 import { createInvite, submitRsvp } from './rsvp';
 import { buildUniversalInviteMessage } from '../lib/compose';
 
@@ -79,6 +79,15 @@ describe('isApproved', () => {
     expect(isApproved({ approval_status: 'approved' })).toBe(true);
     expect(isApproved({ approval_status: 'pending' })).toBe(false);
     expect(isApproved({ approval_status: 'rejected' })).toBe(false);
+  });
+});
+
+describe('getGuestByToken', () => {
+  it('finds the guest by magic token and returns undefined when unknown', async () => {
+    const { guest } = await registerGuest({ name: 'Alice', email: 'a@x.com', language_pref: 'EN', attendee_names: ['Alice'] });
+    const found = await getGuestByToken(guest.magic_token);
+    expect(found?.id).toBe(guest.id);
+    expect(await getGuestByToken('nope')).toBeUndefined();
   });
 });
 
