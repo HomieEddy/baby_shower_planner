@@ -32,14 +32,15 @@ export {
   addGuestbookEntry,
   deleteGuestbookEntry,
   getAllGuestbookEntries,
+  handleGuestbookRoutes,
   setGuestbookEntryVisibility,
 } from './guestbook';
 export { getGuestContentLock, getSettings, updateSettings } from './settings';
 export type { GuestContentLock } from './settings';
-export { createAlert, deleteAlert, getAlerts } from './alerts';
+export { createAlert, deleteAlert, getAlerts, handleAlertRoutes } from './alerts';
 export { getFloorMap, shareFloorPlanEmail, updateFloorMap } from './floorMap';
-export { addPhotosBatch, deletePhoto, getAllPhotos, getGuestPhotoUsage, setPhotoVisibility } from './photos';
-export { addGift, deleteGift, getGiftById, getGifts, toggleGiftThankYou } from './gifts';
+export { addPhotosBatch, deletePhoto, getAllPhotos, getGuestPhotoUsage, handlePhotoRoutes, setPhotoVisibility } from './photos';
+export { addGift, deleteGift, getGiftById, getGifts, handleGiftRoutes, toggleGiftThankYou } from './gifts';
 export { generateThankYouDraft, sendGiftThankYou } from './thankyou';
 export {
   addAgendaTask,
