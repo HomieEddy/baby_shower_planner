@@ -90,6 +90,8 @@ export interface Translations {
   appSubtitle: string;
   appTitle: string;
   applySeatingBtn: string;
+  applySeatingBtn_one: string;
+  applySeatingBtn_other: string;
   assignGuestsToTable: string;
   assignedTableLabel: string;
   attendeeContactHelper: string;
@@ -202,6 +204,8 @@ export interface Translations {
   csvImportErrorToast: string;
   csvImportFailedToast: string;
   csvImportedToast: string;
+  csvImportedToast_one: string;
+  csvImportedToast_other: string;
   csvInvalidToast: string;
   currentStatusLabel: string;
   customHeaderLabel: string;
@@ -323,6 +327,8 @@ export interface Translations {
   finderPartyLead: string;
   finderSearching: string;
   finderSeatedWithParty: string;
+  finderSeatedWithParty_one: string;
+  finderSeatedWithParty_other: string;
   finderTableHighlight: string;
   finderWelcome: string;
   floorPlanInfoDesc: string;
@@ -336,10 +342,14 @@ export interface Translations {
   fpAllSeatedToast: string;
   fpAssignFailedToast: string;
   fpAutoSeatedToast: string;
+  fpAutoSeatedToast_one: string;
+  fpAutoSeatedToast_other: string;
   fpCannotSeatToast: string;
   fpEditCancelledToast: string;
   fpElementRemovedToast: string;
   fpEmailsSentToast: string;
+  fpEmailsSentToast_one: string;
+  fpEmailsSentToast_other: string;
   fpNoEmailsToast: string;
   fpLandmarkAddedToast: string;
   fpNoFitTableToast: string;
@@ -359,6 +369,8 @@ export interface Translations {
   galleryDeleteErrorToast: string;
   galleryDeleteFailedToast: string;
   galleryDeletedToast: string;
+  galleryDeletedToast_one: string;
+  galleryDeletedToast_other: string;
   galleryFiltersResetToast: string;
   galleryPhotoRemovedToast: string;
   galleryPrintQrBtn2: string;
@@ -480,6 +492,8 @@ export interface Translations {
   invitesFailedSuffix: string;
   invitesNoneToast: string;
   invitesSentMsg: string;
+  invitesSentMsg_one: string;
+  invitesSentMsg_other: string;
   langSwitch: string;
   landingAdminBtn: string;
   landingEntryLabel: string;
@@ -489,6 +503,8 @@ export interface Translations {
   linkCopied: string;
   linkOnlyHint: string;
   linksCopiedToast: string;
+  linksCopiedToast_one: string;
+  linksCopiedToast_other: string;
   liveFeedTab: string;
   livePreviewLabel: string;
   loadSampleBtn: string;
@@ -597,6 +613,8 @@ export interface Translations {
   remindersErrorToast: string;
   remindersNoneToast: string;
   remindersSentMsg: string;
+  remindersSentMsg_one: string;
+  remindersSentMsg_other: string;
   removeBtn: string;
   removeGuestBtn: string;
   removeInviteBtn: string;
@@ -654,6 +672,8 @@ export interface Translations {
   seatingCodeTitle: string;
   seatingPassTitle: string;
   seatingProposalsCount: string;
+  seatingProposalsCount_one: string;
+  seatingProposalsCount_other: string;
   seatsAssignedLabel: string;
   seatsLabel: string;
   selectAllBtn: string;
@@ -772,7 +792,11 @@ export interface Translations {
   uploadMoreBtn: string;
   uploadSelectErrorToast: string;
   uploadSuccessMsg: string;
+  uploadSuccessMsg_one: string;
+  uploadSuccessMsg_other: string;
   uploadSuccessToast: string;
+  uploadSuccessToast_one: string;
+  uploadSuccessToast_other: string;
   uploaderLabel: string;
   urgentAlertsSubtitle: string;
   urgentAlertsTitle: string;
@@ -841,6 +865,8 @@ export interface Translations {
   unsavedChangesBadge: string;
   editorSubtitle: string;
   seatsTotalLabel: string;
+  seatsTotalLabel_one: string;
+  seatsTotalLabel_other: string;
   confirmedCountLabel: string;
   roomDimensionsLabel: string;
   roomPresetsLabel: string;
@@ -876,6 +902,8 @@ export interface Translations {
   primaryGuestLabel: string;
   selectedPartyLabel: string;
   requiresSeatsLabel: string;
+  requiresSeatsLabel_one: string;
+  requiresSeatsLabel_other: string;
   includedAttendeesLabel: string;
   chooseVenueTableLabel: string;
   currentlySeatedHere: string;
@@ -911,9 +939,13 @@ export interface Translations {
   scheduleOfTheDayLabel: string;
   themeComboSelectorLabel: string;
   printingCardsLabel: string;
+  printingCardsLabel_one: string;
+  printingCardsLabel_other: string;
   foldedTentCardsBtn: string;
   nameBadgesBtn: string;
   allTablesOption: string;
+  allTablesOption_one: string;
+  allTablesOption_other: string;
   tableFilterLabel: string;
   printPreviewLabel: string;
   paperLayoutLabel: string;
@@ -927,6 +959,8 @@ export interface Translations {
   deleteAllConfirmMsg: string;
   bulkDeleteConfirmTitle: string;
   bulkDeleteConfirmMsg: string;
+  bulkDeleteConfirmMsg_one: string;
+  bulkDeleteConfirmMsg_other: string;
   savingBtn: string;
   totalDietaryNeedsLabel: string;
   noGuestsYetTitle: string;
@@ -1069,7 +1103,9 @@ export const translations: Record<Language, Translations> = {
     amazonRegistryLabel: "Amazon Registry URL",
     appSubtitle: "Baby Shower Planner",
     appTitle: "Bébé",
-    applySeatingBtn: "Apply {{count}} Seating Assignment(s)",
+    applySeatingBtn: "Apply {{count}} Seating Assignments",
+    applySeatingBtn_one: "Apply {{count}} Seating Assignment",
+    applySeatingBtn_other: "Apply {{count}} Seating Assignments",
     assignGuestsToTable: "Assign Guests to Table",
     assignedTableLabel: "Assigned Table",
     attendeeContactHelper: "If provided, an official read-only invite will be sent directly to this attendee.",
@@ -1182,6 +1218,8 @@ export const translations: Record<Language, Translations> = {
     csvImportErrorToast: "An error occurred during CSV import.",
     csvImportFailedToast: "Failed to import CSV data.",
     csvImportedToast: "Successfully imported {{count}} new guests!",
+    csvImportedToast_one: "Successfully imported {{count}} new guest!",
+    csvImportedToast_other: "Successfully imported {{count}} new guests!",
     csvInvalidToast: "No valid guest records found in CSV text.",
     currentStatusLabel: "Current Status",
     customHeaderLabel: "Custom Header Text",
@@ -1302,7 +1340,9 @@ export const translations: Record<Language, Translations> = {
     finderOpenSeatingTitle: "Open Seating / Unassigned Table",
     finderPartyLead: "Party Lead",
     finderSearching: "Searching…",
-    finderSeatedWithParty: "Seated with your party ({{count}} seat(s) reserved)",
+    finderSeatedWithParty: "Seated with your party ({{count}} seats reserved)",
+    finderSeatedWithParty_one: "Seated with your party ({{count}} seat reserved)",
+    finderSeatedWithParty_other: "Seated with your party ({{count}} seats reserved)",
     finderTableHighlight: "Table Highlight on Venue Map",
     finderWelcome: "Welcome, {{name}}!",
     floorPlanInfoDesc: "This is a read-only view of your venue layout. To edit table positions, add venue features, resize the room, or assign confirmed guests, click Open Full-Screen Editor.",
@@ -1316,11 +1356,15 @@ export const translations: Record<Language, Translations> = {
     formattedLabel: "Formatted:",
     fpAllSeatedToast: "ℹ All confirmed attending guests are already seated!",
     fpAssignFailedToast: "Failed to assign guest",
-    fpAutoSeatedToast: "Successfully auto-seated {{count}} guest party/parties!",
+    fpAutoSeatedToast: "Successfully auto-seated {{count}} guest parties!",
+    fpAutoSeatedToast_one: "Successfully auto-seated {{count}} guest party!",
+    fpAutoSeatedToast_other: "Successfully auto-seated {{count}} guest parties!",
     fpCannotSeatToast: "Cannot seat \"{{guest}}\" (Party of {{size}}) at \"{{table}}\". Only {{available}} seats free.",
     fpEditCancelledToast: "Floor plan editing cancelled.",
     fpElementRemovedToast: "Removed element from floor map",
-    fpEmailsSentToast: "Sent seating plan emails to {{count}} guest(s)!",
+    fpEmailsSentToast: "Sent seating plan emails to {{count}} guests!",
+    fpEmailsSentToast_one: "Sent seating plan emails to {{count}} guest!",
+    fpEmailsSentToast_other: "Sent seating plan emails to {{count}} guests!",
     fpNoEmailsToast: "No seating plan emails sent — guests need an email address to receive them.",
     fpLandmarkAddedToast: "Added {{name}}",
     fpNoFitTableToast: "\"{{table}}\" only has {{free}} free seat(s), but \"{{guest}}\" needs {{needed}}.",
@@ -1339,7 +1383,9 @@ export const translations: Record<Language, Translations> = {
     galleryDeleteErrToast: "An error occurred while deleting the photo.",
     galleryDeleteErrorToast: "Failed to delete photo.",
     galleryDeleteFailedToast: "Failed to delete some of the selected photos.",
-    galleryDeletedToast: "Successfully deleted {{count}} photo(s).",
+    galleryDeletedToast: "Successfully deleted {{count}} photos.",
+    galleryDeletedToast_one: "Successfully deleted {{count}} photo.",
+    galleryDeletedToast_other: "Successfully deleted {{count}} photos.",
     galleryFiltersResetToast: "Search and table filters reset.",
     galleryPhotoRemovedToast: "Photo removed from memory library.",
     gbEntryDeletedToast: "Entry deleted.",
@@ -1461,6 +1507,8 @@ export const translations: Record<Language, Translations> = {
     invitesFailedSuffix: "({{count}} failed)",
     invitesNoneToast: "No invitations sent. Check RESEND_API_KEY.",
     invitesSentMsg: "Invitations sent to {{count}} guests!",
+    invitesSentMsg_one: "Invitation sent to {{count}} guest!",
+    invitesSentMsg_other: "Invitations sent to {{count}} guests!",
     langSwitch: "Français (FR)",
     landingAdminBtn: "Host Login",
     landingEntryLabel: "Or continue with",
@@ -1470,6 +1518,8 @@ export const translations: Record<Language, Translations> = {
     linkCopied: "Copied!",
     linkOnlyHint: "You'll get a ready-to-send message to share yourself (WhatsApp, Messenger…).",
     linksCopiedToast: "Copied {{count}} invitation links to clipboard!",
+    linksCopiedToast_one: "Copied {{count}} invitation link to clipboard!",
+    linksCopiedToast_other: "Copied {{count}} invitation links to clipboard!",
     liveFeedTab: "Live Feed",
     livePreviewLabel: "Live Typography & Color Palette Preview",
     loadSampleBtn: "Load Sample Data",
@@ -1580,6 +1630,8 @@ export const translations: Record<Language, Translations> = {
     remindersErrorToast: "Failed to send reminders",
     remindersNoneToast: "No pending guests to remind.",
     remindersSentMsg: "Reminders sent to {{count}} pending guests!",
+    remindersSentMsg_one: "Reminder sent to {{count}} pending guest!",
+    remindersSentMsg_other: "Reminders sent to {{count}} pending guests!",
     removeBtn: "Remove",
     removeGuestBtn: "Remove Guest",
     removeInviteBtn: "Remove",
@@ -1640,7 +1692,9 @@ export const translations: Record<Language, Translations> = {
     seatingCodeHint: "Show or enter this code when scanning the QR code poster at the venue entrance to locate your table!",
     seatingCodeTitle: "Your 4-Digit Day-Of Seating Code",
     seatingPassTitle: "Seating Pass",
-    seatingProposalsCount: "{{count}} Seating Proposal(s) Generated",
+    seatingProposalsCount: "{{count}} Seating Proposals Generated",
+    seatingProposalsCount_one: "{{count}} Seating Proposal Generated",
+    seatingProposalsCount_other: "{{count}} Seating Proposals Generated",
     seatsAssignedLabel: "Seats Assigned",
     seatsLabel: "Seats",
     selectAllBtn: "Select All",
@@ -1758,8 +1812,12 @@ export const translations: Record<Language, Translations> = {
     uploadManyHint: "Upload as many photos as you like at once!",
     uploadMoreBtn: "Upload More Photos",
     uploadSelectErrorToast: "Please select at least one photo to upload.",
-    uploadSuccessMsg: "Your {{count}} photo(s) have been saved safely to the hosts' private memory library.",
-    uploadSuccessToast: "Uploaded {{count}} photo(s) to the event gallery!",
+    uploadSuccessMsg: "Your {{count}} photos have been saved safely to the hosts' private memory library.",
+    uploadSuccessMsg_one: "Your photo has been saved safely to the hosts' private memory library.",
+    uploadSuccessMsg_other: "Your {{count}} photos have been saved safely to the hosts' private memory library.",
+    uploadSuccessToast: "Uploaded {{count}} photos to the event gallery!",
+    uploadSuccessToast_one: "Uploaded {{count}} photo to the event gallery!",
+    uploadSuccessToast_other: "Uploaded {{count}} photos to the event gallery!",
     uploaderLabel: "Uploader:",
     urgentAlertsSubtitle: "Dispatch real-time notification alerts to all guests.",
     urgentAlertsTitle: "Urgent Broadcast Alerts",
@@ -1828,6 +1886,8 @@ export const translations: Record<Language, Translations> = {
     unsavedChangesBadge: "Unsaved Changes",
     editorSubtitle: "Drag & drop tables, customize venue features, and assign confirmed guests",
     seatsTotalLabel: "{{count}} Seats Total",
+    seatsTotalLabel_one: "{{count}} Seat Total",
+    seatsTotalLabel_other: "{{count}} Seats Total",
     confirmedCountLabel: "{{count}} Confirmed",
     roomDimensionsLabel: "Room Dimensions",
     roomPresetsLabel: "Room Presets",
@@ -1862,7 +1922,9 @@ export const translations: Record<Language, Translations> = {
     confirmedAttendingLabel: "Confirmed Attending Guests",
     primaryGuestLabel: "Primary Guest",
     selectedPartyLabel: "Selected Party",
-    requiresSeatsLabel: "Requires {{count}} Seat(s)",
+    requiresSeatsLabel: "Requires {{count}} Seats",
+    requiresSeatsLabel_one: "Requires {{count}} Seat",
+    requiresSeatsLabel_other: "Requires {{count}} Seats",
     includedAttendeesLabel: "Included Attendees ({{count}}):",
     chooseVenueTableLabel: "Choose Venue Table:",
     currentlySeatedHere: "Currently Seated Here",
@@ -1897,10 +1959,14 @@ export const translations: Record<Language, Translations> = {
     thankYouTrackerSubtitle: "Log shower gifts received, auto-generate personalized thank-you notes, and track thank-you card status.",
     scheduleOfTheDayLabel: "Schedule of the Day",
     themeComboSelectorLabel: "Theme & Color Combo Selector",
-    printingCardsLabel: "Print {{count}} Card(s)",
+    printingCardsLabel: "Print {{count}} Cards",
+    printingCardsLabel_one: "Print {{count}} Card",
+    printingCardsLabel_other: "Print {{count}} Cards",
     foldedTentCardsBtn: "Folded Tent Cards",
     nameBadgesBtn: "Name Badges",
     allTablesOption: "All Tables ({{count}} guests)",
+    allTablesOption_one: "All Tables ({{count}} guest)",
+    allTablesOption_other: "All Tables ({{count}} guests)",
     tableFilterLabel: "Table:",
     printPreviewLabel: "Print Preview",
     paperLayoutLabel: "Paper layout",
@@ -1913,7 +1979,9 @@ export const translations: Record<Language, Translations> = {
     deleteAllConfirmTitle: "Delete Guest?",
     deleteAllConfirmMsg: "Are you sure you want to delete {{name}} from the guest list? Their RSVP and seating will be removed.",
     bulkDeleteConfirmTitle: "Delete Selected Guests?",
-    bulkDeleteConfirmMsg: "This will permanently remove {{count}} guest(s) and their RSVPs. This cannot be undone.",
+    bulkDeleteConfirmMsg: "This will permanently remove {{count}} guests and their RSVPs. This cannot be undone.",
+    bulkDeleteConfirmMsg_one: "This will permanently remove {{count}} guest and their RSVP. This cannot be undone.",
+    bulkDeleteConfirmMsg_other: "This will permanently remove {{count}} guests and their RSVPs. This cannot be undone.",
     savingBtn: "Saving...",
     totalDietaryNeedsLabel: "Total Reported Dietary Needs: {{count}}",
     noGuestsYetTitle: "No Guest Invitations Yet",
@@ -2047,7 +2115,9 @@ export const translations: Record<Language, Translations> = {
     amazonRegistryLabel: "Lien Liste de Naissance",
     appSubtitle: "Planificateur de Baby Shower",
     appTitle: "Bébé",
-    applySeatingBtn: "Appliquer {{count}} placement(s)",
+    applySeatingBtn: "Appliquer {{count}} placements",
+    applySeatingBtn_one: "Appliquer {{count}} placement",
+    applySeatingBtn_other: "Appliquer {{count}} placements",
     assignGuestsToTable: "Assigner des invités à la table",
     assignedTableLabel: "Table assignée",
     attendeeContactHelper: "Si renseigné, une invitation officielle en lecture seule sera envoyée directement à cet invité.",
@@ -2160,6 +2230,8 @@ export const translations: Record<Language, Translations> = {
     csvImportErrorToast: "Une erreur est survenue lors de l'import.",
     csvImportFailedToast: "Échec de l'import CSV.",
     csvImportedToast: "{{count}} nouveaux invités importés !",
+    csvImportedToast_one: "{{count}} nouvel invité importé !",
+    csvImportedToast_other: "{{count}} nouveaux invités importés !",
     csvInvalidToast: "Aucun invité valide trouvé dans le texte CSV.",
     currentStatusLabel: "Statut actuel",
     customHeaderLabel: "Texte d'en-tête personnalisé",
@@ -2280,7 +2352,9 @@ export const translations: Record<Language, Translations> = {
     finderOpenSeatingTitle: "Placement libre / table non attribuée",
     finderPartyLead: "Responsable du groupe",
     finderSearching: "Recherche…",
-    finderSeatedWithParty: "Placé avec votre groupe ({{count}} place(s) réservée(s))",
+    finderSeatedWithParty: "Placé avec votre groupe ({{count}} places réservées)",
+    finderSeatedWithParty_one: "Placé avec votre groupe ({{count}} place réservée)",
+    finderSeatedWithParty_other: "Placé avec votre groupe ({{count}} places réservées)",
     finderTableHighlight: "Votre table sur la carte du lieu",
     finderWelcome: "Bienvenue, {{name}} !",
     floorPlanInfoDesc: "Ceci est un aperçu en lecture seule de votre plan. Pour modifier les tables, ajouter des éléments du lieu, redimensionner la salle ou assigner des invités, cliquez sur Ouvrir l'éditeur plein écran.",
@@ -2294,11 +2368,15 @@ export const translations: Record<Language, Translations> = {
     formattedLabel: "Formaté :",
     fpAllSeatedToast: "ℹ Tous les invités confirmés sont déjà placés !",
     fpAssignFailedToast: "Échec du placement de l'invité",
-    fpAutoSeatedToast: "{{count}} groupe(s) placé(s) automatiquement !",
+    fpAutoSeatedToast: "{{count}} groupes placés automatiquement !",
+    fpAutoSeatedToast_one: "{{count}} groupe placé automatiquement !",
+    fpAutoSeatedToast_other: "{{count}} groupes placés automatiquement !",
     fpCannotSeatToast: "Impossible de placer « {{guest}} » (groupe de {{size}}) à « {{table}} ». Seulement {{available}} places libres.",
     fpEditCancelledToast: "Modification du plan annulée.",
     fpElementRemovedToast: "Élément retiré du plan",
-    fpEmailsSentToast: "Emails du plan envoyés à {{count}} invité(s) !",
+    fpEmailsSentToast: "Emails du plan envoyés à {{count}} invités !",
+    fpEmailsSentToast_one: "Email du plan envoyé à {{count}} invité !",
+    fpEmailsSentToast_other: "Emails du plan envoyés à {{count}} invités !",
     fpNoEmailsToast: "Aucun email de plan envoyé — les invités doivent avoir une adresse email.",
     fpLandmarkAddedToast: "{{name}} ajouté",
     fpNoFitTableToast: "« {{table}} » n'a que {{free}} place(s) libre(s), mais « {{guest}} » en demande {{needed}}.",
@@ -2317,7 +2395,9 @@ export const translations: Record<Language, Translations> = {
     galleryDeleteErrToast: "Une erreur est survenue lors de la suppression.",
     galleryDeleteErrorToast: "Échec de la suppression de la photo.",
     galleryDeleteFailedToast: "Échec de la suppression de certaines photos.",
-    galleryDeletedToast: "{{count}} photo(s) supprimée(s) avec succès.",
+    galleryDeletedToast: "{{count}} photos supprimées avec succès.",
+    galleryDeletedToast_one: "{{count}} photo supprimée avec succès.",
+    galleryDeletedToast_other: "{{count}} photos supprimées avec succès.",
     galleryFiltersResetToast: "Recherche et filtres réinitialisés.",
     galleryPhotoRemovedToast: "Photo retirée de la bibliothèque.",
     gbEntryDeletedToast: "Message supprimé.",
@@ -2439,6 +2519,8 @@ export const translations: Record<Language, Translations> = {
     invitesFailedSuffix: "({{count}} en échec)",
     invitesNoneToast: "Aucune invitation envoyée. Vérifiez RESEND_API_KEY.",
     invitesSentMsg: "Invitations envoyées à {{count}} invités !",
+    invitesSentMsg_one: "Invitation envoyée à {{count}} invité !",
+    invitesSentMsg_other: "Invitations envoyées à {{count}} invités !",
     langSwitch: "English (EN)",
     landingAdminBtn: "Connexion Hôte",
     landingEntryLabel: "Ou continuer avec",
@@ -2448,6 +2530,8 @@ export const translations: Record<Language, Translations> = {
     linkCopied: "Copié !",
     linkOnlyHint: "Vous recevrez un message prêt à envoyer à partager vous-même (WhatsApp, Messenger…).",
     linksCopiedToast: "{{count}} liens d'invitation copiés !",
+    linksCopiedToast_one: "{{count}} lien d'invitation copié !",
+    linksCopiedToast_other: "{{count}} liens d'invitation copiés !",
     liveFeedTab: "Fil en direct",
     livePreviewLabel: "Aperçu en direct de la typographie & palette",
     loadSampleBtn: "Charger un exemple",
@@ -2558,6 +2642,8 @@ export const translations: Record<Language, Translations> = {
     remindersErrorToast: "Échec de l'envoi des rappels",
     remindersNoneToast: "Aucun invité en attente à rappeler.",
     remindersSentMsg: "Rappels envoyés à {{count}} invités en attente !",
+    remindersSentMsg_one: "Rappel envoyé à {{count}} invité en attente !",
+    remindersSentMsg_other: "Rappels envoyés à {{count}} invités en attente !",
     removeBtn: "Retirer",
     removeGuestBtn: "Retirer l'invité",
     removeInviteBtn: "Retirer",
@@ -2618,7 +2704,9 @@ export const translations: Record<Language, Translations> = {
     seatingCodeHint: "Affichez ou saisissez ce code en scannant l'affiche QR à l'entrée du lieu pour trouver votre table !",
     seatingCodeTitle: "Votre code de table à 4 chiffres",
     seatingPassTitle: "Pass de Placement",
-    seatingProposalsCount: "{{count}} proposition(s) de placement générée(s)",
+    seatingProposalsCount: "{{count}} propositions de placement générées",
+    seatingProposalsCount_one: "{{count}} proposition de placement générée",
+    seatingProposalsCount_other: "{{count}} propositions de placement générées",
     seatsAssignedLabel: "Places attribuées",
     seatsLabel: "Places",
     selectAllBtn: "Tout sélectionner",
@@ -2736,8 +2824,12 @@ export const translations: Record<Language, Translations> = {
     uploadManyHint: "Envoyez autant de photos que vous voulez d'un coup !",
     uploadMoreBtn: "Envoyer d'autres photos",
     uploadSelectErrorToast: "Veuillez sélectionner au moins une photo.",
-    uploadSuccessMsg: "Vos {{count}} photo(s) ont été enregistrées dans la bibliothèque privée des hôtes.",
-    uploadSuccessToast: "{{count}} photo(s) envoyée(s) à la galerie !",
+    uploadSuccessMsg: "Vos {{count}} photos ont été enregistrées dans la bibliothèque privée des hôtes.",
+    uploadSuccessMsg_one: "Votre photo a été enregistrée dans la bibliothèque privée des hôtes.",
+    uploadSuccessMsg_other: "Vos {{count}} photos ont été enregistrées dans la bibliothèque privée des hôtes.",
+    uploadSuccessToast: "{{count}} photos envoyées à la galerie !",
+    uploadSuccessToast_one: "{{count}} photo envoyée à la galerie !",
+    uploadSuccessToast_other: "{{count}} photos envoyées à la galerie !",
     uploaderLabel: "Par :",
     urgentAlertsSubtitle: "Diffusez des notifications en direct à tous les invités.",
     urgentAlertsTitle: "Alertes Flash en Direct",
@@ -2805,7 +2897,9 @@ export const translations: Record<Language, Translations> = {
     editorTitle: "Editeur de plan de salle plein ecran",
     unsavedChangesBadge: "Modifications non enregistrees",
     editorSubtitle: "Glissez-deposez les tables, personnalisez le lieu et placez les invites confirmes",
-    seatsTotalLabel: "{{count}} sieges au total",
+    seatsTotalLabel: "{{count}} sièges au total",
+    seatsTotalLabel_one: "{{count}} siège au total",
+    seatsTotalLabel_other: "{{count}} sièges au total",
     confirmedCountLabel: "{{count}} confirme(s)",
     roomDimensionsLabel: "Dimensions de la salle",
     roomPresetsLabel: "Prereglages de salle",
@@ -2840,7 +2934,9 @@ export const translations: Record<Language, Translations> = {
     confirmedAttendingLabel: "Invites confirmes",
     primaryGuestLabel: "Invite principal",
     selectedPartyLabel: "Groupe selectionne",
-    requiresSeatsLabel: "Necessite {{count}} place(s)",
+    requiresSeatsLabel: "Nécessite {{count}} places",
+    requiresSeatsLabel_one: "Nécessite {{count}} place",
+    requiresSeatsLabel_other: "Nécessite {{count}} places",
     includedAttendeesLabel: "Personnes incluses ({{count}}) :",
     chooseVenueTableLabel: "Choisir la table :",
     currentlySeatedHere: "Place a cette table",
@@ -2875,10 +2971,14 @@ export const translations: Record<Language, Translations> = {
     thankYouTrackerSubtitle: "Enregistrez les cadeaux recus, generez automatiquement des mots de remerciement personnalises et suivez leur envoi.",
     scheduleOfTheDayLabel: "Programme de la journee",
     themeComboSelectorLabel: "Selecteur de theme & combinaison de couleurs",
-    printingCardsLabel: "Imprimer {{count}} carte(s)",
+    printingCardsLabel: "Imprimer {{count}} cartes",
+    printingCardsLabel_one: "Imprimer {{count}} carte",
+    printingCardsLabel_other: "Imprimer {{count}} cartes",
     foldedTentCardsBtn: "Cartes pliantes",
     nameBadgesBtn: "Badges nominatifs",
-    allTablesOption: "Toutes les tables ({{count}} invites)",
+    allTablesOption: "Toutes les tables ({{count}} invités)",
+    allTablesOption_one: "Toutes les tables ({{count}} invité)",
+    allTablesOption_other: "Toutes les tables ({{count}} invités)",
     tableFilterLabel: "Table :",
     printPreviewLabel: "Apercu d'impression",
     paperLayoutLabel: "Disposition papier",
@@ -2891,7 +2991,9 @@ export const translations: Record<Language, Translations> = {
     deleteAllConfirmTitle: "Supprimer l'invite ?",
     deleteAllConfirmMsg: "Voulez-vous vraiment supprimer {{name}} de la liste des invites ? Son RSVP et son placement seront retires.",
     bulkDeleteConfirmTitle: "Supprimer les invites selectionnes ?",
-    bulkDeleteConfirmMsg: "Cela supprimera definitivement {{count}} invite(s) et leurs RSVP. Cette action est irreversible.",
+    bulkDeleteConfirmMsg: "Cela supprimera définitivement {{count}} invités et leurs RSVP. Cette action est irréversible.",
+    bulkDeleteConfirmMsg_one: "Cela supprimera définitivement {{count}} invité et son RSVP. Cette action est irréversible.",
+    bulkDeleteConfirmMsg_other: "Cela supprimera définitivement {{count}} invités et leurs RSVP. Cette action est irréversible.",
     savingBtn: "Enregistrement...",
     totalDietaryNeedsLabel: "Total des besoins alimentaires signales : {{count}}",
     noGuestsYetTitle: "Aucune invitation d'invite",

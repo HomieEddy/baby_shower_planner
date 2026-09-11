@@ -94,7 +94,7 @@ export const HostPhotoGalleryPage: React.FC = () => {
       }
       setPhotos((prev) => prev.filter((p) => !selectedPhotoIds.includes(p.id)));
       setSelectedPhotoIds([]);
-      toast.success(tf('galleryDeletedToast', { count: String(count) }));
+      toast.success(tf('galleryDeletedToast', { count }));
     } catch (err) {
       console.error('Failed to delete selected photos:', err);
       toast.error(t.galleryDeleteFailedToast);

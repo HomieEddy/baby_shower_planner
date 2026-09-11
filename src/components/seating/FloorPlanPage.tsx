@@ -324,7 +324,7 @@ export const FloorPlanPage = () => {
     }
 
     setIsSmartSuggestOpen(false);
-    setNotification(tf('fpAutoSeatedToast', { count: String(toApply.length) }));
+    setNotification(tf('fpAutoSeatedToast', { count: toApply.length }));
     setTimeout(() => setNotification(null), 3500);
   };
 
@@ -580,7 +580,7 @@ export const FloorPlanPage = () => {
       if (data.success) {
         setIsEmailModalOpen(false);
         setNotification(data.count > 0
-          ? tf('fpEmailsSentToast', { count: String(data.count) })
+          ? tf('fpEmailsSentToast', { count: data.count })
           : t.fpNoEmailsToast);
         setTimeout(() => setNotification(null), 4000);
       }
