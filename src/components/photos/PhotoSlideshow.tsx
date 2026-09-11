@@ -1,7 +1,7 @@
 import React from 'react';
 import { Sparkles, Play, Pause, X } from 'lucide-react';
 import { EventPhoto } from '../../types';
-import { useSettingsStore } from '../../stores/settingsStore';
+import { useSettings } from '../../lib/settingsQuery';
 import { useT } from '../shared/i18n';
 
 interface PhotoSlideshowProps {
@@ -20,7 +20,7 @@ export const PhotoSlideshow: React.FC<PhotoSlideshowProps> = ({
   onClose,
 }) => {
   const t = useT();
-  const settings = useSettingsStore((s) => s.settings);
+  const settings = useSettings();
   const photo = photos[currentIndex];
 
   // The last photo may be deleted while the slideshow is open.

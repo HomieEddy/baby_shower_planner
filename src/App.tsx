@@ -16,7 +16,7 @@ import { EventDetailsPage } from './components/landing/EventDetailsPage';
 import { RegisterPage } from './components/registration/RegisterPage';
 import { ToastProvider } from './components/shared/ToastContext';
 import { ConfirmProvider } from './components/shared/ConfirmDialog';
-import { useSettingsStore } from './stores/settingsStore';
+import { useSettings } from './lib/settingsQuery';
 import { applyThemeToDocument, getThemeById } from './themePresets';
 import { requireAuth } from './lib/api';
 
@@ -41,8 +41,7 @@ export default function App() {
 }
 
 function MainAppContent() {
-  const settings = useSettingsStore((s) => s.settings);
-  const fetchSettings = useSettingsStore((s) => s.fetchSettings);
+  const settings = useSettings();
   const location = useLocation();
 
   // Guest-facing pages render without the admin header/nav — unless the
@@ -56,10 +55,6 @@ function MainAppContent() {
   const isGuestDayOf = location.pathname === '/find-my-table' || location.pathname === '/check-in';
   const showHeader = (isAdminSurface || requireAuth()) && !isGuestDayOf;
   const showFinderLangBar = isGuestDayOf;
-
-  useEffect(() => {
-    fetchSettings();
-  }, [fetchSettings]);
 
   useEffect(() => {
     const activeTheme = getThemeById(settings?.themeId, settings?.customTheme);

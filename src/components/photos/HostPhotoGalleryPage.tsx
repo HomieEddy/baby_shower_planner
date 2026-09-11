@@ -20,7 +20,7 @@ import { useToast } from '../shared/ToastContext';
 import { useConfirm } from '../shared/ConfirmDialog';
 import { Modal } from '../shared/Modal';
 import { adminFetch } from '../../lib/api';
-import { useSettingsStore } from '../../stores/settingsStore';
+import { useSettings } from '../../lib/settingsQuery';
 import { EmptyState } from '../shared/EmptyState';
 import { PhotoCard } from './PhotoCard';
 import { PhotoLightbox } from './PhotoLightbox';
@@ -34,7 +34,7 @@ export const HostPhotoGalleryPage: React.FC = () => {
   const t = useT();
   const { toast } = useToast();
   const confirm = useConfirm();
-  const settings = useSettingsStore((s) => s.settings);
+  const settings = useSettings();
   const [photos, setPhotos] = useState<EventPhoto[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');

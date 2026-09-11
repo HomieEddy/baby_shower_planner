@@ -14,7 +14,7 @@ import { AdminAgendaTab } from './AdminAgendaTab';
 import { useToast } from '../shared/ToastContext';
 import { useConfirm } from '../shared/ConfirmDialog';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { useSettingsStore } from '../../stores/settingsStore';
+import { settingsQueryKey, setSettingsCache, useSettings } from '../../lib/settingsQuery';
 import { adminFetch } from '../../lib/api';
 import { motion, AnimatePresence } from 'motion/react';
 import { useAppStore } from '../../stores/appStore';
@@ -73,20 +73,19 @@ const TabPane = ({ children }: { children: React.ReactNode }) => (
 export const AdminDashboard = () => {
   const navigate = useNavigate();
   const language = useAppStore((s) => s.language);
-  const settings = useSettingsStore((s) => s.settings);
-  const setSettings = useSettingsStore((s) => s.setSettings);
-  const fetchSettings = useSettingsStore((s) => s.fetchSettings);
+  const settings = useSettings();
+  const queryClient = useQueryClient();
   const t = useT();
   const { toast } = useToast();
 
   const [adminSubTab, setAdminSubTab] = useState<TabId>('guests');
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
-  // Re-fetch settings with the admin token: the app-level fetch may have run
-  // before login and received the scrubbed public shape (no host contact).
+  // Re-fetch with the admin token: the app-level fetch may have run before
+  // login and cached the scrubbed public shape (no host contact).
   useEffect(() => {
-    fetchSettings();
-  }, [fetchSettings]);
+    queryClient.invalidateQueries({ queryKey: settingsQueryKey });
+  }, [queryClient]);
 
   const tabLabel = (id: TabId): string => {
     switch (id) {
@@ -103,7 +102,6 @@ export const AdminDashboard = () => {
     }
   };
 
-  const queryClient = useQueryClient();
   const overviewQuery = useQuery({
     queryKey: ['admin-overview'],
     queryFn: async () => {
@@ -188,7 +186,7 @@ export const AdminDashboard = () => {
     }
     const result = await res.json();
     if (result.settings) {
-      setSettings(result.settings);
+      setSettingsCache(queryClient, result.settings);
     }
     return result.settings;
   };

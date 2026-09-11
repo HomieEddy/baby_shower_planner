@@ -1,7 +1,7 @@
 import { useLocation, useNavigate } from 'react-router-dom';
 import { motion } from 'motion/react';
 import { LayoutDashboard, BookOpen, Globe, MapPin, Baby, Camera } from 'lucide-react';
-import { useSettingsStore } from '../../stores/settingsStore';
+import { useSettings } from '../../lib/settingsQuery';
 import { useAppStore } from '../../stores/appStore';
 import { useT } from '../shared/i18n';
 
@@ -15,7 +15,7 @@ interface HeaderProps {
 export const Header: React.FC<HeaderProps> = ({ minimal = false }) => {
   const language = useAppStore((s) => s.language);
   const toggleLanguage = useAppStore((s) => s.toggleLanguage);
-  const settings = useSettingsStore((s) => s.settings);
+  const settings = useSettings();
   const t = useT();
   const location = useLocation();
   const navigate = useNavigate();
