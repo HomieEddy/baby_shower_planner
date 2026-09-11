@@ -14,7 +14,7 @@ import { FloorPlanEditor } from './FloorPlanEditor';
 import { ViewModeToggle, ViewMode } from '../shared/ViewModeToggle';
 import { motion, AnimatePresence } from 'motion/react';
 import { Modal } from '../shared/Modal';
-import { useSettingsStore } from '../../stores/settingsStore';
+import { useSettings } from '../../lib/settingsQuery';
 import {
   Stage,
   Layer,
@@ -57,7 +57,7 @@ import { useT } from '../shared/i18n';
 
 export const FloorPlanPage = () => {
   const language = useAppStore((s) => s.language);
-  const settings = useSettingsStore((s) => s.settings);
+  const settings = useSettings();
   const t = useT();
 
   // Floor Map Data State

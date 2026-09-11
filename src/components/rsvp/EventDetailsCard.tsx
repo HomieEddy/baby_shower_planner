@@ -5,7 +5,7 @@ import { motion, useReducedMotion } from 'motion/react';
 import { useNavigate } from 'react-router-dom';
 import { parse, format } from 'date-fns';
 import { enUS, fr } from 'date-fns/locale';
-import { useSettingsStore } from '../../stores/settingsStore';
+import { useSettings } from '../../lib/settingsQuery';
 import { EmptyState } from '../shared/EmptyState';
 import { useAppStore } from '../../stores/appStore';
 import { useT } from '../shared/i18n';
@@ -63,7 +63,7 @@ export const EventDetailsCard = ({
   status?: { label: string; tone: 'attending' | 'declined' | 'pending' } | null;
 }) => {
   const language = useAppStore((s) => s.language);
-  const settings = useSettingsStore((s) => s.settings);
+  const settings = useSettings();
   const t = useT();
   const reduced = useReducedMotion();
   const navigate = useNavigate();

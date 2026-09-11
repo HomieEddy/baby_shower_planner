@@ -1,7 +1,7 @@
 import { motion } from 'motion/react';
 import { useNavigate } from 'react-router-dom';
 import { UserRound, ShieldCheck, CalendarDays, Baby, Users } from 'lucide-react';
-import { useSettingsStore } from '../../stores/settingsStore';
+import { useSettings } from '../../lib/settingsQuery';
 import { useAppStore } from '../../stores/appStore';
 import { useT } from '../shared/i18n';
 import { fadeUp } from '../shared/motionPresets';
@@ -9,7 +9,7 @@ import { fadeUp } from '../shared/motionPresets';
 export const LandingPage = () => {
   const t = useT();
   const navigate = useNavigate();
-  const settings = useSettingsStore((s) => s.settings);
+  const settings = useSettings();
   const language = useAppStore((s) => s.language);
 
   const parents = settings?.parentsNames?.trim() || settings?.babyName?.trim();

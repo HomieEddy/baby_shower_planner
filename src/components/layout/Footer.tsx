@@ -1,13 +1,13 @@
 import { motion } from 'motion/react';
 import { useQuery } from '@tanstack/react-query';
 import { Heart, FlaskConical } from 'lucide-react';
-import { useSettingsStore } from '../../stores/settingsStore';
+import { useSettings } from '../../lib/settingsQuery';
 import { useAppStore } from '../../stores/appStore';
 import { useT } from '../shared/i18n';
 
 export const Footer = () => {
   const t = useT();
-  const settings = useSettingsStore((s) => s.settings);
+  const settings = useSettings();
   const language = useAppStore((s) => s.language);
   const { data: rehearsal } = useQuery({
     queryKey: ['rehearsal-status'],
