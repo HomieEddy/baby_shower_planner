@@ -18,6 +18,7 @@ import { useToast } from '../shared/ToastContext';
 import { getPartyMembers, isMemberCheckedIn, isPartyLead } from '../../lib/guestAttendees';
 import { getGuestPartySize } from '../../lib/tableAssignment';
 import { decodeApiError } from '../../lib/errors';
+import { isValidCode } from '../../lib/validation';
 import { VenueModal } from './VenueModal';
 
 // A searchable person: the primary guest or one of their party attendees.
@@ -92,7 +93,7 @@ export const GuestFinderPage: React.FC = () => {
       const data = await res.json();
       return data.guests ?? [];
     },
-    enabled: /^\d{4}$/.test(searchCode),
+    enabled: isValidCode(searchCode),
   });
 
   const floorMap = data?.floorMap ?? null;

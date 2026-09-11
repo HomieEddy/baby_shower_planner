@@ -2,6 +2,7 @@
 
 import type { Guest } from '../types';
 import { fromRecord, pb } from './client';
+import { isValidCode } from '../lib/validation';
 
 // Public endpoint data for the seating page: full Guest shape with
 // sensitive fields (email, phone, code, magic_token, dietary info) scrubbed.
@@ -62,7 +63,7 @@ export async function getSeatingRoster(guestToken?: string, code?: string): Prom
   // Code lookup: only the matching party is returned (exact 4-digit match) —
   // the full roster is never exposed.
   let guests: Guest[] = [];
-  if (code && /^\d{4}$/.test(code)) {
+  if (code && isValidCode(code)) {
     guests = records
       .filter((r: any) => r.code === code)
       .map((r: any) => scrubForGuestLookup(fromRecord<Guest>(r)));
