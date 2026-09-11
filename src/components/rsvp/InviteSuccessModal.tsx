@@ -1,7 +1,7 @@
 import { CheckCircle2, Check, Copy, MessageSquare } from 'lucide-react';
 import { Modal } from '../shared/Modal';
 import { useCopyFeedback } from '../shared/hooks';
-import { useT } from '../shared/i18n';
+import { useT, useTf } from '../shared/i18n';
 
 export const InviteSuccessModal = ({
   modal,
@@ -11,6 +11,7 @@ export const InviteSuccessModal = ({
   onClose: () => void;
 }) => {
   const t = useT();
+  const tf = useTf();
   const { copiedKey, copy } = useCopyFeedback();
 
   return (
@@ -21,7 +22,7 @@ export const InviteSuccessModal = ({
         </div>
         <div className="space-y-1">
           <h3 className="font-newsreader text-2xl font-bold text-[#4A3F35]">{t.inviteCreatedTitle}</h3>
-          <p className="text-xs text-[#5D5449]">{t.inviteCreatedHint.replace('{{name}}', modal?.name || '')}</p>
+          <p className="text-xs text-[#5D5449]">{tf('inviteCreatedHint', { name: modal?.name || '' })}</p>
         </div>
         <div className="bg-white p-3.5 rounded-2xl border-2 border-[#CBAE94] font-mono text-xs text-[#5D5449] break-all select-all">
           {modal?.url}

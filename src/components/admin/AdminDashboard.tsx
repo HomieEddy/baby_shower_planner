@@ -18,7 +18,7 @@ import { settingsQueryKey, setSettingsCache, useSettings } from '../../lib/setti
 import { adminFetch } from '../../lib/api';
 import { motion, AnimatePresence } from 'motion/react';
 import { useAppStore } from '../../stores/appStore';
-import { useT } from '../shared/i18n';
+import { useT, useTf } from '../shared/i18n';
 import { adminContainerVariants, adminCardVariants } from '../shared/motionPresets';
 import {
   Users,
@@ -76,6 +76,7 @@ export const AdminDashboard = () => {
   const settings = useSettings();
   const queryClient = useQueryClient();
   const t = useT();
+  const tf = useTf();
   const { toast } = useToast();
 
   const [adminSubTab, setAdminSubTab] = useState<TabId>('guests');
@@ -269,7 +270,7 @@ export const AdminDashboard = () => {
               <p className="font-mono font-bold text-amber-800 text-xs sm:text-sm">{t.rehearsalActiveBanner}</p>
               {rehearsal?.sample && (
                 <p className="text-[11px] text-amber-800/90 mt-0.5">
-                  {t.rehearsalSampleCode.replace('{{code}}', rehearsal.sample.code)}
+                  {tf('rehearsalSampleCode', { code: rehearsal.sample.code })}
                 </p>
               )}
             </div>

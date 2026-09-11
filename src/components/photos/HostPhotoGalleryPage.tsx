@@ -27,11 +27,12 @@ import { PhotoLightbox } from './PhotoLightbox';
 import { PhotoSlideshow } from './PhotoSlideshow';
 import { TableQrModal } from './TableQrModal';
 import { EventPhoto } from '../../types';
-import { useT } from '../shared/i18n';
+import { useT, useTf } from '../shared/i18n';
 import { useFloorMapTables } from '../shared/hooks';
 
 export const HostPhotoGalleryPage: React.FC = () => {
   const t = useT();
+  const tf = useTf();
   const { toast } = useToast();
   const confirm = useConfirm();
   const settings = useSettings();
@@ -93,7 +94,7 @@ export const HostPhotoGalleryPage: React.FC = () => {
       }
       setPhotos((prev) => prev.filter((p) => !selectedPhotoIds.includes(p.id)));
       setSelectedPhotoIds([]);
-      toast.success(t.galleryDeletedToast.replace('{{count}}', String(count)));
+      toast.success(tf('galleryDeletedToast', { count: String(count) }));
     } catch (err) {
       console.error('Failed to delete selected photos:', err);
       toast.error(t.galleryDeleteFailedToast);

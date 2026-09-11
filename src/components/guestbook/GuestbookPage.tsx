@@ -18,7 +18,7 @@ import { uploadPhotoBase64 } from '../../lib/fileUtils';
 import { compressImage } from '../../lib/imageCompressor';
 import { GuestbookEntrySchema } from '../../lib/validation';
 import { useAppStore } from '../../stores/appStore';
-import { useT } from '../shared/i18n';
+import { useT, useTf } from '../shared/i18n';
 import { usePrint } from '../shared/hooks';
 import { GuestbookForm, GuestbookSuccess } from './GuestbookForm';
 import { GuestbookEntryCard } from './GuestbookEntryCard';
@@ -26,6 +26,7 @@ import { GuestbookEntryCard } from './GuestbookEntryCard';
 export const GuestbookPage = () => {
   const language = useAppStore((s) => s.language);
   const t = useT();
+  const tf = useTf();
   const { toast } = useToast();
 
   const [locked, setLocked] = useState(false);
@@ -259,7 +260,7 @@ export const GuestbookPage = () => {
         <div className="flex items-center justify-between px-2">
           <h3 className="font-gaegu text-2xl font-bold text-[#4A3F35] flex items-center gap-2">
             <Heart className="w-5 h-5 text-rose-500 fill-rose-400" />
-            <span>{t.gbWishesCount.replace('{{count}}', String(entries.length))}</span>
+            <span>{tf('gbWishesCount', { count: String(entries.length) })}</span>
           </h3>
           <span className="text-xs font-bold text-[#8B735B]">{t.liveFeedTab}</span>
         </div>

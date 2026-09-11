@@ -2,7 +2,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Guest, FloorMapData, LandmarkElement, TableElement } from '../../types';
 import { clampToRoundRoom } from './floorPlanHelpers';
 import { getGuestPartySize, seatAttendee, seatParty, unseatAttendee, unassignParty } from '../../lib/tableAssignment';
-import { useT } from '../shared/i18n';
+import { useTf } from '../shared/i18n';
 
 export interface FloorPlanEditorDeps {
   floorMap: FloorMapData;
@@ -16,7 +16,7 @@ export interface FloorPlanEditorDeps {
 // handlers. The editor is mounted fresh on every open (parent keys it), so
 // drafts initialize from the current floor map without effects.
 export function useFloorPlanEditor({ floorMap, guests, notify, onSave, onCancel }: FloorPlanEditorDeps) {
-  const t = useT();
+  const tf = useTf();
   const [draftFloorMap, setDraftFloorMap] = useState<FloorMapData>(() =>
     JSON.parse(JSON.stringify(floorMap))
   );
@@ -325,14 +325,14 @@ export function useFloorPlanEditor({ floorMap, guests, notify, onSave, onCancel 
 
     const outcome = seatAttendee(draftFloorMap, draftGuests, guestId, attendeeIndex, tableId, seatIndex);
     if (outcome.placed === 0) {
-      notify(t.fpCannotSeatToast.replace('{{guest}}', guest.name).replace('{{size}}', '1').replace('{{table}}', targetTable.name).replace('{{available}}', '0'));
+      notify(tf('fpCannotSeatToast', { guest: guest.name, size: '1', table: targetTable.name, available: '0' }));
       return false;
     }
 
     setDraftFloorMap(outcome.map);
     setDraftGuests(outcome.guests);
     setIsDirty(true);
-    notify(t.fpSeatedToast.replace('{{guest}}', guest.name).replace('{{size}}', '1').replace('{{table}}', targetTable.name));
+    notify(tf('fpSeatedToast', { guest: guest.name, size: '1', table: targetTable.name }));
     return true;
   };
 
@@ -354,7 +354,7 @@ export function useFloorPlanEditor({ floorMap, guests, notify, onSave, onCancel 
     setDraftFloorMap(outcome.map);
     setDraftGuests(outcome.guests);
     setIsDirty(true);
-    notify(t.fpSeatedToast.replace('{{guest}}', guest.name).replace('{{size}}', String(getGuestPartySize(guest))).replace('{{table}}', target.name));
+    notify(tf('fpSeatedToast', { guest: guest.name, size: String(getGuestPartySize(guest)), table: target.name }));
     return true;
   };
 
@@ -364,7 +364,7 @@ export function useFloorPlanEditor({ floorMap, guests, notify, onSave, onCancel 
     setDraftFloorMap(outcome.map);
     setDraftGuests(outcome.guests);
     setIsDirty(true);
-    if (guest) notify(t.fpUnseatedToast.replace('{{guest}}', guest.name));
+    if (guest) notify(tf('fpUnseatedToast', { guest: guest.name }));
   };
 
   const handleSaveChanges = async () => {

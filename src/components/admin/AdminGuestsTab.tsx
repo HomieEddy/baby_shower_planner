@@ -37,6 +37,7 @@ import { useConfirm } from '../shared/ConfirmDialog';
 import { useCopyFeedback } from '../shared/hooks';
 import { Modal } from '../shared/Modal';
 import { useToast } from '../shared/ToastContext';
+import { useTf } from '../shared/i18n';
 import { EmptyState } from '../shared/EmptyState';
 import { TextInput, Select } from '../shared/ui';
 
@@ -79,6 +80,7 @@ function parseCsvLine(line: string): string[] {
 export const AdminGuestsTab: React.FC<AdminGuestsTabProps> = ({ language, t, guests, onRefresh }) => {
   const navigate = useNavigate();
   const { toast } = useToast();
+  const tf = useTf();
   const confirm = useConfirm();
 
   const [submittingGuest, setSubmittingGuest] = useState(false);
@@ -243,7 +245,7 @@ export const AdminGuestsTab: React.FC<AdminGuestsTabProps> = ({ language, t, gue
       const data = await res.json();
       if (data.guest) {
         setEditingGuest(null);
-        toast.love(t.guestUpdatedToast.replace('{{name}}', data.guest.name));
+        toast.love(tf('guestUpdatedToast', { name: data.guest.name }));
         await onRefresh();
       }
     } catch (err) {
@@ -256,7 +258,7 @@ export const AdminGuestsTab: React.FC<AdminGuestsTabProps> = ({ language, t, gue
   const handleDeleteGuest = async (id: string, guestName: string) => {
     const ok = await confirm({
       title: t.deleteAllConfirmTitle,
-      message: t.deleteAllConfirmMsg.replace('{{name}}', guestName),
+      message: tf('deleteAllConfirmMsg', { name: guestName }),
       confirmText: t.deleteGuestTitle,
     });
     if (!ok) return;
@@ -264,7 +266,7 @@ export const AdminGuestsTab: React.FC<AdminGuestsTabProps> = ({ language, t, gue
       const res = await adminFetch(`/api/guests/${id}`, { method: 'DELETE' });
       if (res.ok) {
         setViewingGuest(null);
-        toast.info(t.guestDeletedToast.replace('{{name}}', guestName));
+        toast.info(tf('guestDeletedToast', { name: guestName }));
         await onRefresh();
       }
     } catch (err) {
@@ -276,8 +278,7 @@ export const AdminGuestsTab: React.FC<AdminGuestsTabProps> = ({ language, t, gue
     try {
       const res = await adminFetch(`/api/guests/${guest.id}/${decision}`, { method: 'POST' });
       if (res.ok) {
-        const msg = decision === 'approve' ? t.guestApprovedToast : t.guestRejectedToast;
-        toast.love(msg.replace('{{name}}', guest.name));
+        toast.love(tf(decision === 'approve' ? 'guestApprovedToast' : 'guestRejectedToast', { name: guest.name }));
         await onRefresh();
       }
     } catch (err) {
@@ -389,7 +390,7 @@ export const AdminGuestsTab: React.FC<AdminGuestsTabProps> = ({ language, t, gue
       });
       if (res.ok) {
         const data = await res.json();
-        toast.love(t.csvImportedToast.replace('{{count}}', String(data.count)));
+        toast.love(tf('csvImportedToast', { count: String(data.count) }));
         setShowCsvImportModal(false);
         setRawCsvText('');
         onRefresh();
@@ -487,7 +488,7 @@ export const AdminGuestsTab: React.FC<AdminGuestsTabProps> = ({ language, t, gue
         body: JSON.stringify({ guestIds: selectedIds }),
       });
       const data = await res.json();
-      if (data.sent > 0) toast.love(t.invitesSentMsg.replace('{{count}}', String(data.sent)) + (data.failed > 0 ? t.invitesFailedSuffix.replace('{{count}}', String(data.failed)) : ''));
+      if (data.sent > 0) toast.love(tf('invitesSentMsg', { count: String(data.sent) }) + (data.failed > 0 ? tf('invitesFailedSuffix', { count: String(data.failed) }) : ''));
       else toast.info(t.invitesNoneToast);
       setSelectedIds([]);
     } catch { toast.error(t.invitesErrorToast); }
@@ -498,7 +499,7 @@ export const AdminGuestsTab: React.FC<AdminGuestsTabProps> = ({ language, t, gue
       const res = await adminFetch('/api/send-reminders', { method: 'POST' });
       const data = await res.json();
       if (data.sent > 0) {
-        toast.love(t.remindersSentMsg.replace('{{count}}', String(data.sent)) + (data.failed > 0 ? t.invitesFailedSuffix.replace('{{count}}', String(data.failed)) : ''));
+        toast.love(tf('remindersSentMsg', { count: String(data.sent) }) + (data.failed > 0 ? tf('invitesFailedSuffix', { count: String(data.failed) }) : ''));
       } else {
         toast.info(t.remindersNoneToast);
       }
@@ -516,13 +517,13 @@ export const AdminGuestsTab: React.FC<AdminGuestsTabProps> = ({ language, t, gue
     if (selectedIds.length === 0) return;
     const ok = await confirm({
       title: t.bulkDeleteConfirmTitle,
-      message: t.bulkDeleteConfirmMsg.replace('{{count}}', String(selectedIds.length)),
+      message: tf('bulkDeleteConfirmMsg', { count: String(selectedIds.length) }),
       confirmText: t.bulkDeleteBtn,
     });
     if (!ok) return;
     try {
       await Promise.all(selectedIds.map((id) => adminFetch(`/api/guests/${id}`, { method: 'DELETE' })));
-      toast.love(t.guestDeletedToast.replace('{{name}}', String(selectedIds.length)));
+      toast.love(tf('guestDeletedToast', { name: String(selectedIds.length) }));
       setSelectedIds([]);
       await onRefresh();
     } catch (err) {
@@ -678,7 +679,7 @@ export const AdminGuestsTab: React.FC<AdminGuestsTabProps> = ({ language, t, gue
             )}
           </div>
           <div className="mt-4 pt-3 border-t border-dashed border-[#CBAE94] text-[11px] text-[#8B735B] font-mono font-bold text-center">
-                {t.totalDietaryNeedsLabel.replace('{{count}}', String(dietaryList.length))}
+                {tf('totalDietaryNeedsLabel', { count: String(dietaryList.length) })}
           </div>
         </motion.div>
       </div>
@@ -703,7 +704,7 @@ export const AdminGuestsTab: React.FC<AdminGuestsTabProps> = ({ language, t, gue
                   <p className="text-[11px] font-mono text-[#5D5449]/70 truncate">
                     {[g.email, g.phone].filter(Boolean).join(' | ') || t.channelNone}
                     {' · '}
-                    {t.guestPartySizeLabel.replace('{{count}}', String(getGuestPartySize(g))).replace('{{max}}', String(g.max_party_size || 1))}
+                    {tf('guestPartySizeLabel', { count: String(getGuestPartySize(g)), max: String(g.max_party_size || 1) })}
                   </p>
                   {g.dietary_restrictions ? (
                     <p className="text-[11px] text-[#8B735B] truncate">{g.dietary_restrictions}</p>

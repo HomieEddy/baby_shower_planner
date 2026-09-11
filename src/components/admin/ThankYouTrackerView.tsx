@@ -12,7 +12,7 @@ import { Field, TextInput, Select, SearchInput } from '../shared/ui';
 import { GiftLogSchema } from '../../lib/validation';
 import { decodeApiError } from '../../lib/errors';
 import { adminFetch } from '../../lib/api';
-import { useT } from '../shared/i18n';
+import { useT, useTf } from '../shared/i18n';
 import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer } from 'recharts';
 
 interface ThankYouTrackerViewProps {
@@ -29,6 +29,7 @@ export const ThankYouTrackerView: React.FC<ThankYouTrackerViewProps> = ({
   onRefreshData,
 }) => {
     const t = useT();
+    const tf = useTf();
   const { toast } = useToast();
   const confirm = useConfirm();
   const [filterStatus, setFilterStatus] = useState<'ALL' | 'PENDING' | 'SENT'>('ALL');
@@ -495,7 +496,7 @@ export const ThankYouTrackerView: React.FC<ThankYouTrackerViewProps> = ({
           <div className="flex items-center gap-2">
             <Sparkles className="w-5 h-5 text-amber-600" />
             <h3 className="font-sans text-xl font-bold text-[#4A3F35]">
-              {t.thankYouModalTitle.replace('{{name}}', activeDraft?.guest || '')}
+              {tf('thankYouModalTitle', { name: activeDraft?.guest || '' })}
             </h3>
           </div>
         }>

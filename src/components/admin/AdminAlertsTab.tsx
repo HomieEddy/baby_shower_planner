@@ -14,6 +14,7 @@ import { adminFetch } from '../../lib/api';
 import { Modal } from '../shared/Modal';
 import { formatDateLong } from '../../lib/dateUtils';
 import { useToast } from '../shared/ToastContext';
+import { useTf } from '../shared/i18n';
 
 interface AdminAlertsTabProps {
   language: Language;
@@ -27,6 +28,7 @@ interface AdminAlertsTabProps {
 
 export const AdminAlertsTab: React.FC<AdminAlertsTabProps> = ({ language, t, guests, alerts, settings, onRefresh, onDeleteAlert }) => {
   const { toast } = useToast();
+  const tf = useTf();
 
   const [alertType, setAlertType] = useState<AlertType>('REMINDER');
   const [targetAudience, setTargetAudience] = useState<'ALL' | 'PENDING' | 'ATTENDING'>('PENDING');
@@ -43,28 +45,28 @@ export const AdminAlertsTab: React.FC<AdminAlertsTabProps> = ({ language, t, gue
     const vn = settings?.venueName || '';
     const va = settings?.venueAddress || '';
     const babyLabel = bn
-      ? t.babyLabelSet.replace('{{name}}', bn)
+      ? tf('babyLabelSet', { name: bn })
       : t.babyLabelUnset;
     if (type === 'REMINDER') {
       setTargetAudience('PENDING');
-      setAlertTitle(t.alertReminderTitle.replace('{{parents}}', pn));
-      setAlertMessage(t.alertReminderMsg.replace('{{baby}}', babyLabel).replace('{{date}}', formatDateLong(dv, language)));
+      setAlertTitle(tf('alertReminderTitle', { parents: pn }));
+      setAlertMessage(tf('alertReminderMsg', { baby: babyLabel, date: formatDateLong(dv, language) }));
     } else if (type === 'DATE_CHANGE') {
       setTargetAudience('ALL');
       setAlertTitle(t.alertDateChangeTitle);
-      setAlertMessage(t.alertDateChangeMsg.replace('{{date}}', formatDateLong(dv, language)));
+      setAlertMessage(tf('alertDateChangeMsg', { date: formatDateLong(dv, language) }));
     } else if (type === 'VENUE_CHANGE') {
       setTargetAudience('ALL');
       setAlertTitle(t.alertVenueChangeTitle);
-      setAlertMessage(t.alertVenueChangeMsg.replace('{{venue}}', vn).replace('{{address}}', va));
+      setAlertMessage(tf('alertVenueChangeMsg', { venue: vn, address: va }));
     } else if (type === 'CANCELLATION') {
       setTargetAudience('ALL');
       setAlertTitle(t.alertCancellationTitle);
-      setAlertMessage(t.alertCancellationMsg.replace('{{baby}}', babyLabel));
+      setAlertMessage(tf('alertCancellationMsg', { baby: babyLabel }));
     } else {
       setTargetAudience('ALL');
       setAlertTitle(t.alertUpdateTitle);
-      setAlertMessage(t.alertUpdateMsg.replace('{{parents}}', pn).replace('{{baby}}', babyLabel));
+      setAlertMessage(tf('alertUpdateMsg', { parents: pn, baby: babyLabel }));
     }
   };
 

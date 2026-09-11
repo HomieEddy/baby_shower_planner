@@ -2,7 +2,7 @@ import React, { useEffect, useState } from 'react';
 import { Guest, FloorMapData } from '../../types';
 import { Utensils, Printer, AlertTriangle, CheckCircle2, Users, FileSpreadsheet, ArrowUpDown, ChevronUp, ChevronDown, BarChart3 } from 'lucide-react';
 import { useToast } from '../shared/ToastContext';
-import { useT } from '../shared/i18n';
+import { useT, useTf } from '../shared/i18n';
 import { usePrint } from '../shared/hooks';
 import { SearchInput } from '../shared/ui';
 import { getAttendeeLocations } from '../../lib/tableAssignment';
@@ -38,6 +38,7 @@ interface CateringRow {
 
 export const CateringSummaryView: React.FC<CateringSummaryViewProps> = ({ guests }) => {
     const t = useT();
+    const tf = useTf();
   const { toast } = useToast();
   const [searchTerm, setSearchTerm] = useState('');
   const [filterDietaryOnly, setFilterDietaryOnly] = useState(false);
@@ -192,7 +193,7 @@ export const CateringSummaryView: React.FC<CateringSummaryViewProps> = ({ guests
         return (
           <span className="font-mono text-[#4A3F35]">
             {r.tableName
-              ? `${r.tableName}${r.seatNumber ? ` · ${t.seatedAtSeatLabel.replace('{{seat}}', String(r.seatNumber))}` : ''}`
+              ? `${r.tableName}${r.seatNumber ? ` · ${tf('seatedAtSeatLabel', { seat: String(r.seatNumber) })}` : ''}`
               : t.unassignedWord}
           </span>
         );
@@ -390,7 +391,7 @@ export const CateringSummaryView: React.FC<CateringSummaryViewProps> = ({ guests
       {/* Guest Dietary Table */}
       <div className="card-paper p-6 space-y-4">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-          <h3 className="font-sans text-lg font-bold text-[#4A3F35]">{t.cateringManifestTitle.replace('{{count}}', String(filteredList.length))}</h3>
+          <h3 className="font-sans text-lg font-bold text-[#4A3F35]">{tf('cateringManifestTitle', { count: String(filteredList.length) })}</h3>
 
           <div className="flex items-center gap-2">
             <SearchInput

@@ -10,7 +10,7 @@ import {
   X,
   BellRing,
 } from 'lucide-react';
-import { useT } from '../shared/i18n';
+import { useT, useTf } from '../shared/i18n';
 import { adminCardVariants } from '../shared/motionPresets';
 
 export const GuestMetricCard = ({
@@ -149,10 +149,11 @@ export const BulkActionsBar = ({
   onClear: () => void;
 }) => {
   const t = useT();
+  const tf = useTf();
   return (
     <motion.div initial={{ opacity: 0, y: -6 }} animate={{ opacity: 1, y: 0 }}
       className="flex flex-wrap items-center gap-2 bg-[#EFE6DC] border-2 border-[#8B735B] rounded-2xl px-4 py-2.5 mb-3">
-      <span className="text-xs font-bold font-mono text-[#8B735B] mr-1">{t.bulkSelectedLabel.replace('{{count}}', String(count))}</span>
+      <span className="text-xs font-bold font-mono text-[#8B735B] mr-1">{tf('bulkSelectedLabel', { count: String(count) })}</span>
       <button onClick={onResend}
         className="px-3 py-1.5 rounded-full bg-[#8B735B] text-white font-bold text-xs hover:bg-[#4A3F35] transition-all flex items-center gap-1 shadow-2xs">
         <Send className="w-3.5 h-3.5" /><span className="hidden md:inline">{t.bulkResendBtn}</span>

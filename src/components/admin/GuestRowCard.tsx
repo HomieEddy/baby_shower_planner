@@ -11,7 +11,7 @@ import {
 import { Guest } from '../../types';
 import { channelLabel } from '../../lib/capabilities';
 import { getGuestPartySize } from '../../lib/tableAssignment';
-import { useT } from '../shared/i18n';
+import { useT, useTf } from '../shared/i18n';
 
 interface GuestRowCardProps {
   guest: Guest;
@@ -27,6 +27,7 @@ export const GuestRowCard = ({
   onView,
 }: GuestRowCardProps) => {
   const t = useT();
+  const tf = useTf();
   const initials = guest.name.split(' ').map((w) => w[0]).filter(Boolean).slice(0, 2).join('').toUpperCase();
   const channelLabelValue = channelLabel(t, guest.delivery_channel || 'none');
   const partySize = getGuestPartySize(guest);
@@ -60,7 +61,7 @@ export const GuestRowCard = ({
               ) : null}
               {guest.invited_by_guest_name ? (
                 <span className="px-2 py-0.5 rounded-md bg-amber-50 border border-amber-300 text-[10px] font-mono font-bold text-amber-800" title={guest.guest_note || ''}>
-                  {t.invitedByBadge.replace('{{name}}', guest.invited_by_guest_name)}
+                  {tf('invitedByBadge', { name: guest.invited_by_guest_name })}
                 </span>
               ) : (
                 <span className="px-2 py-0.5 rounded-md bg-[#F8F5F0] border border-[#CBAE94]/50 text-[10px] font-mono font-bold text-[#5D5449]/60">
@@ -103,7 +104,7 @@ export const GuestRowCard = ({
           <span className="px-2.5 py-1 rounded-lg bg-white border border-[#CBAE94] text-[11px] font-bold text-[#5D5449]">
             {guest.rsvp_status === 'Attending'
               ? `${partySize} / ${maxSize}`
-              : t.guestPartySizeLabel.replace('{{count}}', String(partySize)).replace('{{max}}', String(maxSize))}
+              : tf('guestPartySizeLabel', { count: String(partySize), max: String(maxSize) })}
           </span>
           {guest.dietary_restrictions ? (
             <span className="px-2.5 py-1 rounded-full bg-[#EFE6DC] text-[11px] font-medium text-[#8B735B] border border-[#CBAE94] max-w-full truncate">

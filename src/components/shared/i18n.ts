@@ -1,3 +1,4 @@
+import { useCallback } from 'react';
 import i18n from 'i18next';
 import { initReactI18next, useTranslation } from 'react-i18next';
 import { translations, Translations } from '../../translations';
@@ -37,4 +38,14 @@ export const useT = (): Translations => {
   return new Proxy({} as Translations, {
     get: (_target, prop: string) => t(prop) as string,
   });
+};
+
+// Interpolating translator for the keys that carry `{{var}}` placeholders.
+// Use this instead of `useT()` plus manual placeholder substitution.
+export const useTf = (): ((key: keyof Translations, vars?: Record<string, string | number>) => string) => {
+  const { t } = useTranslation();
+  return useCallback(
+    (key, vars) => t(key, vars) as string,
+    [t]
+  );
 };

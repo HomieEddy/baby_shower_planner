@@ -53,12 +53,13 @@ import { renderTableBody, renderLandmark, SeatRing, TableLabel, renderRoomBounda
 import { useAppStore } from '../../stores/appStore';
 
 const FloorPlan3D = lazy(() => import('./FloorPlan3D').then((m) => ({ default: m.FloorPlan3D })));
-import { useT } from '../shared/i18n';
+import { useT, useTf } from '../shared/i18n';
 
 export const FloorPlanPage = () => {
   const language = useAppStore((s) => s.language);
   const settings = useSettings();
   const t = useT();
+  const tf = useTf();
 
   // Floor Map Data State
   const [floorMap, setFloorMap] = useState<FloorMapData | null>(null);
@@ -323,7 +324,7 @@ export const FloorPlanPage = () => {
     }
 
     setIsSmartSuggestOpen(false);
-    setNotification(t.fpAutoSeatedToast.replace('{{count}}', String(toApply.length)));
+    setNotification(tf('fpAutoSeatedToast', { count: String(toApply.length) }));
     setTimeout(() => setNotification(null), 3500);
   };
 
@@ -358,16 +359,16 @@ export const FloorPlanPage = () => {
     if (tableId && targetTable) {
       const seatedHere = updatedMap.tables.find((tbl) => tbl.id === tableId)?.assignedGuestIds.includes(guestId) ?? false;
       if (seatedHere) {
-        setNotification(t.fpSeatedToast.replace('{{guest}}', guest.name).replace('{{size}}', String(Math.min(getGuestPartySize(guest), targetTable.capacity))).replace('{{table}}', targetTable.name));
+        setNotification(tf('fpSeatedToast', { guest: guest.name, size: String(Math.min(getGuestPartySize(guest), targetTable.capacity)), table: targetTable.name }));
         setTimeout(() => setNotification(null), 3000);
       } else if (outcome.unplaced > 0) {
         setNotification(
-          t.fpNoFitTableToast.replace('{{table}}', targetTable.name).replace('{{free}}', '0').replace('{{guest}}', guest.name).replace('{{needed}}', String(outcome.unplaced))
+          tf('fpNoFitTableToast', { table: targetTable.name, free: '0', guest: guest.name, needed: String(outcome.unplaced) })
         );
         setTimeout(() => setNotification(null), 4000);
       }
     } else {
-      setNotification(t.fpUnseatedToast.replace('{{guest}}', guest.name));
+      setNotification(tf('fpUnseatedToast', { guest: guest.name }));
       setTimeout(() => setNotification(null), 2500);
     }
 
@@ -579,7 +580,7 @@ export const FloorPlanPage = () => {
       if (data.success) {
         setIsEmailModalOpen(false);
         setNotification(data.count > 0
-          ? t.fpEmailsSentToast.replace('{{count}}', String(data.count))
+          ? tf('fpEmailsSentToast', { count: String(data.count) })
           : t.fpNoEmailsToast);
         setTimeout(() => setNotification(null), 4000);
       }
@@ -941,7 +942,7 @@ export const FloorPlanPage = () => {
                         : 'bg-white hover:bg-[#EFE6DC] text-[#5D5449] border border-[#CBAE94]/60'
                     }`}
                   >
-                    {t.allTablesFilterLabel.replace('{{count}}', String(floorMap ? floorMap.tables.length : 0))}
+                    {tf('allTablesFilterLabel', { count: String(floorMap ? floorMap.tables.length : 0) })}
                   </button>
                   <button
                     type="button"
@@ -953,7 +954,7 @@ export const FloorPlanPage = () => {
                     }`}
                   >
                     <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-                    {t.emptyTablesFilterLabel.replace('{{count}}', String(emptyTablesCount))}
+                    {tf('emptyTablesFilterLabel', { count: String(emptyTablesCount) })}
                   </button>
                   <button
                     type="button"
@@ -965,7 +966,7 @@ export const FloorPlanPage = () => {
                     }`}
                   >
                     <span className="w-2 h-2 rounded-full bg-amber-500" />
-                    {t.partialTablesFilterLabel.replace('{{count}}', String(partialTablesCount))}
+                    {tf('partialTablesFilterLabel', { count: String(partialTablesCount) })}
                   </button>
                   <button
                     type="button"
@@ -977,7 +978,7 @@ export const FloorPlanPage = () => {
                     }`}
                   >
                     <span className="w-2 h-2 rounded-full bg-rose-500" />
-                    {t.fullTablesFilterLabel.replace('{{count}}', String(fullTablesCount))}
+                    {tf('fullTablesFilterLabel', { count: String(fullTablesCount) })}
                   </button>
                 </div>
               </div>
@@ -1013,11 +1014,7 @@ export const FloorPlanPage = () => {
                             );
                           } else {
                             setNotification(
-                              t.fpNoFitTableToast
-                                .replace('{{table}}', table.name)
-                                .replace('{{free}}', String(freeSeats))
-                                .replace('{{guest}}', selectedUnassignedGuest.name)
-                                .replace('{{needed}}', String(partyNeeded))
+                              tf('fpNoFitTableToast', { table: table.name, free: String(freeSeats), guest: selectedUnassignedGuest.name, needed: String(partyNeeded) })
                             );
                             setTimeout(() => setNotification(null), 4000);
                           }
@@ -1138,7 +1135,7 @@ export const FloorPlanPage = () => {
                                   if (success) setSelectedUnassignedGuest(null);
                                 } else {
                                   setNotification(
-                                    t.fpNoFitTableToast.replace('{{table}}', table.name).replace('{{free}}', String(freeSeats)).replace('{{guest}}', selectedUnassignedGuest.name).replace('{{needed}}', String(partyNeeded))
+                                    tf('fpNoFitTableToast', { table: table.name, free: String(freeSeats), guest: selectedUnassignedGuest.name, needed: String(partyNeeded) })
                                   );
                                   setTimeout(() => setNotification(null), 4000);
                                 }
