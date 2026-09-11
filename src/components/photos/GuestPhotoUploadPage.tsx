@@ -12,14 +12,14 @@ import {
   MessageSquare,
   Zap,
   FileCheck2,
-  Lock,
   KeyRound,
 } from 'lucide-react';
 import { EventPhoto } from '../../types';
 import { decodeApiError } from '../../lib/errors';
+import { readGuestLock } from '../../lib/guestLock';
 import { compressImage, formatFileSize } from '../../lib/imageCompressor';
 import { useToast } from '../shared/ToastContext';
-import { formatGuestWindow } from '../../lib/dateUtils';
+import { LockedNotice } from '../shared/LockedNotice';
 import { uploadPhotoBase64 } from '../../lib/fileUtils';
 import { useAppStore } from '../../stores/appStore';
 import { useT } from '../shared/i18n';
@@ -67,14 +67,12 @@ export const GuestPhotoUploadPage = () => {
 
   useEffect(() => {
     fetch('/api/photos')
-      .then((res) => {
-        if (res.status === 403) {
-          return res.json().then((data) => {
-            setLocked(true);
-            setLockInfo({ opensAt: data.opensAt, closesAt: data.closesAt });
-          });
+      .then(async (res) => {
+        const lock = await readGuestLock(res);
+        if (lock) {
+          setLocked(true);
+          setLockInfo(lock);
         }
-        return null;
       })
       .catch(() => {});
   }, []);
@@ -302,22 +300,12 @@ export const GuestPhotoUploadPage = () => {
     return (
       <div className="min-h-screen bg-[#FAF6F0] py-8 px-4 sm:px-6 lg:px-8 font-sans">
         <div className="max-w-2xl mx-auto">
-          <div className="card-paper p-10 sm:p-14 text-center space-y-4">
-            <div className="w-14 h-14 bg-[#E9E0D2] text-[#8B735B] rounded-full flex items-center justify-center mx-auto border-2 border-[#CBAE94]">
-              <Lock className="w-6 h-6" />
-            </div>
-            <h2 className="font-newsreader text-2xl sm:text-3xl font-bold text-[#4A3F35]">
-              {t.photosLockedTitle}
-            </h2>
-            <p className="text-sm text-[#4A3F35]/70 font-sans leading-relaxed max-w-md mx-auto">
-              {t.photosLockedMsg}
-            </p>
-            {lockInfo && (
-              <p className="text-xs font-mono font-bold text-[#8B735B] pt-2">
-                {formatGuestWindow(lockInfo.opensAt, lockInfo.closesAt, language)}
-              </p>
-            )}
-          </div>
+          <LockedNotice
+            title={t.photosLockedTitle}
+            message={t.photosLockedMsg}
+            lockInfo={lockInfo}
+            language={language}
+          />
         </div>
       </div>
     );

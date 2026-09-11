@@ -8,12 +8,12 @@ import {
   Heart,
   BookOpen,
   Printer,
-  Lock,
 } from 'lucide-react';
 import { useToast } from '../shared/ToastContext';
 import { useVirtualizer } from '@tanstack/react-virtual';
 import { EmptyState } from '../shared/EmptyState';
-import { formatGuestWindow } from '../../lib/dateUtils';
+import { LockedNotice } from '../shared/LockedNotice';
+import { readGuestLock } from '../../lib/guestLock';
 import { uploadPhotoBase64 } from '../../lib/fileUtils';
 import { compressImage } from '../../lib/imageCompressor';
 import { GuestbookEntrySchema } from '../../lib/validation';
@@ -68,10 +68,10 @@ export const GuestbookPage = () => {
     try {
       setLoadingEntries(true);
       const res = await fetch('/api/guestbook');
-      if (res.status === 403) {
-        const data = await res.json();
+      const lock = await readGuestLock(res);
+      if (lock) {
         setLocked(true);
-        setLockInfo({ opensAt: data.opensAt, closesAt: data.closesAt });
+        setLockInfo(lock);
         return;
       }
       if (res.ok) {
@@ -139,11 +139,11 @@ export const GuestbookPage = () => {
         }),
       });
 
-      if (res.status === 403) {
+      const lock = await readGuestLock(res);
+      if (lock) {
         // The window closed while this page was open.
-        const data = await res.json();
         setLocked(true);
-        setLockInfo({ opensAt: data.opensAt, closesAt: data.closesAt });
+        setLockInfo(lock);
         return;
       }
 
@@ -181,22 +181,12 @@ export const GuestbookPage = () => {
         transition={{ duration: 0.35, ease: 'easeOut' }}
         className="max-w-2xl mx-auto"
       >
-        <div className="card-paper p-10 sm:p-14 text-center space-y-4">
-          <div className="w-14 h-14 bg-[#E9E0D2] text-[#8B735B] rounded-full flex items-center justify-center mx-auto border-2 border-[#CBAE94]">
-            <Lock className="w-6 h-6" />
-          </div>
-          <h2 className="font-newsreader text-2xl sm:text-3xl font-bold text-[#4A3F35]">
-            {t.guestbookLockedTitle}
-          </h2>
-          <p className="text-sm text-[#4A3F35]/70 font-sans leading-relaxed max-w-md mx-auto">
-            {t.guestbookLockedMsg}
-          </p>
-          {lockInfo && (
-            <p className="text-xs font-mono font-bold text-[#8B735B] pt-2">
-              {formatGuestWindow(lockInfo.opensAt, lockInfo.closesAt, language)}
-            </p>
-          )}
-        </div>
+        <LockedNotice
+          title={t.guestbookLockedTitle}
+          message={t.guestbookLockedMsg}
+          lockInfo={lockInfo}
+          language={language}
+        />
       </motion.div>
     );
   }
