@@ -1,5 +1,22 @@
 import { describe, it, expect } from 'vitest';
-import { GuestRsvpSchema, GuestImportSchema, GuestbookEntrySchema, GiftLogSchema } from './validation';
+import { GuestRsvpSchema, GuestImportSchema, GuestbookEntrySchema, GiftLogSchema, isValidEmail, isValidCode } from './validation';
+
+describe('isValidEmail', () => {
+  it('accepts a valid address and rejects malformed/empty', () => {
+    expect(isValidEmail('a@b.com')).toBe(true);
+    expect(isValidEmail('not-an-email')).toBe(false);
+    expect(isValidEmail('')).toBe(false);
+  });
+});
+
+describe('isValidCode', () => {
+  it('accepts exactly four digits', () => {
+    expect(isValidCode('2026')).toBe(true);
+    expect(isValidCode('26')).toBe(false);
+    expect(isValidCode('abcd')).toBe(false);
+    expect(isValidCode(' 2026 ')).toBe(false);
+  });
+});
 
 describe('GuestRsvpSchema', () => {
   it('accepts a valid attending RSVP', () => {

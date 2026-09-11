@@ -4,6 +4,7 @@ import { motion } from 'motion/react';
 import { ArrowLeft, ArrowRight, Ticket, AlertCircle } from 'lucide-react';
 import { useT } from '../shared/i18n';
 import { fadeUp } from '../shared/motionPresets';
+import { isValidCode } from '../../lib/validation';
 
 type PortalStatus = 'idle' | 'invalid' | 'resolving' | 'notFound';
 
@@ -23,7 +24,7 @@ export const GuestPortalPage = () => {
       navigate(`/rsvp/${linkToken}`, { replace: true });
       return;
     }
-    if (!/^\d{4}$/.test(value)) {
+    if (!isValidCode(value)) {
       setStatus('invalid');
       return;
     }

@@ -3,7 +3,7 @@
 
 import type { RouteCtx } from '../http';
 import { parseJson, rateLimit, sendJson } from '../http';
-import { EditGuestSchema } from '../../lib/validation';
+import { EditGuestSchema, isValidCode } from '../../lib/validation';
 import {
   addGuest,
   batchImportGuests,
@@ -26,7 +26,7 @@ export async function handleGuestRoutes(ctx: RouteCtx): Promise<boolean> {
   // portal login). Tightly rate limited: the code space is only 10k.
   if (pathname === '/api/guest/resolve' && method === 'GET') {
     const code = (url.searchParams.get('code') || '').trim();
-    if (!/^\d{4}$/.test(code)) return sendJson(res, 400, { error: 'INVALID_CODE', message: 'Reservation code must be 4 digits' });
+    if (!isValidCode(code)) return sendJson(res, 400, { error: 'INVALID_CODE', message: 'Reservation code must be 4 digits' });
     const attempt = rateLimit(`code-resolve:${ip}`, 10, 60_000);
     if (!attempt.allowed) return sendJson(res, 429, { error: 'Too many attempts. Try again later.' });
     const guest = await getGuestByCode(code);

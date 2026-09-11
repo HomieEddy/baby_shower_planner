@@ -24,6 +24,7 @@ import { uploadPhotoBase64 } from '../../lib/fileUtils';
 import { useAppStore } from '../../stores/appStore';
 import { useT } from '../shared/i18n';
 import { useFloorMapTables } from '../shared/hooks';
+import { isValidCode } from '../../lib/validation';
 import { PhotoDropzone, PhotoFileCard, UploadSuccessScreen } from './PhotoUploadParts';
 
 export interface OptimizedFileItem {
@@ -198,7 +199,7 @@ export const GuestPhotoUploadPage = () => {
       setFileError(t.uploadSelectErrorToast);
       return;
     }
-    if (!/^\d{4}$/.test(reservationCode.trim())) {
+    if (!isValidCode(reservationCode.trim())) {
       setFileError(t.uploadCodeRequiredToast);
       return;
     }

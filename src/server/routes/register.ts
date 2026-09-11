@@ -4,6 +4,7 @@
 import type { RouteCtx } from '../http';
 import { parseJson, rateLimit, sendJson } from '../http';
 import { getUniversalInviteMessage, registerGuest } from '../../db/service';
+import { isValidEmail } from '../../lib/validation';
 import type { RegisterGuestPayload } from '../../types';
 
 export async function handleRegisterRoutes(ctx: RouteCtx): Promise<boolean> {
@@ -27,7 +28,7 @@ export async function handleRegisterRoutes(ctx: RouteCtx): Promise<boolean> {
     if (!name) return sendJson(res, 400, { error: 'NAME_REQUIRED', message: 'Your name is required' });
 
     const email = typeof body.email === 'string' ? body.email.trim() : '';
-    if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+    if (email && !isValidEmail(email)) {
       return sendJson(res, 400, { error: 'INVALID_EMAIL', message: 'Invalid email address' });
     }
 

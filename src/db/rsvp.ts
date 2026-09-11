@@ -6,7 +6,7 @@ import {
 } from './client';
 import { getSettings } from './settings';
 import { isRehearsalActive } from './rehearsal';
-import { getGuestById, isApproved } from './guests';
+import { getGuestById, getGuestByToken, isApproved } from './guests';
 import { DomainError } from '../lib/errors';
 import { buildUniversalInviteMessage, universalRegisterUrl } from '../lib/compose';
 
@@ -28,15 +28,15 @@ export async function isRsvpClosed(): Promise<boolean> {
 }
 
 export async function submitRsvp(token: string, payload: SubmitRsvpPayload): Promise<Guest> {
-  const r = await pb.collection('guests').getFirstListItem(`magic_token="${escFilter(token)}"`).catch(() => null);
-  if (!r) throw new DomainError('INVALID_TOKEN');
-  if (r.is_read_only) return fromRecord<Guest>(r);
-  if (!isApproved(fromRecord<Guest>(r))) {
-    throw new DomainError(r.approval_status === 'rejected' ? 'REGISTRATION_REJECTED' : 'PENDING_APPROVAL');
+  const guest = await getGuestByToken(token);
+  if (!guest) throw new DomainError('INVALID_TOKEN');
+  if (guest.is_read_only) return guest;
+  if (!isApproved(guest)) {
+    throw new DomainError(guest.approval_status === 'rejected' ? 'REGISTRATION_REJECTED' : 'PENDING_APPROVAL');
   }
   // Second submission (open tabs, shared links) must not silently overwrite:
   // the client resets the token first, which is the only way to edit an RSVP.
-  if (r.token_used) throw new DomainError('RSVP_ALREADY_SUBMITTED');
+  if (guest.token_used) throw new DomainError('RSVP_ALREADY_SUBMITTED');
   if (await isRsvpClosed()) throw new DomainError('RSVP_CLOSED');
 
   const updates: Record<string, unknown> = {
@@ -57,10 +57,10 @@ export async function submitRsvp(token: string, payload: SubmitRsvpPayload): Pro
       const raw = Array.isArray(payload.attendee_names)
         ? payload.attendee_names.filter(n => typeof n === 'string' && n.trim())
         : [];
-      names = raw.length > 0 ? raw.map(n => n.trim()) : [r.name];
+      names = raw.length > 0 ? raw.map(n => n.trim()) : [guest.name];
     }
     // Never exceed the party size the host granted.
-    names = names.slice(0, Math.max(1, Number(r.max_party_size) || 1));
+    names = names.slice(0, Math.max(1, Number(guest.max_party_size) || 1));
     updates.attendee_details = details.slice(0, names.length);
     updates.attendee_names = names;
     updates.attending_party_size = names.length;
@@ -71,21 +71,21 @@ export async function submitRsvp(token: string, payload: SubmitRsvpPayload): Pro
     updates.attending_party_size = 0;
     updates.table_id = null;
   }
-  const updated = await pb.collection('guests').update(r.id, updates);
+  const updated = await pb.collection('guests').update(guest.id, updates);
   // Declined keeps 0; a shrunk attending party keeps only its remaining chairs.
-  await removeGuestFromFloorMaps(r.id, keepAttendees);
+  await removeGuestFromFloorMaps(guest.id, keepAttendees);
   return fromRecord<Guest>(updated);
 }
 
 export async function resetTokenUsage(token: string): Promise<Guest> {
-  const r = await pb.collection('guests').getFirstListItem(`magic_token="${escFilter(token)}"`).catch(() => null);
-  if (!r) throw new DomainError('INVALID_TOKEN');
-  if (r.is_read_only) throw new DomainError('RSVP_READ_ONLY');
-  if (!isApproved(fromRecord<Guest>(r))) {
-    throw new DomainError(r.approval_status === 'rejected' ? 'REGISTRATION_REJECTED' : 'PENDING_APPROVAL');
+  const guest = await getGuestByToken(token);
+  if (!guest) throw new DomainError('INVALID_TOKEN');
+  if (guest.is_read_only) throw new DomainError('RSVP_READ_ONLY');
+  if (!isApproved(guest)) {
+    throw new DomainError(guest.approval_status === 'rejected' ? 'REGISTRATION_REJECTED' : 'PENDING_APPROVAL');
   }
   if (await isRsvpClosed()) throw new DomainError('RSVP_CLOSED');
-  const updated = await pb.collection('guests').update(r.id, { token_used: false });
+  const updated = await pb.collection('guests').update(guest.id, { token_used: false });
   return fromRecord<Guest>(updated);
 }
 
@@ -101,14 +101,14 @@ export type GuestContactPayload = {
 // shared link) so future reminders reach them. Stored as-is: there's no
 // email/SMS verification infra, and it's their own reminder channel.
 export async function updateGuestContact(token: string, payload: GuestContactPayload): Promise<Guest> {
-  const r = await pb.collection('guests').getFirstListItem(`magic_token="${escFilter(token)}"`).catch(() => null);
-  if (!r) throw new DomainError('INVALID_TOKEN');
+  const guest = await getGuestByToken(token);
+  if (!guest) throw new DomainError('INVALID_TOKEN');
   const channel = payload.delivery_channel || 'none';
   const email = (payload.email || '').trim();
   const phone = (payload.phone || '').trim();
   if ((channel === 'email' || channel === 'both') && !email) throw new DomainError('EMAIL_REQUIRED');
   if ((channel === 'text' || channel === 'both') && !phone) throw new DomainError('PHONE_REQUIRED');
-  const updated = await pb.collection('guests').update(r.id, { email, phone, delivery_channel: channel });
+  const updated = await pb.collection('guests').update(guest.id, { email, phone, delivery_channel: channel });
   return fromRecord<Guest>(updated);
 }
 
@@ -135,13 +135,12 @@ async function inviteView(record: Record<string, unknown>, language: Language): 
 // created, just a share link (with provenance) the inviter copies/sends. The
 // invitee appears in "your invitations" as pending until they self-register.
 export async function createInvite(token: string, payload: { name: string; contact?: string; note?: string }): Promise<GuestInviteResult> {
-  const inviter = await pb.collection('guests').getFirstListItem(`magic_token="${escFilter(token)}"`).catch(() => null);
+  const inviter = await getGuestByToken(token);
   if (!inviter) return { ok: false, error: 'INVALID_TOKEN' };
   const name = (payload.name || '').trim();
   if (!name) return { ok: false, error: 'NAME_REQUIRED' };
 
-  const inviterGuest = fromRecord<Guest>(inviter);
-  const language: Language = inviterGuest.language_pref === 'EN' ? 'EN' : 'FR';
+  const language: Language = inviter.language_pref === 'EN' ? 'EN' : 'FR';
   const contact = (payload.contact || '').trim();
   const note = (payload.note || '').trim();
 
@@ -158,7 +157,7 @@ export async function createInvite(token: string, payload: { name: string; conta
 
   const created = await pb.collection('invites').create({
     inviter_guest_id: inviter.id,
-    inviter_guest_name: inviterGuest.name,
+    inviter_guest_name: inviter.name,
     invitee_name: name,
     contact,
     note,
@@ -169,10 +168,9 @@ export async function createInvite(token: string, payload: { name: string; conta
 
 // Shares this guest created — pending ("invited") or already registered.
 export async function getInvitesByGuest(token: string): Promise<GuestInviteView[]> {
-  const inviter = await pb.collection('guests').getFirstListItem(`magic_token="${escFilter(token)}"`).catch(() => null);
+  const inviter = await getGuestByToken(token);
   if (!inviter) return [];
-  const inviterGuest = fromRecord<Guest>(inviter);
-  const language: Language = inviterGuest.language_pref === 'EN' ? 'EN' : 'FR';
+  const language: Language = inviter.language_pref === 'EN' ? 'EN' : 'FR';
   const records = await pb.collection('invites').getFullList({
     filter: `inviter_guest_id="${inviter.id}"`,
     sort: '-created_at',
@@ -183,7 +181,7 @@ export async function getInvitesByGuest(token: string): Promise<GuestInviteView[
 // Guests may remove their own pending shares; a registered invitee is a real
 // guest now (host deletes those in the admin).
 export async function removeInvite(token: string, inviteId: string): Promise<boolean> {
-  const inviter = await pb.collection('guests').getFirstListItem(`magic_token="${escFilter(token)}"`).catch(() => null);
+  const inviter = await getGuestByToken(token);
   if (!inviter) return false;
   const invite = await pb.collection('invites').getOne(inviteId).catch(() => null);
   if (!invite || String(invite.inviter_guest_id || '') !== inviter.id) return false;

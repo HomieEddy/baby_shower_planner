@@ -3,7 +3,7 @@
 
 import type { RouteCtx } from '../http';
 import { parseJson, sendJson } from '../http';
-import { GuestRsvpSchema } from '../../lib/validation';
+import { GuestRsvpSchema, isValidEmail } from '../../lib/validation';
 import { errorMessage, errorStatus } from '../../lib/errors';
 import {
   createInvite,
@@ -58,7 +58,7 @@ export async function handleRsvpRoutes(ctx: RouteCtx): Promise<boolean> {
     if (!['none', 'email', 'text', 'both'].includes(delivery_channel)) {
       return sendJson(res, 400, { error: 'Invalid delivery channel' });
     }
-    if (email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+    if (email && !isValidEmail(email)) {
       return sendJson(res, 400, { error: 'Invalid email address' });
     }
     // INVALID_TOKEN / EMAIL_REQUIRED / PHONE_REQUIRED propagate as DomainError.

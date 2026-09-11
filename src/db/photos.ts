@@ -7,6 +7,7 @@ import { escFilter, fromRecord, pb } from './client';
 import { getUploadFilePath, removeUploadFiles } from '../server/uploadFiles';
 import type { RouteCtx } from '../server/http';
 import { parseJson, sendGuestLocked, sendJson } from '../server/http';
+import { isValidCode } from '../lib/validation';
 
 // Per-guest photo quota (keyed by reservation code).
 const MAX_PHOTOS_PER_GUEST = 12;
@@ -114,7 +115,7 @@ export async function handlePhotoRoutes(ctx: RouteCtx): Promise<boolean> {
     const removeBatchFiles = () => removeUploadFiles(list.map((p: any) => String(p.url)));
     // Per-guest quota: uploads are attributed to a reservation code.
     const code = typeof reservation_code === 'string' ? reservation_code.trim() : '';
-    if (!/^\d{4}$/.test(code)) {
+    if (!isValidCode(code)) {
       removeBatchFiles();
       return sendJson(res, 400, { error: 'INVALID_CODE', message: 'A valid 4-digit reservation code is required' });
     }
