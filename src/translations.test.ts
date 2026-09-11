@@ -32,6 +32,21 @@ describe('translations integrity', () => {
       expect(frPlaceholders.sort(), `placeholders in ${key}`).toEqual(enPlaceholders.sort());
     }
   });
+
+  it('plural keys are complete and plural forms show {{count}}', () => {
+    const en = translations.EN as unknown as Record<string, string>;
+    const fr = translations.FR as unknown as Record<string, string>;
+    for (const key of Object.keys(en).filter((k) => k.endsWith('_other'))) {
+      const base = key.slice(0, -'_other'.length);
+      for (const k of [base, `${base}_one`, `${base}_other`]) {
+        expect(typeof en[k], `EN ${k}`).toBe('string');
+        expect(typeof fr[k], `FR ${k}`).toBe('string');
+      }
+      // The plural form must display the number.
+      expect(en[key], `EN ${key}`).toContain('{{count}}');
+      expect(fr[key], `FR ${key}`).toContain('{{count}}');
+    }
+  });
 });
 
 describe('translations shape', () => {
