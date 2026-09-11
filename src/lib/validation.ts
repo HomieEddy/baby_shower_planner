@@ -12,6 +12,11 @@ import {
 // add the input-only concerns the stored shape deliberately omits: defaults,
 // format/length rules, and looser optionality.
 
+// Plain predicates so routes/pages can validate a single value without
+// re-declaring the format the schemas above already express.
+export const isValidEmail = (email: string): boolean => z.string().email().safeParse(email).success;
+export const isValidCode = (code: string): boolean => /^\d{4}$/.test(code);
+
 export const GuestRsvpSchema = Guest.pick({
   rsvp_status: true,
   attending_party_size: true,
