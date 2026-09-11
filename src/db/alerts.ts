@@ -1,4 +1,4 @@
-// Event alerts: read, create (with fan-out to recipients), delete.
+// Event alerts: read, create (with fan-out to recipients), delete, + handler.
 
 import type { EventAlert, AlertType, EventSettings } from '../types';
 import { fromRecord, pb } from './client';
@@ -6,6 +6,8 @@ import { getAllGuests } from './guests';
 import { getSettings } from './settings';
 import { composeAlert } from '../lib/compose';
 import { notifyGuest } from './notify';
+import type { RouteCtx } from '../server/http';
+import { parseJson, sendJson } from '../server/http';
 
 export async function getAlerts(): Promise<EventAlert[]> {
   const records = await pb.collection('alerts').getFullList({ sort: '-created_at' });
@@ -43,4 +45,36 @@ export async function createAlert(payload: { type: AlertType; title: string; mes
 export async function deleteAlert(id: string): Promise<EventAlert[]> {
   await pb.collection('alerts').delete(id);
   return getAlerts();
+}
+
+// ─── HTTP handler ──────────────────────────────────────────────────
+
+export async function handleAlertRoutes(ctx: RouteCtx): Promise<boolean> {
+  const { req, res, url } = ctx;
+  const method = req.method || 'GET';
+  const pathname = url.pathname;
+
+  if (pathname === '/api/alerts') {
+    if (method === 'GET') {
+      const alerts = await getAlerts();
+      return sendJson(res, 200, { alerts });
+    }
+    if (method === 'POST') {
+      ctx.requireAdmin();
+      const body = await parseJson(req);
+      const { type, title, message, target_audience } = body;
+      if (!title || !message) return sendJson(res, 400, { error: 'Title and message are required' });
+      const result = await createAlert({ type: type || 'CUSTOM', title, message, target_audience });
+      return sendJson(res, 200, { success: true, alert: result.alert, notified_count: result.notified_count });
+    }
+  }
+
+  if (pathname.startsWith('/api/alerts/') && method === 'DELETE') {
+    ctx.requireAdmin();
+    const id = pathname.replace('/api/alerts/', '');
+    const remaining = await deleteAlert(id);
+    return sendJson(res, 200, { success: true, alerts: remaining });
+  }
+
+  return false;
 }
