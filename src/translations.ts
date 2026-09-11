@@ -502,9 +502,6 @@ export interface Translations {
   landingHeroSubtitle: string;
   linkCopied: string;
   linkOnlyHint: string;
-  linksCopiedToast: string;
-  linksCopiedToast_one: string;
-  linksCopiedToast_other: string;
   liveFeedTab: string;
   livePreviewLabel: string;
   loadSampleBtn: string;
@@ -901,9 +898,6 @@ export interface Translations {
   confirmedAttendingLabel: string;
   primaryGuestLabel: string;
   selectedPartyLabel: string;
-  requiresSeatsLabel: string;
-  requiresSeatsLabel_one: string;
-  requiresSeatsLabel_other: string;
   includedAttendeesLabel: string;
   chooseVenueTableLabel: string;
   currentlySeatedHere: string;
@@ -938,9 +932,6 @@ export interface Translations {
   thankYouTrackerSubtitle: string;
   scheduleOfTheDayLabel: string;
   themeComboSelectorLabel: string;
-  printingCardsLabel: string;
-  printingCardsLabel_one: string;
-  printingCardsLabel_other: string;
   foldedTentCardsBtn: string;
   nameBadgesBtn: string;
   allTablesOption: string;
@@ -1517,9 +1508,6 @@ export const translations: Record<Language, Translations> = {
     landingHeroSubtitle: "Log in to RSVP, find your seat, and join the celebration.",
     linkCopied: "Copied!",
     linkOnlyHint: "You'll get a ready-to-send message to share yourself (WhatsApp, Messenger…).",
-    linksCopiedToast: "Copied {{count}} invitation links to clipboard!",
-    linksCopiedToast_one: "Copied {{count}} invitation link to clipboard!",
-    linksCopiedToast_other: "Copied {{count}} invitation links to clipboard!",
     liveFeedTab: "Live Feed",
     livePreviewLabel: "Live Typography & Color Palette Preview",
     loadSampleBtn: "Load Sample Data",
@@ -1922,9 +1910,6 @@ export const translations: Record<Language, Translations> = {
     confirmedAttendingLabel: "Confirmed Attending Guests",
     primaryGuestLabel: "Primary Guest",
     selectedPartyLabel: "Selected Party",
-    requiresSeatsLabel: "Requires {{count}} Seats",
-    requiresSeatsLabel_one: "Requires {{count}} Seat",
-    requiresSeatsLabel_other: "Requires {{count}} Seats",
     includedAttendeesLabel: "Included Attendees ({{count}}):",
     chooseVenueTableLabel: "Choose Venue Table:",
     currentlySeatedHere: "Currently Seated Here",
@@ -1959,9 +1944,6 @@ export const translations: Record<Language, Translations> = {
     thankYouTrackerSubtitle: "Log shower gifts received, auto-generate personalized thank-you notes, and track thank-you card status.",
     scheduleOfTheDayLabel: "Schedule of the Day",
     themeComboSelectorLabel: "Theme & Color Combo Selector",
-    printingCardsLabel: "Print {{count}} Cards",
-    printingCardsLabel_one: "Print {{count}} Card",
-    printingCardsLabel_other: "Print {{count}} Cards",
     foldedTentCardsBtn: "Folded Tent Cards",
     nameBadgesBtn: "Name Badges",
     allTablesOption: "All Tables ({{count}} guests)",
@@ -2529,9 +2511,6 @@ export const translations: Record<Language, Translations> = {
     landingHeroSubtitle: "Connectez-vous pour répondre, trouver votre table et célébrer avec nous.",
     linkCopied: "Copié !",
     linkOnlyHint: "Vous recevrez un message prêt à envoyer à partager vous-même (WhatsApp, Messenger…).",
-    linksCopiedToast: "{{count}} liens d'invitation copiés !",
-    linksCopiedToast_one: "{{count}} lien d'invitation copié !",
-    linksCopiedToast_other: "{{count}} liens d'invitation copiés !",
     liveFeedTab: "Fil en direct",
     livePreviewLabel: "Aperçu en direct de la typographie & palette",
     loadSampleBtn: "Charger un exemple",
@@ -2934,9 +2913,6 @@ export const translations: Record<Language, Translations> = {
     confirmedAttendingLabel: "Invites confirmes",
     primaryGuestLabel: "Invite principal",
     selectedPartyLabel: "Groupe selectionne",
-    requiresSeatsLabel: "Nécessite {{count}} places",
-    requiresSeatsLabel_one: "Nécessite {{count}} place",
-    requiresSeatsLabel_other: "Nécessite {{count}} places",
     includedAttendeesLabel: "Personnes incluses ({{count}}) :",
     chooseVenueTableLabel: "Choisir la table :",
     currentlySeatedHere: "Place a cette table",
@@ -2971,9 +2947,6 @@ export const translations: Record<Language, Translations> = {
     thankYouTrackerSubtitle: "Enregistrez les cadeaux recus, generez automatiquement des mots de remerciement personnalises et suivez leur envoi.",
     scheduleOfTheDayLabel: "Programme de la journee",
     themeComboSelectorLabel: "Selecteur de theme & combinaison de couleurs",
-    printingCardsLabel: "Imprimer {{count}} cartes",
-    printingCardsLabel_one: "Imprimer {{count}} carte",
-    printingCardsLabel_other: "Imprimer {{count}} cartes",
     foldedTentCardsBtn: "Cartes pliantes",
     nameBadgesBtn: "Badges nominatifs",
     allTablesOption: "Toutes les tables ({{count}} invités)",
