@@ -47,6 +47,37 @@ export default defineConfig(() => {
         },
       }),
     ],
+    build: {
+      rollupOptions: {
+        output: {
+          // Group vendors into cacheable chunks instead of one ~2 MB entry +
+          // dozens of single-icon fragments. The lazily-loaded 3D stack is
+          // deliberately left unnamed so it stays inside the FloorPlan3D chunk
+          // that the PWA precache ignores.
+          manualChunks(id) {
+            if (!id.includes('node_modules')) return;
+            if (id.includes('/three/') || id.includes('@react-three') || id.includes('three-stdlib')) return;
+            if (id.includes('lucide-react')) return 'vendor-icons';
+            if (id.includes('react-router')) return 'vendor-router';
+            if (id.includes('/react-dom/') || id.includes('/react/') || id.includes('/scheduler/')) return 'vendor-react';
+            if (id.includes('/motion') || id.includes('framer-motion')) return 'vendor-motion';
+            if (id.includes('recharts') || id.includes('/d3-')) return 'vendor-charts';
+            if (id.includes('@tanstack')) return 'vendor-tanstack';
+            if (id.includes('@dnd-kit')) return 'vendor-dnd';
+            if (id.includes('konva')) return 'vendor-konva';
+            if (id.includes('pocketbase')) return 'vendor-pocketbase';
+            if (id.includes('i18next')) return 'vendor-i18n';
+            if (id.includes('date-fns')) return 'vendor-date';
+            if (id.includes('zod')) return 'vendor-zod';
+            if (id.includes('jszip')) return 'vendor-zip';
+            // Everything else (incl. the three.js/drei stack) is left unnamed so
+            // Rollup keeps it with its importer — the 3D deps stay inside the
+            // FloorPlan3D chunk that the precache ignores.
+            return;
+          },
+        },
+      },
+    },
     resolve: {
       alias: {
         '@': path.resolve(__dirname, '.'),
