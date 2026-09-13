@@ -77,7 +77,7 @@ export const AgendaCalendar: React.FC<AgendaCalendarProps> = ({ tasks, t, langua
           <button
             type="button"
             onClick={() => setMonth(startOfMonth(new Date()))}
-            className="px-3 py-1.5 rounded-xl border-2 border-[#CBAE94]/60 text-[#8B735B] text-[11px] font-mono font-bold hover:bg-[#EFE6DC] transition-colors cursor-pointer"
+            className="px-3 py-1.5 rounded-xl border-2 border-[#CBAE94]/60 text-[#8B735B] text-xs font-mono font-bold hover:bg-[#EFE6DC] transition-colors cursor-pointer"
           >
             {t.agendaTodayBtn}
           </button>
@@ -94,7 +94,7 @@ export const AgendaCalendar: React.FC<AgendaCalendarProps> = ({ tasks, t, langua
 
       <div className="grid grid-cols-7 gap-1.5">
         {weekdays.map((day) => (
-          <div key={day.toISOString()} className="text-center text-[10px] font-mono font-bold uppercase text-[#A09080] py-1">
+          <div key={day.toISOString()} className="text-center text-xs font-mono font-bold uppercase text-[#A09080] py-1">
             {format(day, 'EEE', { locale: localeFor(language) })}
           </div>
         ))}
@@ -116,7 +116,7 @@ export const AgendaCalendar: React.FC<AgendaCalendarProps> = ({ tasks, t, langua
                     : 'border-transparent bg-[#F8F5F0]/50 opacity-50'
               }`}
             >
-              <span className={`text-[11px] font-mono font-bold ${today ? 'text-[#8B735B]' : 'text-[#5D5449]'}`}>
+              <span className={`text-xs font-mono font-bold ${today ? 'text-[#8B735B]' : 'text-[#5D5449]'}`}>
                 {format(day, 'd')}
               </span>
               <div className="space-y-0.5 overflow-hidden flex-1">
@@ -126,17 +126,17 @@ export const AgendaCalendar: React.FC<AgendaCalendarProps> = ({ tasks, t, langua
                     role="button"
                     tabIndex={-1}
                     onClick={(e) => { e.stopPropagation(); onOpenTask(task); }}
-                    className={`flex items-center gap-1 rounded-lg px-1.5 py-0.5 bg-white border border-[#CBAE94]/50 text-[10px] font-bold text-[#4A3F35] truncate hover:border-[#8B735B] transition-colors`}
+                    className={`flex items-center gap-1 rounded-lg px-1.5 py-0.5 bg-white border border-[#CBAE94]/50 text-xs font-bold text-[#4A3F35] truncate hover:border-[#8B735B] transition-colors`}
                   >
                     <span className={`w-1.5 h-1.5 rounded-full shrink-0 ${STATUS_DOT[task.status]}`} />
                     <span className="truncate">{task.title}</span>
                     {task.due_time && (
-                      <span className="text-[9px] font-mono text-[#A09080] shrink-0">{formatTime12h(task.due_time)}</span>
+                      <span className="text-xs font-mono text-[#A09080] shrink-0">{formatTime12h(task.due_time, language)}</span>
                     )}
                   </span>
                 ))}
                 {dayTasks.length > 3 && (
-                  <span className="text-[10px] font-mono font-bold text-[#8B735B]">+{dayTasks.length - 3}</span>
+                  <span className="text-xs font-mono font-bold text-[#8B735B]">+{dayTasks.length - 3}</span>
                 )}
               </div>
             </button>

@@ -204,7 +204,7 @@ export const EscortCardsGenerator: React.FC<EscortCardsGeneratorProps> = ({ gues
                     {/* Top Fold (Folded Back / Front Header) â€” occupies the top half, centered */}
                     <div className="h-1/2 flex items-center justify-center opacity-75 transform rotate-180 print:rotate-180 text-center px-4">
                       <div className="space-y-1">
-                        <p className="text-[10px] font-mono uppercase tracking-widest text-[#8B735B]">
+                        <p className="text-xs font-mono uppercase tracking-widest text-[#8B735B]">
                           {customHeader}
                         </p>
                         <h4 className="font-newsreader text-xl font-bold text-[#4A3F35]">
@@ -215,7 +215,7 @@ export const EscortCardsGenerator: React.FC<EscortCardsGeneratorProps> = ({ gues
 
                     {/* Fold line â€” a dedicated divider at the exact middle of the card */}
                     <div className="relative h-0 border-t border-dotted border-[#CBAE94] print:border-slate-300">
-                      <span className="absolute -top-2 right-2 text-[9px] font-mono text-[#CBAE94] bg-[#FAF6F0] px-1 print:hidden">
+                      <span className="absolute -top-2 right-2 text-xs font-mono text-[#CBAE94] bg-[#FAF6F0] px-1 print:hidden">
                         <Scissors className="w-2.5 h-2.5 inline" /> {t.foldLineLabel}
                       </span>
                     </div>
@@ -223,7 +223,7 @@ export const EscortCardsGenerator: React.FC<EscortCardsGeneratorProps> = ({ gues
                     {/* Bottom Fold (Primary Front Facing Display) â€” occupies the bottom half, centered */}
                     <div className="h-1/2 flex items-center justify-between px-4">
                       <div className="space-y-1">
-                        <p className="text-[10px] font-mono uppercase tracking-widest text-[#8B735B]">
+                        <p className="text-xs font-mono uppercase tracking-widest text-[#8B735B]">
                           {customHeader}
                         </p>
                         <h3 className="font-newsreader text-2xl font-bold text-[#4A3F35]">
@@ -235,7 +235,7 @@ export const EscortCardsGenerator: React.FC<EscortCardsGeneratorProps> = ({ gues
                       </div>
 
                       <div className="flex flex-col items-center justify-center text-right">
-                        <span className="text-[9px] font-mono text-[#8B735B] uppercase font-bold">
+                        <span className="text-xs font-mono text-[#8B735B] uppercase font-bold">
                           {t.seatedAtLabel}
                         </span>
                         <div className="px-3 py-1 rounded-xl bg-[#EFE6DC] border border-[#CBAE94] text-[#4A3F35] font-bold text-sm font-mono mt-0.5">
@@ -260,13 +260,13 @@ export const EscortCardsGenerator: React.FC<EscortCardsGeneratorProps> = ({ gues
                     className="border-2 border-[#4A3F35] rounded-2xl p-5 bg-white flex flex-col justify-between h-48 relative shadow-sm print:shadow-none print:border-slate-800 break-inside-avoid"
                   >
                     <div className="text-center border-b border-[#CBAE94]/40 pb-2">
-                      <span className="text-[11px] font-mono font-bold text-[#8B735B] uppercase tracking-wider">
+                      <span className="text-xs font-mono font-bold text-[#8B735B] uppercase tracking-wider">
                         {customHeader}
                       </span>
                     </div>
 
                     <div className="text-center my-auto py-2">
-                      <p className="text-[10px] text-[#8B735B] uppercase font-mono tracking-widest">
+                      <p className="text-xs text-[#8B735B] uppercase font-mono tracking-widest">
                         {t.helloMyNameIsLabel}
                       </p>
                       <h2 className="font-newsreader text-3xl font-bold text-[#4A3F35] mt-1">
@@ -276,7 +276,7 @@ export const EscortCardsGenerator: React.FC<EscortCardsGeneratorProps> = ({ gues
 
                     <div className="flex items-center justify-between border-t border-[#CBAE94]/40 pt-2 text-xs font-mono">
                       <span className="font-bold text-[#8B735B]">{t.tableFilterLabel} {tableNum}</span>
-                      <span className="text-[10px] text-[#8B735B]">{seatLine}</span>
+                      <span className="text-xs text-[#8B735B]">{seatLine}</span>
                     </div>
                   </div>
                 );
