@@ -99,7 +99,7 @@ export const AdminGuestsTab: React.FC<AdminGuestsTabProps> = ({ language, t, gue
     },
   });
 
-  const { register: registerEdit, handleSubmit: handleSubmitEdit, reset: resetEditForm, formState: { errors: editErrors } } = useForm<EditGuestFormValues>({
+  const { register: registerEdit, handleSubmit: handleSubmitEdit, reset: resetEditForm, watch: watchEdit, formState: { errors: editErrors } } = useForm<EditGuestFormValues>({
     resolver: zodResolver(EditGuestFormSchema),
     defaultValues: {
       name: '',
@@ -130,6 +130,8 @@ export const AdminGuestsTab: React.FC<AdminGuestsTabProps> = ({ language, t, gue
 
   const [editingGuest, setEditingGuest] = useState<Guest | null>(null);
   const [savingEdit, setSavingEdit] = useState(false);
+  // Additional members (primary guest excluded) while editing a party.
+  const [editExtraNames, setEditExtraNames] = useState<string[]>([]);
 
   const [metricModal, setMetricModal] = useState<'Attending' | 'Pending' | 'Declined' | 'Awaiting' | 'Total' | null>(null);
   const [metricListView, setMetricListView] = useState<'invites' | 'party'>('invites');
@@ -159,6 +161,11 @@ export const AdminGuestsTab: React.FC<AdminGuestsTabProps> = ({ language, t, gue
   }, [caps, deliveryChannel, channelOptions, setValue]);
 
   const getGuestPartySize = getPartySize;
+
+  // Edit-modal party editor: the allowed size caps how many members can be named.
+  const editMaxParty = Math.max(1, Number(watchEdit('max_party_size')) || 1);
+  const editStatus = watchEdit('rsvp_status');
+  const editPrimaryName = (watchEdit('name') || editingGuest?.name || '').trim();
 
   const primaryGuests = guests.filter((g) => !g.is_read_only);
   // Self-registrations only count once approved.
@@ -192,6 +199,7 @@ export const AdminGuestsTab: React.FC<AdminGuestsTabProps> = ({ language, t, gue
 
   const handleOpenEditGuest = (g: Guest) => {
     setEditingGuest(g);
+    setEditExtraNames(getPartyMembers(g).slice(1));
     resetEditForm({
       name: g.name,
       email: g.email || '',
@@ -231,6 +239,7 @@ export const AdminGuestsTab: React.FC<AdminGuestsTabProps> = ({ language, t, gue
     }
     try {
       setSavingEdit(true);
+      const maxParty = Math.max(1, Number(values.max_party_size) || 1);
       const res = await adminFetch(`/api/guests/${editingGuest.id}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
@@ -239,9 +248,10 @@ export const AdminGuestsTab: React.FC<AdminGuestsTabProps> = ({ language, t, gue
           email: (values.email || '').trim(),
           phone: (values.phone || '').trim(),
           delivery_channel: values.delivery_channel,
-          max_party_size: values.max_party_size,
-          attending_party_size: values.rsvp_status === 'Attending' ? values.max_party_size : editingGuest.attending_party_size,
+          max_party_size: maxParty,
           rsvp_status: values.rsvp_status,
+          // Additional members; the backend derives the attended count and seats.
+          attendee_names: values.rsvp_status === 'Declined' ? [] : editExtraNames.slice(0, Math.max(0, maxParty - 1)),
         }),
       });
       const data = await res.json();
@@ -249,9 +259,12 @@ export const AdminGuestsTab: React.FC<AdminGuestsTabProps> = ({ language, t, gue
         setEditingGuest(null);
         toast.love(tf('guestUpdatedToast', { name: data.guest.name }));
         await onRefresh();
+      } else {
+        toast.error(data.error || data.message || t.invitesErrorToast);
       }
     } catch (err) {
       console.error('Failed to update guest:', err);
+      toast.error(t.invitesErrorToast);
     } finally {
       setSavingEdit(false);
     }
@@ -947,7 +960,14 @@ export const AdminGuestsTab: React.FC<AdminGuestsTabProps> = ({ language, t, gue
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <div>
                     <label className="label-mono block mb-1">{t.partySizeSeatsLabel}</label>
-                    <TextInput type="number" min="1" max="20" required {...registerEdit('max_party_size', { valueAsNumber: true })} />
+                    <TextInput type="number" min="1" max="20" required
+                      {...registerEdit('max_party_size', {
+                        valueAsNumber: true,
+                        onChange: (e) => {
+                          const m = Math.max(1, Number((e.target as HTMLInputElement).value) || 1);
+                          setEditExtraNames((prev) => prev.slice(0, Math.max(0, m - 1)));
+                        },
+                      })} />
                     {editErrors.max_party_size && <p className="text-rose-600 text-[10px]">{editErrors.max_party_size.message}</p>}
                   </div>
                   <div>
@@ -959,6 +979,35 @@ export const AdminGuestsTab: React.FC<AdminGuestsTabProps> = ({ language, t, gue
                     </Select>
                   </div>
                 </div>
+                {editStatus !== 'Declined' && (
+                  <div className="space-y-2 rounded-2xl border border-[#CBAE94]/60 bg-[#EFE6DC]/30 p-3.5">
+                    <label className="label-mono block text-xs font-bold text-[#8B735B]">
+                      {tf('includedAttendeesLabel', { count: String(editExtraNames.length + 1) })}
+                    </label>
+                    <div className="flex items-center gap-2">
+                      <div className="flex-1 px-3 py-2 rounded-xl border border-[#CBAE94] bg-white/60 text-sm font-bold text-[#5D5449] truncate">
+                        {editPrimaryName}
+                      </div>
+                      <span className="shrink-0 px-2 py-0.5 rounded-full bg-[#EFE6DC] border border-[#CBAE94] text-[10px] font-mono font-bold text-[#8B735B]">{t.finderPartyLead}</span>
+                    </div>
+                    {editExtraNames.map((name, i) => (
+                      <div key={i} className="flex items-center gap-2">
+                        <TextInput type="text" value={name} placeholder={t.nameExamplePh}
+                          onChange={(e) => setEditExtraNames((prev) => prev.map((n, j) => (j === i ? e.target.value : n)))} />
+                        <button type="button" onClick={() => setEditExtraNames((prev) => prev.filter((_, j) => j !== i))}
+                          title={t.removeAttendeeTitle}
+                          className="shrink-0 p-2 rounded-xl border border-rose-300 bg-rose-50 hover:bg-rose-100 text-rose-700 transition-colors cursor-pointer">
+                          <XCircle className="w-4 h-4" />
+                        </button>
+                      </div>
+                    ))}
+                    <button type="button" disabled={editExtraNames.length >= editMaxParty - 1}
+                      onClick={() => setEditExtraNames((prev) => [...prev, ''])}
+                      className="w-full py-2 rounded-xl border border-dashed border-[#CBAE94] text-xs font-bold text-[#8B735B] hover:bg-[#EFE6DC] disabled:opacity-40 disabled:cursor-not-allowed inline-flex items-center justify-center gap-1.5">
+                      <UserPlus className="w-3.5 h-3.5" /> {t.addAnotherGuestBtn}
+                    </button>
+                  </div>
+                )}
                 <div className="flex items-center justify-end gap-3 pt-3 border-t border-[#CBAE94]/30">
                   <button type="button" onClick={() => setEditingGuest(null)}
                     className="px-4 py-2.5 rounded-xl border border-[#CBAE94] text-xs font-bold text-[#5D5449] hover:bg-[#EFE6DC]">{t.cancelBtn}</button>
