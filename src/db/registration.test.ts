@@ -63,11 +63,12 @@ vi.mock('./client', () => ({
   newMagicToken: () => 'token-test',
   newReservationCode: () => '9999',
   removeGuestFromFloorMaps: async () => {},
+  removeAttendeeFromFloorMaps: async () => {},
 }));
 
 vi.mock('./settings', () => ({ getSettings: async () => ({ date: '', language: 'EN' }) }));
 
-import { registerGuest, isApproved, getUniversalInviteMessage, getGuestByToken, addGuest } from './guests';
+import { registerGuest, isApproved, getUniversalInviteMessage, getGuestByToken, addGuest, removeGuestAttendee } from './guests';
 import { createInvite, submitRsvp } from './rsvp';
 import { buildUniversalInviteMessage } from '../lib/compose';
 
@@ -198,6 +199,42 @@ describe('submitRsvp approval gate', () => {
     const updated = await submitRsvp(guest.magic_token, { rsvp_status: 'Attending', attendee_names: ['Alice'], dietary_restrictions: 'x' });
     expect(updated.rsvp_status).toBe('Attending');
     expect(updated.dietary_restrictions).toBe('x');
+  });
+});
+
+describe('removeGuestAttendee', () => {
+  const seed = () => {
+    h.stores.guests.push({
+      id: 'g1', name: 'Alice', attendee_names: ['Alice', 'Bob', 'Cara'],
+      attendee_details: [{ name: 'Alice', contact: '' }, { name: 'Bob', contact: '' }, { name: 'Cara', contact: '' }],
+      attending_party_size: 3, max_party_size: 5, rsvp_status: 'Attending',
+      checked_in: true, checked_in_names: ['Bob'],
+    });
+  };
+
+  it('removes a middle member, keeps the lead, and drops their check-in', async () => {
+    seed();
+    const res = await removeGuestAttendee('g1', 1);
+    expect(res.deleted).toBe(false);
+    expect(res.guest?.attendee_names).toEqual(['Alice', 'Cara']);
+    expect(res.guest?.attending_party_size).toBe(2);
+    expect(res.guest?.name).toBe('Alice');
+    expect(res.guest?.checked_in_names).toEqual([]);
+  });
+
+  it('promotes the chosen member when the lead is removed', async () => {
+    seed();
+    const res = await removeGuestAttendee('g1', 0, 'Cara');
+    expect(res.guest?.name).toBe('Cara');
+    expect(res.guest?.attendee_names).toEqual(['Cara', 'Bob']);
+    expect(res.guest?.checked_in_names).toEqual(['Bob']);
+  });
+
+  it('deletes the whole record when the last member is removed', async () => {
+    h.stores.guests.push({ id: 'g2', name: 'Solo', attendee_names: ['Solo'], attending_party_size: 1, max_party_size: 1, rsvp_status: 'Attending' });
+    const res = await removeGuestAttendee('g2', 0);
+    expect(res.deleted).toBe(true);
+    expect(h.stores.guests.find((g) => g.id === 'g2')).toBeUndefined();
   });
 });
 

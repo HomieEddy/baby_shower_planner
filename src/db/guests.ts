@@ -2,7 +2,9 @@
 
 import type { Guest, AddGuestPayload, RegisterGuestPayload, EventSettings, Language } from '../types';
 import { buildInviteMessage, buildUniversalInviteMessage, composeInvitation } from '../lib/compose';
-import { escFilter, fromRecord, newMagicToken, newReservationCode, pb, removeGuestFromFloorMaps } from './client';
+import { getPartyMembers } from '../lib/guestAttendees';
+import { DomainError } from '../lib/errors';
+import { escFilter, fromRecord, newMagicToken, newReservationCode, pb, removeAttendeeFromFloorMaps, removeGuestFromFloorMaps } from './client';
 import { getSettings } from './settings';
 import { notifyGuest } from './notify';
 
@@ -173,6 +175,57 @@ export async function updateGuest(id: string, updates: Partial<Guest>): Promise<
 export async function deleteGuest(id: string): Promise<void> {
   await pb.collection('guests').delete(id);
   await removeGuestFromFloorMaps(id);
+}
+
+// Remove one member from a party ("group"). Removing the lead promotes the
+// chosen (or first) remaining member; removing the last member deletes the
+// record. Seats are reindexed and check-in state follows the removed name.
+export async function removeGuestAttendee(
+  id: string,
+  attendeeIndex: number,
+  promoteName?: string
+): Promise<{ deleted: boolean; guest?: Guest }> {
+  const guest = await getGuestById(id);
+  const members = getPartyMembers(guest);
+  if (!Number.isInteger(attendeeIndex) || attendeeIndex < 0 || attendeeIndex >= members.length) {
+    throw new DomainError('ATTENDEE_NOT_FOUND');
+  }
+  if (members.length <= 1) {
+    await deleteGuest(id);
+    return { deleted: true };
+  }
+
+  const removedName = members[attendeeIndex];
+  let ordered = members.filter((_, i) => i !== attendeeIndex);
+  // Promote a specific remaining member (or the first) when the lead is removed.
+  if (attendeeIndex === 0) {
+    const chosen = promoteName && ordered.includes(promoteName) ? promoteName : ordered[0];
+    ordered = [chosen, ...ordered.filter((n) => n !== chosen)];
+  }
+
+  const contactByName = new Map((guest.attendee_details || []).map((d) => [d.name, d.contact || '']));
+  const attendee_details = ordered.map((name) => ({ name, contact: contactByName.get(name) || '' }));
+
+  let checked_in = guest.checked_in;
+  let checked_in_names = (guest.checked_in_names || []).filter(
+    (n) => n.trim().toLowerCase() !== removedName.trim().toLowerCase()
+  );
+  if (attendeeIndex === 0) {
+    const newLead = ordered[0];
+    checked_in = checked_in_names.some((n) => n.trim().toLowerCase() === newLead.trim().toLowerCase());
+    checked_in_names = checked_in_names.filter((n) => n.trim().toLowerCase() !== newLead.trim().toLowerCase());
+  }
+
+  const updated = await pb.collection('guests').update(id, {
+    name: ordered[0],
+    attendee_names: ordered,
+    attendee_details,
+    attending_party_size: ordered.length,
+    checked_in,
+    checked_in_names,
+  });
+  await removeAttendeeFromFloorMaps(id, attendeeIndex);
+  return { deleted: false, guest: fromRecord<Guest>(updated) };
 }
 
 export async function batchImportGuests(guestList: AddGuestPayload[]): Promise<{ imported: Guest[]; count: number }> {

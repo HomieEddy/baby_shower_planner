@@ -13,6 +13,7 @@ import {
   getGuestById,
   getUniversalInviteMessage,
   inviteMessageFor,
+  removeGuestAttendee,
   setApproval,
   updateGuest,
 } from '../../db/service';
@@ -72,6 +73,20 @@ export async function handleGuestRoutes(ctx: RouteCtx): Promise<boolean> {
     requireAdmin();
     const guest = await setApproval(approval[1], approval[2] === 'approve' ? 'approved' : 'rejected');
     return sendJson(res, 200, { guest });
+  }
+
+  // Remove one member from a party/group (host control over duplicates).
+  const removeAttendee = pathname.match(/^\/api\/guests\/([^/]+)\/remove-attendee$/);
+  if (removeAttendee && method === 'POST') {
+    requireAdmin();
+    const body = await parseJson(req);
+    const index = Number(body.index);
+    if (!Number.isInteger(index) || index < 0) {
+      return sendJson(res, 400, { error: 'INVALID_INDEX', message: 'Attendee index must be a non-negative integer' });
+    }
+    const promoteName = typeof body.promote_name === 'string' ? body.promote_name.trim() : undefined;
+    const result = await removeGuestAttendee(removeAttendee[1], index, promoteName);
+    return sendJson(res, 200, { success: true, deleted: result.deleted, guest: result.guest });
   }
 
   if (pathname.startsWith('/api/guests/') && pathname !== '/api/guests/batch-import') {

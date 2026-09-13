@@ -100,6 +100,7 @@ export interface Translations {
   attendeeContactHelper: string;
   attendeeContactLabel: string;
   attendeeContactPlaceholder: string;
+  attendeeRemovedToast: string;
   attendeeSectionHint: string;
   attendeeSectionTitle: string;
   attendingHappyText: string;
@@ -594,6 +595,7 @@ export interface Translations {
   privateHostGalleryLabel: string;
   processImportBtn: string;
   progressSentLabel: string;
+  promoteLeadLabel: string;
   qrCodeBtn: string;
   qrModalMsg: string;
   qrModalTitle: string;
@@ -616,8 +618,13 @@ export interface Translations {
   remindersSentMsg: string;
   remindersSentMsg_one: string;
   remindersSentMsg_other: string;
+  removeAttendeeBtn: string;
+  removeAttendeeConfirmMsg: string;
+  removeAttendeeConfirmTitle: string;
+  removeAttendeeTitle: string;
   removeBtn: string;
   removeGuestBtn: string;
+  removeLastAttendeeConfirmMsg: string;
   removeInviteBtn: string;
   removeInviteMsg: string;
   removeInviteTitle: string;
@@ -1109,6 +1116,7 @@ export const translations: Record<Language, Translations> = {
     attendeeContactHelper: "If provided, an official read-only invite will be sent directly to this attendee.",
     attendeeContactLabel: "Contact Info (Email or Phone)",
     attendeeContactPlaceholder: "e.g. sarah@example.com or +1 555-0192",
+    attendeeRemovedToast: "{{name}} removed from the group.",
     attendeeSectionHint: "Please enter the full name of each person attending in your party.",
     attendeeSectionTitle: "Attending Guest Names & Contact Info",
     attendingHappyText: "Can't wait to celebrate!",
@@ -1605,6 +1613,7 @@ export const translations: Record<Language, Translations> = {
     privateHostGalleryLabel: "Private Host Gallery",
     processImportBtn: "Process Import",
     progressSentLabel: "{{sent}} of {{total}} Sent ({{percent}}%)",
+    promoteLeadLabel: "New party lead",
     qrCodeBtn: "View QR Code for Tables",
     qrModalMsg: "Download or print this shareable table card image to place on guest tables at the shower!",
     qrModalTitle: "Guestbook QR Code Table Sign",
@@ -1628,8 +1637,13 @@ export const translations: Record<Language, Translations> = {
     remindersSentMsg: "Reminders sent to {{count}} pending guests!",
     remindersSentMsg_one: "Reminder sent to {{count}} pending guest!",
     remindersSentMsg_other: "Reminders sent to {{count}} pending guests!",
+    removeAttendeeBtn: "Remove attendee",
+    removeAttendeeConfirmMsg: "Remove {{name}} from {{group}}? Their seats and check-in will be cleared.",
+    removeAttendeeConfirmTitle: "Remove attendee?",
+    removeAttendeeTitle: "Remove attendee",
     removeBtn: "Remove",
     removeGuestBtn: "Remove Guest",
+    removeLastAttendeeConfirmMsg: "{{name}} is the last person in this group. Removing them deletes the whole invitation and its seats.",
     removeInviteBtn: "Remove",
     removeInviteMsg: "{{name}} will lose access to their invitation link.",
     removeInviteTitle: "Remove this invitation?",
@@ -2116,6 +2130,7 @@ export const translations: Record<Language, Translations> = {
     attendeeContactHelper: "Si renseigné, une invitation officielle en lecture seule sera envoyée directement à cet invité.",
     attendeeContactLabel: "Coordonnées (Courriel ou Téléphone)",
     attendeeContactPlaceholder: "ex : sarah@example.com ou +1 555-0192",
+    attendeeRemovedToast: "{{name}} retiré du groupe.",
     attendeeSectionHint: "Veuillez saisir le nom complet de chaque personne de votre groupe.",
     attendeeSectionTitle: "Noms des invités présents & coordonnées",
     attendingHappyText: "Impatient de célébrer !",
@@ -2612,6 +2627,7 @@ export const translations: Record<Language, Translations> = {
     privateHostGalleryLabel: "Galerie privée des hôtes",
     processImportBtn: "Importer",
     progressSentLabel: "{{sent}} sur {{total}} envoyés ({{percent}}%)",
+    promoteLeadLabel: "Nouvelle personne responsable",
     qrCodeBtn: "Afficher le QR Code pour les tables",
     qrModalMsg: "Téléchargez ou imprimez cette affichette de table pour la poser sur les tables des invités !",
     qrModalTitle: "Signalétique QR Code du Livre d'Or",
@@ -2635,8 +2651,13 @@ export const translations: Record<Language, Translations> = {
     remindersSentMsg: "Rappels envoyés à {{count}} invités en attente !",
     remindersSentMsg_one: "Rappel envoyé à {{count}} invité en attente !",
     remindersSentMsg_other: "Rappels envoyés à {{count}} invités en attente !",
+    removeAttendeeBtn: "Retirer la personne",
+    removeAttendeeConfirmMsg: "Retirer {{name}} de {{group}} ? Ses places et son émargement seront supprimés.",
+    removeAttendeeConfirmTitle: "Retirer cette personne ?",
+    removeAttendeeTitle: "Retirer la personne",
     removeBtn: "Retirer",
     removeGuestBtn: "Retirer l'invité",
+    removeLastAttendeeConfirmMsg: "{{name}} est la dernière personne de ce groupe. La retirer supprimera toute l'invitation et ses places.",
     removeInviteBtn: "Retirer",
     removeInviteMsg: "{{name}} perdra l'accès à son lien d'invitation.",
     removeInviteTitle: "Retirer cette invitation ?",

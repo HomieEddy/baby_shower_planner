@@ -25,6 +25,9 @@ export const ERROR_REGISTRY = {
   NOT_IN_PARTY: { status: 400, message: 'Name is not part of this party.' },
   ONLY_LEAD: { status: 403, message: 'Only the party lead can do that' },
 
+  // Guests (admin)
+  ATTENDEE_NOT_FOUND: { status: 404, message: 'Attendee not found in this party.' },
+
   // Gifts / thank-you
   GUEST_NOT_FOUND: { status: 400, message: 'Guest not found' },
   NO_EMAIL: { status: 400, message: 'No email address on file' },

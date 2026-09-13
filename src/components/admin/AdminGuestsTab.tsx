@@ -276,6 +276,27 @@ export const AdminGuestsTab: React.FC<AdminGuestsTabProps> = ({ language, t, gue
     }
   };
 
+  const handleRemoveAttendee = async (guestId: string, attendeeIndex: number, removedName: string, promoteName?: string) => {
+    try {
+      const res = await adminFetch(`/api/guests/${guestId}/remove-attendee`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ index: attendeeIndex, promote_name: promoteName }),
+      });
+      const data = await res.json();
+      if (res.ok) {
+        setViewingGuest(null);
+        toast.info(tf(data.deleted ? 'guestDeletedToast' : 'attendeeRemovedToast', { name: removedName }));
+        await onRefresh();
+      } else {
+        toast.error(data.message || data.error || t.invitesErrorToast);
+      }
+    } catch (err) {
+      console.error('Failed to remove attendee:', err);
+      toast.error(t.invitesErrorToast);
+    }
+  };
+
   const handleApproval = async (guest: Guest, decision: 'approve' | 'reject') => {
     try {
       const res = await adminFetch(`/api/guests/${guest.id}/${decision}`, { method: 'POST' });
@@ -970,6 +991,7 @@ export const AdminGuestsTab: React.FC<AdminGuestsTabProps> = ({ language, t, gue
         onCopyMessage={handleCopyInviteMessage}
         onEdit={(g) => { setViewingGuest(null); handleOpenEditGuest(g); }}
         onDelete={handleDeleteGuest}
+        onRemoveAttendee={handleRemoveAttendee}
       />
     </motion.div>
   );

@@ -14,6 +14,7 @@ export {
   inviteMessageFor,
   isApproved,
   registerGuest,
+  removeGuestAttendee,
   setApproval,
   updateGuest,
 } from './guests';
