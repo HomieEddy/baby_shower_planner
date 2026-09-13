@@ -52,6 +52,25 @@ export async function addGuest(payload: AddGuestPayload): Promise<{ guest: Guest
   // Host-registered "going" guest: no invitation is sent; the record is created
   // already Attending (the code/magic token stay available for day-of use).
   const going = payload.rsvp_status === 'Attending';
+  const partySize = payload.max_party_size && payload.max_party_size > 0 ? payload.max_party_size : 1;
+  // Party members: the primary guest first, then the host-entered names, capped
+  // at the allowed party size and deduped.
+  const primary = payload.name;
+  const names: string[] = [primary];
+  const seen = new Set<string>([primary.toLowerCase()]);
+  for (const raw of payload.attendee_names || []) {
+    if (names.length >= partySize) break;
+    const n = typeof raw === 'string' ? raw.trim() : '';
+    const key = n.toLowerCase();
+    if (!n || seen.has(key)) continue;
+    seen.add(key);
+    names.push(n);
+  }
+  const attendee_details = names.map((n) => ({
+    name: n,
+    contact: n.toLowerCase() === primary.toLowerCase() ? (payload.email || payload.phone || '') : '',
+  }));
+
   const existing = payload.email || payload.phone
     ? await pb.collection('guests').getList(1, 1, {
         filter: payload.email ? `email="${escFilter(payload.email)}"` : `phone="${escFilter(payload.phone || '')}"`,
@@ -62,15 +81,15 @@ export async function addGuest(payload: AddGuestPayload): Promise<{ guest: Guest
     // Re-registering an existing contact as "going" promotes the record.
     if (going && g.rsvp_status !== 'Attending') {
       const promoted = fromRecord<Guest>(await pb.collection('guests').update(g.id, {
-        rsvp_status: 'Attending', attending_party_size: g.max_party_size || g.attending_party_size || 1,
-        token_used: true,
+        rsvp_status: 'Attending', attending_party_size: names.length,
+        attendee_names: names, attendee_details, token_used: true,
       }));
       return { guest: promoted, magic_token: promoted.magic_token, invite_message: await inviteMessageFor(promoted) };
     }
     return { guest: g, magic_token: g.magic_token, invite_message: await inviteMessageFor(g) };
   }
+
   const magic_token = newMagicToken();
-  const partySize = payload.max_party_size && payload.max_party_size > 0 ? payload.max_party_size : 1;
   const code = newReservationCode();
   const guest = await pb.collection('guests').create({
     name: payload.name,
@@ -78,9 +97,9 @@ export async function addGuest(payload: AddGuestPayload): Promise<{ guest: Guest
     phone: payload.phone || '',
     delivery_channel: payload.delivery_channel || 'none',
     code, max_party_size: partySize, rsvp_status: going ? 'Attending' : 'Pending',
-    attending_party_size: partySize,
-    attendee_names: [payload.name],
-    attendee_details: [{ name: payload.name, contact: payload.email || payload.phone || '' }],
+    attending_party_size: going ? names.length : partySize,
+    attendee_names: names,
+    attendee_details,
     dietary_restrictions: '', language_pref: payload.language_pref || 'FR',
     magic_token, token_used: going, created_at: new Date().toISOString(),
     is_read_only: false,
