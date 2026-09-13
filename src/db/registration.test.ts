@@ -84,12 +84,19 @@ describe('isApproved', () => {
 });
 
 describe('addGuest host self-registration', () => {
-  it('creates an already-going record with the code/token still available', async () => {
-    const { guest } = await addGuest({ name: 'Grandma', language_pref: 'EN', max_party_size: 2, rsvp_status: 'Attending' });
+  it('creates an already-going record with the named party and the code/token', async () => {
+    const { guest } = await addGuest({ name: 'Grandma', language_pref: 'EN', max_party_size: 3, rsvp_status: 'Attending', attendee_names: ['Grandpa', 'Aunt'] });
     expect(guest.rsvp_status).toBe('Attending');
     expect(guest.token_used).toBe(true);
-    expect(guest.attending_party_size).toBe(2);
+    expect(guest.attendee_names).toEqual(['Grandma', 'Grandpa', 'Aunt']);
+    expect(guest.attending_party_size).toBe(3);
     expect(guest.magic_token).toBeTruthy();
+  });
+
+  it('caps the party at max size and drops duplicates', async () => {
+    const { guest } = await addGuest({ name: 'Grandma', language_pref: 'EN', max_party_size: 2, rsvp_status: 'Attending', attendee_names: ['Grandma', 'Grandpa', 'Aunt'] });
+    expect(guest.attendee_names).toEqual(['Grandma', 'Grandpa']);
+    expect(guest.attending_party_size).toBe(2);
   });
 
   it('promotes an existing pending contact to Attending instead of duplicating', async () => {
