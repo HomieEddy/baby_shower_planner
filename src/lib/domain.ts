@@ -239,6 +239,8 @@ export interface AddGuestPayload {
   language_pref: Language;
   // Host-registered "going" guests: created already Attending, no invitation.
   rsvp_status?: 'Attending';
+  // Names of the additional party members (primary guest is `name`).
+  attendee_names?: string[];
 }
 
 export interface RegisterGuestPayload {

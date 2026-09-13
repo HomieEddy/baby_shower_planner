@@ -43,7 +43,7 @@ export async function handleGuestRoutes(ctx: RouteCtx): Promise<boolean> {
     }
     if (method === 'POST') {
       const body = await parseJson(req);
-      const { name, email, phone, delivery_channel, max_party_size, language_pref, going } = body;
+      const { name, email, phone, delivery_channel, max_party_size, language_pref, going, attendee_names } = body;
       const isGoing = going === true;
       // A going guest is registered directly and never sent an invitation, so
       // it carries no delivery channel (a stale "email" selection must not
@@ -53,12 +53,16 @@ export async function handleGuestRoutes(ctx: RouteCtx): Promise<boolean> {
       if ((channel === 'email' || channel === 'both') && (!email || !email.trim())) return sendJson(res, 400, { error: 'Email address is required' });
       if ((channel === 'text' || channel === 'both') && (!phone || !phone.trim())) return sendJson(res, 400, { error: 'Phone number is required' });
       if (!['email', 'text', 'both', 'none'].includes(channel)) return sendJson(res, 400, { error: 'Invalid delivery channel' });
+      const extraNames = Array.isArray(attendee_names)
+        ? attendee_names.filter((n: unknown): n is string => typeof n === 'string').slice(0, 20)
+        : undefined;
 
       const result = await addGuest({
         name: name.trim(), email: email?.trim() || '', phone: phone?.trim() || '',
         delivery_channel: channel, max_party_size: Number(max_party_size) || 1,
         language_pref: language_pref === 'EN' ? 'EN' : 'FR',
         rsvp_status: isGoing ? 'Attending' : undefined,
+        attendee_names: extraNames,
       });
       return sendJson(res, 200, result);
     }

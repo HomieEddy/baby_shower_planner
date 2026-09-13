@@ -47,12 +47,13 @@ const post = (body: unknown) => {
 beforeEach(() => h.addGuest.mockClear());
 
 describe('POST /api/guests', () => {
-  it('registers a going guest with no contact and no delivery channel', async () => {
-    const res = await post({ name: 'Grandma', email: '', delivery_channel: 'email', going: true });
+  it('registers a going guest with no contact, no channel, and its party names', async () => {
+    const res = await post({ name: 'Grandma', email: '', delivery_channel: 'email', going: true, attendee_names: ['Grandpa'] });
     expect(res.statusCode).toBe(200);
     expect(h.addGuest).toHaveBeenCalledWith(expect.objectContaining({
       delivery_channel: 'none',
       rsvp_status: 'Attending',
+      attendee_names: ['Grandpa'],
     }));
   });
 
