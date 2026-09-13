@@ -67,7 +67,7 @@ vi.mock('./client', () => ({
 
 vi.mock('./settings', () => ({ getSettings: async () => ({ date: '', language: 'EN' }) }));
 
-import { registerGuest, isApproved, getUniversalInviteMessage, getGuestByToken } from './guests';
+import { registerGuest, isApproved, getUniversalInviteMessage, getGuestByToken, addGuest } from './guests';
 import { createInvite, submitRsvp } from './rsvp';
 import { buildUniversalInviteMessage } from '../lib/compose';
 
@@ -79,6 +79,26 @@ describe('isApproved', () => {
     expect(isApproved({ approval_status: 'approved' })).toBe(true);
     expect(isApproved({ approval_status: 'pending' })).toBe(false);
     expect(isApproved({ approval_status: 'rejected' })).toBe(false);
+  });
+});
+
+describe('addGuest host self-registration', () => {
+  it('creates an already-going record with the code/token still available', async () => {
+    const { guest } = await addGuest({ name: 'Grandma', language_pref: 'EN', max_party_size: 2, rsvp_status: 'Attending' });
+    expect(guest.rsvp_status).toBe('Attending');
+    expect(guest.token_used).toBe(true);
+    expect(guest.attending_party_size).toBe(2);
+    expect(guest.magic_token).toBeTruthy();
+  });
+
+  it('promotes an existing pending contact to Attending instead of duplicating', async () => {
+    const first = await addGuest({ name: 'Grandma', email: 'g@x.com', language_pref: 'EN', max_party_size: 2 });
+    expect(first.guest.rsvp_status).toBe('Pending');
+    const again = await addGuest({ name: 'Grandma', email: 'g@x.com', language_pref: 'EN', max_party_size: 2, rsvp_status: 'Attending' });
+    expect(again.guest.id).toBe(first.guest.id);
+    expect(again.guest.rsvp_status).toBe('Attending');
+    expect(again.guest.token_used).toBe(true);
+    expect(h.stores.guests.length).toBe(1);
   });
 });
 
