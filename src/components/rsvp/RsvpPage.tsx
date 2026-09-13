@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { useParams } from 'react-router-dom';
+import { useParams, Link } from 'react-router-dom';
 import { useForm, useFieldArray } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -302,7 +302,7 @@ export const RsvpPage = () => {
         }
       } else {
         const { code, message } = decodeApiError(dataRes, res.status);
-        toast.error(code === 'RSVP_CLOSED' ? t.rsvpClosedToast : message || 'Failed to submit RSVP');
+        toast.error(code === 'RSVP_CLOSED' ? t.rsvpClosedToast : message || t.rsvpSubmitErrorToast);
       }
     } catch (err) {
       console.error('RSVP submit error:', err);
@@ -371,17 +371,17 @@ export const RsvpPage = () => {
               <div className="space-y-1 text-left flex-1">
                 <div className="flex flex-wrap items-center justify-between gap-2">
                   <span className="font-bold text-sm font-sans">{a.title}</span>
-                  <span className="text-[10px] uppercase font-mono px-2 py-0.5 rounded-full bg-white/80 font-bold border border-current shrink-0">
+                  <span className="text-xs uppercase font-mono px-2 py-0.5 rounded-full bg-white/80 font-bold border border-current shrink-0">
                     {a.type.replace('_', ' ')}
                   </span>
                 </div>
                 <p className="text-xs leading-relaxed font-sans">{a.message}</p>
-                <p className="text-[10px] opacity-70 font-mono">
+                <p className="text-xs opacity-70 font-mono">
                   {a.target_audience === 'PENDING'
-                    ? 'Reminder sent to pending guests'
+                    ? t.alertAudiencePending
                     : a.target_audience === 'ATTENDING'
-                    ? 'Broadcasted to attending guests'
-                    : 'Broadcasted to invited guests'}{' '}
+                    ? t.alertAudienceAttending
+                    : t.alertAudienceInvited}{' '}
                   • {new Date(a.created_at).toLocaleDateString()}
                 </p>
               </div>
@@ -426,15 +426,15 @@ export const RsvpPage = () => {
               <button
                 type="button"
                 onClick={() => setOpenModal('confirm')}
-                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-white/85 border border-[#CBAE94] shadow-sm text-[11px] font-mono font-bold text-[#4A3F35] hover:bg-white hover:text-[#D4A373] transition-colors cursor-pointer"
+                className="inline-flex items-center gap-2 px-5 min-h-[44px] rounded-full bg-[#4A3F35] text-white shadow-md text-sm font-bold hover:bg-[#3a3229] transition-colors cursor-pointer"
               >
-                <CheckCircle2 className="w-3.5 h-3.5 text-[#D4A373]" />
+                <CheckCircle2 className="w-4 h-4 text-[#D4A373]" />
                 <span>{t.guestConfirmationBtn}</span>
               </button>
               <button
                 type="button"
                 onClick={() => setOpenModal('invite')}
-                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-white/85 border border-[#CBAE94] shadow-sm text-[11px] font-mono font-bold text-[#4A3F35] hover:bg-white hover:text-[#D4A373] transition-colors cursor-pointer"
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-white/85 border border-[#CBAE94] shadow-sm text-xs font-mono font-bold text-[#4A3F35] hover:bg-white hover:text-[#D4A373] transition-colors cursor-pointer"
               >
                 <Users className="w-3.5 h-3.5 text-[#D4A373]" />
                 <span>{t.inviteGuestsBtn}</span>
@@ -442,7 +442,7 @@ export const RsvpPage = () => {
               <button
                 type="button"
                 onClick={() => setOpenModal('contact')}
-                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-white/85 border border-[#CBAE94] shadow-sm text-[11px] font-mono font-bold text-[#4A3F35] hover:bg-white hover:text-[#D4A373] transition-colors cursor-pointer"
+                className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-white/85 border border-[#CBAE94] shadow-sm text-xs font-mono font-bold text-[#4A3F35] hover:bg-white hover:text-[#D4A373] transition-colors cursor-pointer"
               >
                 <Bell className="w-3.5 h-3.5 text-[#D4A373]" />
                 <span>{t.contactNotificationsBtn}</span>
@@ -454,9 +454,17 @@ export const RsvpPage = () => {
 
       {/* Invalid token warning */}
       {!loading && errorMsg && (
-        <div className="max-w-2xl mx-auto p-4 rounded-2xl border-2 bg-rose-50 border-rose-400 text-rose-900 flex items-start gap-3">
-          <AlertTriangle className="w-5 h-5 shrink-0 mt-0.5" />
-          <p className="text-xs leading-relaxed font-sans">{errorMsg}</p>
+        <div className="max-w-2xl mx-auto p-4 rounded-2xl border-2 bg-rose-50 border-rose-400 text-rose-900 space-y-3">
+          <div className="flex items-start gap-3">
+            <AlertTriangle className="w-5 h-5 shrink-0 mt-0.5" />
+            <p className="text-sm leading-relaxed font-sans">{errorMsg}</p>
+          </div>
+          <Link
+            to="/"
+            className="inline-flex items-center gap-2 px-5 min-h-[44px] rounded-full bg-[#4A3F35] text-white text-sm font-bold hover:bg-[#3a3229] transition-colors"
+          >
+            {t.backHomeBtn}
+          </Link>
         </div>
       )}
 
@@ -609,11 +617,11 @@ export const RsvpPage = () => {
                         <p className="text-xs text-[#4A3F35]/70 mb-1 font-sans">
                           {t.attendeeSectionHint}
                         </p>
-                        <p className="text-[11px] text-[#8B735B] font-medium font-sans flex items-center gap-1">
+                        <p className="text-xs text-[#8B735B] font-medium font-sans flex items-center gap-1">
                           <Lightbulb className="w-3 h-3 shrink-0" />
                           {tf('primaryGuestIncluded', { name: guest.name })}
                         </p>
-                        <p className="text-[11px] text-[#8B735B] font-medium font-sans flex items-center gap-1">
+                        <p className="text-xs text-[#8B735B] font-medium font-sans flex items-center gap-1">
                           <Lightbulb className="w-3 h-3 shrink-0" />
                           {t.attendeeContactHelper}
                         </p>
@@ -624,7 +632,7 @@ export const RsvpPage = () => {
                           <div key={att.id} className="p-3.5 bg-white/90 rounded-xl border border-[#4A3F35]/20 space-y-2.5">
                             <div className="flex items-center justify-between gap-2">
                               <span className="text-xs font-mono font-bold text-[#8B735B] uppercase tracking-wider">
-                                {`Party Member #${index + 1}`}
+                                {tf('partyMemberLabel', { n: index + 1 })}
                               </span>
                               <button
                                 type="button"
@@ -720,7 +728,7 @@ export const RsvpPage = () => {
             </div>
             <div>
               <h3 className="font-sans text-base font-bold text-[#8B735B]">{t.inviteGuestTitle}</h3>
-              <p className="text-[11px] text-[#5D5449]">{t.inviteGuestHint}</p>
+              <p className="text-xs text-[#5D5449]">{t.inviteGuestHint}</p>
             </div>
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -745,7 +753,7 @@ export const RsvpPage = () => {
               />
             </div>
           </div>
-          <p className="text-[11px] text-[#8B735B] font-medium flex items-center gap-1">
+          <p className="text-xs text-[#8B735B] font-medium flex items-center gap-1">
             <Link2 className="w-3 h-3 shrink-0" />
             {t.linkOnlyHint}
           </p>
@@ -776,7 +784,7 @@ export const RsvpPage = () => {
             <p className="text-xs text-[#5D5449]/70 italic py-2">{t.noInvitesYet}</p>
           ) : (
             <>
-              <p className="text-[11px] text-[#8B735B] font-medium">{t.invitePendingHint}</p>
+              <p className="text-xs text-[#8B735B] font-medium">{t.invitePendingHint}</p>
               <div className="space-y-2.5">
                 {myInvites.map((invite) => {
                   const registered = invite.registered_guest;
@@ -785,15 +793,15 @@ export const RsvpPage = () => {
                       <div className="flex items-center justify-between gap-2">
                         <div className="min-w-0">
                           <p className="text-xs font-bold text-[#4A3F35] truncate">{invite.invitee_name}</p>
-                          <p className="text-[10px] font-mono text-[#8B735B] truncate">
+                          <p className="text-xs font-mono text-[#8B735B] truncate">
                             {invite.contact || t.channelNone}
                           </p>
                           {invite.note && (
-                            <p className="text-[10px] text-[#5D5449] italic truncate">{invite.note}</p>
+                            <p className="text-xs text-[#5D5449] italic truncate">{invite.note}</p>
                           )}
                         </div>
                         <span
-                          className={`px-2 py-0.5 rounded-full text-[10px] font-bold border shrink-0 ${
+                          className={`px-2 py-0.5 rounded-full text-xs font-bold border shrink-0 ${
                             registered
                               ? registered.rsvp_status === 'Declined'
                                 ? 'bg-rose-50 text-rose-800 border-rose-300'
@@ -807,14 +815,14 @@ export const RsvpPage = () => {
                       <div className="flex flex-wrap items-center gap-2">
                         <button
                           onClick={() => copyText(invite.invite_url, `link-${invite.id}`)}
-                          className="px-2.5 py-1.5 rounded-lg bg-[#E9E0D2] hover:bg-[#CBAE94] hover:text-white text-[#8B735B] text-[10px] font-bold font-mono transition-colors border border-[#CBAE94] inline-flex items-center gap-1"
+                          className="px-2.5 py-1.5 rounded-lg bg-[#E9E0D2] hover:bg-[#CBAE94] hover:text-white text-[#8B735B] text-xs font-bold font-mono transition-colors border border-[#CBAE94] inline-flex items-center gap-1"
                         >
                           {copiedKey === `link-${invite.id}` ? <Check className="w-3 h-3 text-emerald-600" /> : <Copy className="w-3 h-3" />}
                           <span>{copiedKey === `link-${invite.id}` ? t.linkCopied : t.copyLink}</span>
                         </button>
                         <button
                           onClick={() => copyText(invite.invite_message, `msg-${invite.id}`)}
-                          className="px-2.5 py-1.5 rounded-lg bg-white hover:bg-[#EFE6DC] text-[#5D5449] text-[10px] font-bold font-mono transition-colors border border-[#CBAE94] inline-flex items-center gap-1"
+                          className="px-2.5 py-1.5 rounded-lg bg-white hover:bg-[#EFE6DC] text-[#5D5449] text-xs font-bold font-mono transition-colors border border-[#CBAE94] inline-flex items-center gap-1"
                         >
                           {copiedKey === `msg-${invite.id}` ? <Check className="w-3 h-3 text-emerald-600" /> : <MessageSquare className="w-3 h-3" />}
                           <span>{copiedKey === `msg-${invite.id}` ? t.linkCopied : t.copyMessageBtn}</span>
@@ -822,7 +830,7 @@ export const RsvpPage = () => {
                         {!registered && (
                           <button
                             onClick={() => handleRemoveInvite(invite)}
-                            className="ml-auto px-2.5 py-1.5 rounded-lg bg-rose-50 hover:bg-rose-100 text-rose-700 text-[10px] font-bold font-mono transition-colors border border-rose-300 inline-flex items-center gap-1"
+                            className="ml-auto px-2.5 py-1.5 rounded-lg bg-rose-50 hover:bg-rose-100 text-rose-700 text-xs font-bold font-mono transition-colors border border-rose-300 inline-flex items-center gap-1"
                           >
                             <Trash2 className="w-3 h-3" />
                             <span>{t.removeInviteBtn}</span>
@@ -853,7 +861,7 @@ export const RsvpPage = () => {
             </div>
             <div>
               <h3 className="font-sans text-base font-bold text-[#8B735B]">{t.contactCardTitle}</h3>
-              <p className="text-[11px] text-[#5D5449]">{t.contactCardHint}</p>
+              <p className="text-xs text-[#5D5449]">{t.contactCardHint}</p>
             </div>
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">

@@ -271,12 +271,12 @@ export const AdminAgendaTab: React.FC<AdminAgendaTabProps> = ({ language, t, set
           <button type="button" onClick={() => setReminderForm((f) => ({ ...f, emailOn: !f.emailOn }))} className={toggleCls(emailOn)}>
             <Mail className="w-4 h-4" />
             {t.agendaReminderEmailLabel}
-            {caps?.email ? null : <span className="ml-auto text-[9px] font-mono text-amber-700 bg-amber-100 px-1.5 py-0.5 rounded-full">MOCK</span>}
+            {caps?.email ? null : <span className="ml-auto text-xs font-mono text-amber-700 bg-amber-100 px-1.5 py-0.5 rounded-full">MOCK</span>}
           </button>
           <button type="button" onClick={() => setReminderForm((f) => ({ ...f, smsOn: !f.smsOn }))} className={toggleCls(smsOn)}>
             <MessageSquare className="w-4 h-4" />
             {t.agendaReminderSmsLabel}
-            {caps?.sms ? null : <span className="ml-auto text-[9px] font-mono text-amber-700 bg-amber-100 px-1.5 py-0.5 rounded-full">MOCK</span>}
+            {caps?.sms ? null : <span className="ml-auto text-xs font-mono text-amber-700 bg-amber-100 px-1.5 py-0.5 rounded-full">MOCK</span>}
           </button>
         </div>
 
@@ -299,7 +299,7 @@ export const AdminAgendaTab: React.FC<AdminAgendaTabProps> = ({ language, t, set
                 <option key={opt} value={opt}>{advanceLabel(t, opt)}</option>
               ))}
             </select>
-            <p className="text-[11px] text-[#8B735B] font-mono mt-1">{t.agendaReminderWindowLabel}</p>
+            <p className="text-xs text-[#8B735B] font-mono mt-1">{t.agendaReminderWindowLabel}</p>
           </div>
           <div>
             <label className="label-mono block mb-1">{t.agendaReminderLangLabel}</label>
@@ -310,7 +310,7 @@ export const AdminAgendaTab: React.FC<AdminAgendaTabProps> = ({ language, t, set
           </div>
         </div>
 
-        {mock && <p className="text-[11px] text-amber-800 bg-amber-50 border border-amber-200 rounded-2xl px-4 py-3 font-mono">{t.agendaMockHint}</p>}
+        {mock && <p className="text-xs text-amber-800 bg-amber-50 border border-amber-200 rounded-2xl px-4 py-3 font-mono">{t.agendaMockHint}</p>}
 
         <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 pt-1 border-t border-[#CBAE94]/30">
           <button
@@ -332,7 +332,7 @@ export const AdminAgendaTab: React.FC<AdminAgendaTabProps> = ({ language, t, set
             {t.agendaReminderTestBtn}
           </button>
           {!channelConfigured && (
-            <span className="text-[11px] text-[#A09080] font-mono">{t.agendaReminderTestUnconfigured}</span>
+            <span className="text-xs text-[#A09080] font-mono">{t.agendaReminderTestUnconfigured}</span>
           )}
         </div>
       </motion.div>

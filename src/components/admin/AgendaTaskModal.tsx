@@ -116,7 +116,7 @@ export const AgendaTaskModal: React.FC<AgendaTaskModalProps> = ({ open, task, pr
             placeholder={t.agendaTitlePh}
             className={inputCls}
           />
-          {errors.title && <p className="text-[11px] text-rose-600 mt-1">{errors.title.message}</p>}
+          {errors.title && <p className="text-xs text-rose-600 mt-1">{errors.title.message}</p>}
         </div>
 
         <div>
@@ -133,12 +133,12 @@ export const AgendaTaskModal: React.FC<AgendaTaskModalProps> = ({ open, task, pr
           <div>
             <label className={labelCls}>{t.agendaTaskDueDateLabel}</label>
             <input type="date" {...register('due_date')} className={inputCls} />
-            {errors.due_date && <p className="text-[11px] text-rose-600 mt-1">{errors.due_date.message}</p>}
+            {errors.due_date && <p className="text-xs text-rose-600 mt-1">{errors.due_date.message}</p>}
           </div>
           <div>
             <label className={labelCls}>{t.agendaTaskDueTimeLabel}</label>
             <input type="time" {...register('due_time')} className={inputCls} />
-            {errors.due_time && <p className="text-[11px] text-rose-600 mt-1">{errors.due_time.message}</p>}
+            {errors.due_time && <p className="text-xs text-rose-600 mt-1">{errors.due_time.message}</p>}
           </div>
         </div>
 

@@ -137,7 +137,7 @@ export const DayOfQrModal: React.FC<DayOfQrModalProps> = ({
               </motion.div>
 
               <motion.div
-                className="pt-2 border-t border-dashed border-[#CBAE94]/60 text-[11px] font-mono text-[#8B735B]"
+                className="pt-2 border-t border-dashed border-[#CBAE94]/60 text-xs font-mono text-[#8B735B]"
                 variants={fadeUp}
                 initial="hidden"
                 animate="show"

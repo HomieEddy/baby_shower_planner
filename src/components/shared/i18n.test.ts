@@ -3,6 +3,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import './i18n';
 import i18n from 'i18next';
+import { translations } from '../../translations';
 
 // `useTf` is a thin wrapper over i18next's `t`; this exercises the underlying
 // interpolation the hook relies on.
@@ -60,6 +61,49 @@ describe('no manual placeholder substitution', () => {
       }
     };
     walk(path.join(process.cwd(), 'src'));
+    expect(offenders).toEqual([]);
+  });
+});
+
+// Guards the clean-text pass: a key carrying `{{...}}` must be read through
+// `tf(...)`, never `t.key` (which leaves the raw token visible).
+describe('no raw placeholder keys read via t.key', () => {
+  const placeholderKeys = new Set<string>();
+  for (const lang of ['EN', 'FR'] as const) {
+    for (const [key, value] of Object.entries(translations[lang] as unknown as Record<string, string>)) {
+      if (/\{\{/.test(value)) placeholderKeys.add(key);
+    }
+  }
+
+  it('every t.<key> whose value has a placeholder uses tf()', () => {
+    const offenders: string[] = [];
+    const walk = (dir: string) => {
+      for (const entry of fs.readdirSync(dir, { withFileTypes: true })) {
+        const full = path.join(dir, entry.name);
+        if (entry.isDirectory()) walk(full);
+        else if (/\.(ts|tsx)$/.test(entry.name) && !/\.test\./.test(entry.name)) {
+          const src = fs.readFileSync(full, 'utf8');
+          const re = /(?<![.\w])t\.([A-Za-z0-9_]+)\b/g;
+          let m: RegExpExecArray | null;
+          while ((m = re.exec(src))) {
+            if (placeholderKeys.has(m[1])) {
+              offenders.push(`${path.relative(process.cwd(), full)}: t.${m[1]}`);
+            }
+          }
+        }
+      }
+    };
+    walk(path.join(process.cwd(), 'src'));
+    expect(offenders).toEqual([]);
+  });
+
+  it('no translation is a bare bracketed mock label', () => {
+    const offenders: string[] = [];
+    for (const lang of ['EN', 'FR'] as const) {
+      for (const [key, value] of Object.entries(translations[lang] as unknown as Record<string, string>)) {
+        if (/^\[[^\]]*\]$/.test(value)) offenders.push(`${lang} ${key} = ${value}`);
+      }
+    }
     expect(offenders).toEqual([]);
   });
 });

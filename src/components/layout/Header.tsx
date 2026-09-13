@@ -79,7 +79,7 @@ export const Header: React.FC<HeaderProps> = ({ minimal = false }) => {
                 <h2 className="font-gaegu text-3xl sm:text-4xl font-bold text-[#4A3F35] leading-none truncate">
                   Bébé {settings?.babyName || 'Baby Shower'}
                 </h2>
-                <span className="font-mono text-[10px] uppercase tracking-widest text-[#4A3F35]/60 block mt-0.5 truncate">
+                <span className="font-mono text-xs uppercase tracking-widest text-[#4A3F35]/60 block mt-0.5 truncate">
                   {t.appSubtitle}
                 </span>
               </div>

@@ -2,13 +2,14 @@ import { motion } from 'motion/react';
 import { Heart, MessageSquare, Trash2, Eye, EyeOff } from 'lucide-react';
 import { GuestbookEntry } from '../../types';
 import { adminCardVariants, adminContainerVariants } from '../shared/motionPresets';
-import { useT } from '../shared/i18n';
+import { useT, useTf } from '../shared/i18n';
 import { useToast } from '../shared/ToastContext';
 import { useConfirm } from '../shared/ConfirmDialog';
 import { adminFetch } from '../../lib/api';
 
 export const AdminGuestbookFeed = ({ entries, onRefresh }: { entries: GuestbookEntry[]; onRefresh: () => Promise<void> }) => {
   const t = useT();
+  const tf = useTf();
   const { toast } = useToast();
   const confirm = useConfirm();
 
@@ -30,9 +31,9 @@ export const AdminGuestbookFeed = ({ entries, onRefresh }: { entries: GuestbookE
 
   const handleDelete = async (entry: GuestbookEntry) => {
     const ok = await confirm({
-      title: 'Delete Guestbook Entry?',
-      message: `Remove "${entry.guest_name}"'s message permanently? This cannot be undone.`,
-      confirmText: 'Delete Entry',
+      title: t.deleteGbEntryTitle,
+      message: tf('deleteGbEntryMsg', { name: entry.guest_name }),
+      confirmText: t.deleteGbEntryBtn,
     });
     if (!ok) return;
     try {
@@ -89,7 +90,7 @@ export const AdminGuestbookFeed = ({ entries, onRefresh }: { entries: GuestbookE
                       }}
                     />
                     {entry.visible === false && (
-                      <span className="absolute top-2 left-2 px-2 py-0.5 rounded-full bg-rose-600 text-white text-[10px] font-bold font-mono uppercase">
+                      <span className="absolute top-2 left-2 px-2 py-0.5 rounded-full bg-rose-600 text-white text-xs font-bold font-mono uppercase">
                         {t.moderationHiddenBadge}
                       </span>
                     )}
@@ -102,7 +103,7 @@ export const AdminGuestbookFeed = ({ entries, onRefresh }: { entries: GuestbookE
                   </p>
                 </div>
 
-                <div className="pt-3 border-t border-dashed border-[#CBAE94] flex items-center justify-between text-[11px] text-[#5D5449]">
+                <div className="pt-3 border-t border-dashed border-[#CBAE94] flex items-center justify-between text-xs text-[#5D5449]">
                   <span className="font-bold text-[#8B735B]">
                     <Heart className="w-3.5 h-3.5 inline" /> {entry.guest_name}
                   </span>

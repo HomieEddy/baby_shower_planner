@@ -76,13 +76,13 @@ const TaskCard: React.FC<{ task: AgendaTask; language: Language; onOpenTask: (ta
         <div className="min-w-0 flex-1 space-y-1">
           <p className="text-xs font-bold text-[#4A3F35] leading-snug break-words">{task.title}</p>
           {task.description && (
-            <p className="text-[11px] text-[#A09080] line-clamp-2 break-words">{task.description}</p>
+            <p className="text-xs text-[#A09080] line-clamp-2 break-words">{task.description}</p>
           )}
           {task.due_date && (
-            <p className="text-[10px] font-mono font-bold text-[#8B735B] flex items-center gap-1">
+            <p className="text-xs font-mono font-bold text-[#8B735B] flex items-center gap-1">
               <Clock className="w-3 h-3" />
               {shortDueDate(task.due_date, language)}
-              {task.due_time ? ` · ${formatTime12h(task.due_time)}` : ''}
+              {task.due_time ? ` · ${formatTime12h(task.due_time, language)}` : ''}
             </p>
           )}
         </div>
@@ -109,7 +109,7 @@ const KanbanColumn: React.FC<{
     >
       <div className="flex items-center justify-between px-1">
         <span className="text-xs font-bold font-mono uppercase tracking-wide">{statusLabel(t, id)}</span>
-        <span className="px-2 py-0.5 rounded-full bg-white/70 border border-current text-[10px] font-mono font-bold">
+        <span className="px-2 py-0.5 rounded-full bg-white/70 border border-current text-xs font-mono font-bold">
           {tasks.length}
         </span>
       </div>
@@ -121,7 +121,7 @@ const KanbanColumn: React.FC<{
         </div>
       </SortableContext>
       {tasks.length === 0 && (
-        <p className="text-[11px] text-[#A09080] italic text-center py-4">{t.agendaEmptyColumnMsg}</p>
+        <p className="text-xs text-[#A09080] italic text-center py-4">{t.agendaEmptyColumnMsg}</p>
       )}
     </div>
   );

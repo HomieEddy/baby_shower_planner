@@ -72,11 +72,20 @@ describe('formatTime12h', () => {
     expect(formatTime12h('00:30')).toBe('12:30 AM');
     expect(formatTime12h('12:00')).toBe('12:00 PM');
   });
+
+  it('uses the 24-hour clock for FR', () => {
+    expect(formatTime12h('14:00', 'FR')).toBe('14:00');
+    expect(formatTime12h('09:05', 'FR')).toBe('09:05');
+  });
 });
 
 describe('formatTimeRangeString', () => {
   it('combines times with en-dash', () => {
     expect(formatTimeRangeString('14:00', '18:00')).toBe('2:00 PM – 6:00 PM');
+  });
+
+  it('combines FR times in 24h', () => {
+    expect(formatTimeRangeString('14:00', '18:00', 'FR')).toBe('14:00 – 18:00');
   });
 });
 
@@ -134,6 +143,10 @@ describe('formatTaskDue', () => {
 
   it('formats FR date-only', () => {
     expect(formatTaskDue('2026-09-12', undefined, 'FR')).toBe('Samedi 12 septembre 2026');
+  });
+
+  it('formats FR with 24h time', () => {
+    expect(formatTaskDue('2026-09-12', '09:00', 'FR')).toBe('Samedi 12 septembre 2026 à 09:00');
   });
 
   it('returns empty for empty date', () => {

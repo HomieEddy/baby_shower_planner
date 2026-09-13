@@ -237,12 +237,12 @@ export const FloorPlanEditor = ({
                 {t.editorTitle}
               </h2>
               {isDirty && (
-                <span className="px-2.5 py-0.5 rounded-full bg-amber-100 text-amber-800 border border-amber-300 text-[10px] font-mono font-bold uppercase shrink-0">
+                <span className="px-2.5 py-0.5 rounded-full bg-amber-100 text-amber-800 border border-amber-300 text-xs font-mono font-bold uppercase shrink-0">
                   {t.unsavedChangesBadge}
                 </span>
               )}
             </div>
-            <p className="hidden sm:block text-[11px] text-[#8B735B] font-medium">
+            <p className="hidden sm:block text-xs text-[#8B735B] font-medium">
               {t.editorSubtitle}
             </p>
           </div>
@@ -251,14 +251,14 @@ export const FloorPlanEditor = ({
         {/* Live Draft Stats Tracker */}
         <div className="hidden md:flex items-center gap-4 bg-[#EFE6DC]/60 px-4 py-1.5 rounded-2xl border border-[#CBAE94]">
           <div className="text-center">
-            <span className="text-[10px] font-mono font-bold uppercase text-[#8B735B]">{t.draftCapacityLabel}</span>
+            <span className="text-xs font-mono font-bold uppercase text-[#8B735B]">{t.draftCapacityLabel}</span>
             <p className="text-xs font-bold text-[#4A3F35]">
               {tf('seatsTotalLabel', { count: draftFloorMap.tables.reduce((s, t) => s + t.capacity, 0) })}
             </p>
           </div>
           <div className="h-6 w-px bg-[#CBAE94]/40" />
           <div className="text-center">
-            <span className="text-[10px] font-mono font-bold uppercase text-[#8B735B]">{t.draftSeatedLabel}</span>
+            <span className="text-xs font-mono font-bold uppercase text-[#8B735B]">{t.draftSeatedLabel}</span>
             <p className="text-xs font-bold text-[#4A3F35]">
               {draftFloorMap.tables.reduce((s, t) => s + getTableOccupiedSeats(t, draftGuests), 0)} Confirmed
             </p>
@@ -297,7 +297,7 @@ export const FloorPlanEditor = ({
               <h3 className="label-mono font-bold text-[#8B735B] flex items-center gap-1.5">
                 <Maximize2 className="w-4 h-4" /> {t.roomDimensionsLabel}
               </h3>
-              <span className="text-[11px] font-mono font-bold text-[#4A3F35] bg-[#EFE6DC] px-2 py-0.5 rounded-lg border border-[#CBAE94]/60">
+              <span className="text-xs font-mono font-bold text-[#4A3F35] bg-[#EFE6DC] px-2 py-0.5 rounded-lg border border-[#CBAE94]/60">
                 {(draftFloorMap.roomShape ?? 'rectangle') === 'circle'
                   ? `Ø ${Math.min(draftFloorMap.canvasWidth, draftFloorMap.canvasHeight)} px`
                   : `${draftFloorMap.canvasWidth} × ${draftFloorMap.canvasHeight} px`}
@@ -344,10 +344,10 @@ export const FloorPlanEditor = ({
             {/* Size Presets */}
             {(draftFloorMap.roomShape ?? 'rectangle') === 'circle' ? (
               <div>
-                <label className="text-[10px] font-mono uppercase font-bold text-[#8B735B] block mb-1">
+                <label className="text-xs font-mono uppercase font-bold text-[#8B735B] block mb-1">
                   {t.roomPresetsLabel}
                 </label>
-                <div className="grid grid-cols-2 gap-1.5 text-[11px] font-bold">
+                <div className="grid grid-cols-2 gap-1.5 text-xs font-bold">
                   <button type="button" onClick={() => handleUpdateDiameter(650)} className={`px-2 py-1.5 rounded-xl border transition-all text-left flex items-center gap-1 ${Math.min(draftFloorMap.canvasWidth, draftFloorMap.canvasHeight) === 650 ? 'bg-[#8B735B] text-white border-[#8B735B]' : 'bg-white text-[#5D5449] border-[#CBAE94]/60 hover:bg-[#EFE6DC]'}`}>
                     <Home className="w-3 h-3" /> Small (Ø 650)
                   </button>
@@ -364,10 +364,10 @@ export const FloorPlanEditor = ({
               </div>
             ) : (
               <div>
-                <label className="text-[10px] font-mono uppercase font-bold text-[#8B735B] block mb-1">
+                <label className="text-xs font-mono uppercase font-bold text-[#8B735B] block mb-1">
                   {t.roomPresetsLabel}
                 </label>
-                <div className="grid grid-cols-2 gap-1.5 text-[11px] font-bold">
+                <div className="grid grid-cols-2 gap-1.5 text-xs font-bold">
                   <button
                     type="button"
                     onClick={() => handleUpdateDraftRoomSize(750, 550)}
@@ -430,7 +430,7 @@ export const FloorPlanEditor = ({
                   </div>
                   <input type="range" min={500} max={2500} step={50} value={Math.min(draftFloorMap.canvasWidth, draftFloorMap.canvasHeight)} onChange={(e) => handleUpdateDiameter(parseInt(e.target.value, 10))} className="w-full accent-[#8B735B]" />
                 </div>
-                <button type="button" onClick={() => handleUpdateDiameter(Math.min(draftFloorMap.canvasWidth, draftFloorMap.canvasHeight) + 150)} className="w-full py-2 px-3 rounded-xl bg-[#EFE6DC] hover:bg-[#CBAE94] text-[#4A3F35] font-bold text-[11px] transition-colors flex items-center justify-center gap-1">
+                <button type="button" onClick={() => handleUpdateDiameter(Math.min(draftFloorMap.canvasWidth, draftFloorMap.canvasHeight) + 150)} className="w-full py-2 px-3 rounded-xl bg-[#EFE6DC] hover:bg-[#CBAE94] text-[#4A3F35] font-bold text-xs transition-colors flex items-center justify-center gap-1">
                   <Maximize2 className="w-3.5 h-3.5 text-[#8B735B]" /> + Expand Room (+150px Ø)
                 </button>
               </div>
@@ -503,7 +503,7 @@ export const FloorPlanEditor = ({
                 <button
                   type="button"
                   onClick={() => handleUpdateDraftRoomSize(draftFloorMap.canvasWidth + 200, draftFloorMap.canvasHeight + 150)}
-                  className="w-full py-2 px-3 rounded-xl bg-[#EFE6DC] hover:bg-[#CBAE94] text-[#4A3F35] font-bold text-[11px] transition-colors flex items-center justify-center gap-1"
+                  className="w-full py-2 px-3 rounded-xl bg-[#EFE6DC] hover:bg-[#CBAE94] text-[#4A3F35] font-bold text-xs transition-colors flex items-center justify-center gap-1"
                 >
                   <Maximize2 className="w-3.5 h-3.5 text-[#8B735B]" /> + Expand Room (+200×150px)
                 </button>
@@ -525,7 +525,7 @@ export const FloorPlanEditor = ({
                 <div className="w-8 h-8 rounded-full border-2 border-[#8B735B] bg-white mx-auto flex items-center justify-center group-hover:scale-110 transition-transform">
                   <Plus className="w-4 h-4 text-[#8B735B]" />
                 </div>
-                <span className="text-[11px] font-bold text-[#4A3F35] block">
+                <span className="text-xs font-bold text-[#4A3F35] block">
                   {t.roundTableBtn}
                 </span>
               </button>
@@ -538,7 +538,7 @@ export const FloorPlanEditor = ({
                 <div className="w-12 h-7 rounded-lg border-2 border-[#8B735B] bg-white mx-auto flex items-center justify-center group-hover:scale-110 transition-transform">
                   <Plus className="w-4 h-4 text-[#8B735B]" />
                 </div>
-                <span className="text-[11px] font-bold text-[#4A3F35] block">
+                <span className="text-xs font-bold text-[#4A3F35] block">
                   {t.rectTableBtn}
                 </span>
               </button>
@@ -608,7 +608,7 @@ export const FloorPlanEditor = ({
             <p className="font-bold flex items-center gap-1 text-[#8B735B]">
               <Info className="w-3.5 h-3.5" /> {t.quickGuideLabel}
             </p>
-            <p className="text-[11px] leading-relaxed">
+            <p className="text-xs leading-relaxed">
               • Click elements on the canvas stage to select them.
               <br />
               • Drag elements to position them around the venue floor.
@@ -640,7 +640,7 @@ export const FloorPlanEditor = ({
                 </button>
               )}
               <ViewModeToggle value={viewMode} onChange={setViewMode} />
-              <span className="hidden md:inline text-[11px] font-mono text-[#5D5449]">
+              <span className="hidden md:inline text-xs font-mono text-[#5D5449]">
                 {t.liveDraftStageLabel}
               </span>
             </div>
@@ -946,7 +946,7 @@ export const FloorPlanEditor = ({
             <div className="bg-[#FFFDF9] rounded-3xl p-4 shadow-md border-2 border-[#CBAE94] space-y-4">
               <div className="flex items-center justify-between border-b border-[#CBAE94]/40 pb-2">
                 <div>
-                  <span className="text-[10px] font-mono font-bold uppercase text-[#8B735B]">
+                  <span className="text-xs font-mono font-bold uppercase text-[#8B735B]">
                     {t.landmarkInspectorLabel}
                   </span>
                   <h3 className="font-gaegu text-2xl font-bold text-[#4A3F35]">
@@ -1050,7 +1050,7 @@ export const FloorPlanEditor = ({
                 <div className="bg-[#FFFDF9] rounded-3xl p-4 shadow-md border-2 border-[#CBAE94] space-y-4">
                   <div className="flex items-center justify-between border-b border-[#CBAE94]/40 pb-2">
                     <div>
-                      <span className="text-[10px] font-mono font-bold uppercase text-[#8B735B]">
+                      <span className="text-xs font-mono font-bold uppercase text-[#8B735B]">
                         {t.draftTableInspectorLabel}
                       </span>
                       <h3 className="font-gaegu text-2xl font-bold text-[#4A3F35]">
@@ -1180,7 +1180,7 @@ export const FloorPlanEditor = ({
                             >
                               <div className="min-w-0">
                                 <p className="font-bold text-[#4A3F35] truncate">{name}</p>
-                                <span className="text-[10px] text-[#8B735B] font-medium">
+                                <span className="text-xs text-[#8B735B] font-medium">
                                   {tf('seatedAtSeatLabel', { seat: String(idx + 1) })} · {guest.name}
                                 </span>
                               </div>
@@ -1222,7 +1222,7 @@ export const FloorPlanEditor = ({
                           const remaining = pSize - getGuestSeatedCount(g.id, draftFloorMap, draftGuests);
                           return (
                             <option key={g.id} value={g.id}>
-                              {g.name} (Party of {pSize}) — {remaining > 0 ? `${remaining} to seat` : t.allAttendeesSeatedMsg}
+                              {g.name} ({tf('partyOfLabel', { count: pSize })}) — {remaining > 0 ? tf('remainingToSeatLabel', { count: remaining }) : t.allAttendeesSeatedMsg}
                             </option>
                           );
                         })}
@@ -1243,7 +1243,7 @@ export const FloorPlanEditor = ({
                     onClick={() => setSeatingWorkflowTab('guest')}
                     className="w-full mt-2 py-2 px-3 rounded-xl bg-[#EFE6DC] hover:bg-[#CBAE94]/30 text-[#8B735B] text-xs font-bold transition-all flex items-center justify-center gap-1"
                   >
-                    Switch to "By Guest & Party" Mode <ChevronRight className="w-3.5 h-3.5" />
+                    {t.switchByGuestModeBtn} <ChevronRight className="w-3.5 h-3.5" />
                   </button>
                 </div>
               )}
@@ -1254,7 +1254,7 @@ export const FloorPlanEditor = ({
           {seatingWorkflowTab === 'guest' && (
             <div className="bg-[#FFFDF9] rounded-3xl p-4 shadow-md border-2 border-[#CBAE94] space-y-4">
               <div>
-                <span className="text-[10px] font-mono font-bold uppercase text-[#8B735B]">
+                <span className="text-xs font-mono font-bold uppercase text-[#8B735B]">
                   {t.guestFirstSeatingLabel}
                 </span>
                 <h3 className="font-gaegu text-2xl font-bold text-[#4A3F35]">
@@ -1275,7 +1275,7 @@ export const FloorPlanEditor = ({
 
               {/* Attendee palette — drag a name onto a chair, or tap a name then a chair */}
               <div className="space-y-2 max-h-[22rem] overflow-y-auto pr-1">
-                <span className="text-[10px] font-mono font-bold uppercase text-[#8B735B] block mb-1">
+                <span className="text-xs font-mono font-bold uppercase text-[#8B735B] block mb-1">
                   {t.dragAttendeeHint}
                 </span>
                 {Array.from(paletteByParty.entries())
@@ -1307,7 +1307,7 @@ export const FloorPlanEditor = ({
                           className="w-full flex items-center justify-between font-bold text-left text-[#4A3F35]"
                         >
                           <span className="truncate">{guest.name}</span>
-                          <span className="ml-2 shrink-0 px-2 py-0.5 rounded-full text-[10px] font-mono bg-[#EFE6DC] text-[#8B735B]">
+                          <span className="ml-2 shrink-0 px-2 py-0.5 rounded-full text-xs font-mono bg-[#EFE6DC] text-[#8B735B]">
                             {seated}/{getGuestPartySize(guest)}
                           </span>
                         </button>
@@ -1328,7 +1328,7 @@ export const FloorPlanEditor = ({
                                   setDropTarget(null);
                                 }}
                                 onClick={() => handlePaletteItemClick(item)}
-                                className={`px-2 py-1 rounded-lg border text-[10px] font-bold cursor-grab active:cursor-grabbing transition-all ${
+                                className={`px-2 py-1 rounded-lg border text-xs font-bold cursor-grab active:cursor-grabbing transition-all ${
                                   isPicked
                                     ? 'bg-amber-200 border-amber-400 text-amber-900'
                                     : isSeated
@@ -1359,7 +1359,7 @@ export const FloorPlanEditor = ({
                 <div className="p-3 bg-[#EFE6DC]/50 rounded-2xl border-2 border-[#CBAE94] space-y-3 pt-3">
                   <div className="flex items-center justify-between border-b border-[#CBAE94]/40 pb-2">
                     <div>
-                      <span className="text-[10px] font-mono font-bold uppercase text-[#8B735B]">
+                      <span className="text-xs font-mono font-bold uppercase text-[#8B735B]">
                         {t.selectedPartyLabel}
                       </span>
                       <h4 className="font-bold text-[#4A3F35] text-sm">
@@ -1376,7 +1376,7 @@ export const FloorPlanEditor = ({
                         <button
                           type="button"
                           onClick={() => handleUnassignParty(selectedGuestForSeating.id)}
-                          className="px-2 py-1 rounded-lg bg-red-100 hover:bg-red-200 text-red-700 text-[10px] font-bold"
+                          className="px-2 py-1 rounded-lg bg-red-100 hover:bg-red-200 text-red-700 text-xs font-bold"
                         >
                           {t.unassignParty}
                         </button>
@@ -1385,12 +1385,12 @@ export const FloorPlanEditor = ({
                   </div>
 
                   <div>
-                    <span className="text-[10px] font-mono font-bold uppercase text-[#8B735B] block mb-1">
-                      {t.includedAttendeesLabel} ({pSize}):
+                    <span className="text-xs font-mono font-bold uppercase text-[#8B735B] block mb-1">
+                      {tf('includedAttendeesLabel', { count: pSize })}
                     </span>
                     <div className="flex flex-wrap gap-1">
                       {getPartyMembers(selectedGuestForSeating).map((name, nIdx) => (
-                        <span key={nIdx} className="px-2 py-0.5 bg-white rounded-md border border-[#CBAE94]/60 text-[10px] font-medium text-[#4A3F35]">
+                        <span key={nIdx} className="px-2 py-0.5 bg-white rounded-md border border-[#CBAE94]/60 text-xs font-medium text-[#4A3F35]">
                           • {name}
                         </span>
                       ))}
@@ -1399,7 +1399,7 @@ export const FloorPlanEditor = ({
 
                   {/* Live Table Grid — auto-fill the party's remaining members */}
                   <div className="space-y-2 pt-1">
-                    <span className="text-[10px] font-mono font-bold uppercase text-[#8B735B] block">
+                    <span className="text-xs font-mono font-bold uppercase text-[#8B735B] block">
                       {t.chooseVenueTableLabel}
                     </span>
                     <div className="space-y-2 max-h-52 overflow-y-auto pr-1">
@@ -1419,7 +1419,7 @@ export const FloorPlanEditor = ({
                               <span className="font-bold text-[#4A3F35]">
                                 {table.name}
                               </span>
-                              <span className="text-[10px] font-mono text-[#5D5449]">
+                              <span className="text-xs font-mono text-[#5D5449]">
                                 {occCount} / {table.capacity} Seats ({free} Free)
                               </span>
                             </div>
@@ -1433,7 +1433,7 @@ export const FloorPlanEditor = ({
                                 <Check className="w-3.5 h-3.5" /> {t.seatPartyHere} ({Math.min(remaining, free)} {language === 'FR' ? 'siège(s)' : 'seats'})
                               </button>
                             ) : (
-                              <div className="py-1 px-2 rounded-lg bg-red-100 text-red-700 text-[10px] font-bold text-center">
+                              <div className="py-1 px-2 rounded-lg bg-red-100 text-red-700 text-xs font-bold text-center">
                                 {free === 0 ? t.insufficientSeats : t.allAttendeesSeatedMsg}
                               </div>
                             )}

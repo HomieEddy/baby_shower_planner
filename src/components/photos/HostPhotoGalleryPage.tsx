@@ -81,9 +81,9 @@ export const HostPhotoGalleryPage: React.FC = () => {
   const handleBatchDelete = async () => {
     if (selectedPhotoIds.length === 0) return;
     const ok = await confirm({
-      title: 'Delete Selected Photos?',
-      message: `Are you sure you want to delete ${selectedPhotoIds.length} selected photo(s) from the memory library?`,
-      confirmText: 'Delete Photos',
+      title: t.deleteSelectedPhotosTitle,
+      message: tf('deleteSelectedPhotosMsg', { count: selectedPhotoIds.length }),
+      confirmText: t.deletePhotosBtn,
     });
     if (!ok) return;
 
@@ -106,7 +106,7 @@ export const HostPhotoGalleryPage: React.FC = () => {
     if (photosToZip.length === 0) return;
     setIsZipping(true);
     setZipProgress(0);
-    setZipStatusMessage('Initializing ZIP archive...');
+    setZipStatusMessage(t.zipInitializingStatus);
 
     try {
       const zip = new JSZip();
@@ -114,7 +114,7 @@ export const HostPhotoGalleryPage: React.FC = () => {
 
       for (let i = 0; i < photosToZip.length; i++) {
         const p = photosToZip[i];
-        setZipStatusMessage(`Adding photo ${i + 1} of ${photosToZip.length}...`);
+        setZipStatusMessage(tf('zipAddingPhotoStatus', { current: i + 1, total: photosToZip.length }));
 
         let ext = 'jpg';
         let dataBuffer: Uint8Array | Blob;
@@ -152,7 +152,7 @@ export const HostPhotoGalleryPage: React.FC = () => {
         setZipProgress(Math.round(((i + 1) / photosToZip.length) * 85));
       }
 
-      setZipStatusMessage('Compressing ZIP archive...');
+      setZipStatusMessage(t.zipCompressingStatus);
       const zipBlob = await zip.generateAsync({ type: 'blob' }, (metadata) => {
         setZipProgress(85 + Math.round(metadata.percent * 0.15));
       });
@@ -167,14 +167,14 @@ export const HostPhotoGalleryPage: React.FC = () => {
       URL.revokeObjectURL(url);
 
       setZipProgress(100);
-      setZipStatusMessage('ZIP download started!');
+      setZipStatusMessage(t.zipDownloadStarted);
       setTimeout(() => {
         setIsZipping(false);
         setZipStatusMessage('');
       }, 1200);
     } catch (err) {
       console.error('Error generating ZIP archive:', err);
-      alert('Failed to generate ZIP archive. Please try again.');
+      toast.error(t.zipGenerationFailedToast);
       setIsZipping(false);
     }
   };
@@ -224,9 +224,9 @@ export const HostPhotoGalleryPage: React.FC = () => {
   const handleDeletePhoto = async (photoId: string, e?: React.MouseEvent) => {
     if (e) e.stopPropagation();
     const ok = await confirm({
-      title: 'Delete Photo?',
-      message: 'Are you sure you want to delete this photo from the memory library?',
-      confirmText: 'Delete Photo',
+      title: t.removePhotoTitle,
+      message: t.deletePhotoConfirmMsg,
+      confirmText: t.deletePhotoBtn,
     });
     if (!ok) return;
 
@@ -295,10 +295,10 @@ export const HostPhotoGalleryPage: React.FC = () => {
               <span>{t.privateHostGalleryLabel}</span>
             </div>
             <h1 className="font-gaegu text-3xl sm:text-4xl font-bold text-[#4A3F35]">
-              {settings?.parentsNames ? `${settings.parentsNames}'s Photo Memory Library` : "Hosts' Photo Memory Library"}
+              {settings?.parentsNames ? tf('photoMemoryLibraryOwn', { name: settings.parentsNames }) : t.photoMemoryLibraryHosts}
             </h1>
             <p className="text-xs sm:text-sm text-[#8B735B]">
-              Real-time gallery of pictures snapped & uploaded by guests from their event tables.
+              {t.photoGallerySubtitle}
             </p>
           </div>
 
@@ -354,7 +354,7 @@ export const HostPhotoGalleryPage: React.FC = () => {
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
           <div className="bg-[#FFFDF9] p-5 rounded-2xl border border-[#CBAE94]/40 shadow-sm flex items-center justify-between">
             <div>
-              <p className="text-[11px] font-bold uppercase tracking-wider text-[#8B735B]">
+              <p className="text-xs font-bold uppercase tracking-wider text-[#8B735B]">
                 {t.totalUploadedPhotos}
               </p>
               <p className="text-2xl font-bold text-[#4A3F35] mt-0.5">{photos.length}</p>
@@ -366,7 +366,7 @@ export const HostPhotoGalleryPage: React.FC = () => {
 
           <div className="bg-[#FFFDF9] p-5 rounded-2xl border border-[#CBAE94]/40 shadow-sm flex items-center justify-between">
             <div>
-              <p className="text-[11px] font-bold uppercase tracking-wider text-[#8B735B]">
+              <p className="text-xs font-bold uppercase tracking-wider text-[#8B735B]">
                 {t.activeGuestTables}
               </p>
               <p className="text-2xl font-bold text-[#4A3F35] mt-0.5">
@@ -411,8 +411,8 @@ export const HostPhotoGalleryPage: React.FC = () => {
                 )}
                 <span className="hidden sm:inline">
                   {filteredPhotos.length > 0 && filteredPhotos.every((p) => selectedPhotoIds.includes(p.id))
-                    ? 'Deselect All'
-                    : `Select All (${filteredPhotos.length})`}
+                    ? t.deselectAllBtn
+                    : tf('selectAllCount', { count: filteredPhotos.length })}
                 </span>
               </button>
             )}
@@ -424,14 +424,14 @@ export const HostPhotoGalleryPage: React.FC = () => {
                 onChange={(e) => setSelectedTableFilter(e.target.value)}
                 className="px-3 py-2 rounded-xl bg-[#FAF6F0] border border-[#CBAE94]/60 text-xs font-bold text-[#4A3F35] focus:outline-none"
               >
-                <option value="all">All Venue Tables ({photos.length})</option>
+                <option value="all">{tf('allVenueTablesCount', { count: photos.length })}</option>
                 {tables.map((t) => {
                   const count = photos.filter(
                     (p) => p.table_id === t.id || p.table_name === t.name
                   ).length;
                   return (
                     <option key={t.id} value={t.id}>
-                      {t.name} ({count} photos)
+                      {tf('tablePhotoCount', { name: t.name, count })}
                     </option>
                   );
                 })}
@@ -451,7 +451,7 @@ export const HostPhotoGalleryPage: React.FC = () => {
                 title={t.masonryLayoutLabel}
               >
                 <Columns className="w-4 h-4" />
-                <span className="hidden sm:inline text-[11px]">{t.masonryLabel}</span>
+                <span className="hidden sm:inline text-xs">{t.masonryLabel}</span>
               </button>
               <button
                 type="button"
@@ -464,7 +464,7 @@ export const HostPhotoGalleryPage: React.FC = () => {
                 title={t.gridLayoutLabel}
               >
                 <LayoutGrid className="w-4 h-4" />
-                <span className="hidden sm:inline text-[11px]">{t.gridLabel}</span>
+                <span className="hidden sm:inline text-xs">{t.gridLabel}</span>
               </button>
             </div>
           </div>
@@ -478,7 +478,7 @@ export const HostPhotoGalleryPage: React.FC = () => {
                 {selectedPhotoIds.length}
               </span>
               <span className="text-xs sm:text-sm font-bold">
-                {selectedPhotoIds.length} photo{selectedPhotoIds.length > 1 ? 's' : ''} selected
+                {tf('photosSelectedCount', { count: selectedPhotoIds.length })}
               </span>
             </div>
 
@@ -493,7 +493,7 @@ export const HostPhotoGalleryPage: React.FC = () => {
                 className="px-4 py-2 rounded-xl bg-amber-500 hover:bg-amber-400 text-[#4A3F35] text-xs font-bold flex items-center gap-1.5 transition-colors shadow-sm"
               >
                 <DownloadCloud className="w-4 h-4" />
-                <span>Download Selected ZIP ({selectedPhotoIds.length})</span>
+                <span>{tf('downloadSelectedZip', { count: selectedPhotoIds.length })}</span>
               </button>
 
               <button
@@ -510,7 +510,7 @@ export const HostPhotoGalleryPage: React.FC = () => {
                 onClick={() => setSelectedPhotoIds([])}
                 className="px-3 py-2 rounded-xl bg-white/10 hover:bg-white/20 text-white text-xs font-bold transition-colors"
               >
-                Clear
+                {t.clearSelectionBtn}
               </button>
             </div>
           </div>
@@ -520,11 +520,11 @@ export const HostPhotoGalleryPage: React.FC = () => {
         {filteredPhotos.length === 0 ? (
           <EmptyState
             type={photos.length === 0 ? 'photos' : 'search'}
-            title={photos.length === 0 ? 'No Guest Photos Uploaded Yet' : 'No Matching Photos Found'}
+            title={photos.length === 0 ? t.noGuestPhotosTitle : t.noMatchingPhotosTitle}
             description={
               photos.length === 0
-                ? 'Your memory library is sparkling clean! Print Table QR Cards or invite guests to start uploading candid photos from their seats.'
-                : 'No photos matched your current search keyword or table filter. Try adjusting your query or resetting filters.'
+                ? t.noGuestPhotosDesc
+                : t.noMatchingPhotosDesc
             }
             actionLabel={photos.length === 0 ? t.galleryPrintQrBtn2 : t.galleryClearFiltersBtn}
             onAction={
@@ -593,10 +593,10 @@ export const HostPhotoGalleryPage: React.FC = () => {
             </div>
             <div>
               <h3 className="font-gaegu text-2xl font-bold text-[#4A3F35]">
-                Packaging Photo ZIP Archive
+                {t.packagingZipTitle}
               </h3>
               <p className="text-xs text-[#8B735B] font-medium mt-1">
-                {zipStatusMessage || 'Compressing photos into a ZIP archive...'}
+                {zipStatusMessage || t.compressingPhotosMsg}
               </p>
             </div>
 
@@ -607,8 +607,8 @@ export const HostPhotoGalleryPage: React.FC = () => {
                 style={{ width: `${zipProgress}%` }}
               />
             </div>
-            <p className="text-[11px] font-mono font-bold text-[#8B735B]">
-              {zipProgress}% Completed
+            <p className="text-xs font-mono font-bold text-[#8B735B]">
+              {tf('zipProgressLabel', { percent: zipProgress })}
             </p>
           </div>
         </Modal>

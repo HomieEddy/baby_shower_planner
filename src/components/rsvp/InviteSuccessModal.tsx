@@ -27,7 +27,7 @@ export const InviteSuccessModal = ({
         <div className="bg-white p-3.5 rounded-2xl border-2 border-[#CBAE94] font-mono text-xs text-[#5D5449] break-all select-all">
           {modal?.url}
         </div>
-        <div className="bg-[#EFE6DC]/50 p-3 rounded-xl border border-[#CBAE94] whitespace-pre-wrap text-left text-[11px] text-[#5D5449] font-mono max-h-40 overflow-y-auto">
+        <div className="bg-[#EFE6DC]/50 p-3 rounded-xl border border-[#CBAE94] whitespace-pre-wrap text-left text-xs text-[#5D5449] font-mono max-h-40 overflow-y-auto">
           {modal?.message}
         </div>
         <div className="flex space-x-3">

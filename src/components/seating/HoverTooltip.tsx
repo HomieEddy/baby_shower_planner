@@ -9,13 +9,13 @@ export const HoverTooltip = ({ tooltip }: { tooltip: HoverTooltipData }) => (
       {tooltip.title}
     </div>
     {tooltip.subtitle && (
-      <div className="text-[10px] font-mono text-[#CBAE94] font-bold uppercase tracking-wider">
+      <div className="text-xs font-mono text-[#CBAE94] font-bold uppercase tracking-wider">
         {tooltip.subtitle}
       </div>
     )}
     <div className="pt-1.5 border-t border-[#CBAE94]/30 space-y-1">
       {tooltip.details.map((d, i) => (
-        <p key={i} className="text-[11px] leading-relaxed text-[#F8F5F0]">
+        <p key={i} className="text-xs leading-relaxed text-[#F8F5F0]">
           {d}
         </p>
       ))}

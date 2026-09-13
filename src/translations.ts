@@ -71,6 +71,16 @@ export interface Translations {
   alertDateChangeMsg: string;
   alertDateChangeTitle: string;
   alertDeletedToast: string;
+  deleteAlertConfirmTitle: string;
+  deleteAlertConfirmMsg: string;
+  deleteAlertConfirmBtn: string;
+  wipeDbTitle: string;
+  wipeDbMsg: string;
+  wipeDbYesBtn: string;
+  wipeDbConfirmWord: string;
+  dangerZoneTitle: string;
+  dangerZoneDesc: string;
+  typeToConfirmHint: string;
   alertMessageLabel: string;
   alertMessageLabel2: string;
   alertMessagePh: string;
@@ -133,6 +143,7 @@ export interface Translations {
   byGuest: string;
   byTable: string;
   cancelBtn: string;
+  confirmBtn: string;
   cancellationTemplate: string;
   cancellationTemplateDesc: string;
   capacityLabel: string;
@@ -1013,6 +1024,89 @@ export interface Translations {
   rsvpDeadlineLabel: string;
   rsvpDeadlineHint: string;
   copyFailedToast: string;
+  alertsHistoryCount: string;
+  alertAudienceAttending: string;
+  alertAudienceInvited: string;
+  alertAudiencePending: string;
+  alertDispatchMeta: string;
+  alertTargetPrefix: string;
+  allTablesFullMsg: string;
+  allVenueTablesCount: string;
+  autoFitBadge: string;
+  cateringCatDairy: string;
+  cateringCatGlutenFree: string;
+  cateringCatHalal: string;
+  cateringCatNut: string;
+  cateringCatOther: string;
+  cateringCatVegetarian: string;
+  cateringSummaryDesc: string;
+  cateringSummaryHeading: string;
+  compressingPhotosMsg: string;
+  csvPasteHint: string;
+  deleteGbEntryBtn: string;
+  deleteGbEntryMsg: string;
+  deleteGbEntryTitle: string;
+  deletePhotoConfirmMsg: string;
+  dispatchAlertBtn: string;
+  dispatchingAlertBtn: string;
+  downloadSelectedZip: string;
+  filterAllOption: string;
+  fitsFreeSeats: string;
+  freeSeatsCount: string;
+  freeSeatsCount_one: string;
+  freeSeatsCount_other: string;
+  layoutOverviewHint: string;
+  noGuestPhotosDesc: string;
+  noGuestPhotosTitle: string;
+  noMatchingPhotosDesc: string;
+  noMatchingPhotosTitle: string;
+  optimizationSavedMsg: string;
+  optionalLabel: string;
+  overallSeatingProgress: string;
+  packagingZipTitle: string;
+  partyMemberLabel: string;
+  partySeatsNeededLabel: string;
+  photoGallerySubtitle: string;
+  photoMemoryLibraryHosts: string;
+  photoMemoryLibraryOwn: string;
+  photoUploadFailedToast: string;
+  photosSelectedCount: string;
+  readyToUploadCount: string;
+  readyToUploadCount_one: string;
+  readyToUploadCount_other: string;
+  scheduleDescEnPlaceholder: string;
+  scheduleDescFrPlaceholder: string;
+  scheduleItemLabel: string;
+  scheduleTitleEnPlaceholder: string;
+  scheduleTitleFrPlaceholder: string;
+  seatHighlightHint: string;
+  seatingProgressDetail: string;
+  selectAllCount: string;
+  sourceGuestOption: string;
+  sourceHostOption: string;
+  tableOptionWithCapacity: string;
+  tablePhotoCount: string;
+  targetAllNonDeclined: string;
+  targetAttendingGuests: string;
+  targetPendingGuests: string;
+  uploadFailedGeneric: string;
+  uploadGenericErrorToast: string;
+  uploadingFromLabel: string;
+  uploadingPhotosProgress: string;
+  uploadOptimizedCount: string;
+  uploadOptimizedCount_one: string;
+  uploadOptimizedCount_other: string;
+  uploadPhotosBtn: string;
+  venueFloorPlanView: string;
+  zipCompressingStatus: string;
+  zipDownloadStarted: string;
+  zipGenerationFailedToast: string;
+  zipProgressLabel: string;
+  deleteSelectedPhotosTitle: string;
+  deleteSelectedPhotosMsg: string;
+  deletePhotosBtn: string;
+  zipInitializingStatus: string;
+  zipAddingPhotoStatus: string;
 }
 
 export const translations: Record<Language, Translations> = {
@@ -1076,7 +1170,7 @@ export const translations: Record<Language, Translations> = {
     agendaTaskDeletedToast: "Task deleted",
     agendaTitlePh: "e.g. Order the cake, book the venue...",
     agendaTodayBtn: "Today",
-    adminCoHostControl: "[03] Co-Host Control Center",
+    adminCoHostControl: "Co-Host Control Center",
     adminLoginLabel: "Admin Login",
     adminSubtitle: "Track RSVPs, dietary restrictions, and manage guest invites in real time.",
     adminTitle: "Co-Host Dashboard",
@@ -1087,6 +1181,16 @@ export const translations: Record<Language, Translations> = {
     alertDateChangeMsg: "Dear guests, please note our baby shower date has changed to {{date}}. Please update your RSVPs accordingly!",
     alertDateChangeTitle: "Event Date Change Notice",
     alertDeletedToast: "Broadcast alert deleted.",
+    deleteAlertConfirmTitle: "Delete Broadcast Alert?",
+    deleteAlertConfirmMsg: "Remove this broadcast alert from the guest view? This cannot be undone.",
+    deleteAlertConfirmBtn: "Delete Alert",
+    wipeDbTitle: "Clear All Data?",
+    wipeDbMsg: "This permanently removes all guests, guestbook entries, alerts, seating maps, photos, and gifts. Event settings (names, date, venue) are kept. This cannot be undone.",
+    wipeDbYesBtn: "Yes, Clear All Data",
+    wipeDbConfirmWord: "DELETE",
+    dangerZoneTitle: "Danger Zone",
+    dangerZoneDesc: "Irreversible actions. Proceed with caution.",
+    typeToConfirmHint: "Type {{word}} to confirm",
     alertMessageLabel: "Alert Message",
     alertMessageLabel2: "Alert Message Body",
     alertMessagePh: "Explain the changes or reminder clearly...",
@@ -1149,6 +1253,7 @@ export const translations: Record<Language, Translations> = {
     byGuest: "By Guest & Party",
     byTable: "By Table",
     cancelBtn: "Cancel",
+    confirmBtn: "Confirm",
     cancellationTemplate: "Event Cancelled",
     cancellationTemplateDesc: "Cancellation notice",
     capacityLabel: "Capacity",
@@ -1237,7 +1342,7 @@ export const translations: Record<Language, Translations> = {
     dateChangeTemplate: "Date Change",
     dateChangeTemplateDesc: "Update event date/time",
     dayOfBadge: "Day-Of Check-In & Seating",
-    dayOfGuestbookTab: "[04] Day-Of Digital Guestbook",
+    dayOfGuestbookTab: "Day-Of Digital Guestbook",
     dayOfSubtitle: "Find your name, check in, and see your assigned table on the map — the party lead can check in the whole group at once.",
     dayOfTitle: "Check In & Find Your Seat",
     declinedNote: "* Note: Guests who have already declined will only receive cancellation alerts.",
@@ -1447,7 +1552,7 @@ export const translations: Record<Language, Translations> = {
     guestDeletedToast: "Deleted guest invitation for \"{{name}}\"",
     guestConfirmationBtn: "Guest Confirmation",
     guestEmailsLabel: "guest email(s)",
-    guestListBadge: "[GUESTLIST]",
+    guestListBadge: "Guest List",
     guestListTitle: "Invited Guests List",
     guestModeSubtitle: "Find your table and see your assigned seat on the interactive map.",
     guestNameCol: "Guest Name",
@@ -2029,6 +2134,89 @@ export const translations: Record<Language, Translations> = {
     rsvpDeadlineLabel: "RSVP deadline",
     rsvpDeadlineHint: "Shown in invitation messages. Leave empty for no deadline.",
     copyFailedToast: "Could not copy",
+    alertsHistoryCount: "Active Broadcast Alerts History ({{count}})",
+    alertAudienceAttending: "Broadcasted to attending guests",
+    alertAudienceInvited: "Broadcasted to invited guests",
+    alertAudiencePending: "Reminder sent to pending guests",
+    alertDispatchMeta: "Dispatched on {{date}} • {{count}} guest(s) notified",
+    alertTargetPrefix: "Target:",
+    allTablesFullMsg: "Every table is full. Add a table or free a chair to seat the rest of this party.",
+    allVenueTablesCount: "All Venue Tables ({{count}})",
+    autoFitBadge: "Auto-Fit",
+    cateringCatDairy: "Dairy-Free / Lactose",
+    cateringCatGlutenFree: "Gluten-Free",
+    cateringCatHalal: "Halal / Kosher",
+    cateringCatNut: "Nut / Peanut Allergy",
+    cateringCatOther: "Other / Custom Notes",
+    cateringCatVegetarian: "Vegetarian / Vegan",
+    cateringSummaryDesc: "Comprehensive headcount breakdown and allergy/dietary manifest for your caterers, chef, and banquet team.",
+    cateringSummaryHeading: "Catering & Dietary Restrictions Summary",
+    compressingPhotosMsg: "Compressing photos into a ZIP archive...",
+    csvPasteHint: "Paste comma-separated rows or raw CSV values below. Columns format:",
+    deleteGbEntryBtn: "Delete Entry",
+    deleteGbEntryMsg: "Remove \"{{name}}\"'s message permanently? This cannot be undone.",
+    deleteGbEntryTitle: "Delete Guestbook Entry?",
+    deletePhotoConfirmMsg: "Are you sure you want to delete this photo from the memory library?",
+    dispatchAlertBtn: "Dispatch Alert & Email Guests",
+    dispatchingAlertBtn: "Dispatching Broadcast...",
+    downloadSelectedZip: "Download Selected ZIP ({{count}})",
+    filterAllOption: "All",
+    fitsFreeSeats: "Fits ({{count}} Free)",
+    freeSeatsCount: "{{count}} free seats",
+    freeSeatsCount_one: "{{count}} free seat",
+    freeSeatsCount_other: "{{count}} free seats",
+    layoutOverviewHint: "Layout overview • Click Unassigned Guests on left sidebar to seat parties",
+    noGuestPhotosDesc: "Your memory library is sparkling clean! Print Table QR Cards or invite guests to start uploading candid photos from their seats.",
+    noGuestPhotosTitle: "No Guest Photos Uploaded Yet",
+    noMatchingPhotosDesc: "No photos matched your current search keyword or table filter. Try adjusting your query or resetting filters.",
+    noMatchingPhotosTitle: "No Matching Photos Found",
+    optimizationSavedMsg: "Automatic Optimization Saved {{size}} ({{percent}}% smaller payload!)",
+    optionalLabel: "Optional",
+    overallSeatingProgress: "Overall Seating Progress",
+    packagingZipTitle: "Packaging Photo ZIP Archive",
+    partyMemberLabel: "Party Member #{{n}}",
+    partySeatsNeededLabel: "Party of {{party}} ({{seats}} seats needed)",
+    photoGallerySubtitle: "Real-time gallery of pictures snapped & uploaded by guests from their event tables.",
+    photoMemoryLibraryHosts: "Hosts' Photo Memory Library",
+    photoMemoryLibraryOwn: "{{name}}'s Photo Memory Library",
+    photoUploadFailedToast: "Photo upload failed. Please try again.",
+    photosSelectedCount: "{{count}} photo(s) selected",
+    readyToUploadCount: "Ready to Upload ({{count}} photos)",
+    readyToUploadCount_one: "Ready to Upload ({{count}} photo)",
+    readyToUploadCount_other: "Ready to Upload ({{count}} photos)",
+    scheduleDescEnPlaceholder: "Mingle and sign guestbook...",
+    scheduleDescFrPlaceholder: "Chat and sign the guestbook...",
+    scheduleItemLabel: "Schedule Item #{{n}}",
+    scheduleTitleEnPlaceholder: "Guest Arrival & Refreshments",
+    scheduleTitleFrPlaceholder: "Guest Arrival...",
+    seatHighlightHint: "Click any green highlighted table to seat {{name}} (Party of {{count}})",
+    seatingProgressDetail: "{{seated}} of {{total}} confirmed guests assigned to tables",
+    selectAllCount: "Select All ({{count}})",
+    sourceGuestOption: "Guest-invited",
+    sourceHostOption: "Host",
+    tableOptionWithCapacity: "{{name}} (Cap: {{count}})",
+    tablePhotoCount: "{{name}} ({{count}} photos)",
+    targetAllNonDeclined: "All Non-Declined",
+    targetAttendingGuests: "Attending Guests",
+    targetPendingGuests: "Pending Guests",
+    uploadFailedGeneric: "Upload failed",
+    uploadGenericErrorToast: "An error occurred during upload. Please try again.",
+    uploadingFromLabel: "Uploading from: {{name}}",
+    uploadingPhotosProgress: "Uploading Photos ({{percent}}%)...",
+    uploadOptimizedCount: "Upload {{count}} Optimized Photos",
+    uploadOptimizedCount_one: "Upload {{count}} Optimized Photo",
+    uploadOptimizedCount_other: "Upload {{count}} Optimized Photos",
+    uploadPhotosBtn: "Upload Photos",
+    venueFloorPlanView: "Venue Floor Plan View",
+    zipCompressingStatus: "Compressing ZIP archive...",
+    zipDownloadStarted: "ZIP download started!",
+    zipGenerationFailedToast: "Failed to generate ZIP archive. Please try again.",
+    zipProgressLabel: "{{percent}}% Completed",
+    deleteSelectedPhotosTitle: "Delete Selected Photos?",
+    deleteSelectedPhotosMsg: "Are you sure you want to delete {{count}} selected photo(s) from the memory library?",
+    deletePhotosBtn: "Delete Photos",
+    zipInitializingStatus: "Initializing ZIP archive...",
+    zipAddingPhotoStatus: "Adding photo {{current}} of {{total}}...",
   },
   FR: {
     activeAlertsHistory: "Historique des alertes diffusées",
@@ -2090,7 +2278,7 @@ export const translations: Record<Language, Translations> = {
     agendaTaskDeletedToast: "Tâche supprimée",
     agendaTitlePh: "ex. Commander le gâteau, réserver la salle...",
     agendaTodayBtn: "Aujourd'hui",
-    adminCoHostControl: "[03] Centre de Contrôle Hôte",
+    adminCoHostControl: "Centre de Contrôle Hôte",
     adminLoginLabel: "Connexion admin",
     adminSubtitle: "Suivez les réponses RSVP, les régimes alimentaires et gérez les invitations en temps réel.",
     adminTitle: "Tableau de Bord Co-Hôte",
@@ -2101,6 +2289,16 @@ export const translations: Record<Language, Translations> = {
     alertDateChangeMsg: "Chers invités, veuillez noter que la date de notre baby shower est déplacée au {{date}}. Merci de mettre à jour votre RSVP !",
     alertDateChangeTitle: "Avis de changement de date",
     alertDeletedToast: "Alerte diffusée supprimée.",
+    deleteAlertConfirmTitle: "Supprimer l'alerte diffusée ?",
+    deleteAlertConfirmMsg: "Retirer cette alerte diffusée de la vue des invités ? Cette action est irréversible.",
+    deleteAlertConfirmBtn: "Supprimer l'alerte",
+    wipeDbTitle: "Effacer toutes les données ?",
+    wipeDbMsg: "Cela supprime définitivement tous les invités, messages du livre d'or, alertes, plans de table, photos et cadeaux. Les réglages de l'événement (noms, date, lieu) sont conservés. Action irréversible.",
+    wipeDbYesBtn: "Oui, tout effacer",
+    wipeDbConfirmWord: "EFFACER",
+    dangerZoneTitle: "Zone sensible",
+    dangerZoneDesc: "Actions irréversibles. À utiliser avec précaution.",
+    typeToConfirmHint: "Saisissez {{word}} pour confirmer",
     alertMessageLabel: "Message de l'alerte",
     alertMessageLabel2: "Corps du message",
     alertMessagePh: "Expliquez clairement les changements ou le rappel...",
@@ -2163,6 +2361,7 @@ export const translations: Record<Language, Translations> = {
     byGuest: "Par Invité & Groupe",
     byTable: "Par Table",
     cancelBtn: "Annuler",
+    confirmBtn: "Confirmer",
     cancellationTemplate: "Événement annulé",
     cancellationTemplateDesc: "Avis d'annulation",
     capacityLabel: "Capacité",
@@ -2251,7 +2450,7 @@ export const translations: Record<Language, Translations> = {
     dateChangeTemplate: "Changement de date",
     dateChangeTemplateDesc: "Mise à jour de la date/heure",
     dayOfBadge: "Pointage & placement du jour J",
-    dayOfGuestbookTab: "[04] Livre d'or du jour J",
+    dayOfGuestbookTab: "Livre d'or du jour J",
     dayOfSubtitle: "Trouvez votre nom, enregistrez-vous et découvrez votre table sur le plan — le responsable du groupe peut tout enregistrer d'un coup.",
     dayOfTitle: "Enregistrez-vous & trouvez votre place",
     declinedNote: "* Remarque : les invités ayant décliné ne recevront que les alertes d'annulation.",
@@ -2461,7 +2660,7 @@ export const translations: Record<Language, Translations> = {
     guestDeletedToast: "Invitation de « {{name}} » supprimée",
     guestConfirmationBtn: "Confirmation de l'invité",
     guestEmailsLabel: "email(s) d'invité(s)",
-    guestListBadge: "[LISTE DES INVITÉS]",
+    guestListBadge: "Liste des invités",
     guestListTitle: "Liste des Invités",
     guestModeSubtitle: "Trouvez votre table et votre place sur la carte interactive.",
     guestNameCol: "Nom de l'invité",
@@ -2747,7 +2946,7 @@ export const translations: Record<Language, Translations> = {
     specialDietaryLabel: "Demandes alimentaires spéciales",
     standardMealsLabel: "Repas standards",
     startTimeLabel: "Heure de début",
-    statAttending: "Presents",
+    statAttending: "Présents",
     statCapacity: "Capacité du lieu",
     statConfirmed: "Présents confirmés",
     statDeclined: "Absents",
@@ -2899,13 +3098,13 @@ export const translations: Record<Language, Translations> = {
     unseatedCountLabel: "{{count}} non place(s)",
     matchingTablesLabel: "Tables disponibles avec capacite :",
     highlightingTablesBtn: "Surligner les tables disponibles",
-    selectHighlightBtn: "Selectionner et surligner",
+    selectHighlightBtn: "Sélectionner et surligner",
     allTablesFilterLabel: "Toutes les tables ({{count}})",
     emptyTablesFilterLabel: "Vides ({{count}})",
     partialTablesFilterLabel: "Partielles ({{count}})",
     fullTablesFilterLabel: "Pleines ({{count}})",
-    fullySeatedBadge: "Tous places !",
-    unseatedWord: "non place(s)",
+    fullySeatedBadge: "Tous placés !",
+    unseatedWord: "non placé(s)",
     editorTitle: "Editeur de plan de salle plein ecran",
     unsavedChangesBadge: "Modifications non enregistrees",
     editorSubtitle: "Glissez-deposez les tables, personnalisez le lieu et placez les invites confirmes",
@@ -2942,7 +3141,7 @@ export const translations: Record<Language, Translations> = {
     noTableSelectedMsg: "Cliquez sur une table de la toile pour modifier sa capacite, voir les invites places ou assigner de nouveaux groupes.",
     switchByGuestModeBtn: "Passer au mode Par invite & groupe",
     guestFirstSeatingLabel: "Mode placement par invite",
-    selectGuestSeatTitle: "Selectionner l'invite et placer le groupe",
+    selectGuestSeatTitle: "Sélectionner l'invité et placer le groupe",
     confirmedAttendingLabel: "Invites confirmes",
     primaryGuestLabel: "Invite principal",
     selectedPartyLabel: "Groupe selectionne",
@@ -2955,7 +3154,7 @@ export const translations: Record<Language, Translations> = {
     unseatAttendeeBtn: "Retirer de la place",
     dragAttendeeHint: "Glissez un nom sur une chaise — ou touchez un nom, puis une chaise.",
     allAttendeesSeatedMsg: "Tous places",
-    remainingToSeatLabel: "{{count}} a placer",
+    remainingToSeatLabel: "{{count}} à placer",
     chooseGuestOption: "+ Choisir un invite / groupe a placer...",
     selectGuestHint: "Selectionnez un invite confirme ci-dessus pour voir les tables compatibles et placer son groupe.",
     venueBadge: "Lieu & Programme",
@@ -2966,20 +3165,20 @@ export const translations: Record<Language, Translations> = {
     guestPhotoAlt: "Invite",
     tapToViewDetails: "Touchez pour voir les details",
     deselectPhotoTitle: "Deselectionner la photo",
-    selectPhotoTitle: "Selectionner la photo",
+    selectPhotoTitle: "Sélectionner la photo",
     guestSingular: "invite(s)",
-    unassignedWord: "Non assigne",
-    cateringManifestTitle: "Liste des invites presents ({{count}})",
+    unassignedWord: "Non assigné",
+    cateringManifestTitle: "Liste des invités présents ({{count}})",
     dietaryOnlyBtn: "Filtrer regime alimentaire",
     showingDietaryOnlyBtn: "Regime alimentaire uniquement",
     checkinFailedToast: "Echec de l'enregistrement",
     checkinDeclinedError: "Cet invité a décliné l'invitation et ne peut pas s'enregistrer.",
     noContactLabel: "Aucun contact",
     partyOfLabel: "Groupe de {{count}}",
-    thankYouTrackerTitle: "Suivi automatise des cartes de remerciement",
-    thankYouTrackerSubtitle: "Enregistrez les cadeaux recus, generez automatiquement des mots de remerciement personnalises et suivez leur envoi.",
-    scheduleOfTheDayLabel: "Programme de la journee",
-    themeComboSelectorLabel: "Selecteur de theme & combinaison de couleurs",
+    thankYouTrackerTitle: "Suivi automatisé des cartes de remerciement",
+    thankYouTrackerSubtitle: "Enregistrez les cadeaux reçus, générez automatiquement des mots de remerciement personnalisés et suivez leur envoi.",
+    scheduleOfTheDayLabel: "Programme de la journée",
+    themeComboSelectorLabel: "Sélecteur de thème & combinaison de couleurs",
     foldedTentCardsBtn: "Cartes pliantes",
     nameBadgesBtn: "Badges nominatifs",
     allTablesOption: "Toutes les tables ({{count}} invités)",
@@ -3001,7 +3200,7 @@ export const translations: Record<Language, Translations> = {
     bulkDeleteConfirmMsg_one: "Cela supprimera définitivement {{count}} invité et son RSVP. Cette action est irréversible.",
     bulkDeleteConfirmMsg_other: "Cela supprimera définitivement {{count}} invités et leurs RSVP. Cette action est irréversible.",
     savingBtn: "Enregistrement...",
-    totalDietaryNeedsLabel: "Total des besoins alimentaires signales : {{count}}",
+    totalDietaryNeedsLabel: "Total des besoins alimentaires signalés : {{count}}",
     noGuestsYetTitle: "Aucune invitation d'invite",
     noGuestsYetMsg: "Votre liste d'invites est vide ! Ajoutez des invites avec le formulaire ci-dessus.",
     noGuestsMatchTitle: "Aucun invite trouve",
@@ -3043,5 +3242,88 @@ export const translations: Record<Language, Translations> = {
     rsvpDeadlineLabel: "Date limite de confirmation",
     rsvpDeadlineHint: "Affichée dans les messages d'invitation. Laissez vide pour aucune date limite.",
     copyFailedToast: "Impossible de copier",
+    alertsHistoryCount: "Historique des alertes diffusées ({{count}})",
+    alertAudienceAttending: "Diffusé aux invités présents",
+    alertAudienceInvited: "Diffusé aux invités",
+    alertAudiencePending: "Rappel envoyé aux invités en attente",
+    alertDispatchMeta: "Diffusée le {{date}} • {{count}} invité(s) notifié(s)",
+    alertTargetPrefix: "Cible :",
+    allTablesFullMsg: "Toutes les tables sont pleines. Ajoutez une table ou libérez une place pour installer le reste du groupe.",
+    allVenueTablesCount: "Toutes les tables du lieu ({{count}})",
+    autoFitBadge: "Ajustement auto",
+    cateringCatDairy: "Sans produits laitiers / lactose",
+    cateringCatGlutenFree: "Sans gluten",
+    cateringCatHalal: "Halal / Casher",
+    cateringCatNut: "Allergie aux fruits à coque / arachides",
+    cateringCatOther: "Autres / notes personnalisées",
+    cateringCatVegetarian: "Végétarien / végan",
+    cateringSummaryDesc: "Répartition complète des convives et manifeste des allergies/régimes pour vos traiteurs, votre chef et l'équipe de banquets.",
+    cateringSummaryHeading: "Résumé traiteur & restrictions alimentaires",
+    compressingPhotosMsg: "Compression des photos dans une archive ZIP...",
+    csvPasteHint: "Collez des lignes séparées par des virgules ou des valeurs CSV brutes ci-dessous. Format des colonnes :",
+    deleteGbEntryBtn: "Supprimer le message",
+    deleteGbEntryMsg: "Supprimer définitivement le message de « {{name}} » ? Cette action est irréversible.",
+    deleteGbEntryTitle: "Supprimer le message du livre d'or ?",
+    deletePhotoConfirmMsg: "Voulez-vous vraiment supprimer cette photo de la bibliothèque ?",
+    dispatchAlertBtn: "Diffuser l'alerte et prévenir les invités",
+    dispatchingAlertBtn: "Diffusion en cours...",
+    downloadSelectedZip: "Télécharger la sélection ZIP ({{count}})",
+    filterAllOption: "Tous",
+    fitsFreeSeats: "Compatible ({{count}} libres)",
+    freeSeatsCount: "{{count}} places libres",
+    freeSeatsCount_one: "{{count}} place libre",
+    freeSeatsCount_other: "{{count}} places libres",
+    layoutOverviewHint: "Aperçu du plan • Cliquez sur les invités non placés dans la barre latérale pour installer les groupes",
+    noGuestPhotosDesc: "Votre bibliothèque est vide ! Imprimez les QR de table ou invitez les invités à partager des photos depuis leur place.",
+    noGuestPhotosTitle: "Aucune photo d'invité pour l'instant",
+    noMatchingPhotosDesc: "Aucune photo ne correspond à votre recherche ou au filtre de table. Modifiez votre recherche ou réinitialisez les filtres.",
+    noMatchingPhotosTitle: "Aucune photo correspondante",
+    optimizationSavedMsg: "Optimisation automatique : {{size}} économisés ({{percent}} % de charge en moins !)",
+    optionalLabel: "Optionnel",
+    overallSeatingProgress: "Progression globale du placement",
+    packagingZipTitle: "Préparation de l'archive ZIP des photos",
+    partyMemberLabel: "Membre du groupe n° {{n}}",
+    partySeatsNeededLabel: "Groupe de {{party}} ({{seats}} places nécessaires)",
+    photoGallerySubtitle: "Galerie en temps réel des photos prises et envoyées par les invités depuis leur table.",
+    photoMemoryLibraryHosts: "Bibliothèque photo des hôtes",
+    photoMemoryLibraryOwn: "Bibliothèque photo de {{name}}",
+    photoUploadFailedToast: "Échec de l'envoi de la photo. Veuillez réessayer.",
+    photosSelectedCount: "{{count}} photo(s) sélectionnée(s)",
+    readyToUploadCount: "Prêt à envoyer ({{count}} photos)",
+    readyToUploadCount_one: "Prêt à envoyer ({{count}} photo)",
+    readyToUploadCount_other: "Prêt à envoyer ({{count}} photos)",
+    scheduleDescEnPlaceholder: "Discutez et signez le livre d'or...",
+    scheduleDescFrPlaceholder: "Discutez et signez le livre d'or...",
+    scheduleItemLabel: "Moment n° {{n}}",
+    scheduleTitleEnPlaceholder: "Arrivée des invités & rafraîchissements",
+    scheduleTitleFrPlaceholder: "Arrivée des invités...",
+    seatHighlightHint: "Cliquez sur une table verte pour placer {{name}} (Groupe de {{count}})",
+    seatingProgressDetail: "{{seated}} invités confirmés sur {{total}} assignés à des tables",
+    selectAllCount: "Tout sélectionner ({{count}})",
+    sourceGuestOption: "Invité par un invité",
+    sourceHostOption: "Hôte",
+    tableOptionWithCapacity: "{{name}} (Cap. : {{count}})",
+    tablePhotoCount: "{{name}} ({{count}} photos)",
+    targetAllNonDeclined: "Tous les non-déclinés",
+    targetAttendingGuests: "Invités présents",
+    targetPendingGuests: "Invités en attente",
+    uploadFailedGeneric: "Échec de l'envoi",
+    uploadGenericErrorToast: "Une erreur est survenue lors de l'envoi. Veuillez réessayer.",
+    uploadingFromLabel: "Envoi depuis : {{name}}",
+    uploadingPhotosProgress: "Envoi des photos ({{percent}} %)...",
+    uploadOptimizedCount: "Envoyer {{count}} photos optimisées",
+    uploadOptimizedCount_one: "Envoyer {{count}} photo optimisée",
+    uploadOptimizedCount_other: "Envoyer {{count}} photos optimisées",
+    uploadPhotosBtn: "Envoyer les photos",
+    venueFloorPlanView: "Vue du plan de salle",
+    zipCompressingStatus: "Compression de l'archive ZIP...",
+    zipDownloadStarted: "Téléchargement ZIP lancé !",
+    zipGenerationFailedToast: "Impossible de générer l'archive ZIP. Veuillez réessayer.",
+    zipProgressLabel: "{{percent}} % terminé",
+    deleteSelectedPhotosTitle: "Supprimer les photos sélectionnées ?",
+    deleteSelectedPhotosMsg: "Voulez-vous vraiment supprimer {{count}} photo(s) sélectionnée(s) de la bibliothèque ?",
+    deletePhotosBtn: "Supprimer les photos",
+    zipInitializingStatus: "Initialisation de l'archive ZIP...",
+    zipAddingPhotoStatus: "Ajout de la photo {{current}} sur {{total}}...",
   },
 };

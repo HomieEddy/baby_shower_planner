@@ -55,43 +55,43 @@ export const GuestRowCard = ({
             <div className="flex items-center gap-2 flex-wrap">
               <h4 className="font-bold text-[#5D5449] text-sm truncate">{guest.name}</h4>
               {guest.delivery_channel ? (
-                <span className="px-2 py-0.5 rounded-md bg-[#EFE6DC] border border-[#CBAE94] text-[10px] font-mono font-bold text-[#8B735B]">
+                <span className="px-2 py-0.5 rounded-md bg-[#EFE6DC] border border-[#CBAE94] text-xs font-mono font-bold text-[#8B735B]">
                   {channelLabelValue}
                 </span>
               ) : null}
               {guest.invited_by_guest_name ? (
-                <span className="px-2 py-0.5 rounded-md bg-amber-50 border border-amber-300 text-[10px] font-mono font-bold text-amber-800" title={guest.guest_note || ''}>
+                <span className="px-2 py-0.5 rounded-md bg-amber-50 border border-amber-300 text-xs font-mono font-bold text-amber-800" title={guest.guest_note || ''}>
                   {tf('invitedByBadge', { name: guest.invited_by_guest_name })}
                 </span>
               ) : (
-                <span className="px-2 py-0.5 rounded-md bg-[#F8F5F0] border border-[#CBAE94]/50 text-[10px] font-mono font-bold text-[#5D5449]/60">
+                <span className="px-2 py-0.5 rounded-md bg-[#F8F5F0] border border-[#CBAE94]/50 text-xs font-mono font-bold text-[#5D5449]/60">
                   {t.invitedByHostBadge}
                 </span>
               )}
               {guest.approval_status === 'pending' && (
-                <span className="px-2 py-0.5 rounded-md bg-amber-50 border border-amber-300 text-[10px] font-mono font-bold text-amber-800">
+                <span className="px-2 py-0.5 rounded-md bg-amber-50 border border-amber-300 text-xs font-mono font-bold text-amber-800">
                   {t.approvalPendingBadge}
                 </span>
               )}
             </div>
-            <div className="text-[11px] text-[#5D5449]/70 font-mono truncate mt-0.5 flex items-center gap-2 flex-wrap">
+            <div className="text-xs text-[#5D5449]/70 font-mono truncate mt-0.5 flex items-center gap-2 flex-wrap">
               {guest.email ? <span className="inline-flex items-center gap-1"><Mail className="w-3 h-3 shrink-0" />{guest.email}</span> : null}
               {guest.phone ? <span className="inline-flex items-center gap-1"><Smartphone className="w-3 h-3 shrink-0" />{guest.phone}</span> : null}
             </div>
           </div>
         </div>
         {guest.rsvp_status === 'Attending' && (
-          <span className="inline-flex items-center space-x-1 px-3 py-1 rounded-full bg-[#EFE6DC] text-emerald-800 text-[11px] font-bold border border-emerald-300 whitespace-nowrap shrink-0">
+          <span className="inline-flex items-center space-x-1 px-3 py-1 rounded-full bg-[#EFE6DC] text-emerald-800 text-xs font-bold border border-emerald-300 whitespace-nowrap shrink-0">
             <CheckCircle2 className="w-3 h-3 text-emerald-600 shrink-0" /><span>{t.statusAttendingWord}</span>
           </span>
         )}
         {guest.rsvp_status === 'Pending' && (
-          <span className="inline-flex items-center space-x-1 px-3 py-1 rounded-full bg-[#EFE6DC] text-[#8B735B] text-[11px] font-bold border border-[#CBAE94] whitespace-nowrap shrink-0">
+          <span className="inline-flex items-center space-x-1 px-3 py-1 rounded-full bg-[#EFE6DC] text-[#8B735B] text-xs font-bold border border-[#CBAE94] whitespace-nowrap shrink-0">
             <Clock className="w-3 h-3 text-[#8B735B] shrink-0" /><span>{t.statusPendingWord}</span>
           </span>
         )}
         {guest.rsvp_status === 'Declined' && (
-          <span className="inline-flex items-center space-x-1 px-3 py-1 rounded-full bg-rose-50 text-rose-800 text-[11px] font-bold border border-rose-300 whitespace-nowrap shrink-0">
+          <span className="inline-flex items-center space-x-1 px-3 py-1 rounded-full bg-rose-50 text-rose-800 text-xs font-bold border border-rose-300 whitespace-nowrap shrink-0">
             <XCircle className="w-3 h-3 text-rose-500 shrink-0" /><span>{t.statusDeclinedWord}</span>
           </span>
         )}
@@ -101,13 +101,13 @@ export const GuestRowCard = ({
       <div className="flex flex-wrap items-center justify-between gap-2">
         <div className="flex flex-wrap items-center gap-1.5">
           <span className="px-2.5 py-1 rounded-lg bg-[#EFE6DC] border border-[#CBAE94] text-xs font-bold font-mono text-[#8B735B]">{guest.code}</span>
-          <span className="px-2.5 py-1 rounded-lg bg-white border border-[#CBAE94] text-[11px] font-bold text-[#5D5449]">
+          <span className="px-2.5 py-1 rounded-lg bg-white border border-[#CBAE94] text-xs font-bold text-[#5D5449]">
             {guest.rsvp_status === 'Attending'
               ? `${partySize} / ${maxSize}`
               : tf('guestPartySizeLabel', { count: String(partySize), max: String(maxSize) })}
           </span>
           {guest.dietary_restrictions ? (
-            <span className="px-2.5 py-1 rounded-full bg-[#EFE6DC] text-[11px] font-medium text-[#8B735B] border border-[#CBAE94] max-w-full truncate">
+            <span className="px-2.5 py-1 rounded-full bg-[#EFE6DC] text-xs font-medium text-[#8B735B] border border-[#CBAE94] max-w-full truncate">
               {guest.dietary_restrictions}
             </span>
           ) : null}

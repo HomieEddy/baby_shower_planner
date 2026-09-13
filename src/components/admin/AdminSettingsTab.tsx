@@ -35,6 +35,7 @@ import { Translations } from '../../translations';
 import { parseToYmd, formatDateLong, parseTimeRange, formatTimeRangeString } from '../../lib/dateUtils';
 import { THEME_PRESETS, getThemeById, applyThemeToDocument, getContrastTextColor, getCustomTheme, CUSTOM_THEME_ID, FONT_OPTIONS, DEFAULT_CUSTOM_THEME } from '../../themePresets';
 import { useToast } from '../shared/ToastContext';
+import { useTf } from '../shared/i18n';
 
 // ISO timestamp -> <TextInput type="datetime-local"> value (local time)
 function isoToLocalInput(iso: string): string {
@@ -60,6 +61,7 @@ interface SortableScheduleItemProps {
 }
 
 const SortableScheduleItem: React.FC<SortableScheduleItemProps> = ({ item, index, t, onRemove, onChange }) => {
+  const tf = useTf();
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: item.id });
 
   return (
@@ -80,7 +82,7 @@ const SortableScheduleItem: React.FC<SortableScheduleItemProps> = ({ item, index
           >
             <GripVertical className="w-4 h-4" />
           </button>
-          <span className="text-xs font-bold font-mono text-[#8B735B]">Schedule Item #{index + 1}</span>
+          <span className="text-xs font-bold font-mono text-[#8B735B]">{tf('scheduleItemLabel', { n: index + 1 })}</span>
         </div>
         <button type="button" onClick={() => onRemove(index)}
           className="text-xs font-bold text-rose-600 hover:text-rose-800 bg-rose-50 hover:bg-rose-100 px-2.5 py-1 rounded-xl transition-colors flex items-center gap-1">
@@ -98,13 +100,13 @@ const SortableScheduleItem: React.FC<SortableScheduleItemProps> = ({ item, index
           <div>
             <label className="label-mono block mb-1">{t.titleEnLabel}</label>
             <TextInput type="text" value={item.titleEn} onChange={(e) => onChange(index, 'titleEn', e.target.value)}
-              placeholder="Guest Arrival & Refreshments"
+              placeholder={t.scheduleTitleEnPlaceholder}
               variant="soft" />
           </div>
           <div>
             <label className="label-mono block mb-1">{t.descEnLabel}</label>
             <TextInput type="text" value={item.descEn || ''} onChange={(e) => onChange(index, 'descEn', e.target.value)}
-              placeholder="Mingle and sign guestbook..."
+              placeholder={t.scheduleDescEnPlaceholder}
               variant="soft" />
           </div>
         </div>
@@ -112,13 +114,13 @@ const SortableScheduleItem: React.FC<SortableScheduleItemProps> = ({ item, index
           <div>
             <label className="label-mono block mb-1">{t.titleFrLabel}</label>
             <TextInput type="text" value={item.titleFr} onChange={(e) => onChange(index, 'titleFr', e.target.value)}
-              placeholder="Arrivée des invités..."
+              placeholder={t.scheduleTitleFrPlaceholder}
               variant="soft" />
           </div>
           <div>
             <label className="label-mono block mb-1">{t.descFrLabel}</label>
             <TextInput type="text" value={item.descFr || ''} onChange={(e) => onChange(index, 'descFr', e.target.value)}
-              placeholder="Discitez et signez le livre d'or..."
+              placeholder={t.scheduleDescFrPlaceholder}
               variant="soft" />
           </div>
         </div>
@@ -192,7 +194,7 @@ export const AdminSettingsTab: React.FC<AdminSettingsTabProps> = ({ language, t,
     try {
       setSavingSettings(true);
       const formattedDate = formatDateLong(datePickerValue, language);
-      const formattedTime = formatTimeRangeString(startTime, endTime);
+      const formattedTime = formatTimeRangeString(startTime, endTime, language);
       await onSave({
         parentsNames,
         babyName,
@@ -259,7 +261,7 @@ export const AdminSettingsTab: React.FC<AdminSettingsTabProps> = ({ language, t,
                 <TextInput type="date" required value={datePickerValue} onChange={(e) => { const v = e.target.value; setDatePickerValue(v); syncWindowFromEvent(v, startTime, endTime); }}
                   className="w-full pl-10 pr-4 py-2.5 rounded-2xl border-2 border-[#CBAE94] text-xs font-bold text-[#5D5449] focus:outline-none focus:ring-2 focus:ring-[#8B735B] bg-white cursor-pointer" />
               </div>
-              <div className="bg-[#EFE6DC]/60 px-3 py-1.5 rounded-xl border border-[#CBAE94]/40 text-[11px] font-mono text-[#8B735B] flex items-center justify-between">
+              <div className="bg-[#EFE6DC]/60 px-3 py-1.5 rounded-xl border border-[#CBAE94]/40 text-xs font-mono text-[#8B735B] flex items-center justify-between">
                 <span className="font-bold">{t.formattedLabel}</span>
                 <span className="font-sans font-bold text-[#5D5449]">{formatDateLong(datePickerValue, language)}</span>
               </div>
@@ -269,7 +271,7 @@ export const AdminSettingsTab: React.FC<AdminSettingsTabProps> = ({ language, t,
               <label className="label-mono block mb-1">{t.eventTimeRangeLabel}</label>
               <div className="grid grid-cols-2 gap-2 bg-[#EFE6DC]/30 p-2.5 rounded-2xl border-2 border-[#CBAE94]/60">
                 <div>
-                  <span className="text-[10px] uppercase font-mono font-bold text-[#8B735B] block mb-1">{t.startTimeLabel}</span>
+                  <span className="text-xs uppercase font-mono font-bold text-[#8B735B] block mb-1">{t.startTimeLabel}</span>
                   <div className="relative">
                     <Clock className="w-3.5 h-3.5 text-[#CBAE94] absolute left-2.5 top-2.5 pointer-events-none" />
                     <TextInput type="time" required value={startTime} onChange={(e) => { const v = e.target.value; setStartTime(v); syncWindowFromEvent(datePickerValue, v, endTime); }}
@@ -277,7 +279,7 @@ export const AdminSettingsTab: React.FC<AdminSettingsTabProps> = ({ language, t,
                   </div>
                 </div>
                 <div>
-                  <span className="text-[10px] uppercase font-mono font-bold text-[#8B735B] block mb-1">{t.endTimeLabel}</span>
+                  <span className="text-xs uppercase font-mono font-bold text-[#8B735B] block mb-1">{t.endTimeLabel}</span>
                   <div className="relative">
                     <Clock className="w-3.5 h-3.5 text-[#CBAE94] absolute left-2.5 top-2.5 pointer-events-none" />
                     <TextInput type="time" required value={endTime} onChange={(e) => { const v = e.target.value; setEndTime(v); syncWindowFromEvent(datePickerValue, startTime, v); }}
@@ -285,9 +287,9 @@ export const AdminSettingsTab: React.FC<AdminSettingsTabProps> = ({ language, t,
                   </div>
                 </div>
               </div>
-              <div className="bg-[#EFE6DC]/60 px-3 py-1.5 rounded-xl border border-[#CBAE94]/40 text-[11px] font-mono text-[#8B735B] flex items-center justify-between">
+              <div className="bg-[#EFE6DC]/60 px-3 py-1.5 rounded-xl border border-[#CBAE94]/40 text-xs font-mono text-[#8B735B] flex items-center justify-between">
                 <span className="font-bold">{t.combinedLabel}</span>
-                <span className="font-sans font-bold text-[#5D5449]">{formatTimeRangeString(startTime, endTime)}</span>
+                <span className="font-sans font-bold text-[#5D5449]">{formatTimeRangeString(startTime, endTime, language)}</span>
               </div>
             </div>
 
@@ -321,7 +323,7 @@ export const AdminSettingsTab: React.FC<AdminSettingsTabProps> = ({ language, t,
               <label className="label-mono block mb-1">{t.rsvpDeadlineLabel}</label>
               <TextInput type="date" value={rsvpDeadline} onChange={(e) => setRsvpDeadline(e.target.value)}
                 className="w-full px-3 py-2.5 rounded-2xl border-2 border-[#CBAE94] text-xs font-bold text-[#5D5449] focus:outline-none focus:ring-2 focus:ring-[#8B735B] bg-white" />
-              <p className="text-[11px] text-[#5D5449]/70 mt-1 font-mono">{t.rsvpDeadlineHint}</p>
+              <p className="text-xs text-[#5D5449]/70 mt-1 font-mono">{t.rsvpDeadlineHint}</p>
             </div>
           </div>
 
@@ -358,7 +360,7 @@ export const AdminSettingsTab: React.FC<AdminSettingsTabProps> = ({ language, t,
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
               <div>
                 <h4 className="font-sans text-xl font-bold text-[#8B735B] flex items-center gap-2">
-                  <Clock className="w-5 h-5 text-[#8B735B]" />Schedule of the Day
+                  <Clock className="w-5 h-5 text-[#8B735B]" />{t.scheduleOfTheDayLabel}
                 </h4>
                 <p className="text-xs text-[#5D5449]">{t.scheduleDesc}</p>
               </div>
@@ -395,7 +397,7 @@ export const AdminSettingsTab: React.FC<AdminSettingsTabProps> = ({ language, t,
           <div className="pt-6 border-t-2 border-[#CBAE94]/40 space-y-4">
             <div>
               <h4 className="font-sans text-xl font-bold text-[#8B735B] flex items-center gap-2">
-                <Palette className="w-5 h-5 text-[#8B735B]" />Theme & Color Combo Selector
+                <Palette className="w-5 h-5 text-[#8B735B]" />{t.themeComboSelectorLabel}
               </h4>
               <p className="text-xs text-[#5D5449] mt-0.5">{t.themeDesc}</p>
             </div>
@@ -418,7 +420,7 @@ export const AdminSettingsTab: React.FC<AdminSettingsTabProps> = ({ language, t,
 
               {selectedThemeId === CUSTOM_THEME_ID && (
                 <div className="p-4 rounded-2xl bg-[#EFE6DC]/40 border border-[#CBAE94] space-y-3">
-                  <p className="text-[11px] text-[#5D5449] font-medium">{t.customThemeDesc}</p>
+                  <p className="text-xs text-[#5D5449] font-medium">{t.customThemeDesc}</p>
                   <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                     {([
                       ['bg', t.color1BgLabel],
@@ -426,7 +428,7 @@ export const AdminSettingsTab: React.FC<AdminSettingsTabProps> = ({ language, t,
                       ['accent', t.color3AccentLabel],
                     ] as const).map(([key, label]) => (
                       <label key={key} className="flex flex-col gap-1">
-                        <span className="text-[11px] font-mono font-bold uppercase text-[#8B735B]">{label}</span>
+                        <span className="text-xs font-mono font-bold uppercase text-[#8B735B]">{label}</span>
                         <div className="flex items-center gap-2">
                           <input
                             type="color"
@@ -440,7 +442,7 @@ export const AdminSettingsTab: React.FC<AdminSettingsTabProps> = ({ language, t,
                     ))}
                   </div>
                   <label className="block">
-                    <span className="text-[11px] font-mono font-bold uppercase text-[#8B735B] block mb-1">{t.signatureTypographyLabel}</span>
+                    <span className="text-xs font-mono font-bold uppercase text-[#8B735B] block mb-1">{t.signatureTypographyLabel}</span>
                     <select
                       value={customTheme.fontFamily}
                       onChange={(e) => updateCustomTheme('fontFamily', e.target.value)}
@@ -467,27 +469,27 @@ export const AdminSettingsTab: React.FC<AdminSettingsTabProps> = ({ language, t,
                   style={{ backgroundColor: currentTheme.bg, color: currentTheme.ink, borderColor: currentTheme.accent }}>
                   <div className="flex flex-wrap items-center justify-between gap-2 border-b border-current/20 pb-2.5">
                     <div>
-                      <span className="text-[10px] font-mono font-bold uppercase tracking-wider opacity-85">Active Theme • {currentTheme.category}</span>
+                      <span className="text-xs font-mono font-bold uppercase tracking-wider opacity-85">Active Theme • {currentTheme.category}</span>
                       <h5 className="text-lg font-bold leading-tight">{currentTheme.name}</h5>
                     </div>
                     <div className="text-right">
-                      <span className="text-[10px] font-mono font-bold block opacity-85">{t.signatureTypographyLabel}</span>
+                      <span className="text-xs font-mono font-bold block opacity-85">{t.signatureTypographyLabel}</span>
                       <span className="text-xs font-bold" style={{ fontFamily: currentTheme.fontFamily }}>{currentTheme.displayFontName}</span>
                     </div>
                   </div>
                   <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5 pt-1">
                     <div className="p-2.5 rounded-xl border border-black/10 text-center space-y-1 shadow-2xs" style={{ backgroundColor: cardHeaderBg, color: currentTheme.ink }}>
-                      <span className="text-[10px] font-mono font-bold uppercase block opacity-80">{t.color1BgLabel}</span>
+                      <span className="text-xs font-mono font-bold uppercase block opacity-80">{t.color1BgLabel}</span>
                       <div className="h-8 rounded-lg border border-black/10 flex items-center justify-center font-mono font-bold text-xs shadow-2xs"
                         style={{ backgroundColor: currentTheme.bg, color: col1Text }}>{currentTheme.bg}</div>
                     </div>
                     <div className="p-2.5 rounded-xl border border-black/10 text-center space-y-1 shadow-2xs" style={{ backgroundColor: cardHeaderBg, color: currentTheme.ink }}>
-                      <span className="text-[10px] font-mono font-bold uppercase block opacity-80">{t.color2InkLabel}</span>
+                      <span className="text-xs font-mono font-bold uppercase block opacity-80">{t.color2InkLabel}</span>
                       <div className="h-8 rounded-lg flex items-center justify-center font-mono font-bold text-xs border border-black/10 shadow-2xs"
                         style={{ backgroundColor: currentTheme.ink, color: col2Text }}>{currentTheme.ink}</div>
                     </div>
                     <div className="p-2.5 rounded-xl border border-black/10 text-center space-y-1 shadow-2xs" style={{ backgroundColor: cardHeaderBg, color: currentTheme.ink }}>
-                      <span className="text-[10px] font-mono font-bold uppercase block opacity-80">{t.color3AccentLabel}</span>
+                      <span className="text-xs font-mono font-bold uppercase block opacity-80">{t.color3AccentLabel}</span>
                       <div className="h-8 rounded-lg flex items-center justify-center font-mono font-bold text-xs border border-black/10 shadow-2xs"
                         style={{ backgroundColor: currentTheme.accent, color: col3Text }}>{currentTheme.accent}</div>
                     </div>

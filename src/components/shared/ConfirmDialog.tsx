@@ -1,6 +1,7 @@
 import { createContext, useCallback, useContext, useState, ReactNode } from 'react';
 import { AlertTriangle } from 'lucide-react';
 import { Modal } from './Modal';
+import { useT, useTf } from './i18n';
 
 export interface ConfirmOptions {
   title: string;
@@ -8,6 +9,8 @@ export interface ConfirmOptions {
   confirmText?: string;
   cancelText?: string;
   variant?: 'danger' | 'warning';
+  /** When set, the user must type this word before the confirm button enables. */
+  requireText?: string;
 }
 
 interface ConfirmState extends ConfirmOptions {
@@ -19,10 +22,14 @@ const ConfirmContext = createContext<(options: ConfirmOptions) => Promise<boolea
 );
 
 export const ConfirmProvider = ({ children }: { children: ReactNode }) => {
+  const t = useT();
+  const tf = useTf();
   const [state, setState] = useState<ConfirmState | null>(null);
+  const [typed, setTyped] = useState('');
 
   const confirm = useCallback((options: ConfirmOptions) => {
     return new Promise<boolean>((resolve) => {
+      setTyped('');
       setState({ ...options, variant: options.variant || 'danger', resolve });
     });
   }, []);
@@ -33,6 +40,8 @@ export const ConfirmProvider = ({ children }: { children: ReactNode }) => {
   };
 
   const isDanger = state?.variant === 'danger';
+  const requireText = state?.requireText;
+  const canConfirm = !requireText || typed.trim().toUpperCase() === requireText.toUpperCase();
 
   return (
     <ConfirmContext.Provider value={confirm}>
@@ -41,23 +50,25 @@ export const ConfirmProvider = ({ children }: { children: ReactNode }) => {
         open={!!state}
         onClose={() => close(false)}
         maxWidth="md"
+        ariaLabel={state?.title}
         footer={
           <div className="flex items-center justify-end gap-3">
             <button
               type="button"
               onClick={() => close(false)}
-              className="px-4 py-2.5 rounded-xl border border-[#CBAE94] text-xs font-bold text-[#5D5449] hover:bg-[#EFE6DC] transition-colors"
+              className="px-5 min-h-[44px] rounded-xl border border-[#CBAE94] text-sm font-bold text-[#5D5449] hover:bg-[#EFE6DC] transition-colors"
             >
-              {state?.cancelText || 'Cancel'}
+              {state?.cancelText || t.cancelBtn}
             </button>
             <button
               type="button"
-              onClick={() => close(true)}
-              className={`px-4 py-2.5 rounded-xl text-xs font-bold text-white shadow-md transition-all ${
+              onClick={() => canConfirm && close(true)}
+              disabled={!canConfirm}
+              className={`px-5 min-h-[44px] rounded-xl text-sm font-bold text-white shadow-md transition-all ${
                 isDanger ? 'bg-rose-600 hover:bg-rose-700' : 'bg-[#8B735B] hover:bg-[#705C47]'
-              }`}
+              } disabled:opacity-40 disabled:cursor-not-allowed`}
             >
-              {state?.confirmText || 'Confirm'}
+              {state?.confirmText || t.confirmBtn}
             </button>
           </div>
         }
@@ -77,6 +88,21 @@ export const ConfirmProvider = ({ children }: { children: ReactNode }) => {
           </div>
         )}
         <p className="text-xs sm:text-sm text-[#5D5449] leading-relaxed">{state?.message}</p>
+        {requireText && (
+          <div className="mt-4 space-y-1.5">
+            <label className="label-mono block text-xs font-bold">
+              {tf('typeToConfirmHint', { word: requireText })}
+            </label>
+            <input
+              type="text"
+              value={typed}
+              onChange={(e) => setTyped(e.target.value)}
+              placeholder={requireText}
+              aria-label={tf('typeToConfirmHint', { word: requireText })}
+              className="w-full px-3.5 py-2.5 rounded-xl border border-[#CBAE94] bg-white text-sm font-mono font-bold text-[#4A3F35] focus:outline-none focus:ring-2 focus:ring-[#8B735B]"
+            />
+          </div>
+        )}
       </Modal>
     </ConfirmContext.Provider>
   );

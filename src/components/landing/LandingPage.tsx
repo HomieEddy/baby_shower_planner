@@ -49,7 +49,7 @@ export const LandingPage = () => {
 
         <div className="flex items-center gap-3 py-1" aria-hidden>
           <span className="flex-1 border-t border-[#CBAE94]/50" />
-          <span className="text-[10px] font-mono font-bold text-[#A09080] uppercase tracking-widest">{t.landingEntryLabel}</span>
+          <span className="text-xs font-mono font-bold text-[#A09080] uppercase tracking-widest">{t.landingEntryLabel}</span>
           <span className="flex-1 border-t border-[#CBAE94]/50" />
         </div>
 

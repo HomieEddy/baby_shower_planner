@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useSearchParams } from 'react-router-dom';
 import { Guest, GuestbookEntry, EventSettings, EventAlert, GiftLog } from '../../types';
 import { HostPhotoGalleryPage } from '../photos/HostPhotoGalleryPage';
 import { CateringSummaryView } from './CateringSummaryView';
@@ -71,7 +71,6 @@ const TabPane = ({ children }: { children: React.ReactNode }) => (
 );
 
 export const AdminDashboard = () => {
-  const navigate = useNavigate();
   const language = useAppStore((s) => s.language);
   const settings = useSettings();
   const queryClient = useQueryClient();
@@ -79,7 +78,20 @@ export const AdminDashboard = () => {
   const tf = useTf();
   const { toast } = useToast();
 
-  const [adminSubTab, setAdminSubTab] = useState<TabId>('guests');
+  // The active tab lives in the URL (?tab=guests) so the browser Back button
+  // closes a tab switch, deep links work, and returning to /admin keeps place.
+  const [searchParams, setSearchParams] = useSearchParams();
+  const tabParam = searchParams.get('tab');
+  const adminSubTab: TabId = TABS.some((tab) => tab.id === tabParam) ? (tabParam as TabId) : 'guests';
+  const setAdminSubTab = (id: TabId) =>
+    setSearchParams((prev) => {
+      const next = new URLSearchParams(prev);
+      next.set('tab', id);
+      // Drop any open guest modal params when switching tabs.
+      next.delete('guest');
+      next.delete('edit');
+      return next;
+    });
   const [sidebarOpen, setSidebarOpen] = useState(false);
 
   // Re-fetch with the admin token: the app-level fetch may have run before
@@ -165,9 +177,9 @@ export const AdminDashboard = () => {
 
   const handleDeleteAlertRequest = async (alertId: string) => {
     const ok = await confirm({
-      title: 'Delete Broadcast Alert?',
-      message: 'Are you sure you want to delete this broadcast alert from the guest view?',
-      confirmText: 'Delete Alert',
+      title: t.deleteAlertConfirmTitle,
+      message: t.deleteAlertConfirmMsg,
+      confirmText: t.deleteAlertConfirmBtn,
     });
     if (!ok) return;
     await adminFetch(`/api/alerts/${alertId}`, { method: 'DELETE' });
@@ -195,9 +207,10 @@ export const AdminDashboard = () => {
 
   const handleWipeData = async () => {
     const ok = await confirm({
-      title: 'Clear All Data?',
-      message: 'This will permanently remove all guests, guestbook entries, alerts, seating maps, photos, and gifts. Event settings (parents\' names, date, venue) are preserved. This cannot be undone.',
-      confirmText: 'Yes, Clear All Data',
+      title: t.wipeDbTitle,
+      message: t.wipeDbMsg,
+      confirmText: t.wipeDbYesBtn,
+      requireText: t.wipeDbConfirmWord,
     });
     if (!ok) return;
     await adminFetch('/api/wipe-data', { method: 'POST' });
@@ -269,7 +282,7 @@ export const AdminDashboard = () => {
             <div className="flex-1 min-w-0">
               <p className="font-mono font-bold text-amber-800 text-xs sm:text-sm">{t.rehearsalActiveBanner}</p>
               {rehearsal?.sample && (
-                <p className="text-[11px] text-amber-800/90 mt-0.5">
+                <p className="text-xs text-amber-800/90 mt-0.5">
                   {tf('rehearsalSampleCode', { code: rehearsal.sample.code })}
                 </p>
               )}
@@ -291,7 +304,7 @@ export const AdminDashboard = () => {
                 href={link.href}
                 target="_blank"
                 rel="noopener noreferrer"
-                className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-white border border-amber-300 text-[11px] font-bold text-amber-800 hover:bg-amber-100 transition-colors"
+                className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-white border border-amber-300 text-xs font-bold text-amber-800 hover:bg-amber-100 transition-colors"
               >
                 {link.label}
                 <ExternalLink className="w-3 h-3" />
@@ -347,16 +360,6 @@ export const AdminDashboard = () => {
               <span>{t.rehearsalBtn}</span>
             </motion.button>
           )}
-          <motion.button
-            whileHover={{ scale: 1.03 }}
-            whileTap={{ scale: 0.97 }}
-            onClick={handleWipeData}
-            className="btn-outline-accent text-xs sm:text-sm py-2.5 px-3.5 hover:bg-red-50 hover:text-red-700 hover:border-red-300 transition-colors cursor-pointer"
-            title={t.deleteAllDataTitle}
-          >
-            <Trash2 className="w-3.5 h-3.5 mr-1 text-red-600" />
-            <span>{t.wipeDbBtn}</span>
-          </motion.button>
         </div>
       </motion.div>
 
@@ -433,7 +436,7 @@ export const AdminDashboard = () => {
                   <Icon className={`w-4 h-4 shrink-0 ${tab.id === 'alerts' && !isActive ? 'text-amber-500' : ''}`} />
                   <span className="truncate flex-1">{tabLabel(tab.id)}</span>
                   {tab.id === 'alerts' && alerts.length > 0 ? (
-                    <span className="px-1.5 py-0.5 rounded-full bg-amber-500 text-white text-[10px] font-bold shrink-0">
+                    <span className="px-1.5 py-0.5 rounded-full bg-amber-500 text-white text-xs font-bold shrink-0">
                       {alerts.length}
                     </span>
                   ) : null}
@@ -524,6 +527,29 @@ export const AdminDashboard = () => {
 
         </div>
       </div>
+
+      {/* Danger Zone — destructive actions kept apart from everyday controls */}
+      <motion.div
+        variants={adminCardVariants}
+        className="rounded-2xl border-2 border-rose-300 bg-rose-50/60 p-5 sm:p-6 space-y-3"
+      >
+        <div className="flex items-center gap-2">
+          <AlertTriangle className="w-5 h-5 text-rose-600" />
+          <h2 className="font-sans text-lg font-bold text-rose-900">{t.dangerZoneTitle}</h2>
+        </div>
+        <p className="text-sm text-rose-900/80 max-w-2xl">{t.dangerZoneDesc}</p>
+        <div className="flex flex-col sm:flex-row sm:items-center gap-3">
+          <button
+            type="button"
+            onClick={handleWipeData}
+            className="inline-flex items-center justify-center gap-2 px-5 min-h-[44px] rounded-xl border-2 border-rose-400 bg-white text-rose-700 text-sm font-bold hover:bg-rose-100 transition-colors cursor-pointer"
+          >
+            <Trash2 className="w-4 h-4" />
+            <span>{t.wipeDbBtn}</span>
+          </button>
+          <span className="text-xs text-rose-900/70">{t.deleteAllDataTitle}</span>
+        </div>
+      </motion.div>
     </motion.div>
   );
 };

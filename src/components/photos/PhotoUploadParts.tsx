@@ -50,12 +50,12 @@ export const PhotoDropzone = ({
         <p className="text-xs font-bold text-[#4A3F35]">
           {t.tapToChoosePhotos}
         </p>
-        <p className="text-[11px] text-[#8B735B] mt-1">
+        <p className="text-xs text-[#8B735B] mt-1">
           {t.uploadManyHint}
         </p>
       </div>
 
-      <div className="pt-1 flex items-center justify-center gap-1.5 text-[10px] text-emerald-800 font-medium">
+      <div className="pt-1 flex items-center justify-center gap-1.5 text-xs text-emerald-800 font-medium">
         <Zap className="w-3 h-3 text-amber-600 shrink-0" />
         <span>{t.photoCompressedHint}</span>
       </div>
@@ -101,23 +101,23 @@ export const PhotoFileCard = ({
           <X className="w-3.5 h-3.5" />
         </button>
 
-        <span className="absolute bottom-1.5 left-1.5 px-1.5 py-0.5 rounded bg-black/60 text-[9px] font-mono text-white">
+        <span className="absolute bottom-1.5 left-1.5 px-1.5 py-0.5 rounded bg-black/60 text-xs font-mono text-white">
           #{index + 1}
         </span>
 
         {savedPct > 5 && (
-          <span className="absolute top-1.5 left-1.5 px-1.5 py-0.5 rounded-full bg-emerald-600/90 text-white text-[9px] font-bold shadow-sm flex items-center gap-0.5">
+          <span className="absolute top-1.5 left-1.5 px-1.5 py-0.5 rounded-full bg-emerald-600/90 text-white text-xs font-bold shadow-sm flex items-center gap-0.5">
             <Zap className="w-2.5 h-2.5 fill-current" />-{savedPct}%
           </span>
         )}
       </div>
 
       {/* File details info */}
-      <div className="p-2 bg-[#FFFDF9] border-t border-[#CBAE94]/30 text-[10px] font-medium text-[#4A3F35] flex items-center justify-between">
+      <div className="p-2 bg-[#FFFDF9] border-t border-[#CBAE94]/30 text-xs font-medium text-[#4A3F35] flex items-center justify-between">
         <span className="truncate font-mono text-[#8B735B]">
           {formatFileSize(item.compressedSize)}
         </span>
-        <span className="text-[9px] text-emerald-700 font-bold flex items-center gap-0.5">
+        <span className="text-xs text-emerald-700 font-bold flex items-center gap-0.5">
           <Check className="w-3 h-3 text-emerald-600" />
           {t.readyLabel}
         </span>

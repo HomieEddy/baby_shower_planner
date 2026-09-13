@@ -46,7 +46,7 @@ export const UnassignedGuestsSidebar = ({
             <h3 className="font-gaegu text-xl font-bold text-[#4A3F35] leading-none">
               {t.unassignedGuestsLabel}
             </h3>
-            <p className="text-[11px] text-[#8B735B] font-medium">
+            <p className="text-xs text-[#8B735B] font-medium">
               {t.selectPartyHint}
             </p>
           </div>
@@ -73,14 +73,14 @@ export const UnassignedGuestsSidebar = ({
         <div className="p-3.5 rounded-2xl bg-emerald-50 border-2 border-emerald-400 space-y-2.5 shadow-sm">
           <div className="flex items-start justify-between gap-2">
             <div>
-              <span className="px-2 py-0.5 rounded-md bg-emerald-600 text-white text-[10px] font-mono font-bold uppercase">
-                Active Seating Target
+              <span className="px-2 py-0.5 rounded-md bg-emerald-600 text-white text-xs font-mono font-bold uppercase">
+                {t.activeSeatingTargetLabel}
               </span>
               <h4 className="font-bold text-[#4A3F35] text-sm mt-1">
                 {selectedGuest.name}
               </h4>
               <p className="text-xs text-emerald-800 font-bold">
-                Party of {pSize} ({pSize} seats needed)
+                {tf('partySeatsNeededLabel', { party: pSize, seats: pSize })}
               </p>
             </div>
             <button
@@ -92,13 +92,13 @@ export const UnassignedGuestsSidebar = ({
             </button>
           </div>
 
-          <p className="text-[11px] text-emerald-900 bg-emerald-100/70 p-2 rounded-xl border border-emerald-200 leading-snug">
+          <p className="text-xs text-emerald-900 bg-emerald-100/70 p-2 rounded-xl border border-emerald-200 leading-snug">
             <strong>{t.mapGuidanceLabel}</strong> Available tables with at least {pSize} free seats are highlighted in <strong className="text-emerald-700 font-extrabold">{t.greenLegend}</strong> {t.greenLegendHint}
           </p>
 
           {/* Available Table Direct Seating Buttons */}
           <div className="space-y-1 pt-1 border-t border-emerald-200">
-            <span className="text-[10px] font-mono font-bold uppercase text-emerald-800 block">
+            <span className="text-xs font-mono font-bold uppercase text-emerald-800 block">
               {t.matchingTablesLabel}
             </span>
             <div className="space-y-1 max-h-36 overflow-y-auto pr-1">
@@ -117,15 +117,15 @@ export const UnassignedGuestsSidebar = ({
                     <span className="text-xs font-bold text-[#4A3F35] group-hover:text-emerald-900 flex items-center gap-1">
                       <Utensils className="w-3 h-3" /> {tbl.name}
                     </span>
-                    <span className="text-[11px] font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-md border border-emerald-200">
-                      {free} free seats
+                    <span className="text-xs font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-md border border-emerald-200">
+                      {tf('freeSeatsCount', { count: free })}
                     </span>
                   </button>
                 );
               })}
               {matchingTables.length === 0 && (
-                <p className="text-xs text-amber-700 italic bg-amber-50 p-2 rounded-xl border border-amber-200">
-                  Every table is full. Add a table or free a chair to seat the rest of this party.
+                <p className="text-xs text-amber-700 italic bg-amber-50 rounded-xl border border-amber-200 p-2">
+                  {t.allTablesFullMsg}
                 </p>
               )}
             </div>
@@ -141,7 +141,7 @@ export const UnassignedGuestsSidebar = ({
             <p className="text-xs font-bold text-emerald-900">
               {t.allSeatedTitle}
             </p>
-            <p className="text-[11px] text-emerald-700">
+            <p className="text-xs text-emerald-700">
               {t.allSeatedMsg}
             </p>
           </div>
@@ -165,12 +165,12 @@ export const UnassignedGuestsSidebar = ({
                     <h4 className="font-bold text-[#4A3F35] text-xs">
                       {g.name}
                     </h4>
-                    <p className="text-[11px] text-[#8B735B] font-medium">
+                    <p className="text-xs text-[#8B735B] font-medium">
                       {g.email}
                     </p>
                   </div>
-                  <span className="px-2 py-0.5 rounded-full bg-[#EFE6DC] text-[#8B735B] text-[10px] font-bold border border-[#CBAE94]/60 whitespace-nowrap">
-                    Party of {guestPSize}
+                  <span className="px-2 py-0.5 rounded-full bg-[#EFE6DC] text-[#8B735B] text-xs font-bold border border-[#CBAE94]/60 whitespace-nowrap">
+                    {tf('partyOfLabel', { count: guestPSize })}
                   </span>
                 </div>
 
@@ -179,7 +179,7 @@ export const UnassignedGuestsSidebar = ({
                     {g.attendee_names.map((att, aIdx) => (
                       <span
                         key={aIdx}
-                        className="px-2 py-0.5 rounded-md bg-[#FAF6F0] border border-[#CBAE94]/40 text-[10px] text-[#5D5449] font-medium"
+                        className="px-2 py-0.5 rounded-md bg-[#FAF6F0] border border-[#CBAE94]/40 text-xs text-[#5D5449] font-medium"
                       >
                         • {att}
                       </span>

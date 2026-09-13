@@ -215,7 +215,7 @@ export const GuestPhotoUploadPage = () => {
       for (const item of fileItems) {
         const photoUrl = await uploadPhotoBase64(item.file);
         if (!photoUrl) {
-          throw new Error('Photo upload failed. Please try again.');
+          throw new Error(t.photoUploadFailedToast);
         }
         photoPayloads.push({ url: photoUrl, filename: item.file.name });
       }
@@ -261,7 +261,7 @@ export const GuestPhotoUploadPage = () => {
         if (code === 'PHOTO_SIZE_LIMIT_REACHED') {
           throw new Error(t.uploadPhotoSizeLimitToast);
         }
-        throw new Error(message || 'Upload failed');
+        throw new Error(message || t.uploadFailedGeneric);
       }
 
       setUploadProgress(100);
@@ -275,7 +275,7 @@ export const GuestPhotoUploadPage = () => {
       setFileItems([]);
     } catch (err: any) {
       setIsUploading(false);
-      const errMsg = err.message || 'An error occurred during upload. Please try again.';
+      const errMsg = err.message || t.uploadGenericErrorToast;
       setFileError(errMsg);
       toast.error(tf('uploadErrorToast', { error: errMsg }));
     }
@@ -339,7 +339,7 @@ export const GuestPhotoUploadPage = () => {
             {selectedTableObj && (
               <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-xl bg-amber-400/20 border border-amber-300/40 text-amber-100 text-xs font-bold mt-2">
                 <Building2 className="w-4 h-4 text-amber-200" />
-                <span>Uploading from: {selectedTableObj.name}</span>
+                <span>{tf('uploadingFromLabel', { name: selectedTableObj.name })}</span>
               </div>
             )}
           </div>
@@ -382,7 +382,7 @@ export const GuestPhotoUploadPage = () => {
                   <option value="">{t.selectTablePlaceholder}</option>
                   {tables.map((t) => (
                     <option key={t.id} value={t.id}>
-                      {t.name} (Cap: {t.capacity})
+                      {tf('tableOptionWithCapacity', { name: t.name, count: t.capacity })}
                     </option>
                   ))}
                 </select>
@@ -444,7 +444,7 @@ export const GuestPhotoUploadPage = () => {
                   <ImageIcon className="w-3.5 h-3.5 text-[#8B735B]" />
                   {t.selectPhotosLabel}
                 </span>
-                <span className="inline-flex items-center gap-1 text-[11px] font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-md border border-emerald-200">
+                <span className="inline-flex items-center gap-1 text-xs font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-md border border-emerald-200">
                   <Zap className="w-3 h-3 text-emerald-600 fill-emerald-500" />
                   {t.autoResizedLabel}
                 </span>
@@ -483,13 +483,13 @@ export const GuestPhotoUploadPage = () => {
                 <div className="flex flex-wrap items-center justify-between gap-2 text-xs font-bold text-[#4A3F35]">
                   <span className="flex items-center gap-1.5">
                     <FileCheck2 className="w-4 h-4 text-[#8B735B]" />
-                    Ready to Upload ({fileItems.length} photo/s)
+                    {tf('readyToUploadCount', { count: fileItems.length })}
                   </span>
 
                   <button
                     type="button"
                     onClick={handleClearAllFiles}
-                    className="text-rose-600 hover:underline text-[11px] font-bold"
+                    className="text-rose-600 hover:underline text-xs font-bold"
                   >
                     {t.clearAllBtn}
                   </button>
@@ -501,10 +501,10 @@ export const GuestPhotoUploadPage = () => {
                     <div className="flex items-center gap-2">
                       <Zap className="w-4 h-4 text-emerald-600 fill-emerald-500 shrink-0" />
                       <span>
-                        Automatic Optimization Saved {formatFileSize(totalSavedBytes)} ({totalSavedPercent}% smaller payload!)
+                        {tf('optimizationSavedMsg', { size: formatFileSize(totalSavedBytes), percent: totalSavedPercent })}
                       </span>
                     </div>
-                    <span className="text-[10px] text-emerald-700 font-mono hidden sm:inline flex items-center gap-1">
+                    <span className="text-xs text-emerald-700 font-mono hidden sm:inline flex items-center gap-1">
                       {formatFileSize(totalOriginalBytes)}
                       <ArrowRight className="w-3 h-3" />
                       {formatFileSize(totalCompressedBytes)}
@@ -530,13 +530,13 @@ export const GuestPhotoUploadPage = () => {
                 {isUploading ? (
                   <>
                     <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                    <span>Uploading Photos ({uploadProgress}%)...</span>
+                    <span>{tf('uploadingPhotosProgress', { percent: uploadProgress })}</span>
                   </>
                 ) : (
                   <>
                     <UploadCloud className="w-5 h-5 text-amber-200" />
                     <span>
-                      Upload {fileItems.length > 0 ? `${fileItems.length} Optimized Photo(s)` : 'Photos'}
+                      {fileItems.length > 0 ? tf('uploadOptimizedCount', { count: fileItems.length }) : t.uploadPhotosBtn}
                     </span>
                   </>
                 )}

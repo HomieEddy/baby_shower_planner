@@ -226,7 +226,7 @@ export const ThankYouTrackerView: React.FC<ThankYouTrackerViewProps> = ({
             <div className="flex justify-between text-xs font-bold text-[#4A3F35] font-mono">
               <span>{t.thankYouProgressLabel}</span>
               <span>
-                {sentCount} of {totalGifts} Sent ({percentComplete}%)
+                {tf('progressSentLabel', { sent: sentCount, total: totalGifts, percent: percentComplete })}
               </span>
             </div>
             <div className="w-full bg-[#EFE6DC] h-3.5 rounded-full overflow-hidden border border-[#CBAE94]/40">
@@ -257,7 +257,7 @@ export const ThankYouTrackerView: React.FC<ThankYouTrackerViewProps> = ({
                 </PieChart>
               </ResponsiveContainer>
             </div>
-            <div className="flex items-center justify-center gap-4 text-[11px] font-bold text-[#4A3F35] font-mono mt-1">
+            <div className="flex items-center justify-center gap-4 text-xs font-bold text-[#4A3F35] font-mono mt-1">
               <span className="flex items-center gap-1.5">
                 <span className="w-2.5 h-2.5 rounded-full bg-emerald-500" />
                 {t.thankYousCompletedLabel} ({sentCount})
@@ -315,7 +315,7 @@ export const ThankYouTrackerView: React.FC<ThankYouTrackerViewProps> = ({
                 </option>
               ))}
             </Select>
-            {errors.guest_name && <p className="text-rose-600 text-[10px] mt-1">{errors.guest_name.message}</p>}
+            {errors.guest_name && <p className="text-rose-600 text-xs mt-1">{errors.guest_name.message}</p>}
           </Field>
 
           <Field label={t.giftDescRequired}>
@@ -326,7 +326,7 @@ export const ThankYouTrackerView: React.FC<ThankYouTrackerViewProps> = ({
               {...register('gift_description')}
               placeholder={t.giftDescPh}
             />
-            {errors.gift_description && <p className="text-rose-600 text-[10px] mt-1">{errors.gift_description.message}</p>}
+            {errors.gift_description && <p className="text-rose-600 text-xs mt-1">{errors.gift_description.message}</p>}
           </Field>
 
           <Field label={t.categoryLabel}>
@@ -358,7 +358,7 @@ export const ThankYouTrackerView: React.FC<ThankYouTrackerViewProps> = ({
       <div className="card-paper p-6 sm:p-8 space-y-4">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-[#CBAE94]/30 pb-3">
           <h3 className="font-sans text-xl font-bold text-[#4A3F35]">
-            Gift Log & Note Status ({filteredGifts.length})
+            {tf('giftLogStatusLabel', { count: filteredGifts.length })}
           </h3>
 
           <div className="flex items-center gap-2">
@@ -386,7 +386,7 @@ export const ThankYouTrackerView: React.FC<ThankYouTrackerViewProps> = ({
                   filterStatus === 'PENDING' ? 'bg-white text-rose-800 shadow-xs' : 'text-[#8B735B]'
                 }`}
               >
-                {t.giftFilterPending} ({pendingCount})
+                {tf('giftFilterPending', { count: pendingCount })}
               </button>
               <button
                 type="button"
@@ -395,7 +395,7 @@ export const ThankYouTrackerView: React.FC<ThankYouTrackerViewProps> = ({
                   filterStatus === 'SENT' ? 'bg-white text-emerald-800 shadow-xs' : 'text-[#8B735B]'
                 }`}
               >
-                {t.giftFilterSent} ({sentCount})
+                {tf('giftFilterSent', { count: sentCount })}
               </button>
             </div>
           </div>
@@ -427,7 +427,7 @@ export const ThankYouTrackerView: React.FC<ThankYouTrackerViewProps> = ({
                     <div>
                       <div className="flex items-center gap-2">
                         <h4 className="text-sm font-bold text-[#4A3F35]">{gift.guest_name}</h4>
-                        <span className="px-2 py-0.5 rounded-md bg-[#EFE6DC] text-[#8B735B] text-[10px] font-bold font-mono">
+                        <span className="px-2 py-0.5 rounded-md bg-[#EFE6DC] text-[#8B735B] text-xs font-bold font-mono">
                           {gift.category}
                         </span>
                       </div>
