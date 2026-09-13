@@ -118,27 +118,27 @@ export const AdminAlertsTab: React.FC<AdminAlertsTabProps> = ({ language, t, gue
             <button type="button" onClick={() => handlePresetAlert('REMINDER')}
               className={`p-3 rounded-2xl border-2 text-xs font-bold text-left transition-all flex flex-col space-y-1 ${alertType === 'REMINDER' ? 'border-amber-600 bg-amber-50 text-amber-900' : 'border-[#CBAE94]/50 bg-white hover:bg-[#EFE6DC]/40 text-[#5D5449]'}`}>
               <span className="font-bold">{t.rsvpReminderTemplate}</span>
-              <span className="text-[10px] opacity-75 text-amber-800">{t.rsvpReminderTemplateDesc}</span>
+              <span className="text-xs opacity-75 text-amber-800">{t.rsvpReminderTemplateDesc}</span>
             </button>
             <button type="button" onClick={() => handlePresetAlert('VENUE_CHANGE')}
               className={`p-3 rounded-2xl border-2 text-xs font-bold text-left transition-all flex flex-col space-y-1 ${alertType === 'VENUE_CHANGE' ? 'border-[#8B735B] bg-[#EFE6DC] text-[#8B735B]' : 'border-[#CBAE94]/50 bg-white hover:bg-[#EFE6DC]/40 text-[#5D5449]'}`}>
               <span className="font-bold">{t.venueChangeTemplate}</span>
-              <span className="text-[10px] opacity-75">{t.venueChangeTemplateDesc}</span>
+              <span className="text-xs opacity-75">{t.venueChangeTemplateDesc}</span>
             </button>
             <button type="button" onClick={() => handlePresetAlert('DATE_CHANGE')}
               className={`p-3 rounded-2xl border-2 text-xs font-bold text-left transition-all flex flex-col space-y-1 ${alertType === 'DATE_CHANGE' ? 'border-[#8B735B] bg-[#EFE6DC] text-[#8B735B]' : 'border-[#CBAE94]/50 bg-white hover:bg-[#EFE6DC]/40 text-[#5D5449]'}`}>
               <span className="font-bold">{t.dateChangeTemplate}</span>
-              <span className="text-[10px] opacity-75">{t.dateChangeTemplateDesc}</span>
+              <span className="text-xs opacity-75">{t.dateChangeTemplateDesc}</span>
             </button>
             <button type="button" onClick={() => handlePresetAlert('CANCELLATION')}
               className={`p-3 rounded-2xl border-2 text-xs font-bold text-left transition-all flex flex-col space-y-1 ${alertType === 'CANCELLATION' ? 'border-rose-500 bg-rose-50 text-rose-800' : 'border-[#CBAE94]/50 bg-white hover:bg-[#EFE6DC]/40 text-[#5D5449]'}`}>
               <span className="font-bold">{t.cancellationTemplate}</span>
-              <span className="text-[10px] opacity-75 text-rose-600">{t.cancellationTemplateDesc}</span>
+              <span className="text-xs opacity-75 text-rose-600">{t.cancellationTemplateDesc}</span>
             </button>
             <button type="button" onClick={() => handlePresetAlert('CUSTOM')}
               className={`p-3 rounded-2xl border-2 text-xs font-bold text-left transition-all flex flex-col space-y-1 ${alertType === 'CUSTOM' ? 'border-[#8B735B] bg-[#EFE6DC] text-[#8B735B]' : 'border-[#CBAE94]/50 bg-white hover:bg-[#EFE6DC]/40 text-[#5D5449]'}`}>
               <span className="font-bold">{t.customTemplate}</span>
-              <span className="text-[10px] opacity-75">{t.customTemplateDesc}</span>
+              <span className="text-xs opacity-75">{t.customTemplateDesc}</span>
             </button>
           </div>
         </div>
@@ -149,20 +149,20 @@ export const AdminAlertsTab: React.FC<AdminAlertsTabProps> = ({ language, t, gue
             <button type="button" onClick={() => setTargetAudience('ALL')}
               className={`p-3 rounded-2xl border-2 text-xs font-bold text-left transition-all flex items-center justify-between ${targetAudience === 'ALL' ? 'border-[#8B735B] bg-[#EFE6DC] text-[#8B735B]' : 'border-[#CBAE94]/40 bg-white text-[#5D5449] hover:bg-[#EFE6DC]/30'}`}>
               <span>{t.allNonDeclinedLabel}</span>
-              <span className="px-2 py-0.5 rounded-full text-[10px] font-mono bg-white border border-current font-bold">{guests.filter((g) => g.rsvp_status !== 'Declined').length}</span>
+              <span className="px-2 py-0.5 rounded-full text-xs font-mono bg-white border border-current font-bold">{guests.filter((g) => g.rsvp_status !== 'Declined').length}</span>
             </button>
             <button type="button" onClick={() => setTargetAudience('PENDING')}
               className={`p-3 rounded-2xl border-2 text-xs font-bold text-left transition-all flex items-center justify-between ${targetAudience === 'PENDING' ? 'border-amber-600 bg-amber-50 text-amber-900' : 'border-[#CBAE94]/40 bg-white text-[#5D5449] hover:bg-[#EFE6DC]/30'}`}>
               <span>{t.pendingOnlyLabel}</span>
-              <span className="px-2 py-0.5 rounded-full text-[10px] font-mono bg-white border border-current font-bold">{guests.filter((g) => g.rsvp_status === 'Pending').length}</span>
+              <span className="px-2 py-0.5 rounded-full text-xs font-mono bg-white border border-current font-bold">{guests.filter((g) => g.rsvp_status === 'Pending').length}</span>
             </button>
             <button type="button" onClick={() => setTargetAudience('ATTENDING')}
               className={`p-3 rounded-2xl border-2 text-xs font-bold text-left transition-all flex items-center justify-between ${targetAudience === 'ATTENDING' ? 'border-emerald-600 bg-emerald-50 text-emerald-900' : 'border-[#CBAE94]/40 bg-white text-[#5D5449] hover:bg-[#EFE6DC]/30'}`}>
               <span>{t.attendingOnlyLabel}</span>
-              <span className="px-2 py-0.5 rounded-full text-[10px] font-mono bg-white border border-current font-bold">{guests.filter((g) => g.rsvp_status === 'Attending').length}</span>
+              <span className="px-2 py-0.5 rounded-full text-xs font-mono bg-white border border-current font-bold">{guests.filter((g) => g.rsvp_status === 'Attending').length}</span>
             </button>
           </div>
-          <p className="text-[11px] text-[#8B735B] font-mono">{t.declinedNote}</p>
+          <p className="text-xs text-[#8B735B] font-mono">{t.declinedNote}</p>
         </div>
 
         <form onSubmit={handleDispatchAlert} className="space-y-4">
@@ -200,7 +200,7 @@ export const AdminAlertsTab: React.FC<AdminAlertsTabProps> = ({ language, t, gue
             </span>
             <button type="submit" disabled={dispatchingAlert}
               className="btn-accent px-6 py-3 text-xs flex items-center space-x-2 bg-amber-800 hover:bg-amber-900">
-              <Send className="w-4 h-4" /><span>{dispatchingAlert ? 'Dispatching Broadcast...' : 'Dispatch Alert & Email Guests'}</span>
+              <Send className="w-4 h-4" /><span>{dispatchingAlert ? t.dispatchingAlertBtn : t.dispatchAlertBtn}</span>
             </button>
           </div>
         </form>
@@ -209,7 +209,7 @@ export const AdminAlertsTab: React.FC<AdminAlertsTabProps> = ({ language, t, gue
       {/* Broadcast History */}
       <motion.div variants={adminCardVariants} className="card-paper p-6 sm:p-8 space-y-4">
         <h4 className="font-sans text-lg font-bold text-[#8B735B] flex items-center space-x-2">
-          <Bell className="w-5 h-5 text-[#8B735B]" /><span>Active Broadcast Alerts History ({alerts.length})</span>
+          <Bell className="w-5 h-5 text-[#8B735B]" /><span>{tf('alertsHistoryCount', { count: alerts.length })}</span>
         </h4>
         {alerts.length === 0 ? (
           <p className="text-xs text-[#5D5449] italic font-mono bg-[#EFE6DC]/40 p-4 rounded-2xl border border-dashed border-[#CBAE94] text-center">{t.noAlertsYetMsg}</p>
@@ -221,11 +221,11 @@ export const AdminAlertsTab: React.FC<AdminAlertsTabProps> = ({ language, t, gue
                 <div className="space-y-1">
                   <div className="flex flex-wrap items-center gap-2">
                     <span className="font-bold text-sm">{alt.title}</span>
-                    <span className="text-[10px] font-mono font-bold uppercase px-2 py-0.5 rounded-full bg-white/80 border border-current">{alt.type.replace('_', ' ')}</span>
-                    <span className="text-[10px] font-mono font-bold px-2 py-0.5 rounded-full bg-amber-100 text-amber-900 border border-amber-300">Target: {alt.target_audience === 'PENDING' ? 'Pending Guests' : alt.target_audience === 'ATTENDING' ? 'Attending Guests' : 'All Non-Declined'}</span>
+                    <span className="text-xs font-mono font-bold uppercase px-2 py-0.5 rounded-full bg-white/80 border border-current">{alt.type.replace('_', ' ')}</span>
+                    <span className="text-xs font-mono font-bold px-2 py-0.5 rounded-full bg-amber-100 text-amber-900 border border-amber-300">{t.alertTargetPrefix} {alt.target_audience === 'PENDING' ? t.targetPendingGuests : alt.target_audience === 'ATTENDING' ? t.targetAttendingGuests : t.targetAllNonDeclined}</span>
                   </div>
                   <p className="text-xs italic leading-relaxed">{alt.message}</p>
-                  <span className="text-[10px] font-mono opacity-70 block">Dispatched on {new Date(alt.created_at).toLocaleString()} • {alt.notified_guests_count} guest(s) notified</span>
+                  <span className="text-xs font-mono opacity-70 block">{tf('alertDispatchMeta', { date: new Date(alt.created_at).toLocaleString(), count: String(alt.notified_guests_count) })}</span>
                 </div>
                 <button onClick={() => onDeleteAlert(alt.id)}
                   className="p-2 text-rose-600 hover:bg-rose-100 rounded-xl transition-colors shrink-0 self-end sm:self-center" title={t.deleteAlertTitle}>
@@ -250,8 +250,8 @@ export const AdminAlertsTab: React.FC<AdminAlertsTabProps> = ({ language, t, gue
           <div className="flex items-center space-x-2 text-[#8B735B] font-bold">
             <Mail className="w-4 h-4 shrink-0" /><span>{t.simulatedDispatchLabel}</span>
           </div>
-          <p className="text-[11px]">{t.emailsTriggeredLabel} <strong>{alertSuccessModal?.count}</strong> {t.invitedGuestsLabel}</p>
-          <p className="text-[11px] text-amber-800 font-bold">{t.bannerVisibleNote}</p>
+          <p className="text-xs">{t.emailsTriggeredLabel} <strong>{alertSuccessModal?.count}</strong> {t.invitedGuestsLabel}</p>
+          <p className="text-xs text-amber-800 font-bold">{t.bannerVisibleNote}</p>
         </div>
         <button onClick={() => setAlertSuccessModal(null)} className="btn-accent w-full py-3 text-xs">{t.doneReturnBtn}</button>
       </Modal>

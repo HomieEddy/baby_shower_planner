@@ -87,17 +87,17 @@ export const GuestCheckIn = () => {
         <div className="bg-white rounded-2xl border border-[#CBAE94]/30 p-4 text-center">
           <Users className="w-5 h-5 text-[#8B735B] mx-auto mb-1" />
           <div className="text-2xl font-bold text-[#4A3F35]">{stats.total}</div>
-          <div className="text-[11px] text-[#A09080] font-mono">{t.totalGuestsLabel}</div>
+          <div className="text-xs text-[#A09080] font-mono">{t.totalGuestsLabel}</div>
         </div>
         <div className="bg-white rounded-2xl border border-[#CBAE94]/30 p-4 text-center">
           <UserCheck className="w-5 h-5 text-green-600 mx-auto mb-1" />
           <div className="text-2xl font-bold text-green-700">{stats.checkedIn}</div>
-          <div className="text-[11px] text-[#A09080] font-mono">{t.checkedInLabel}</div>
+          <div className="text-xs text-[#A09080] font-mono">{t.checkedInLabel}</div>
         </div>
         <div className="bg-white rounded-2xl border border-[#CBAE94]/30 p-4 text-center">
           <UserX className="w-5 h-5 text-amber-600 mx-auto mb-1" />
           <div className="text-2xl font-bold text-amber-700">{notYet}</div>
-          <div className="text-[11px] text-[#A09080] font-mono">{t.notYetLabel}</div>
+          <div className="text-xs text-[#A09080] font-mono">{t.notYetLabel}</div>
         </div>
       </div>
 
@@ -153,7 +153,7 @@ export const GuestCheckIn = () => {
                       <div className="font-semibold text-sm text-[#4A3F35] truncate">
                         {guest.name}
                         {members.length > 1 && (
-                          <span className={`ml-2 text-[10px] font-mono px-2 py-0.5 rounded-full ${
+                          <span className={`ml-2 text-xs font-mono px-2 py-0.5 rounded-full ${
                             allChecked
                               ? 'bg-green-100 text-green-800'
                               : anyChecked
@@ -164,7 +164,7 @@ export const GuestCheckIn = () => {
                           </span>
                         )}
                       </div>
-                      <div className="text-[11px] text-[#A09080] font-mono">
+                      <div className="text-xs text-[#A09080] font-mono">
                         {guest.email || guest.phone || t.noContactLabel} · {tf('partyOfLabel', { count: String(guest.attending_party_size || guest.max_party_size) })}
                         {guest.checked_in_at && ` · ${new Date(guest.checked_in_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`}
                       </div>
@@ -213,7 +213,7 @@ export const GuestCheckIn = () => {
                             <span className="text-xs font-semibold text-[#4A3F35] truncate">
                               {member}
                               {isPrimary && (
-                                <span className="ml-1.5 text-[9px] font-mono uppercase text-[#8B735B]">
+                                <span className="ml-1.5 text-xs font-mono uppercase text-[#8B735B]">
                                   {t.finderPartyLead}
                                 </span>
                               )}
@@ -223,7 +223,7 @@ export const GuestCheckIn = () => {
                             <button
                               onClick={() => handleMemberUndo(guest.id, member)}
                               disabled={isBusy}
-                              className="flex items-center gap-1 text-[10px] font-bold text-green-700 hover:text-green-900 disabled:opacity-50"
+                              className="flex items-center gap-1 text-xs font-bold text-green-700 hover:text-green-900 disabled:opacity-50"
                             >
                               <CheckCircle2 className="w-3 h-3" />
                               <span>{t.checkedInLabel}</span>
@@ -233,7 +233,7 @@ export const GuestCheckIn = () => {
                             <button
                               onClick={() => handleMemberCheckIn(guest.id, member)}
                               disabled={isBusy}
-                              className="px-2.5 py-1 rounded-full text-[10px] font-bold bg-[#8B735B] text-white hover:bg-[#4A3F35] transition-colors disabled:opacity-50"
+                              className="px-2.5 py-1 rounded-full text-xs font-bold bg-[#8B735B] text-white hover:bg-[#4A3F35] transition-colors disabled:opacity-50"
                             >
                               {t.checkInBtn}
                             </button>

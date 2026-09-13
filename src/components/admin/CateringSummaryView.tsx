@@ -125,9 +125,19 @@ export const CateringSummaryView: React.FC<CateringSummaryViewProps> = ({ guests
     }
   });
 
+  const dietaryCategoryLabels: Record<string, string> = {
+    'Vegetarian / Vegan': t.cateringCatVegetarian,
+    'Gluten-Free': t.cateringCatGlutenFree,
+    'Nut / Peanut Allergy': t.cateringCatNut,
+    'Dairy-Free / Lactose': t.cateringCatDairy,
+    'Halal / Kosher': t.cateringCatHalal,
+    'Other / Custom Notes': t.cateringCatOther,
+  };
+  const dietaryCategoryLabel = (cat: string) => dietaryCategoryLabels[cat] ?? cat;
+
   // Chart data: top 6 dietary categories by guest count
   const dietaryChartData = Object.entries(dietaryCategories)
-    .map(([category, info]) => ({ category, count: info.count }))
+    .map(([category, info]) => ({ category: dietaryCategoryLabel(category), count: info.count }))
     .filter((d) => d.count > 0)
     .sort((a, b) => b.count - a.count)
     .slice(0, 6);
@@ -167,7 +177,7 @@ export const CateringSummaryView: React.FC<CateringSummaryViewProps> = ({ guests
     columnHelper.accessor((r) => partySize(r.guest), {
       id: 'partySize',
       header: () => <span>{t.partySizeCol}</span>,
-      cell: (info) => <span className="font-mono text-[#4A3F35]">{info.getValue()} guest(s)</span>,
+      cell: (info) => <span className="font-mono text-[#4A3F35]">{info.getValue()} {t.guestSingular}</span>,
     }),
     columnHelper.accessor((r) => (r.guest.dietary_restrictions || '').trim(), {
       id: 'dietary',
@@ -255,10 +265,10 @@ export const CateringSummaryView: React.FC<CateringSummaryViewProps> = ({ guests
               <span>{t.cateringTitle}</span>
             </div>
             <h2 className="font-newsreader text-3xl font-bold text-[#4A3F35]">
-              Catering & Dietary Restrictions Summary
+              {t.cateringSummaryHeading}
             </h2>
             <p className="text-xs text-[#8B735B] font-sans max-w-xl">
-              Comprehensive headcount breakdown and allergy/dietary manifest for your caterers, chef, and banquet team.
+              {t.cateringSummaryDesc}
             </p>
           </div>
 
@@ -339,7 +349,7 @@ export const CateringSummaryView: React.FC<CateringSummaryViewProps> = ({ guests
               }`}
             >
               <div className="flex items-center justify-between mb-2">
-                <span className="text-xs font-bold font-mono text-[#4A3F35]">{cat}</span>
+                <span className="text-xs font-bold font-mono text-[#4A3F35]">{dietaryCategoryLabel(cat)}</span>
                 <span
                   className={`px-2.5 py-0.5 rounded-full text-xs font-bold font-mono ${
                     info.count > 0 ? 'bg-amber-200 text-amber-900' : 'bg-[#EFE6DC] text-[#8B735B]'
@@ -359,7 +369,7 @@ export const CateringSummaryView: React.FC<CateringSummaryViewProps> = ({ guests
                   ))}
                 </ul>
               ) : (
-                <p className="text-[11px] text-[#8B735B] italic font-sans">{t.noGuestsInCategory}</p>
+                <p className="text-xs text-[#8B735B] italic font-sans">{t.noGuestsInCategory}</p>
               )}
             </div>
           ))}
@@ -419,7 +429,7 @@ export const CateringSummaryView: React.FC<CateringSummaryViewProps> = ({ guests
           <table className="w-full text-left text-xs font-sans">
             <thead>
               {table.getHeaderGroups().map((headerGroup) => (
-                <tr key={headerGroup.id} className="border-b border-[#CBAE94]/40 text-[#8B735B] font-mono text-[11px] uppercase">
+                <tr key={headerGroup.id} className="border-b border-[#CBAE94]/40 text-[#8B735B] font-mono text-xs uppercase">
                   {headerGroup.headers.map((header) => (
                     <th key={header.id} className="pb-3 font-bold">
                       {header.isPlaceholder ? null : (

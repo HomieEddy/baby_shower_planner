@@ -40,7 +40,7 @@ export const GuestMetricCard = ({
     <div className="mt-3">
       <span className="text-2xl sm:text-3xl font-sans font-bold text-[#8B735B]">{value}</span>
     </div>
-    <div className="mt-2 text-[11px] text-[#8B735B] font-mono font-bold break-words">{footer}</div>
+    <div className="mt-2 text-xs text-[#8B735B] font-mono font-bold break-words">{footer}</div>
   </motion.div>
 );
 
@@ -113,16 +113,25 @@ export const GuestFiltersBar = ({
       </div>
 
       <div className="flex items-center space-x-1 bg-[#EFE6DC] p-1 rounded-full text-xs font-bold font-mono border border-[#CBAE94]">
-        {(['All', 'Attending', 'Pending', 'Declined'] as const).map((st) => (
+        {([
+          ['All', t.filterStatusAll],
+          ['Attending', t.statusAttendingWord],
+          ['Pending', t.statusPendingWord],
+          ['Declined', t.statusDeclinedWord],
+        ] as const).map(([st, label]) => (
           <button key={st} onClick={() => onStatusFilter(st)}
-            className={`px-2.5 py-1 rounded-full transition-colors ${statusFilter === st ? 'bg-[#8B735B] text-white shadow-xs font-bold' : 'text-[#5D5449] hover:text-[#8B735B]'}`}>{st}</button>
+            className={`px-2.5 py-1 rounded-full transition-colors ${statusFilter === st ? 'bg-[#8B735B] text-white shadow-xs font-bold' : 'text-[#5D5449] hover:text-[#8B735B]'}`}>{label}</button>
         ))}
       </div>
 
       <div className="flex items-center space-x-1 bg-white p-1 rounded-full text-xs font-bold font-mono border border-[#CBAE94]" title={t.sourceFilterTitle}>
-        {(['All', 'Host', 'Guest-invited'] as const).map((st) => (
+        {([
+          ['All', t.filterAllOption],
+          ['Host', t.sourceHostOption],
+          ['Guest-invited', t.sourceGuestOption],
+        ] as const).map(([st, label]) => (
           <button key={st} onClick={() => onSourceFilter(st)}
-            className={`px-2.5 py-1 rounded-full transition-colors ${sourceFilter === st ? 'bg-[#D4A373] text-white shadow-xs font-bold' : 'text-[#5D5449] hover:text-[#8B735B]'}`}>{st}</button>
+            className={`px-2.5 py-1 rounded-full transition-colors ${sourceFilter === st ? 'bg-[#D4A373] text-white shadow-xs font-bold' : 'text-[#5D5449] hover:text-[#8B735B]'}`}>{label}</button>
         ))}
       </div>
 
