@@ -43,9 +43,10 @@ export const ToastProvider: React.FC<{ children: React.ReactNode }> = ({ childre
     }
   }, [removeToast]);
 
+  // Errors linger longer — users need time to read what went wrong.
   const toast = {
     success: (msg: string, duration?: number) => showToast(msg, 'success', duration),
-    error: (msg: string, duration?: number) => showToast(msg, 'error', duration),
+    error: (msg: string, duration = 8000) => showToast(msg, 'error', duration),
     info: (msg: string, duration?: number) => showToast(msg, 'info', duration),
     love: (msg: string, duration?: number) => showToast(msg, 'love', duration),
   };
