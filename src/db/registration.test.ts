@@ -68,7 +68,7 @@ vi.mock('./client', () => ({
 
 vi.mock('./settings', () => ({ getSettings: async () => ({ date: '', language: 'EN' }) }));
 
-import { registerGuest, isApproved, getUniversalInviteMessage, getGuestByToken, addGuest, removeGuestAttendee } from './guests';
+import { registerGuest, isApproved, getUniversalInviteMessage, getGuestByToken, addGuest, removeGuestAttendee, updateGuest } from './guests';
 import { createInvite, submitRsvp } from './rsvp';
 import { buildUniversalInviteMessage } from '../lib/compose';
 
@@ -235,6 +235,40 @@ describe('removeGuestAttendee', () => {
     const res = await removeGuestAttendee('g2', 0);
     expect(res.deleted).toBe(true);
     expect(h.stores.guests.find((g) => g.id === 'g2')).toBeUndefined();
+  });
+});
+
+describe('updateGuest party sync', () => {
+  const seed = () => {
+    h.stores.guests.push({
+      id: 'g1', name: 'Alice', attendee_names: ['Alice', 'Bob', 'Cara'],
+      attendee_details: [{ name: 'Alice', contact: '' }, { name: 'Bob', contact: '' }, { name: 'Cara', contact: '' }],
+      attending_party_size: 3, max_party_size: 5, rsvp_status: 'Attending',
+      checked_in_names: ['Bob', 'Cara'],
+    });
+  };
+
+  it('caps the named party at the allowed size and derives attendance from names', async () => {
+    seed();
+    const g = await updateGuest('g1', { name: 'Alice', max_party_size: 2, rsvp_status: 'Attending', attendee_names: ['Bob', 'Cara'] });
+    expect(g.attendee_names).toEqual(['Alice', 'Bob']);
+    expect(g.attending_party_size).toBe(2);
+  });
+
+  it('prunes check-in names that are no longer in the party', async () => {
+    seed();
+    const g = await updateGuest('g1', { name: 'Alice', max_party_size: 5, rsvp_status: 'Attending', attendee_names: ['Bob'] });
+    expect(g.attendee_names).toEqual(['Alice', 'Bob']);
+    expect(g.checked_in_names).toEqual(['Bob']);
+  });
+
+  it('clears the party and seats when the guest declines', async () => {
+    seed();
+    const g = await updateGuest('g1', { name: 'Alice', rsvp_status: 'Declined', attendee_names: ['Bob'] });
+    expect(g.attendee_names).toEqual([]);
+    expect(g.attending_party_size).toBe(0);
+    expect(g.checked_in).toBe(false);
+    expect(g.checked_in_names).toEqual([]);
   });
 });
 

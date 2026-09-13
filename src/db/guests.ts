@@ -168,7 +168,56 @@ export async function getUniversalInviteMessage(language: Language = 'FR'): Prom
 }
 
 export async function updateGuest(id: string, updates: Partial<Guest>): Promise<Guest> {
-  const updated = await pb.collection('guests').update(id, updates);
+  // Party edits arrive as the ordered list of extra member names. Keep the
+  // stored arrays, attendance count, check-in and floor seats consistent with
+  // the (possibly changed) group size.
+  if (!Array.isArray(updates.attendee_names)) {
+    const updated = await pb.collection('guests').update(id, updates);
+    return fromRecord<Guest>(updated);
+  }
+
+  const guest = await getGuestById(id);
+  const status = updates.rsvp_status || guest.rsvp_status;
+  const declined = status === 'Declined';
+  const max = Math.max(1, Number(updates.max_party_size ?? guest.max_party_size) || 1);
+  const primary = ((updates.name ?? guest.name) || '').trim() || guest.name;
+
+  const names: string[] = [primary];
+  const seen = new Set([primary.toLowerCase()]);
+  for (const raw of updates.attendee_names) {
+    if (names.length >= max) break;
+    const n = typeof raw === 'string' ? raw.trim() : '';
+    if (!n || seen.has(n.toLowerCase())) continue;
+    seen.add(n.toLowerCase());
+    names.push(n);
+  }
+
+  // Declining clears the party entirely; otherwise the attended count is the
+  // number of named members (not the allowed size).
+  const finalNames = declined ? [] : names;
+  const contactByName = new Map((guest.attendee_details || []).map((d) => [d.name, d.contact || '']));
+  const attendee_details = finalNames.map((n) => ({ name: n, contact: contactByName.get(n) || '' }));
+  const checked_in_names = declined
+    ? []
+    : (guest.checked_in_names || []).filter((n) =>
+        finalNames.some((m) => m.toLowerCase() === n.trim().toLowerCase())
+      );
+
+  const patch: Partial<Guest> = {
+    ...updates,
+    attendee_names: finalNames,
+    attendee_details,
+    attending_party_size: declined ? 0 : finalNames.length,
+    checked_in_names,
+  };
+  if (declined) {
+    patch.checked_in = false;
+    patch.table_id = '';
+  }
+
+  const updated = await pb.collection('guests').update(id, patch);
+  // Re-pack the seats: keep the chairs of the attendees that remain, drop the rest.
+  await removeGuestFromFloorMaps(id, declined ? 0 : finalNames.length);
   return fromRecord<Guest>(updated);
 }
 
