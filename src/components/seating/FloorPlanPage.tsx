@@ -774,8 +774,8 @@ export const FloorPlanPage = () => {
                     <Wand2 className="w-4 h-4 text-amber-200 animate-pulse group-hover:rotate-12 transition-transform" />
                     <span>{t.smartSuggestBtn}</span>
                   </div>
-                  <span className="px-2 py-0.5 rounded-full bg-white/20 text-[10px] font-mono font-bold text-amber-100">
-                    Auto-Fit
+                  <span className="px-2 py-0.5 rounded-full bg-white/20 text-xs font-mono font-bold text-amber-100">
+                    {t.autoFitBadge}
                   </span>
                 </button>
 
@@ -832,10 +832,10 @@ export const FloorPlanPage = () => {
                   </div>
                   <div>
                     <h4 className="font-gaegu text-2xl font-bold text-[#4A3F35] leading-none">
-                      Overall Seating Progress
+                      {t.overallSeatingProgress}
                     </h4>
                     <p className="text-xs text-[#5D5449] font-medium mt-0.5">
-                      {totalSeatedGuests} of {totalConfirmedGuests} confirmed guests assigned to tables
+                      {tf('seatingProgressDetail', { seated: totalSeatedGuests, total: totalConfirmedGuests })}
                     </p>
                   </div>
                 </div>
@@ -867,27 +867,27 @@ export const FloorPlanPage = () => {
             {/* Quick Stats Summary Bar */}
             <div className="bg-[#FFFDF9] rounded-2xl p-3 border-2 border-[#CBAE94] grid grid-cols-2 sm:grid-cols-4 gap-2 text-center">
               <div className="p-2 rounded-xl bg-[#EFE6DC]/40 border border-[#CBAE94]/40">
-                <span className="text-[10px] font-mono uppercase font-bold text-[#8B735B]">{t.confirmedGuestsLabel}</span>
+                <span className="text-xs font-mono uppercase font-bold text-[#8B735B]">{t.confirmedGuestsLabel}</span>
                 <p className="text-base font-bold text-[#4A3F35]">
-                  {totalConfirmedGuests} <span className="text-[11px] font-normal text-[#5D5449]">{t.attendingWord}</span>
+                  {totalConfirmedGuests} <span className="text-xs font-normal text-[#5D5449]">{t.attendingWord}</span>
                 </p>
               </div>
               <div className="p-2 rounded-xl bg-[#EFE6DC]/40 border border-[#CBAE94]/40">
-                <span className="text-[10px] font-mono uppercase font-bold text-[#8B735B]">{t.seatsAssignedLabel}</span>
+                <span className="text-xs font-mono uppercase font-bold text-[#8B735B]">{t.seatsAssignedLabel}</span>
                 <p className="text-base font-bold text-[#4A3F35]">
-                  {totalSeatedGuests} <span className="text-[11px] font-normal text-[#5D5449]">{t.seatedWord}</span>
+                  {totalSeatedGuests} <span className="text-xs font-normal text-[#5D5449]">{t.seatedWord}</span>
                 </p>
               </div>
               <div className="p-2 rounded-xl bg-[#EFE6DC]/40 border border-[#CBAE94]/40">
-                <span className="text-[10px] font-mono uppercase font-bold text-[#8B735B]">{t.unseatedConfirmedLabel}</span>
+                <span className="text-xs font-mono uppercase font-bold text-[#8B735B]">{t.unseatedConfirmedLabel}</span>
                 <p className="text-base font-bold text-[#8B735B]">
-                  {Math.max(0, totalConfirmedGuests - totalSeatedGuests)} <span className="text-[11px] font-normal text-[#5D5449]">{t.guestsWord}</span>
+                  {Math.max(0, totalConfirmedGuests - totalSeatedGuests)} <span className="text-xs font-normal text-[#5D5449]">{t.guestsWord}</span>
                 </p>
               </div>
               <div className="p-2 rounded-xl bg-[#EFE6DC]/40 border border-[#CBAE94]/40">
-                <span className="text-[10px] font-mono uppercase font-bold text-[#8B735B]">{t.venueCapacityLabel}</span>
+                <span className="text-xs font-mono uppercase font-bold text-[#8B735B]">{t.venueCapacityLabel}</span>
                 <p className="text-base font-bold text-[#4A3F35]">
-                  {floorMap ? floorMap.tables.reduce((s, tbl) => s + tbl.capacity, 0) : 0} <span className="text-[11px] font-normal text-[#5D5449]">{t.totalSeatsWord}</span>
+                  {floorMap ? floorMap.tables.reduce((s, tbl) => s + tbl.capacity, 0) : 0} <span className="text-xs font-normal text-[#5D5449]">{t.totalSeatsWord}</span>
                 </p>
               </div>
             </div>
@@ -904,12 +904,12 @@ export const FloorPlanPage = () => {
                   </div>
                   <div>
                     <h3 className="font-gaegu text-xl font-bold text-[#4A3F35]">
-                      Venue Floor Plan View
+                      {t.venueFloorPlanView}
                     </h3>
-                    <p className="text-[11px] text-[#8B735B] font-medium">
+                    <p className="text-xs text-[#8B735B] font-medium">
                       {selectedUnassignedGuest
-                        ? `Click any green highlighted table to seat ${selectedUnassignedGuest.name} (Party of ${getGuestPartySize(selectedUnassignedGuest)})`
-                        : 'Layout overview • Click Unassigned Guests on left sidebar to seat parties'}
+                        ? tf('seatHighlightHint', { name: selectedUnassignedGuest.name, count: getGuestPartySize(selectedUnassignedGuest) })
+                        : t.layoutOverviewHint}
                     </p>
                   </div>
                 </div>
@@ -1150,7 +1150,7 @@ export const FloorPlanPage = () => {
                               <Text
                                 text={
                                   canFitSelected
-                                    ? `Fits (${freeSeats} Free)`
+                                    ? tf('fitsFreeSeats', { count: freeSeats })
                                     : `FULL`
                                 }
                                 x={-15}
