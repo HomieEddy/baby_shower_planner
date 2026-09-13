@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import {
   Mail,
   Smartphone,
@@ -9,11 +10,13 @@ import {
   Settings,
   Trash2,
   Loader2,
+  X,
 } from 'lucide-react';
 import { Modal } from '../shared/Modal';
 import { useT, useTf } from '../shared/i18n';
 import { Guest } from '../../types';
 import { getGuestPartySize } from '../../lib/tableAssignment';
+import { getPartyMembers } from '../../lib/guestAttendees';
 import { channelLabel } from '../../lib/capabilities';
 
 interface GuestListModalProps {
@@ -123,6 +126,7 @@ interface GuestDetailsModalProps {
   onCopyMessage: (guestId: string) => void;
   onEdit: (guest: Guest) => void;
   onDelete: (id: string, name: string) => void;
+  onRemoveAttendee: (guestId: string, attendeeIndex: number, removedName: string, promoteName?: string) => void;
 }
 
 export const GuestDetailsModal = ({
@@ -137,9 +141,12 @@ export const GuestDetailsModal = ({
   onCopyMessage,
   onEdit,
   onDelete,
+  onRemoveAttendee,
 }: GuestDetailsModalProps) => {
   const t = useT();
   const tf = useTf();
+  const [pendingRemove, setPendingRemove] = useState<{ index: number; name: string } | null>(null);
+  const [promoteName, setPromoteName] = useState('');
   if (!guest) return null;
 
   const initials = guest.name.split(' ').map((w) => w[0]).filter(Boolean).slice(0, 2).join('').toUpperCase();
@@ -148,8 +155,20 @@ export const GuestDetailsModal = ({
   const isCopied = copiedToken === guest.magic_token;
   const magicUrl = `${window.location.origin}/rsvp/${guest.magic_token}`;
   const channelLabelValue = channelLabel(t, guest.delivery_channel || 'none');
-  const members = guest.attendee_names && guest.attendee_names.length > 0 ? guest.attendee_names : [guest.name];
+  const members = getPartyMembers(guest);
   const invitedGuests = allGuests.filter((g) => g.invited_by_guest_id === guest.id);
+
+  const requestRemove = (index: number, name: string) => {
+    setPromoteName(index === 0 && members.length > 1 ? members[1] || '' : '');
+    setPendingRemove({ index, name });
+  };
+
+  const confirmRemove = () => {
+    if (!pendingRemove) return;
+    const promote = pendingRemove.index === 0 && members.length > 1 ? promoteName : undefined;
+    onRemoveAttendee(guest.id, pendingRemove.index, pendingRemove.name, promote);
+    setPendingRemove(null);
+  };
 
   const statusBadge =
     guest.rsvp_status === 'Attending' ? (
@@ -203,7 +222,13 @@ export const GuestDetailsModal = ({
           <label className="label-mono block text-xs font-bold text-[#8B735B]">{tf('includedAttendeesLabel', { count: String(members.length) })}</label>
           <div className="flex flex-wrap gap-1.5">
             {members.map((n, i) => (
-              <span key={i} className="px-2 py-0.5 rounded-lg bg-[#EFE6DC] border border-[#CBAE94] text-[11px] font-mono text-[#8B735B]">{n}</span>
+              <span key={i} className="inline-flex items-center gap-1 px-2 py-0.5 rounded-lg bg-[#EFE6DC] border border-[#CBAE94] text-[11px] font-mono text-[#8B735B]">
+                {n}
+                <button type="button" onClick={() => requestRemove(i, n)} title={t.removeAttendeeTitle}
+                  className="text-[#8B735B]/60 hover:text-rose-600 transition-colors cursor-pointer">
+                  <X className="w-3 h-3" />
+                </button>
+              </span>
             ))}
           </div>
         </div>
@@ -258,6 +283,38 @@ export const GuestDetailsModal = ({
           </button>
         </div>
       </div>
+
+      <Modal open={!!pendingRemove} onClose={() => setPendingRemove(null)} maxWidth="md"
+        title={<h3 className="font-sans text-xl font-bold text-[#4A3F35]">{t.removeAttendeeConfirmTitle}</h3>}
+        footer={
+          <div className="flex items-center justify-end gap-3">
+            <button type="button" onClick={() => setPendingRemove(null)}
+              className="px-4 py-2.5 rounded-xl border border-[#CBAE94] text-xs font-bold text-[#5D5449] hover:bg-[#EFE6DC] transition-colors">
+              {t.cancelBtn}
+            </button>
+            <button type="button" onClick={confirmRemove}
+              className="px-4 py-2.5 rounded-xl bg-rose-600 hover:bg-rose-700 text-white text-xs font-bold shadow-md transition-all">
+              {t.removeAttendeeBtn}
+            </button>
+          </div>
+        }>
+        <p className="text-xs sm:text-sm text-[#5D5449] leading-relaxed">
+          {members.length <= 1
+            ? tf('removeLastAttendeeConfirmMsg', { name: pendingRemove?.name || '' })
+            : tf('removeAttendeeConfirmMsg', { name: pendingRemove?.name || '', group: guest.name })}
+        </p>
+        {pendingRemove?.index === 0 && members.length > 1 && (
+          <div className="mt-4">
+            <label className="label-mono block mb-1 text-xs font-bold text-[#8B735B]">{t.promoteLeadLabel}</label>
+            <select value={promoteName} onChange={(e) => setPromoteName(e.target.value)}
+              className="w-full px-3 py-2 rounded-xl border border-[#CBAE94] bg-white text-xs font-mono text-[#4A3F35] focus:outline-none">
+              {members.filter((_, i) => i !== 0).map((n) => (
+                <option key={n} value={n}>{n}</option>
+              ))}
+            </select>
+          </div>
+        )}
+      </Modal>
     </Modal>
   );
 };
