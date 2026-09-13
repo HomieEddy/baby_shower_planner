@@ -73,21 +73,25 @@ function parseSingleTimeTo24h(str: string): string | null {
   return null;
 }
 
-export function formatTime12h(time24: string): string {
+export function formatTime12h(time24: string, lang: Lang = 'EN'): string {
   if (!time24) return '';
   const [hStr, mStr] = time24.split(':');
   let h = parseInt(hStr, 10);
   const m = mStr || '00';
   if (isNaN(h)) return time24;
+  // FR uses the 24-hour clock.
+  if (lang === 'FR') {
+    return `${String(h).padStart(2, '0')}:${m}`;
+  }
   const ampm = h >= 12 ? 'PM' : 'AM';
   h = h % 12;
   if (h === 0) h = 12;
   return `${h}:${m} ${ampm}`;
 }
 
-export function formatTimeRangeString(startTime24: string, endTime24: string): string {
-  const startFmt = formatTime12h(startTime24);
-  const endFmt = formatTime12h(endTime24);
+export function formatTimeRangeString(startTime24: string, endTime24: string, lang: Lang = 'EN'): string {
+  const startFmt = formatTime12h(startTime24, lang);
+  const endFmt = formatTime12h(endTime24, lang);
   if (startFmt && endFmt) {
     return `${startFmt} – ${endFmt}`;
   }
@@ -101,7 +105,9 @@ export function formatGuestWindow(opensAt?: string, closesAt?: string, lang: Lan
     if (!iso) return null;
     const d = new Date(iso);
     if (Number.isNaN(d.getTime())) return null;
-    const out = format(d, 'EEE, MMM d, h:mm a', { locale });
+    const out = lang === 'FR'
+      ? format(d, 'EEE d MMM, HH:mm', { locale })
+      : format(d, 'EEE, MMM d, h:mm a', { locale });
     return out.charAt(0).toUpperCase() + out.slice(1);
   };
   const open = fmt(opensAt);
@@ -147,7 +153,7 @@ export function isInReminderWindow(dueAt: number, advanceMs: number, now: number
 export function formatTaskDue(dueDate: string, dueTime?: string, lang: Lang = 'EN'): string {
   const date = formatDateLong(dueDate, lang);
   if (!date) return '';
-  const time = dueTime ? formatTime12h(dueTime) : '';
+  const time = dueTime ? formatTime12h(dueTime, lang) : '';
   return lang === 'FR'
     ? `${date}${time ? ` à ${time}` : ''}`
     : `${date}${time ? ` at ${time}` : ''}`;
