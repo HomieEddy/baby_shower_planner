@@ -60,7 +60,7 @@ export const GuestbookForm = ({
             />
           );
         })()}
-        {errors.guest_name && <p className="text-rose-600 text-[10px]">{errors.guest_name.message}</p>}
+        {errors.guest_name && <p className="text-rose-600 text-xs">{errors.guest_name.message}</p>}
       </div>
 
       {/* Message Input */}
@@ -75,7 +75,7 @@ export const GuestbookForm = ({
           placeholder={t.gbMessagePlaceholder}
           className="w-full px-4 py-3 rounded-2xl border-2 border-[#CBAE94] text-sm font-medium focus:outline-none focus:ring-2 focus:ring-[#8B735B] bg-white text-[#5D5449]"
         />
-        {errors.message && <p className="text-rose-600 text-[10px]">{errors.message.message}</p>}
+        {errors.message && <p className="text-rose-600 text-xs">{errors.message.message}</p>}
       </div>
 
       {/* Photo Upload Input */}
@@ -97,7 +97,7 @@ export const GuestbookForm = ({
             <p className="text-xs font-bold text-[#5D5449]">
               {t.tapToChoosePhoto}
             </p>
-            <p className="text-[11px] text-[#5D5449]/70 font-mono">
+            <p className="text-xs text-[#5D5449]/70 font-mono">
               {t.gbPhotoHelper}
             </p>
           </motion.div>

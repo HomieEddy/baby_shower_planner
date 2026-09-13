@@ -15,7 +15,7 @@ const QrStandeeCard = ({ table, last }: { table: TableElement; last?: boolean })
       last ? '' : 'page-break-after'
     }`}
   >
-    <span className="inline-block px-3 py-1 rounded-full bg-amber-200 text-amber-900 text-[10px] font-bold uppercase tracking-wider">
+    <span className="inline-block px-3 py-1 rounded-full bg-amber-200 text-amber-900 text-xs font-bold uppercase tracking-wider">
       {table.name} • Photo Drop
     </span>
 
@@ -35,7 +35,7 @@ const QrStandeeCard = ({ table, last }: { table: TableElement; last?: boolean })
       Scan this QR code with your smartphone camera to instantly upload table photos into the hosts' memory library!
     </p>
 
-    <div className="text-[10px] font-mono text-[#8B735B] pt-2 border-t border-dashed border-[#CBAE94]/60">
+    <div className="text-xs font-mono text-[#8B735B] pt-2 border-t border-dashed border-[#CBAE94]/60">
       Table: {table.name} • Scan & Upload • No App Required
     </div>
   </div>

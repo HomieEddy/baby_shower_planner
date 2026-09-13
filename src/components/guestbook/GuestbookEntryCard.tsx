@@ -19,7 +19,7 @@ export const GuestbookEntryCard = ({ entry }: { entry: GuestbookEntry }) => {
               <h4 className="text-xs sm:text-sm font-bold text-[#4A3F35]">
                 {entry.guest_name}
               </h4>
-              <p className="text-[10px] text-[#8B735B] font-mono flex items-center gap-1">
+              <p className="text-xs text-[#8B735B] font-mono flex items-center gap-1">
                 <Clock className="w-3 h-3" />
                 {new Date(entry.created_at).toLocaleDateString([], {
                   month: 'short',

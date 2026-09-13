@@ -83,7 +83,7 @@ export const ConfirmationView = ({
             </motion.span>
           ))}
         </motion.div>
-        <p className="text-[11px] text-[#5D5449] font-medium">
+        <p className="text-xs text-[#5D5449] font-medium">
           {t.seatingCodeHint}
         </p>
       </motion.div>

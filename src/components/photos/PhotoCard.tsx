@@ -55,7 +55,7 @@ export const PhotoCard: React.FC<PhotoCardProps> = ({
         </div>
 
         {hidden && (
-          <span className="absolute top-2.5 left-2.5 z-10 px-2.5 py-1 rounded-full bg-rose-600 text-white text-[10px] font-bold font-mono uppercase shadow-sm">
+          <span className="absolute top-2.5 left-2.5 z-10 px-2.5 py-1 rounded-full bg-rose-600 text-white text-xs font-bold font-mono uppercase shadow-sm">
             {t.moderationHiddenBadge}
           </span>
         )}
@@ -74,7 +74,7 @@ export const PhotoCard: React.FC<PhotoCardProps> = ({
         </button>
 
         {photo.table_name && (
-          <span className="absolute bottom-2.5 left-2.5 px-2.5 py-1 rounded-full bg-black/60 backdrop-blur-md text-white text-[10px] font-bold border border-white/20 shadow-sm pointer-events-none">
+          <span className="absolute bottom-2.5 left-2.5 px-2.5 py-1 rounded-full bg-black/60 backdrop-blur-md text-white text-xs font-bold border border-white/20 shadow-sm pointer-events-none">
             {photo.table_name}
           </span>
         )}
@@ -103,7 +103,7 @@ export const PhotoCard: React.FC<PhotoCardProps> = ({
           <p className="text-xs font-bold text-[#4A3F35] truncate">
             {photo.uploader_name || t.guestPhotoAlt}
           </p>
-          <p className="text-[10px] text-[#8B735B]">
+          <p className="text-xs text-[#8B735B]">
             {new Date(photo.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
           </p>
         </div>
