@@ -164,7 +164,7 @@ select option {
 
 .label-mono {
   font-family: 'Space Mono', monospace;
-  font-size: 0.65rem;
+  font-size: 0.75rem;
   text-transform: uppercase;
   letter-spacing: 0.12em;
   color: var(--ink);
