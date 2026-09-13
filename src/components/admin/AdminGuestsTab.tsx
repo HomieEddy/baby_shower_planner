@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { motion, AnimatePresence } from 'motion/react';
 import { adminContainerVariants, adminCardVariants } from '../shared/motionPresets';
 import { GuestRowCard } from './GuestRowCard';
@@ -79,6 +79,7 @@ function parseCsvLine(line: string): string[] {
 
 export const AdminGuestsTab: React.FC<AdminGuestsTabProps> = ({ language, t, guests, onRefresh }) => {
   const navigate = useNavigate();
+  const [searchParams, setSearchParams] = useSearchParams();
   const { toast } = useToast();
   const tf = useTf();
   const confirm = useConfirm();
@@ -90,7 +91,7 @@ export const AdminGuestsTab: React.FC<AdminGuestsTabProps> = ({ language, t, gue
   const [attendeeModal, setAttendeeModal] = useState<{ values: AddGuestFormValues; going: boolean } | null>(null);
   const [extraNames, setExtraNames] = useState<string[]>([]);
 
-  const { register, handleSubmit, setValue, watch, formState: { errors } } = useForm<AddGuestFormValues>({
+  const { register, handleSubmit, setValue, watch, setFocus, formState: { errors } } = useForm<AddGuestFormValues>({
     resolver: zodResolver(GuestImportSchema),
     defaultValues: {
       name: '',
@@ -131,7 +132,15 @@ export const AdminGuestsTab: React.FC<AdminGuestsTabProps> = ({ language, t, gue
     localStorage.setItem('guestMetricMode', m);
   };
 
-  const [editingGuest, setEditingGuest] = useState<Guest | null>(null);
+  // Guest details/edit are URL-routed: ?guest=<id> opens details, &edit=1 opens
+  // the edit modal on top. Closing edit returns to details; browser Back works.
+  const guestParam = searchParams.get('guest');
+  const viewingGuest = guestParam ? guests.find((g) => g.id === guestParam) ?? null : null;
+  const editingGuest = searchParams.get('edit') && viewingGuest ? viewingGuest : null;
+  const closeGuestModal = () =>
+    setSearchParams((prev) => { const p = new URLSearchParams(prev); p.delete('guest'); p.delete('edit'); return p; });
+  const closeEditModal = () =>
+    setSearchParams((prev) => { const p = new URLSearchParams(prev); p.delete('edit'); return p; });
   const [savingEdit, setSavingEdit] = useState(false);
   // Additional members (primary guest excluded) while editing a party.
   const [editExtraNames, setEditExtraNames] = useState<string[]>([]);
@@ -139,7 +148,6 @@ export const AdminGuestsTab: React.FC<AdminGuestsTabProps> = ({ language, t, gue
   const [metricModal, setMetricModal] = useState<'Attending' | 'Pending' | 'Declined' | 'Awaiting' | 'Total' | null>(null);
   const [metricListView, setMetricListView] = useState<'invites' | 'party'>('invites');
 
-  const [viewingGuest, setViewingGuest] = useState<Guest | null>(null);
   const [viewingMessage, setViewingMessage] = useState('');
   const [loadingMessage, setLoadingMessage] = useState(false);
 
@@ -201,8 +209,8 @@ export const AdminGuestsTab: React.FC<AdminGuestsTabProps> = ({ language, t, gue
   });
 
   const handleOpenEditGuest = (g: Guest) => {
-    setEditingGuest(g);
     setEditExtraNames(getPartyMembers(g).slice(1));
+    setSearchParams((prev) => { const p = new URLSearchParams(prev); p.set('guest', g.id); p.set('edit', '1'); return p; });
     resetEditForm({
       name: g.name,
       email: g.email || '',
@@ -215,20 +223,24 @@ export const AdminGuestsTab: React.FC<AdminGuestsTabProps> = ({ language, t, gue
     });
   };
 
-  const handleOpenViewGuest = async (g: Guest) => {
-    setViewingGuest(g);
+  // Load the invite message whenever the detail modal's guest changes — covers
+  // both clicking a row and deep-linking straight to ?guest=<id>.
+  useEffect(() => {
+    if (!viewingGuest) return;
+    let cancelled = false;
     setViewingMessage('');
     setLoadingMessage(true);
-    try {
-      const res = await adminFetch(`/api/guests/${g.id}/invite-message`);
-      const data = await res.json();
-      if (data.message) setViewingMessage(data.message);
-    } catch {
-      /* non-fatal */
-    } finally {
-      setLoadingMessage(false);
-    }
-  };
+    adminFetch(`/api/guests/${viewingGuest.id}/invite-message`)
+      .then((res) => res.json())
+      .then((data) => { if (!cancelled && data.message) setViewingMessage(data.message); })
+      .catch(() => { /* non-fatal */ })
+      .finally(() => { if (!cancelled) setLoadingMessage(false); });
+    return () => { cancelled = true; };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [viewingGuest?.id]);
+
+  const handleOpenViewGuest = (g: Guest) =>
+    setSearchParams((prev) => { const p = new URLSearchParams(prev); p.set('guest', g.id); p.delete('edit'); return p; });
 
   const handleSaveEditGuest = async (values: EditGuestFormValues) => {
     if (!editingGuest) return;
@@ -259,7 +271,7 @@ export const AdminGuestsTab: React.FC<AdminGuestsTabProps> = ({ language, t, gue
       });
       const data = await res.json();
       if (data.guest) {
-        setEditingGuest(null);
+        closeEditModal();
         toast.love(tf('guestUpdatedToast', { name: data.guest.name }));
         await onRefresh();
       } else {
@@ -283,7 +295,7 @@ export const AdminGuestsTab: React.FC<AdminGuestsTabProps> = ({ language, t, gue
     try {
       const res = await adminFetch(`/api/guests/${id}`, { method: 'DELETE' });
       if (res.ok) {
-        setViewingGuest(null);
+        closeGuestModal();
         toast.info(tf('guestDeletedToast', { name: guestName }));
         await onRefresh();
       }
@@ -301,7 +313,7 @@ export const AdminGuestsTab: React.FC<AdminGuestsTabProps> = ({ language, t, gue
       });
       const data = await res.json();
       if (res.ok) {
-        setViewingGuest(null);
+        closeGuestModal();
         toast.info(tf(data.deleted ? 'guestDeletedToast' : 'attendeeRemovedToast', { name: removedName }));
         await onRefresh();
       } else {
@@ -675,7 +687,7 @@ export const AdminGuestsTab: React.FC<AdminGuestsTabProps> = ({ language, t, gue
                 className="mt-0.5 w-4 h-4 accent-[#8B735B] shrink-0" />
               <span>
                 <span className="block text-xs font-bold text-[#8B735B]">{t.addGuestGoingToggle}</span>
-                <span className="block text-[11px] text-[#5D5449]">{t.addGuestGoingHint}</span>
+                <span className="block text-xs text-[#5D5449]">{t.addGuestGoingHint}</span>
               </span>
             </label>
 
@@ -695,7 +707,7 @@ export const AdminGuestsTab: React.FC<AdminGuestsTabProps> = ({ language, t, gue
                 ))}
               </div>
               {deliveryChannel === 'none' && (
-                <p className="text-[11px] text-[#8B735B] font-mono flex items-center gap-1">
+                <p className="text-xs text-[#8B735B] font-mono flex items-center gap-1">
                   <Lightbulb className="w-3 h-3 shrink-0" /> {t.linkOnlyHint}
                 </p>
               )}
@@ -706,17 +718,17 @@ export const AdminGuestsTab: React.FC<AdminGuestsTabProps> = ({ language, t, gue
               <div>
                 <label className="label-mono block mb-1">{t.fieldName} *</label>
                 <TextInput type="text" required placeholder={t.nameExamplePh} {...register('name')} />
-                {errors.name && <p className="text-rose-600 text-[10px]">{errors.name.message}</p>}
+                {errors.name && <p className="text-rose-600 text-xs">{errors.name.message}</p>}
               </div>
               <div>
-                <label className="label-mono block mb-1">{t.fieldEmail} {!markGoing && (deliveryChannel === 'email' || deliveryChannel === 'both') ? '*' : '(Optional)'}</label>
+                <label className="label-mono block mb-1">{t.fieldEmail} {!markGoing && (deliveryChannel === 'email' || deliveryChannel === 'both') ? <span aria-hidden="true">*</span> : t.optionalLabel}</label>
                 <TextInput type="email" required={!markGoing && (deliveryChannel === 'email' || deliveryChannel === 'both')} placeholder={t.emailExamplePh} {...register('email')} />
-                {errors.email && <p className="text-rose-600 text-[10px]">{errors.email.message}</p>}
+                {errors.email && <p className="text-rose-600 text-xs">{errors.email.message}</p>}
               </div>
               <div>
-                <label className="label-mono block mb-1">{t.fieldPhone} {!markGoing && (deliveryChannel === 'text' || deliveryChannel === 'both') ? '*' : '(Optional)'}</label>
+                <label className="label-mono block mb-1">{t.fieldPhone} {!markGoing && (deliveryChannel === 'text' || deliveryChannel === 'both') ? <span aria-hidden="true">*</span> : t.optionalLabel}</label>
                 <TextInput type="tel" required={!markGoing && (deliveryChannel === 'text' || deliveryChannel === 'both')} placeholder={t.fieldPhonePlaceholder} {...register('phone')} />
-                {errors.phone && <p className="text-rose-600 text-[10px]">{errors.phone.message}</p>}
+                {errors.phone && <p className="text-rose-600 text-xs">{errors.phone.message}</p>}
               </div>
               <div>
                 <label className="label-mono block mb-1">{t.fieldLanguage}</label>
@@ -726,9 +738,9 @@ export const AdminGuestsTab: React.FC<AdminGuestsTabProps> = ({ language, t, gue
                 </Select>
               </div>
               <div>
-                <label className="label-mono block mb-1">{language === 'FR' ? 'Nombre de personnes (Taille du groupe) *' : 'Allowed Party Size (Max Guests) *'}</label>
+                <label className="label-mono block mb-1">{t.partySizeSeatsLabel}</label>
                 <TextInput type="number" min="1" max="20" required {...register('max_party_size', { valueAsNumber: true })} />
-                {errors.max_party_size && <p className="text-rose-600 text-[10px]">{errors.max_party_size.message}</p>}
+                {errors.max_party_size && <p className="text-rose-600 text-xs">{errors.max_party_size.message}</p>}
               </div>
             </div>
 
@@ -761,7 +773,7 @@ export const AdminGuestsTab: React.FC<AdminGuestsTabProps> = ({ language, t, gue
               </div>
             )}
           </div>
-          <div className="mt-4 pt-3 border-t border-dashed border-[#CBAE94] text-[11px] text-[#8B735B] font-mono font-bold text-center">
+          <div className="mt-4 pt-3 border-t border-dashed border-[#CBAE94] text-xs text-[#8B735B] font-mono font-bold text-center">
                 {tf('totalDietaryNeedsLabel', { count: String(dietaryList.length) })}
           </div>
         </motion.div>
@@ -784,13 +796,13 @@ export const AdminGuestsTab: React.FC<AdminGuestsTabProps> = ({ language, t, gue
               <div key={g.id} className="flex flex-wrap items-center justify-between gap-3 p-4 bg-white border border-[#CBAE94]/50 rounded-2xl">
                 <div className="min-w-0">
                   <p className="text-sm font-bold text-[#5D5449] truncate">{g.name}</p>
-                  <p className="text-[11px] font-mono text-[#5D5449]/70 truncate">
+                  <p className="text-xs font-mono text-[#5D5449]/70 truncate">
                     {[g.email, g.phone].filter(Boolean).join(' | ') || t.channelNone}
                     {' · '}
                     {tf('guestPartySizeLabel', { count: String(getGuestPartySize(g)), max: String(g.max_party_size || 1) })}
                   </p>
                   {g.dietary_restrictions ? (
-                    <p className="text-[11px] text-[#8B735B] truncate">{g.dietary_restrictions}</p>
+                    <p className="text-xs text-[#8B735B] truncate">{g.dietary_restrictions}</p>
                   ) : null}
                 </div>
                 <div className="flex items-center gap-2 shrink-0">
@@ -821,7 +833,6 @@ export const AdminGuestsTab: React.FC<AdminGuestsTabProps> = ({ language, t, gue
       <motion.div variants={adminCardVariants} className="card-paper p-6 sm:p-8 space-y-6">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div>
-            <div className="label-mono">{t.guestListBadge}</div>
             <h3 className="font-sans text-xl font-bold text-[#8B735B]">{t.guestListTitle}</h3>
           </div>
 
@@ -871,7 +882,7 @@ export const AdminGuestsTab: React.FC<AdminGuestsTabProps> = ({ language, t, gue
                 description={guests.length === 0 ? t.noGuestsYetMsg : t.noGuestsMatchMsg}
                 actionLabel={guests.length === 0 ? t.addFirstGuestBtn : t.clearFilterBtn}
                 onAction={guests.length === 0
-                  ? () => { const el = document.querySelector('input[required]'); if (el) (el as HTMLElement).focus(); }
+                  ? () => setFocus('name')
                   : () => { setSearchTerm(''); setStatusFilter('All'); toast.info(t.filterResetToast); }
                 }
               />
@@ -889,8 +900,8 @@ export const AdminGuestsTab: React.FC<AdminGuestsTabProps> = ({ language, t, gue
           </div>
         }>
         <p className="text-xs text-[#4A3F35]/80 leading-relaxed font-sans">
-          Paste comma-separated rows or raw CSV values below. Columns format:
-          <code className="block mt-1 p-2 rounded-lg bg-[#EFE6DC] font-mono text-[11px] text-[#8B735B]">{t.csvColumnsHint}</code>
+          {t.csvPasteHint}
+          <code className="block mt-1 p-2 rounded-lg bg-[#EFE6DC] font-mono text-xs text-[#8B735B]">{t.csvColumnsHint}</code>
         </p>
         <form onSubmit={handleProcessCsvImport} className="space-y-4">
           <textarea rows={6} value={rawCsvText} onChange={(e) => setRawCsvText(e.target.value)}
@@ -925,11 +936,11 @@ export const AdminGuestsTab: React.FC<AdminGuestsTabProps> = ({ language, t, gue
             {window.location.origin}/rsvp/{invitedGuestModal?.token}
           </div>
           {invitedGuestModal?.message && (
-            <div className="bg-[#EFE6DC]/50 p-3 rounded-xl border border-[#CBAE94] whitespace-pre-wrap text-left text-[11px] text-[#5D5449] font-mono max-h-40 overflow-y-auto">
+            <div className="bg-[#EFE6DC]/50 p-3 rounded-xl border border-[#CBAE94] whitespace-pre-wrap text-left text-xs text-[#5D5449] font-mono max-h-40 overflow-y-auto">
               {invitedGuestModal.message}
             </div>
           )}
-          <p className="text-[11px] text-[#8B735B] bg-[#EFE6DC] p-3 rounded-xl border border-[#CBAE94] font-mono"><Lightbulb className="w-3.5 h-3.5 inline" /> {t.sendEmailLogNotice}</p>
+          <p className="text-xs text-[#8B735B] bg-[#EFE6DC] p-3 rounded-xl border border-[#CBAE94] font-mono"><Lightbulb className="w-3.5 h-3.5 inline" /> {t.sendEmailLogNotice}</p>
           <div className="flex space-x-3">
             <button onClick={() => invitedGuestModal && handleCopyMagicLink(invitedGuestModal.token)} className="btn-accent flex-1 py-3 text-xs">{t.copyLink}</button>
             {invitedGuestModal?.message && (
@@ -986,7 +997,7 @@ export const AdminGuestsTab: React.FC<AdminGuestsTabProps> = ({ language, t, gue
       </Modal>
 
       {/* Modal: Edit Guest */}
-      <Modal open={!!editingGuest} onClose={() => setEditingGuest(null)} maxWidth="lg"
+      <Modal open={!!editingGuest} onClose={closeEditModal} maxWidth="lg"
         title={
           <div className="flex items-center gap-2">
             <UserPlus className="w-5 h-5 text-[#8B735B]" />
@@ -997,7 +1008,7 @@ export const AdminGuestsTab: React.FC<AdminGuestsTabProps> = ({ language, t, gue
                 <div>
                   <label className="label-mono block mb-1">{t.guestNameRequired}</label>
                   <TextInput type="text" required {...registerEdit('name')} />
-                  {editErrors.name && <p className="text-rose-600 text-[10px]">{editErrors.name.message}</p>}
+                  {editErrors.name && <p className="text-rose-600 text-xs">{editErrors.name.message}</p>}
                 </div>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                   <div>
@@ -1028,7 +1039,7 @@ export const AdminGuestsTab: React.FC<AdminGuestsTabProps> = ({ language, t, gue
                           setEditExtraNames((prev) => prev.slice(0, Math.max(0, m - 1)));
                         },
                       })} />
-                    {editErrors.max_party_size && <p className="text-rose-600 text-[10px]">{editErrors.max_party_size.message}</p>}
+                    {editErrors.max_party_size && <p className="text-rose-600 text-xs">{editErrors.max_party_size.message}</p>}
                   </div>
                   <div>
                     <label className="label-mono block mb-1">{t.rsvpStatusLabel}</label>
@@ -1048,7 +1059,7 @@ export const AdminGuestsTab: React.FC<AdminGuestsTabProps> = ({ language, t, gue
                       <div className="flex-1 px-3 py-2 rounded-xl border border-[#CBAE94] bg-white/60 text-sm font-bold text-[#5D5449] truncate">
                         {editPrimaryName}
                       </div>
-                      <span className="shrink-0 px-2 py-0.5 rounded-full bg-[#EFE6DC] border border-[#CBAE94] text-[10px] font-mono font-bold text-[#8B735B]">{t.finderPartyLead}</span>
+                      <span className="shrink-0 px-2 py-0.5 rounded-full bg-[#EFE6DC] border border-[#CBAE94] text-xs font-mono font-bold text-[#8B735B]">{t.finderPartyLead}</span>
                     </div>
                     {editExtraNames.map((name, i) => (
                       <div key={i} className="flex items-center gap-2">
@@ -1069,7 +1080,7 @@ export const AdminGuestsTab: React.FC<AdminGuestsTabProps> = ({ language, t, gue
                   </div>
                 )}
                 <div className="flex items-center justify-end gap-3 pt-3 border-t border-[#CBAE94]/30">
-                  <button type="button" onClick={() => setEditingGuest(null)}
+                  <button type="button" onClick={closeEditModal}
                     className="px-4 py-2.5 rounded-xl border border-[#CBAE94] text-xs font-bold text-[#5D5449] hover:bg-[#EFE6DC]">{t.cancelBtn}</button>
                   <button type="submit" disabled={savingEdit}
                     className="px-5 py-2.5 rounded-xl bg-[#8B735B] hover:bg-[#705C47] text-white text-xs font-bold shadow-md">{savingEdit ? t.savingBtn : t.saveChangesBtn}</button>
@@ -1089,16 +1100,16 @@ export const AdminGuestsTab: React.FC<AdminGuestsTabProps> = ({ language, t, gue
 
       {/* Modal: Invitation Details */}
       <GuestDetailsModal
-        open={!!viewingGuest}
+        open={!!viewingGuest && !editingGuest}
         guest={viewingGuest}
         allGuests={guests}
         message={viewingMessage}
         loadingMessage={loadingMessage}
         copiedToken={copiedToken}
-        onClose={() => setViewingGuest(null)}
+        onClose={closeGuestModal}
         onCopyLink={handleCopyMagicLink}
         onCopyMessage={handleCopyInviteMessage}
-        onEdit={(g) => { setViewingGuest(null); handleOpenEditGuest(g); }}
+        onEdit={handleOpenEditGuest}
         onDelete={handleDeleteGuest}
         onRemoveAttendee={handleRemoveAttendee}
       />
