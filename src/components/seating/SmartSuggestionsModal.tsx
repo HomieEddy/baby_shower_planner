@@ -62,7 +62,7 @@ export const SmartSuggestionsModal = ({
           <button
             type="button"
             onClick={onToggleSelectAll}
-            className="px-2.5 py-1 rounded-lg bg-white border border-[#CBAE94] text-[11px] font-bold text-[#8B735B] hover:bg-[#EFE6DC]"
+            className="px-2.5 py-1 rounded-lg bg-white border border-[#CBAE94] text-xs font-bold text-[#8B735B] hover:bg-[#EFE6DC]"
           >
             {selectedIds.size === suggestions.length
               ? t.deselectAllBtn
@@ -108,7 +108,7 @@ export const SmartSuggestionsModal = ({
                 </div>
 
                 <div className="text-right">
-                  <span className="inline-block px-2.5 py-1 rounded-full text-[10px] font-mono font-bold uppercase tracking-wider bg-amber-100 text-amber-900 border border-amber-300">
+                  <span className="inline-block px-2.5 py-1 rounded-full text-xs font-mono font-bold uppercase tracking-wider bg-amber-100 text-amber-900 border border-amber-300">
                     {sug.matchBadge}
                   </span>
                   <div className="text-xs font-bold text-[#8B735B] mt-1">
@@ -117,7 +117,7 @@ export const SmartSuggestionsModal = ({
                 </div>
               </div>
 
-              <div className="text-[11px] text-[#8B735B] bg-[#FAF6F0] p-2 rounded-xl border border-[#CBAE94]/30 font-medium">
+              <div className="text-xs text-[#8B735B] bg-[#FAF6F0] p-2 rounded-xl border border-[#CBAE94]/30 font-medium">
                 {sug.reason}
               </div>
             </div>

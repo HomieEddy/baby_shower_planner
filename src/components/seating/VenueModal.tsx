@@ -131,7 +131,7 @@ export const VenueModal = ({ open, selected, floorMap, roster, onClose }: VenueM
                   <h3 className="font-gaegu text-2xl font-bold text-[#4A3F35] truncate">
                     {t.venueTitle}
                   </h3>
-                  <p className="text-[11px] font-mono font-bold text-[#8B735B] truncate">
+                  <p className="text-xs font-mono font-bold text-[#8B735B] truncate">
                     {selected.displayName} · {tf('finderCodeParty', { code: selected.guest.code, count: String(getGuestPartySize(selected.guest)) })}
                   </p>
                 </div>
@@ -158,7 +158,7 @@ export const VenueModal = ({ open, selected, floorMap, roster, onClose }: VenueM
                   <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
                     <div className="flex items-center gap-4">
                       <motion.span
-                        className="shrink-0 inline-block px-3 py-1 rounded-full bg-[#8B735B] text-white text-[11px] font-mono font-bold uppercase"
+                        className="shrink-0 inline-block px-3 py-1 rounded-full bg-[#8B735B] text-white text-xs font-mono font-bold uppercase"
                         initial={{ opacity: 0, y: -6 }}
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ delay: 0.25 }}
@@ -198,7 +198,7 @@ export const VenueModal = ({ open, selected, floorMap, roster, onClose }: VenueM
                     </div>
 
                     <motion.div
-                      className="flex items-center gap-2 pt-1 text-[11px] font-mono text-[#4A3F35] font-bold"
+                      className="flex items-center gap-2 pt-1 text-xs font-mono text-[#4A3F35] font-bold"
                       initial={{ opacity: 0, y: 8 }}
                       animate={{ opacity: 1, y: 0 }}
                       transition={{ delay: 0.55 }}
@@ -227,7 +227,7 @@ export const VenueModal = ({ open, selected, floorMap, roster, onClose }: VenueM
                     </p>
                     <ViewModeToggle value={viewMode} onChange={setViewMode} />
                   </div>
-                  <p className="text-[10px] font-mono text-[#CBAE94] text-center mb-2">
+                  <p className="text-xs font-mono text-[#CBAE94] text-center mb-2">
                     {viewMode === '3d' ? t.finderMap3dHint : t.finderMapHint}
                   </p>
 
@@ -380,7 +380,7 @@ export const VenueModal = ({ open, selected, floorMap, roster, onClose }: VenueM
                   </div>
 
                   {/* Legend */}
-                  <div className="flex flex-wrap items-center justify-center gap-4 mt-3 text-[10px] font-mono font-bold text-[#5D5449]">
+                  <div className="flex flex-wrap items-center justify-center gap-4 mt-3 text-xs font-mono font-bold text-[#5D5449]">
                     <span className="flex items-center gap-1.5">
                       <motion.span
                         className="w-2.5 h-2.5 rounded-full bg-[#C9A227]"

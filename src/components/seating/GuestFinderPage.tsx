@@ -305,12 +305,12 @@ export const GuestFinderPage: React.FC = () => {
                           <p className="text-xs font-bold text-[#4A3F35] truncate">
                             {hit.displayName}
                             {hit.attendeeName === null && (
-                              <span className="ml-1.5 text-[9px] font-mono uppercase text-[#8B735B]">
+                              <span className="ml-1.5 text-xs font-mono uppercase text-[#8B735B]">
                                 {t.finderPartyLead}
                               </span>
                             )}
                           </p>
-                          <span className="text-[10px] text-[#8B735B] font-mono">
+                          <span className="text-xs text-[#8B735B] font-mono">
                             {hit.guest.code}
                             {hit.attendeeName !== null && (
                               <span className="ml-1.5 text-[#CBAE94]">
@@ -389,7 +389,7 @@ export const GuestFinderPage: React.FC = () => {
 
               {/* Check-in — each guest checks in themselves; the lead can check in the whole party */}
               <div className="space-y-2">
-                <p className="text-[11px] font-mono uppercase tracking-wider font-bold text-[#8B735B] flex items-center gap-1.5">
+                <p className="text-xs font-mono uppercase tracking-wider font-bold text-[#8B735B] flex items-center gap-1.5">
                   <UserCheck className="w-3.5 h-3.5" />
                   {t.checkinPartyLabel}
                 </p>
@@ -431,7 +431,7 @@ export const GuestFinderPage: React.FC = () => {
                       >
                         <div className="flex items-center gap-3 min-w-0">
                           <span
-                            className={`w-9 h-9 rounded-full flex items-center justify-center text-[11px] font-bold shrink-0 ${
+                            className={`w-9 h-9 rounded-full flex items-center justify-center text-xs font-bold shrink-0 ${
                               checked
                                 ? 'bg-green-600 text-white'
                                 : 'bg-[#EFE6DC] text-[#8B735B]'
@@ -443,17 +443,17 @@ export const GuestFinderPage: React.FC = () => {
                             <p className="text-sm font-bold text-[#4A3F35] truncate">
                               {member}
                               {isSelf && (
-                                <span className="ml-1.5 text-[9px] font-mono uppercase text-[#8B735B]">
+                                <span className="ml-1.5 text-xs font-mono uppercase text-[#8B735B]">
                                   {t.checkinYouLabel}
                                 </span>
                               )}
                               {!isSelf && isPartyLead(selected.guest, member) && (
-                                <span className="ml-1.5 text-[9px] font-mono uppercase text-[#8B735B]">
+                                <span className="ml-1.5 text-xs font-mono uppercase text-[#8B735B]">
                                   {t.finderPartyLead}
                                 </span>
                               )}
                             </p>
-                            <p className={`text-[10px] font-mono font-bold ${checked ? 'text-green-700' : 'text-[#A09080]'}`}>
+                            <p className={`text-xs font-mono font-bold ${checked ? 'text-green-700' : 'text-[#A09080]'}`}>
                               {checked ? t.checkedInLabel : t.notYetLabel}
                             </p>
                           </div>
@@ -463,7 +463,7 @@ export const GuestFinderPage: React.FC = () => {
                           <button
                             onClick={() => void act(member, false, true)}
                             disabled={isBusy || !canAct}
-                            className="flex items-center gap-1 text-[11px] font-bold text-green-700 hover:text-green-900 disabled:opacity-40 transition-colors"
+                            className="flex items-center gap-1 text-xs font-bold text-green-700 hover:text-green-900 disabled:opacity-40 transition-colors"
                             title={t.undoCheckinBtn}
                           >
                             <CheckCircle2 className="w-4 h-4" />
@@ -479,7 +479,7 @@ export const GuestFinderPage: React.FC = () => {
                             {isSelf ? t.checkinMeBtn : t.checkInBtn}
                           </button>
                         ) : (
-                          <span className="text-[10px] font-mono text-[#A09080] italic">
+                          <span className="text-xs font-mono text-[#A09080] italic">
                             {t.notYetLabel}
                           </span>
                         )}
