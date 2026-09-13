@@ -383,3 +383,24 @@ export function trimPartySeats(
     return { ...t, assignedGuestIds: (t.assignedGuestIds || []).filter((id) => id !== guestId) };
   });
 }
+
+// Remove one attendee (by index) from a party's seats in every table. Higher
+// attendee indices shift down so they keep pointing at the same people. Legacy
+// tables (assignedGuestIds only) drop the whole party, like trimPartySeats.
+export function removePartyAttendee(
+  tables: TableElement[],
+  guestId: string,
+  removedIndex: number
+): TableElement[] {
+  return tables.map((t) => {
+    if (Array.isArray(t.seats)) {
+      const seats = t.seats.map((s) => {
+        if (!s || s.guestId !== guestId) return s;
+        if (s.attendeeIndex === removedIndex) return null;
+        return s.attendeeIndex > removedIndex ? { ...s, attendeeIndex: s.attendeeIndex - 1 } : s;
+      });
+      return { ...t, seats, assignedGuestIds: rebuildAssignedGuestIds(seats) };
+    }
+    return { ...t, assignedGuestIds: (t.assignedGuestIds || []).filter((id) => id !== guestId) };
+  });
+}

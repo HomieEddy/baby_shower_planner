@@ -12,6 +12,7 @@ import {
   unseatAttendee,
   unassignParty,
   trimPartySeats,
+  removePartyAttendee,
 } from './tableAssignment';
 
 const expectCode = (fn: () => void, code: string) => {
@@ -240,5 +241,36 @@ describe('trimPartySeats', () => {
     const t1 = table({ assignedGuestIds: ['g1', 'g2'] });
     const out = trimPartySeats([t1], 'g1');
     expect(out[0].assignedGuestIds).toEqual(['g2']);
+  });
+});
+
+describe('removePartyAttendee', () => {
+  it('removes a middle attendee and shifts higher indices down', () => {
+    const t1 = table({
+      seats: [
+        { guestId: 'g1', attendeeIndex: 0 },
+        { guestId: 'g1', attendeeIndex: 1 },
+        { guestId: 'g1', attendeeIndex: 2 },
+        null,
+      ],
+    });
+    const out = removePartyAttendee([t1], 'g1', 1);
+    expect(out[0].seats?.[0]).toEqual({ guestId: 'g1', attendeeIndex: 0 });
+    expect(out[0].seats?.[1]).toBeNull();
+    expect(out[0].seats?.[2]).toEqual({ guestId: 'g1', attendeeIndex: 1 });
+    expect(out[0].assignedGuestIds).toEqual(['g1']);
+  });
+
+  it('leaves other parties untouched and drops a legacy entry', () => {
+    const t1 = table({
+      seats: [
+        { guestId: 'g1', attendeeIndex: 0 },
+        { guestId: 'g2', attendeeIndex: 0 },
+        null,
+        null,
+      ],
+    });
+    expect(removePartyAttendee([t1], 'g1', 0)[0].seats?.[1]).toEqual({ guestId: 'g2', attendeeIndex: 0 });
+    expect(removePartyAttendee([table({ assignedGuestIds: ['g1', 'g2'] })], 'g1', 0)[0].assignedGuestIds).toEqual(['g2']);
   });
 });
