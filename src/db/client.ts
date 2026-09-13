@@ -4,7 +4,7 @@
 import PocketBase from 'pocketbase/cjs';
 import crypto from 'node:crypto';
 import type { TableElement } from '../types';
-import { trimPartySeats } from '../lib/tableAssignment';
+import { trimPartySeats, removePartyAttendee } from '../lib/tableAssignment';
 
 const PB_URL = process.env.POCKETBASE_URL || process.env.VITE_POCKETBASE_URL || 'http://127.0.0.1:8090';
 export const pb = new PocketBase(PB_URL);
@@ -39,6 +39,20 @@ export async function removeGuestFromFloorMaps(guestId: string, keepAttendees = 
     if (maps.length === 0) return;
     const map = maps[0];
     const tables = trimPartySeats((map.tables as TableElement[]) || [], guestId, keepAttendees);
+    await pb.collection('floor_maps').update(map.id, { tables });
+  } catch (err) {
+    console.error('Failed to update floor map:', err);
+  }
+}
+
+// Remove one attendee (by index) from a party's seats: the chair is dropped and
+// higher attendee indices shift down to keep the remaining people seated.
+export async function removeAttendeeFromFloorMaps(guestId: string, removedIndex: number): Promise<void> {
+  try {
+    const maps = await pb.collection('floor_maps').getFullList();
+    if (maps.length === 0) return;
+    const map = maps[0];
+    const tables = removePartyAttendee((map.tables as TableElement[]) || [], guestId, removedIndex);
     await pb.collection('floor_maps').update(map.id, { tables });
   } catch (err) {
     console.error('Failed to update floor map:', err);
