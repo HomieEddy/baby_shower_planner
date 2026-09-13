@@ -5,7 +5,7 @@ export interface Translations {
   activeGuestTables: string;
   activeSeatingTargetLabel: string;
   addAnotherGuestBtn: string;
-  addAsGoingBtn: string;
+  addAttendeesTitle: string;
   addFirstGuestBtn: string;
   addGuestGoingHint: string;
   addGuestGoingToggle: string;
@@ -1021,7 +1021,7 @@ export const translations: Record<Language, Translations> = {
     activeGuestTables: "Active Guest Tables",
     activeSeatingTargetLabel: "Active Seating Target",
     addAnotherGuestBtn: "+ Add Another Person / Guest",
-    addAsGoingBtn: "Add as going",
+    addAttendeesTitle: "Add party members",
     addFirstGuestBtn: "Add First Guest",
     addGuestGoingHint: "Adds the guest directly as attending. No invitation message is sent.",
     addGuestGoingToggle: "Mark as going (no invitation needed)",
@@ -2035,7 +2035,7 @@ export const translations: Record<Language, Translations> = {
     activeGuestTables: "Tables actives",
     activeSeatingTargetLabel: "Cible de placement active",
     addAnotherGuestBtn: "+ Ajouter une autre personne / invité",
-    addAsGoingBtn: "Ajouter comme présent",
+    addAttendeesTitle: "Ajouter les personnes du groupe",
     addFirstGuestBtn: "Ajouter le premier invité",
     addGuestGoingHint: "Ajoute l'invité directement comme présent. Aucun message d'invitation n'est envoyé.",
     addGuestGoingToggle: "Marquer comme présent (sans invitation)",

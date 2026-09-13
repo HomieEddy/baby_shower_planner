@@ -86,6 +86,9 @@ export const AdminGuestsTab: React.FC<AdminGuestsTabProps> = ({ language, t, gue
   const [submittingGuest, setSubmittingGuest] = useState(false);
   // Host self-registration: create the guest already "going", no invitation.
   const [markGoing, setMarkGoing] = useState(false);
+  // Party-member entry: when the group size is > 1 the host names the members.
+  const [attendeeModal, setAttendeeModal] = useState<{ values: AddGuestFormValues; going: boolean } | null>(null);
+  const [extraNames, setExtraNames] = useState<string[]>([]);
 
   const { register, handleSubmit, setValue, watch, formState: { errors } } = useForm<AddGuestFormValues>({
     resolver: zodResolver(GuestImportSchema),
@@ -428,7 +431,7 @@ export const AdminGuestsTab: React.FC<AdminGuestsTabProps> = ({ language, t, gue
     }
   };
 
-  const handleAddGuest = async (values: AddGuestFormValues) => {
+  const handleAddGuest = (values: AddGuestFormValues) => {
     if (!values.name.trim()) return;
     if (!markGoing) {
       if ((values.delivery_channel === 'email' || values.delivery_channel === 'both') && !(values.email || '').trim()) {
@@ -440,6 +443,25 @@ export const AdminGuestsTab: React.FC<AdminGuestsTabProps> = ({ language, t, gue
         return;
       }
     }
+    // A group ask the host to name the extra members before creating anything.
+    const partySize = Math.max(1, Number(values.max_party_size) || 1);
+    if (partySize > 1) {
+      setExtraNames(Array(partySize - 1).fill(''));
+      setAttendeeModal({ values, going: markGoing });
+      return;
+    }
+    void submitGuest(values, [], markGoing);
+  };
+
+  const handleConfirmAttendees = () => {
+    if (!attendeeModal) return;
+    const extras = extraNames.map((n) => n.trim()).filter(Boolean);
+    const { values, going } = attendeeModal;
+    setAttendeeModal(null);
+    void submitGuest(values, extras, going);
+  };
+
+  const submitGuest = async (values: AddGuestFormValues, extras: string[], going: boolean) => {
     try {
       setSubmittingGuest(true);
       const res = await adminFetch('/api/guests', {
@@ -452,11 +474,12 @@ export const AdminGuestsTab: React.FC<AdminGuestsTabProps> = ({ language, t, gue
           delivery_channel: values.delivery_channel,
           max_party_size: values.max_party_size,
           language_pref: values.language_pref,
-          going: markGoing,
+          going,
+          attendee_names: extras,
         }),
       });
       const data = await res.json();
-      if (markGoing) {
+      if (going) {
         if (data.guest) {
           toast.love(tf('guestAddedGoingToast', { name: data.guest.name }));
           setValue('name', '');
@@ -699,7 +722,7 @@ export const AdminGuestsTab: React.FC<AdminGuestsTabProps> = ({ language, t, gue
             <motion.button whileTap={{ scale: 0.98 }} type="submit" disabled={submittingGuest}
               className="btn-accent w-full sm:w-auto py-3 px-6 text-sm disabled:opacity-50">
               <Send className="w-4 h-4 mr-2" />
-              <span>{submittingGuest ? t.sendingInviteBtn : markGoing ? t.addAsGoingBtn : t.sendInviteBtn}</span>
+              <span>{submittingGuest ? t.sendingInviteBtn : markGoing ? t.createInviteBtn : t.sendInviteBtn}</span>
             </motion.button>
           </form>
         </motion.div>
@@ -909,6 +932,43 @@ export const AdminGuestsTab: React.FC<AdminGuestsTabProps> = ({ language, t, gue
             <button onClick={() => { if (invitedGuestModal) { const m = invitedGuestModal; setInvitedGuestModal(null); navigate(`/rsvp/${m.token}`); } }} className="btn-outline-accent flex-1 py-3 text-xs">{t.previewInviteBtn}</button>
           </div>
           <button onClick={() => setInvitedGuestModal(null)} className="w-full py-2 text-[#5D5449]/70 hover:text-[#5D5449] text-xs font-mono font-bold text-center">{t.closeModal}</button>
+        </div>
+      </Modal>
+
+      {/* Modal: Name the party members */}
+      <Modal open={!!attendeeModal} onClose={() => setAttendeeModal(null)} maxWidth="lg"
+        title={
+          <div className="flex items-center gap-2">
+            <Users className="w-5 h-5 text-[#8B735B]" />
+            <h3 className="font-sans text-xl font-bold text-[#4A3F35]">{t.addAttendeesTitle}</h3>
+          </div>
+        }>
+        <p className="text-xs text-[#5D5449] leading-relaxed font-sans">{t.attendeeSectionHint}</p>
+        <div className="space-y-3 pt-2">
+          <div>
+            <label className="label-mono block mb-1 text-xs font-bold text-[#8B735B]">{t.finderPartyLead}</label>
+            <div className="px-3 py-2 rounded-xl border border-[#CBAE94] bg-[#EFE6DC]/50 text-sm font-bold text-[#5D5449]">
+              {attendeeModal?.values.name.trim()}
+            </div>
+          </div>
+          {extraNames.map((name, i) => (
+            <div key={i}>
+              <label className="label-mono block mb-1 text-xs font-bold text-[#8B735B]">
+                {t.fieldName} {i + 1}
+              </label>
+              <TextInput type="text" value={name} placeholder={t.nameExamplePh}
+                onChange={(e) => setExtraNames((prev) => prev.map((n, j) => (j === i ? e.target.value : n)))} />
+            </div>
+          ))}
+        </div>
+        <div className="flex items-center justify-end gap-3 pt-4 mt-2 border-t border-[#CBAE94]/30">
+          <button type="button" onClick={() => setAttendeeModal(null)}
+            className="px-4 py-2.5 rounded-xl border border-[#CBAE94] text-xs font-bold text-[#5D5449] hover:bg-[#EFE6DC]">{t.cancelBtn}</button>
+          <button type="button" onClick={handleConfirmAttendees}
+            className="btn-accent px-5 py-2.5 text-xs font-bold inline-flex items-center gap-1.5">
+            <Send className="w-3.5 h-3.5" />
+            <span>{attendeeModal?.going ? t.createInviteBtn : t.sendInviteBtn}</span>
+          </button>
         </div>
       </Modal>
 
