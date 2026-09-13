@@ -237,6 +237,8 @@ export interface AddGuestPayload {
   delivery_channel?: DeliveryChannel;
   max_party_size?: number;
   language_pref: Language;
+  // Host-registered "going" guests: created already Attending, no invitation.
+  rsvp_status?: 'Attending';
 }
 
 export interface RegisterGuestPayload {

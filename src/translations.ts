@@ -5,7 +5,10 @@ export interface Translations {
   activeGuestTables: string;
   activeSeatingTargetLabel: string;
   addAnotherGuestBtn: string;
+  addAsGoingBtn: string;
   addFirstGuestBtn: string;
+  addGuestGoingHint: string;
+  addGuestGoingToggle: string;
   addGuestSubtitle: string;
   addGuestTitle: string;
   addScheduleItemBtn: string;
@@ -423,6 +426,7 @@ export interface Translations {
   gridLabel: string;
   gridLayoutLabel: string;
   guestConfirmationBtn: string;
+  guestAddedGoingToast: string;
   guestDeletedToast: string;
   guestEmailsLabel: string;
   guestListBadge: string;
@@ -1010,7 +1014,10 @@ export const translations: Record<Language, Translations> = {
     activeGuestTables: "Active Guest Tables",
     activeSeatingTargetLabel: "Active Seating Target",
     addAnotherGuestBtn: "+ Add Another Person / Guest",
+    addAsGoingBtn: "Add as going",
     addFirstGuestBtn: "Add First Guest",
+    addGuestGoingHint: "Adds the guest directly as attending. No invitation message is sent.",
+    addGuestGoingToggle: "Mark as going (no invitation needed)",
     addGuestSubtitle: "Generate a personal magic link and send an invitation.",
     addGuestTitle: "Invite a New Guest",
     addScheduleItemBtn: "+ Add Schedule Item",
@@ -1428,6 +1435,7 @@ export const translations: Record<Language, Translations> = {
     greenLegendHint: "on the floor plan. Click a green table to seat them!",
     gridLabel: "Grid",
     gridLayoutLabel: "Uniform Square Grid Layout",
+    guestAddedGoingToast: "{{name}} added as going.",
     guestDeletedToast: "Deleted guest invitation for \"{{name}}\"",
     guestConfirmationBtn: "Guest Confirmation",
     guestEmailsLabel: "guest email(s)",
@@ -2013,7 +2021,10 @@ export const translations: Record<Language, Translations> = {
     activeGuestTables: "Tables actives",
     activeSeatingTargetLabel: "Cible de placement active",
     addAnotherGuestBtn: "+ Ajouter une autre personne / invité",
+    addAsGoingBtn: "Ajouter comme présent",
     addFirstGuestBtn: "Ajouter le premier invité",
+    addGuestGoingHint: "Ajoute l'invité directement comme présent. Aucun message d'invitation n'est envoyé.",
+    addGuestGoingToggle: "Marquer comme présent (sans invitation)",
     addGuestSubtitle: "Générez un lien magique personnel et envoyez une invitation.",
     addGuestTitle: "Inviter un nouvel invité",
     addScheduleItemBtn: "+ Ajouter un moment",
@@ -2431,6 +2442,7 @@ export const translations: Record<Language, Translations> = {
     greenLegendHint: "sur le plan. Cliquez sur une table verte pour les placer !",
     gridLabel: "Grille",
     gridLayoutLabel: "Grille carrée uniforme",
+    guestAddedGoingToast: "{{name}} ajouté comme présent.",
     guestDeletedToast: "Invitation de « {{name}} » supprimée",
     guestConfirmationBtn: "Confirmation de l'invité",
     guestEmailsLabel: "email(s) d'invité(s)",
