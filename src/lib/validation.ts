@@ -55,6 +55,12 @@ export const EditGuestSchema = Guest.partial().extend({
   rsvp_status: z.enum(['Pending', 'Attending', 'Declined']),
 });
 
+// The edit form does not expose `attending_party_size` (it is derived from the
+// RSVP status on save), so the form validates against the same schema minus
+// that field. Using the full schema as the resolver silently rejected every
+// save because the field was never in the form state.
+export const EditGuestFormSchema = EditGuestSchema.omit({ attending_party_size: true });
+
 export const GuestbookEntrySchema = Guestbook.pick({
   guest_name: true,
   message: true,

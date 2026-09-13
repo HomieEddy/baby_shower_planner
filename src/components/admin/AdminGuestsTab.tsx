@@ -29,7 +29,7 @@ import {
 import { Guest, Language, DeliveryChannel, FloorMapData } from '../../types';
 import { Translations } from '../../translations';
 import { adminFetch } from '../../lib/api';
-import { GuestImportSchema, EditGuestSchema } from '../../lib/validation';
+import { GuestImportSchema, EditGuestFormSchema } from '../../lib/validation';
 import { useCapabilities, availableChannels, channelLabel } from '../../lib/capabilities';
 import { getGuestPartySize as getPartySize, getAttendeeLocations } from '../../lib/tableAssignment';
 import { getPartyMembers } from '../../lib/guestAttendees';
@@ -49,7 +49,7 @@ interface AdminGuestsTabProps {
 }
 
 type AddGuestFormValues = z.input<typeof GuestImportSchema>;
-type EditGuestFormValues = z.input<typeof EditGuestSchema>;
+type EditGuestFormValues = z.input<typeof EditGuestFormSchema>;
 
 // CSV-aware line split: quoted fields may contain commas.
 function parseCsvLine(line: string): string[] {
@@ -100,7 +100,7 @@ export const AdminGuestsTab: React.FC<AdminGuestsTabProps> = ({ language, t, gue
   });
 
   const { register: registerEdit, handleSubmit: handleSubmitEdit, reset: resetEditForm, formState: { errors: editErrors } } = useForm<EditGuestFormValues>({
-    resolver: zodResolver(EditGuestSchema),
+    resolver: zodResolver(EditGuestFormSchema),
     defaultValues: {
       name: '',
       email: '',

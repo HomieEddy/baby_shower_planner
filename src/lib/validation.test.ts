@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { GuestRsvpSchema, GuestImportSchema, GuestbookEntrySchema, GiftLogSchema, isValidEmail, isValidCode } from './validation';
+import { GuestRsvpSchema, GuestImportSchema, GuestbookEntrySchema, GiftLogSchema, EditGuestSchema, EditGuestFormSchema, isValidEmail, isValidCode } from './validation';
 
 describe('isValidEmail', () => {
   it('accepts a valid address and rejects malformed/empty', () => {
@@ -32,6 +32,21 @@ describe('GuestRsvpSchema', () => {
   it('rejects party size above 20', () => {
     const r = GuestRsvpSchema.safeParse({ rsvp_status: 'Attending', attending_party_size: 21 });
     expect(r.success).toBe(false);
+  });
+});
+
+describe('EditGuestFormSchema', () => {
+  const formShape = {
+    name: 'Grandma', email: '', phone: '',
+    delivery_channel: 'none' as const, max_party_size: 2, rsvp_status: 'Pending' as const,
+  };
+
+  it('accepts exactly the fields the edit form exposes', () => {
+    expect(EditGuestFormSchema.safeParse(formShape).success).toBe(true);
+  });
+
+  it('the route schema still requires attending_party_size', () => {
+    expect(EditGuestSchema.safeParse(formShape).success).toBe(false);
   });
 });
 
