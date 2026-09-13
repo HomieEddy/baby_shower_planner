@@ -47,6 +47,9 @@ export async function inviteMessageFor(guest: Guest): Promise<string> {
 }
 
 export async function addGuest(payload: AddGuestPayload): Promise<{ guest: Guest; magic_token: string; invite_message: string }> {
+  // Host-registered "going" guest: no invitation is sent; the record is created
+  // already Attending (the code/magic token stay available for day-of use).
+  const going = payload.rsvp_status === 'Attending';
   const existing = payload.email || payload.phone
     ? await pb.collection('guests').getList(1, 1, {
         filter: payload.email ? `email="${escFilter(payload.email)}"` : `phone="${escFilter(payload.phone || '')}"`,
@@ -54,6 +57,14 @@ export async function addGuest(payload: AddGuestPayload): Promise<{ guest: Guest
     : { items: [] };
   if (existing.items.length > 0) {
     const g = fromRecord<Guest>(existing.items[0]);
+    // Re-registering an existing contact as "going" promotes the record.
+    if (going && g.rsvp_status !== 'Attending') {
+      const promoted = fromRecord<Guest>(await pb.collection('guests').update(g.id, {
+        rsvp_status: 'Attending', attending_party_size: g.max_party_size || g.attending_party_size || 1,
+        token_used: true,
+      }));
+      return { guest: promoted, magic_token: promoted.magic_token, invite_message: await inviteMessageFor(promoted) };
+    }
     return { guest: g, magic_token: g.magic_token, invite_message: await inviteMessageFor(g) };
   }
   const magic_token = newMagicToken();
@@ -64,12 +75,12 @@ export async function addGuest(payload: AddGuestPayload): Promise<{ guest: Guest
     email: payload.email || '',
     phone: payload.phone || '',
     delivery_channel: payload.delivery_channel || 'none',
-    code, max_party_size: partySize, rsvp_status: 'Pending',
+    code, max_party_size: partySize, rsvp_status: going ? 'Attending' : 'Pending',
     attending_party_size: partySize,
     attendee_names: [payload.name],
     attendee_details: [{ name: payload.name, contact: payload.email || payload.phone || '' }],
     dietary_restrictions: '', language_pref: payload.language_pref || 'FR',
-    magic_token, token_used: false, created_at: new Date().toISOString(),
+    magic_token, token_used: going, created_at: new Date().toISOString(),
     is_read_only: false,
   });
   const g = fromRecord<Guest>(guest);
