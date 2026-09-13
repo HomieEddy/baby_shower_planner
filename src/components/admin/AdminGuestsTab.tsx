@@ -84,6 +84,8 @@ export const AdminGuestsTab: React.FC<AdminGuestsTabProps> = ({ language, t, gue
   const confirm = useConfirm();
 
   const [submittingGuest, setSubmittingGuest] = useState(false);
+  // Host self-registration: create the guest already "going", no invitation.
+  const [markGoing, setMarkGoing] = useState(false);
 
   const { register, handleSubmit, setValue, watch, formState: { errors } } = useForm<AddGuestFormValues>({
     resolver: zodResolver(GuestImportSchema),
@@ -407,13 +409,15 @@ export const AdminGuestsTab: React.FC<AdminGuestsTabProps> = ({ language, t, gue
 
   const handleAddGuest = async (values: AddGuestFormValues) => {
     if (!values.name.trim()) return;
-    if ((values.delivery_channel === 'email' || values.delivery_channel === 'both') && !(values.email || '').trim()) {
-      toast.error(t.emailRequiredToast);
-      return;
-    }
-    if ((values.delivery_channel === 'text' || values.delivery_channel === 'both') && !(values.phone || '').trim()) {
-      toast.error(t.phoneRequiredToast);
-      return;
+    if (!markGoing) {
+      if ((values.delivery_channel === 'email' || values.delivery_channel === 'both') && !(values.email || '').trim()) {
+        toast.error(t.emailRequiredToast);
+        return;
+      }
+      if ((values.delivery_channel === 'text' || values.delivery_channel === 'both') && !(values.phone || '').trim()) {
+        toast.error(t.phoneRequiredToast);
+        return;
+      }
     }
     try {
       setSubmittingGuest(true);
@@ -427,10 +431,21 @@ export const AdminGuestsTab: React.FC<AdminGuestsTabProps> = ({ language, t, gue
           delivery_channel: values.delivery_channel,
           max_party_size: values.max_party_size,
           language_pref: values.language_pref,
+          going: markGoing,
         }),
       });
       const data = await res.json();
-      if (data.guest && data.magic_token) {
+      if (markGoing) {
+        if (data.guest) {
+          toast.love(tf('guestAddedGoingToast', { name: data.guest.name }));
+          setValue('name', '');
+          setValue('email', '');
+          setValue('phone', '');
+          await onRefresh();
+        } else if (data.error) {
+          toast.error(data.error);
+        }
+      } else if (data.guest && data.magic_token) {
         const contactInfo = [data.guest.email, data.guest.phone].filter(Boolean).join(' | ');
         setInvitedGuestModal({
           name: data.guest.name,
@@ -598,6 +613,16 @@ export const AdminGuestsTab: React.FC<AdminGuestsTabProps> = ({ language, t, gue
           </div>
 
           <form onSubmit={handleSubmit(handleAddGuest)} className="space-y-4">
+            <label className="flex items-start gap-3 p-3.5 rounded-2xl border border-[#CBAE94]/60 bg-[#EFE6DC]/40 cursor-pointer">
+              <input type="checkbox" checked={markGoing} onChange={(e) => setMarkGoing(e.target.checked)}
+                className="mt-0.5 w-4 h-4 accent-[#8B735B] shrink-0" />
+              <span>
+                <span className="block text-xs font-bold text-[#8B735B]">{t.addGuestGoingToggle}</span>
+                <span className="block text-[11px] text-[#5D5449]">{t.addGuestGoingHint}</span>
+              </span>
+            </label>
+
+            {!markGoing && (
             <div className="bg-[#EFE6DC]/40 p-3.5 rounded-2xl border border-[#CBAE94]/60 space-y-2">
               <label className="label-mono block text-xs font-bold text-[#8B735B]">{t.fieldSendVia} *</label>
               <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
@@ -618,6 +643,7 @@ export const AdminGuestsTab: React.FC<AdminGuestsTabProps> = ({ language, t, gue
                 </p>
               )}
             </div>
+            )}
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
@@ -626,13 +652,13 @@ export const AdminGuestsTab: React.FC<AdminGuestsTabProps> = ({ language, t, gue
                 {errors.name && <p className="text-rose-600 text-[10px]">{errors.name.message}</p>}
               </div>
               <div>
-                <label className="label-mono block mb-1">{t.fieldEmail} {(deliveryChannel === 'email' || deliveryChannel === 'both') ? '*' : '(Optional)'}</label>
-                <TextInput type="email" required={deliveryChannel === 'email' || deliveryChannel === 'both'} placeholder={t.emailExamplePh} {...register('email')} />
+                <label className="label-mono block mb-1">{t.fieldEmail} {!markGoing && (deliveryChannel === 'email' || deliveryChannel === 'both') ? '*' : '(Optional)'}</label>
+                <TextInput type="email" required={!markGoing && (deliveryChannel === 'email' || deliveryChannel === 'both')} placeholder={t.emailExamplePh} {...register('email')} />
                 {errors.email && <p className="text-rose-600 text-[10px]">{errors.email.message}</p>}
               </div>
               <div>
-                <label className="label-mono block mb-1">{t.fieldPhone} {(deliveryChannel === 'text' || deliveryChannel === 'both') ? '*' : '(Optional)'}</label>
-                <TextInput type="tel" required={deliveryChannel === 'text' || deliveryChannel === 'both'} placeholder={t.fieldPhonePlaceholder} {...register('phone')} />
+                <label className="label-mono block mb-1">{t.fieldPhone} {!markGoing && (deliveryChannel === 'text' || deliveryChannel === 'both') ? '*' : '(Optional)'}</label>
+                <TextInput type="tel" required={!markGoing && (deliveryChannel === 'text' || deliveryChannel === 'both')} placeholder={t.fieldPhonePlaceholder} {...register('phone')} />
                 {errors.phone && <p className="text-rose-600 text-[10px]">{errors.phone.message}</p>}
               </div>
               <div>
@@ -652,7 +678,7 @@ export const AdminGuestsTab: React.FC<AdminGuestsTabProps> = ({ language, t, gue
             <motion.button whileTap={{ scale: 0.98 }} type="submit" disabled={submittingGuest}
               className="btn-accent w-full sm:w-auto py-3 px-6 text-sm disabled:opacity-50">
               <Send className="w-4 h-4 mr-2" />
-              <span>{submittingGuest ? t.sendingInviteBtn : t.sendInviteBtn}</span>
+              <span>{submittingGuest ? t.sendingInviteBtn : markGoing ? t.addAsGoingBtn : t.sendInviteBtn}</span>
             </motion.button>
           </form>
         </motion.div>
