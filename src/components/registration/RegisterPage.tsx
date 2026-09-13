@@ -169,7 +169,7 @@ export const RegisterPage = () => {
               <div>
                 <label className="label-mono block mb-1">{t.fieldName} *</label>
                 <TextInput type="text" placeholder={t.nameExamplePh} {...register('name')} />
-                {errors.name && <p className="text-rose-600 text-[10px]">{t.registerNameRequiredToast}</p>}
+                {errors.name && <p className="text-rose-600 text-xs">{t.registerNameRequiredToast}</p>}
               </div>
               <div>
                 <label className="label-mono block mb-1">{t.fieldLanguage}</label>

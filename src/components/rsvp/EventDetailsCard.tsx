@@ -10,7 +10,7 @@ import { EmptyState } from '../shared/EmptyState';
 import { useAppStore } from '../../stores/appStore';
 import { useT } from '../shared/i18n';
 import { cardStagger, cardItem, fadeUp } from '../shared/motionPresets';
-import { parseToYmd } from '../../lib/dateUtils';
+import { parseToYmd, parseTimeRange, formatTimeRangeString } from '../../lib/dateUtils';
 import {
   WatercolorBow,
   FloatingTeddyBalloons,
@@ -88,8 +88,11 @@ export const EventDetailsCard = ({
   const parents = (settings.parentsNames || settings.babyName || '').trim();
   const parentsSplit = splitParents(parents);
   const dateParts = deriveDateParts(settings.date, language);
-  // Only the start of a range (e.g. "2:00 PM – 6:00 PM" → "2:00 PM").
-  const startTimeOnly = settings.time ? settings.time.split(/[-–—]/)[0].trim() : '';
+  // Only the start of a range, re-formatted for the active locale (EN 12h, FR 24h).
+  const timeRange = settings.time ? parseTimeRange(settings.time) : null;
+  const startTimeOnly = timeRange
+    ? formatTimeRangeString(timeRange.startTime, timeRange.endTime, language).split(/[-–—]/)[0].trim()
+    : '';
 
   // One orchestrated entrance: sections stagger in on first view (also fires
   // when the RSVP carousel's event tab slides into view). Reduced motion
@@ -183,7 +186,7 @@ export const EventDetailsCard = ({
               <div className="snap-center shrink-0 w-full flex flex-col items-center">
                 {status ? (
                   <span
-                    className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-white/85 border border-[#CBAE94] shadow-sm text-[11px] font-mono font-bold uppercase tracking-widest"
+                    className="inline-flex items-center gap-1.5 px-3.5 py-1.5 rounded-full bg-white/85 border border-[#CBAE94] shadow-sm text-xs font-mono font-bold uppercase tracking-widest"
                     style={ink}
                   >
                     <span
@@ -373,7 +376,7 @@ export const EventDetailsCard = ({
                             <div className="pt-1 min-w-0 flex-1">
                               <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
                                 {showTime && item.time ? (
-                                  <span className="px-2 py-0.5 rounded-md bg-[#EFE6DC] border border-[#CBAE94]/40 text-[#8B735B] font-mono font-bold text-[11px]">
+                                  <span className="px-2 py-0.5 rounded-md bg-[#EFE6DC] border border-[#CBAE94]/40 text-[#8B735B] font-mono font-bold text-xs">
                                     {item.time}
                                   </span>
                                 ) : null}
