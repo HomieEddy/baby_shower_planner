@@ -6,11 +6,8 @@ import {
   Clock,
   XCircle,
   Check,
-  Eye,
 } from 'lucide-react';
 import { Guest } from '../../types';
-import { channelLabel } from '../../lib/capabilities';
-import { getGuestPartySize } from '../../lib/tableAssignment';
 import { useT, useTf } from '../shared/i18n';
 
 interface GuestRowCardProps {
@@ -20,6 +17,9 @@ interface GuestRowCardProps {
   onView: (guest: Guest) => void;
 }
 
+// Whole card opens the details modal; the selection checkbox is the only
+// nested control and stops propagation. div role="button" because a <button>
+// cannot legally contain another interactive element.
 export const GuestRowCard = ({
   guest,
   selected,
@@ -29,23 +29,31 @@ export const GuestRowCard = ({
   const t = useT();
   const tf = useTf();
   const initials = guest.name.split(' ').map((w) => w[0]).filter(Boolean).slice(0, 2).join('').toUpperCase();
-  const channelLabelValue = channelLabel(t, guest.delivery_channel || 'none');
-  const partySize = getGuestPartySize(guest);
-  const maxSize = Math.max(guest.max_party_size || 1, partySize);
+  const contactLine = [guest.email, guest.phone].filter(Boolean).join(' · ');
 
   return (
     <motion.div
       initial={{ opacity: 0, y: 10 }}
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, x: -10 }}
-      className="bg-white border border-[#CBAE94]/50 rounded-2xl p-4 space-y-3 shadow-xs"
+      onClick={() => onView(guest)}
+      onKeyDown={(e) => {
+        if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onView(guest); }
+      }}
+      role="button"
+      tabIndex={0}
+      aria-label={t.viewBtn}
+      className="bg-white border border-[#CBAE94]/50 rounded-2xl p-4 shadow-xs cursor-pointer hover:border-[#CBAE94] hover:bg-[#EFE6DC]/30 focus:outline-none focus:ring-2 focus:ring-[#8B735B] transition-colors"
     >
-      {/* Header: initials, name, status */}
       <div className="flex items-start justify-between gap-3">
         <div className="flex items-center gap-3 min-w-0">
-          <button type="button" onClick={() => onToggleSelect(guest.id)}
+          <button
+            type="button"
+            onClick={(e) => { e.stopPropagation(); onToggleSelect(guest.id); }}
+            onKeyDown={(e) => e.stopPropagation()}
             className={`shrink-0 rounded-lg border-2 p-1 transition-colors cursor-pointer ${selected ? 'bg-[#8B735B] border-[#8B735B] text-white' : 'border-[#CBAE94] text-transparent hover:border-[#8B735B] hover:text-[#8B735B]'}`}
-            title={selected ? t.deselectAllBtn : t.selectAllBtn}>
+            title={selected ? t.deselectAllBtn : t.selectAllBtn}
+            aria-label={selected ? t.deselectAllBtn : t.selectAllBtn}>
             <Check className="w-3.5 h-3.5" />
           </button>
           <div className="w-10 h-10 rounded-full bg-[#EFE6DC] border border-[#CBAE94] flex items-center justify-center shrink-0">
@@ -54,20 +62,6 @@ export const GuestRowCard = ({
           <div className="min-w-0">
             <div className="flex items-center gap-2 flex-wrap">
               <h4 className="font-bold text-[#5D5449] text-sm truncate">{guest.name}</h4>
-              {guest.delivery_channel ? (
-                <span className="px-2 py-0.5 rounded-md bg-[#EFE6DC] border border-[#CBAE94] text-xs font-mono font-bold text-[#8B735B]">
-                  {channelLabelValue}
-                </span>
-              ) : null}
-              {guest.invited_by_guest_name ? (
-                <span className="px-2 py-0.5 rounded-md bg-amber-50 border border-amber-300 text-xs font-mono font-bold text-amber-800" title={guest.guest_note || ''}>
-                  {tf('invitedByBadge', { name: guest.invited_by_guest_name })}
-                </span>
-              ) : (
-                <span className="px-2 py-0.5 rounded-md bg-[#F8F5F0] border border-[#CBAE94]/50 text-xs font-mono font-bold text-[#5D5449]/60">
-                  {t.invitedByHostBadge}
-                </span>
-              )}
               {guest.approval_status === 'pending' && (
                 <span className="px-2 py-0.5 rounded-md bg-amber-50 border border-amber-300 text-xs font-mono font-bold text-amber-800">
                   {t.approvalPendingBadge}
@@ -75,8 +69,15 @@ export const GuestRowCard = ({
               )}
             </div>
             <div className="text-xs text-[#5D5449]/70 font-mono truncate mt-0.5 flex items-center gap-2 flex-wrap">
-              {guest.email ? <span className="inline-flex items-center gap-1"><Mail className="w-3 h-3 shrink-0" />{guest.email}</span> : null}
-              {guest.phone ? <span className="inline-flex items-center gap-1"><Smartphone className="w-3 h-3 shrink-0" />{guest.phone}</span> : null}
+              {contactLine ? <span className="inline-flex items-center gap-1">
+                {guest.email ? <Mail className="w-3 h-3 shrink-0" /> : <Smartphone className="w-3 h-3 shrink-0" />}
+                {contactLine}
+              </span> : null}
+              {guest.invited_by_guest_name ? (
+                <span className="inline-flex items-center gap-1 text-amber-800">
+                  {tf('invitedByBadge', { name: guest.invited_by_guest_name })}
+                </span>
+              ) : null}
             </div>
           </div>
         </div>
@@ -95,28 +96,6 @@ export const GuestRowCard = ({
             <XCircle className="w-3 h-3 text-rose-500 shrink-0" /><span>{t.statusDeclinedWord}</span>
           </span>
         )}
-      </div>
-
-      {/* Details: code, party size, dietary + View */}
-      <div className="flex flex-wrap items-center justify-between gap-2">
-        <div className="flex flex-wrap items-center gap-1.5">
-          <span className="px-2.5 py-1 rounded-lg bg-[#EFE6DC] border border-[#CBAE94] text-xs font-bold font-mono text-[#8B735B]">{guest.code}</span>
-          <span className="px-2.5 py-1 rounded-lg bg-white border border-[#CBAE94] text-xs font-bold text-[#5D5449]">
-            {guest.rsvp_status === 'Attending'
-              ? `${partySize} / ${maxSize}`
-              : tf('guestPartySizeLabel', { count: String(partySize), max: String(maxSize) })}
-          </span>
-          {guest.dietary_restrictions ? (
-            <span className="px-2.5 py-1 rounded-full bg-[#EFE6DC] text-xs font-medium text-[#8B735B] border border-[#CBAE94] max-w-full truncate">
-              {guest.dietary_restrictions}
-            </span>
-          ) : null}
-        </div>
-        <button onClick={() => onView(guest)}
-          className="px-4 py-1.5 bg-[#EFE6DC] hover:bg-[#CBAE94] hover:text-white text-[#8B735B] rounded-xl text-xs font-bold font-mono transition-colors inline-flex items-center justify-center gap-1.5 border border-[#CBAE94] cursor-pointer shrink-0"
-          title={t.viewBtn}>
-          <Eye className="w-3.5 h-3.5 shrink-0" /><span>{t.viewBtn}</span>
-        </button>
       </div>
     </motion.div>
   );

@@ -1,13 +1,13 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
-import { useNavigate, useSearchParams } from 'react-router-dom';
+import { useSearchParams } from 'react-router-dom';
 import { motion, AnimatePresence } from 'motion/react';
 import { adminContainerVariants, adminCardVariants } from '../shared/motionPresets';
 import { GuestRowCard } from './GuestRowCard';
-import { GuestMetricCard, GuestMetricToggle, GuestFiltersBar, BulkActionsBar } from './GuestListParts';
-import { GuestListModal, GuestDetailsModal } from './GuestListModals';
+import { GuestMetricCard, GuestMetricToggle, GuestToolbar, GuestTableView, BulkActionsBar } from './GuestListParts';
+import { GuestDetailsModal } from './GuestListModals';
 import {
   Users,
   CheckCircle2,
@@ -15,8 +15,6 @@ import {
   XCircle,
   UserPlus,
   Send,
-  Copy,
-  Check,
   Upload,
   FileSpreadsheet,
   Mail,
@@ -78,7 +76,6 @@ function parseCsvLine(line: string): string[] {
 }
 
 export const AdminGuestsTab: React.FC<AdminGuestsTabProps> = ({ language, t, guests, onRefresh }) => {
-  const navigate = useNavigate();
   const [searchParams, setSearchParams] = useSearchParams();
   const { toast } = useToast();
   const tf = useTf();
@@ -133,6 +130,15 @@ export const AdminGuestsTab: React.FC<AdminGuestsTabProps> = ({ language, t, gue
     localStorage.setItem('guestMetricMode', m);
   };
 
+  // List rendering mode: roomy cards or a dense table for long guest lists.
+  const [listView, setListView] = useState<'cards' | 'table'>(() =>
+    localStorage.getItem('guestListView') === 'table' ? 'table' : 'cards'
+  );
+  const switchListView = (m: 'cards' | 'table') => {
+    setListView(m);
+    localStorage.setItem('guestListView', m);
+  };
+
   // Guest details/edit are URL-routed: ?guest=<id> opens details, &edit=1 opens
   // the edit modal on top. Closing edit returns to details; browser Back works.
   const guestParam = searchParams.get('guest');
@@ -146,18 +152,13 @@ export const AdminGuestsTab: React.FC<AdminGuestsTabProps> = ({ language, t, gue
   // Additional members (primary guest excluded) while editing a party.
   const [editExtraNames, setEditExtraNames] = useState<string[]>([]);
 
-  const [metricModal, setMetricModal] = useState<'Attending' | 'Pending' | 'Declined' | 'Awaiting' | 'Total' | null>(null);
-  const [metricListView, setMetricListView] = useState<'invites' | 'party'>('invites');
+  const [viewingMessage, setViewingMessage] = useState('');  const [loadingMessage, setLoadingMessage] = useState(false);
 
-  const [viewingMessage, setViewingMessage] = useState('');
-  const [loadingMessage, setLoadingMessage] = useState(false);
-
-  const [invitedGuestModal, setInvitedGuestModal] = useState<{
-    name: string;
-    email: string;
-    token: string;
-    message: string;
-  } | null>(null);
+  // Metric cards drive the list filters: Attending/Pending/Declined/Total set
+  // the status filter and scroll to the list; Awaiting scrolls to the queue.
+  const listRef = useRef<HTMLDivElement>(null);
+  const approvalRef = useRef<HTMLDivElement>(null);
+  const scrollToList = () => listRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
 
   const [sourceFilter, setSourceFilter] = useState<'All' | 'Host' | 'Guest-invited'>('All');
 
@@ -511,16 +512,13 @@ export const AdminGuestsTab: React.FC<AdminGuestsTabProps> = ({ language, t, gue
           toast.error(apiError(data.error, t.invitesErrorToast));
         }
       } else if (data.guest && data.magic_token) {
-        const contactInfo = [data.guest.email, data.guest.phone].filter(Boolean).join(' | ');
-        setInvitedGuestModal({
-          name: data.guest.name,
-          email: contactInfo || data.guest.email || data.guest.phone || '',
-          token: data.magic_token,
-          message: data.invite_message || '',
-        });
         setValue('name', '');
         setValue('email', '');
         setValue('phone', '');
+        // Open the guest's details modal: copy link, copy message, and the
+        // RSVP preview live there — no separate "invite sent" modal.
+        setSearchParams((prev) => { const p = new URLSearchParams(prev); p.set('guest', data.guest.id); p.delete('edit'); return p; });
+        toast.love(tf('invitesSentMsg', { count: 1 }));
         await onRefresh();
       } else if (data.error) {
         toast.error(apiError(data.error, t.invitesErrorToast));
@@ -612,28 +610,6 @@ export const AdminGuestsTab: React.FC<AdminGuestsTabProps> = ({ language, t, gue
     }
   };
 
-  const metricModalList: Guest[] = (() => {
-    switch (metricModal) {
-      case 'Attending': return attendingGuests;
-      case 'Pending': return pendingGuests;
-      case 'Declined': return declinedGuests;
-      case 'Awaiting': return pendingApprovals;
-      case 'Total': return guests;
-      default: return [];
-    }
-  })();
-
-  const metricModalTitle = (() => {
-    switch (metricModal) {
-      case 'Attending': return t.statAttending;
-      case 'Pending': return t.statPending;
-      case 'Declined': return t.statDeclined;
-      case 'Awaiting': return t.statAwaitingApproval;
-      case 'Total': return t.statTotalGuests;
-      default: return '';
-    }
-  })();
-
   return (
     <motion.div
       key="guests"
@@ -649,19 +625,19 @@ export const AdminGuestsTab: React.FC<AdminGuestsTabProps> = ({ language, t, gue
       <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
         <GuestMetricCard label={t.statAttending} icon={<CheckCircle2 className="w-5 h-5" />}
           value={metricMode === 'party' ? totalAttendingPartySize : attendingGuests.length}
-          footer={t.statTotalAttendingParty} onClick={() => setMetricModal('Attending')} />
+          footer={t.statTotalAttendingParty} onClick={() => { setStatusFilter('Attending'); scrollToList(); }} />
         <GuestMetricCard label={t.statPending} icon={<Clock className="w-5 h-5" />}
           value={metricMode === 'party' ? pendingPartySize : pendingGuests.length}
-          footer={t.awaitingResponse} iconClass="text-[#5D5449]" onClick={() => setMetricModal('Pending')} />
+          footer={t.awaitingResponse} iconClass="text-[#5D5449]" onClick={() => { setStatusFilter('Pending'); scrollToList(); }} />
         <GuestMetricCard label={t.statDeclined} icon={<XCircle className="w-5 h-5 text-rose-500" />}
           value={metricMode === 'party' ? declinedPartySize : declinedGuests.length}
-          footer={t.unableToAttend} iconClass="text-rose-600" onClick={() => setMetricModal('Declined')} />
+          footer={t.unableToAttend} iconClass="text-rose-600" onClick={() => { setStatusFilter('Declined'); scrollToList(); }} />
         <GuestMetricCard label={t.statAwaitingApproval} icon={<Clock className="w-5 h-5 text-amber-600" />}
           value={pendingApprovals.length}
-          footer={t.approvalPendingBadge} iconClass="text-amber-700" onClick={() => setMetricModal('Awaiting')} />
+          footer={t.approvalPendingBadge} iconClass="text-amber-700" onClick={() => approvalRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })} />
         <GuestMetricCard label={t.statTotalGuests} icon={<Users className="w-5 h-5" />}
           value={metricMode === 'party' ? totalPartySize : guests.length}
-          footer={t.totalGuestInvites} onClick={() => setMetricModal('Total')} />
+          footer={t.totalGuestInvites} onClick={() => { setStatusFilter('All'); scrollToList(); }} />
       </div>
 
       {/* Add Guest Form */}
@@ -750,7 +726,7 @@ export const AdminGuestsTab: React.FC<AdminGuestsTabProps> = ({ language, t, gue
 
       {/* Pending self-registrations awaiting host approval */}
       {pendingApprovals.length > 0 && (
-        <motion.div variants={adminCardVariants} className="card-paper p-6 sm:p-8 space-y-4">
+        <motion.div ref={approvalRef} variants={adminCardVariants} className="card-paper p-6 sm:p-8 space-y-4">
           <div className="flex items-center gap-3">
             <div className="p-2.5 bg-amber-50 text-amber-700 rounded-2xl border border-amber-300">
               <Clock className="w-5 h-5" />
@@ -799,30 +775,33 @@ export const AdminGuestsTab: React.FC<AdminGuestsTabProps> = ({ language, t, gue
       )}
 
       {/* Invited Guests Table Section */}
-      <motion.div variants={adminCardVariants} className="card-paper p-6 sm:p-8 space-y-6">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+      <motion.div ref={listRef} variants={adminCardVariants} className="card-paper p-6 sm:p-8 space-y-6">
+        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
           <div className="shrink-0">
             <h3 className="font-sans text-xl font-bold text-[#8B735B] whitespace-nowrap">{t.guestListTitle}</h3>
           </div>
 
-          <GuestFiltersBar
+          <GuestToolbar
+            className="lg:flex-1 lg:min-w-0"
             searchTerm={searchTerm}
             onSearchChange={setSearchTerm}
             statusFilter={statusFilter}
             onStatusFilter={setStatusFilter}
             sourceFilter={sourceFilter}
             onSourceFilter={setSourceFilter}
+            viewMode={listView}
+            onViewMode={switchListView}
             onExportCsv={handleExportCsv}
             onOpenImport={() => setShowCsvImportModal(true)}
             onSendReminders={handleSendReminders}
-            allSelected={selectedIds.length === filteredGuests.length && filteredGuests.length > 0}
-            onToggleSelectAll={toggleSelectAll}
           />
         </div>
 
         {selectedIds.length > 0 && (
           <BulkActionsBar
             count={selectedIds.length}
+            allSelected={selectedIds.length === filteredGuests.length && filteredGuests.length > 0}
+            onToggleSelectAll={toggleSelectAll}
             onResend={handleBulkResend}
             onExport={handleBulkExport}
             onDelete={handleBulkDelete}
@@ -830,6 +809,11 @@ export const AdminGuestsTab: React.FC<AdminGuestsTabProps> = ({ language, t, gue
           />
         )}
 
+        {listView === 'table' && filteredGuests.length > 0 && (
+          <GuestTableView guests={filteredGuests} onView={handleOpenViewGuest} />
+        )}
+
+        {listView === 'cards' && (
         <div className="grid grid-cols-1 gap-3">
           <AnimatePresence>
             {filteredGuests.map((guest) => (
@@ -852,12 +836,13 @@ export const AdminGuestsTab: React.FC<AdminGuestsTabProps> = ({ language, t, gue
                 actionLabel={guests.length === 0 ? t.addFirstGuestBtn : t.clearFilterBtn}
                 onAction={guests.length === 0
                   ? () => setFocus('name')
-                  : () => { setSearchTerm(''); setStatusFilter('All'); toast.info(t.filterResetToast); }
+                  : () => { setSearchTerm(''); setStatusFilter('All'); setSourceFilter('All'); toast.info(t.filterResetToast); }
                 }
               />
             </div>
           )}
         </div>
+        )}
       </motion.div>
 
       {/* Modal: Batch CSV Guest Import */}
@@ -889,43 +874,6 @@ export const AdminGuestsTab: React.FC<AdminGuestsTabProps> = ({ language, t, gue
             </div>
           </div>
         </form>
-      </Modal>
-
-      {/* Modal: Invite Sent Confirmation */}
-      <Modal open={!!invitedGuestModal} onClose={() => setInvitedGuestModal(null)} maxWidth="md">
-        <div className="space-y-4">
-          <div className="w-12 h-12 bg-[#EFE6DC] text-[#8B735B] rounded-full flex items-center justify-center mx-auto border-2 border-[#CBAE94]">
-            <CheckCircle2 className="w-6 h-6" />
-          </div>
-          <div className="text-center space-y-1">
-            <h3 className="font-sans text-2xl font-bold text-[#8B735B]">{t.inviteSentModalTitle}</h3>
-            <p className="text-xs text-[#5D5449]">{t.inviteLinkForLabel} <strong className="text-[#8B735B]">{invitedGuestModal?.name}</strong> ({invitedGuestModal?.email})</p>
-          </div>
-          <div className="bg-white p-3.5 rounded-2xl border-2 border-[#CBAE94] font-mono text-xs text-[#5D5449] break-all select-all">
-            {window.location.origin}/rsvp/{invitedGuestModal?.token}
-          </div>
-          {invitedGuestModal?.message && (
-            <div className="bg-[#EFE6DC]/50 p-3 rounded-xl border border-[#CBAE94] whitespace-pre-wrap text-left text-xs text-[#5D5449] font-mono max-h-40 overflow-y-auto">
-              {invitedGuestModal.message}
-            </div>
-          )}
-          <p className="text-xs text-[#8B735B] bg-[#EFE6DC] p-3 rounded-xl border border-[#CBAE94] font-mono"><Lightbulb className="w-3.5 h-3.5 inline" /> {t.sendEmailLogNotice}</p>
-          <div className="flex space-x-3">
-            <button onClick={() => invitedGuestModal && handleCopyMagicLink(invitedGuestModal.token)} className="btn-accent flex-1 py-3 text-xs">{t.copyLink}</button>
-            {invitedGuestModal?.message && (
-              <button onClick={() => {
-                if (!invitedGuestModal) return;
-                copyMagicLink(invitedGuestModal.message, 'msg');
-                toast.love(t.messageCopiedToast);
-              }} className="btn-outline-accent flex-1 py-3 text-xs inline-flex items-center justify-center">
-                {copiedToken === 'msg' ? <Check className="w-3.5 h-3.5 mr-1.5 text-emerald-600" /> : <Copy className="w-3.5 h-3.5 mr-1.5" />}
-                <span>{t.copyMessageBtn}</span>
-              </button>
-            )}
-            <button onClick={() => { if (invitedGuestModal) { const m = invitedGuestModal; setInvitedGuestModal(null); navigate(`/rsvp/${m.token}`); } }} className="btn-outline-accent flex-1 py-3 text-xs">{t.previewInviteBtn}</button>
-          </div>
-          <button onClick={() => setInvitedGuestModal(null)} className="w-full py-2 text-[#5D5449]/70 hover:text-[#5D5449] text-xs font-mono font-bold text-center">{t.closeModal}</button>
-        </div>
       </Modal>
 
       {/* Modal: Name the party members */}
@@ -1056,16 +1004,6 @@ export const AdminGuestsTab: React.FC<AdminGuestsTabProps> = ({ language, t, gue
                 </div>
               </form>
       </Modal>
-
-      {/* Modal: Metric Card Guest List */}
-      <GuestListModal
-        open={!!metricModal}
-        title={metricModalTitle}
-        guests={metricModalList}
-        listView={metricListView}
-        onListViewChange={setMetricListView}
-        onClose={() => setMetricModal(null)}
-      />
 
       {/* Modal: Invitation Details */}
       <GuestDetailsModal
