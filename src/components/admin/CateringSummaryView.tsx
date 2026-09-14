@@ -1,10 +1,16 @@
 import React, { useEffect, useMemo, useState } from 'react';
+import { motion } from 'motion/react';
 import { Guest, FloorMapData } from '../../types';
 import { Utensils, Printer, AlertTriangle, CheckCircle2, Users, FileSpreadsheet, ArrowUpDown, ChevronUp, ChevronDown, BarChart3 } from 'lucide-react';
 import { useToast } from '../shared/ToastContext';
 import { useT, useTf } from '../shared/i18n';
 import { usePrint } from '../shared/hooks';
 import { SearchInput } from '../shared/ui';
+import { MetricCard } from '../shared/MetricCard';
+import { Segmented } from '../shared/Segmented';
+import { ActionsMenu } from '../shared/ActionsMenu';
+import { AdminToolbar } from './AdminToolbar';
+import { adminContainerVariants } from '../shared/motionPresets';
 import { getAttendeeLocations } from '../../lib/tableAssignment';
 import { getPartyMembers } from '../../lib/guestAttendees';
 import {
@@ -274,83 +280,49 @@ export const CateringSummaryView: React.FC<CateringSummaryViewProps> = ({ guests
 
   const printManifest = usePrint();
 
+  const standardMeals = totalHeadcount - guestsWithDietary.reduce((acc, g) => acc + partySize(g), 0);
+
   return (
-    <div className="space-y-6">
+    <motion.div variants={adminContainerVariants} initial="hidden" animate="show" className="space-y-6">
       {/* Header Banner */}
       <div className="card-paper p-6 sm:p-8 bg-gradient-to-br from-[#FFFDF9] to-[#FAF6F0] border border-[#CBAE94]/60 shadow-xs relative overflow-hidden">
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
-          <div className="space-y-2">
-            <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#EFE6DC] text-[#8B735B] font-bold text-xs uppercase tracking-wider font-mono">
-              <Utensils className="w-3.5 h-3.5" />
-              <span>{t.cateringTitle}</span>
-            </div>
-            <h2 className="font-newsreader text-3xl font-bold text-[#4A3F35]">
-              {t.cateringSummaryHeading}
-            </h2>
-            <p className="text-xs text-[#8B735B] font-sans max-w-xl">
-              {t.cateringSummaryDesc}
-            </p>
+        <div className="space-y-2">
+          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#EFE6DC] text-[#8B735B] font-bold text-xs uppercase tracking-wider font-mono">
+            <Utensils className="w-3.5 h-3.5" />
+            <span>{t.cateringTitle}</span>
           </div>
-
-          <div className="flex items-center gap-2">
-            <button
-              type="button"
-              onClick={handleExportCsv}
-              className="px-4 py-2.5 rounded-xl bg-white border border-[#CBAE94] text-[#8B735B] font-bold text-xs hover:bg-[#EFE6DC] transition-all flex items-center gap-2 shadow-2xs cursor-pointer"
-            >
-              <FileSpreadsheet className="w-4 h-4 text-emerald-600" />
-              <span>{t.exportCateringBtn}</span>
-            </button>
-            <button
-              type="button"
-              onClick={() => printManifest(t.cateringPrintToast, 300)}
-              className="px-4 py-2.5 rounded-xl bg-[#8B735B] text-white font-bold text-xs hover:bg-[#705C47] transition-all flex items-center gap-2 shadow-2xs cursor-pointer"
-            >
-              <Printer className="w-4 h-4" />
-              <span>{t.printManifestBtn}</span>
-            </button>
-          </div>
+          <h2 className="font-newsreader text-3xl font-bold text-[#4A3F35]">
+            {t.cateringSummaryHeading}
+          </h2>
+          <p className="text-xs text-[#8B735B] font-sans max-w-xl">
+            {t.cateringSummaryDesc}
+          </p>
         </div>
       </div>
 
       {/* Metrics Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-        <div className="card-paper p-5 flex items-center gap-4 bg-[#FFFDF9] border border-[#CBAE94]/50">
-          <div className="w-12 h-12 rounded-2xl bg-amber-100 text-amber-800 flex items-center justify-center font-bold text-xl border border-amber-300">
-            <Users className="w-6 h-6" />
-          </div>
-          <div>
-            <p className="text-xs font-mono text-[#8B735B] uppercase font-bold">{t.totalAttendingLabel}</p>
-            <h4 className="text-2xl font-bold font-newsreader text-[#4A3F35]">
-              {attendingGuests.length}           <span className="text-xs font-normal text-[#8B735B]">({totalHeadcount} {t.mealsWord} total)</span>
-            </h4>
-          </div>
-        </div>
-
-        <div className="card-paper p-5 flex items-center gap-4 bg-[#FFFDF9] border border-[#CBAE94]/50">
-          <div className="w-12 h-12 rounded-2xl bg-rose-100 text-rose-800 flex items-center justify-center font-bold text-xl border border-rose-300">
-            <AlertTriangle className="w-6 h-6" />
-          </div>
-          <div>
-            <p className="text-xs font-mono text-rose-800 uppercase font-bold">{t.specialDietaryLabel}</p>
-            <h4 className="text-2xl font-bold font-newsreader text-[#4A3F35]">
-              {guestsWithDietary.length} <span className="text-xs font-normal text-[#8B735B]">{t.guestsWord2}</span>
-            </h4>
-          </div>
-        </div>
-
-        <div className="card-paper p-5 flex items-center gap-4 bg-[#FFFDF9] border border-[#CBAE94]/50">
-          <div className="w-12 h-12 rounded-2xl bg-emerald-100 text-emerald-800 flex items-center justify-center font-bold text-xl border border-emerald-300">
-            <CheckCircle2 className="w-6 h-6" />
-          </div>
-          <div>
-            <p className="text-xs font-mono text-emerald-800 uppercase font-bold">{t.standardMealsLabel}</p>
-            <h4 className="text-2xl font-bold font-newsreader text-[#4A3F35]">
-              {totalHeadcount - guestsWithDietary.reduce((acc, g) => acc + partySize(g), 0)}{' '}
-              <span className="text-xs font-normal text-[#8B735B]">{t.mealsWord}</span>
-            </h4>
-          </div>
-        </div>
+        <MetricCard
+          label={t.totalAttendingLabel}
+          value={attendingGuests.length}
+          icon={<Users className="w-5 h-5" />}
+          iconClass="text-amber-700"
+          footer={`${totalHeadcount} ${t.mealsWord}`}
+        />
+        <MetricCard
+          label={t.specialDietaryLabel}
+          value={guestsWithDietary.length}
+          icon={<AlertTriangle className="w-5 h-5" />}
+          iconClass="text-rose-600"
+          footer={t.guestsWord2}
+        />
+        <MetricCard
+          label={t.standardMealsLabel}
+          value={standardMeals}
+          icon={<CheckCircle2 className="w-5 h-5" />}
+          iconClass="text-emerald-600"
+          footer={t.mealsWord}
+        />
       </div>
 
       {/* Categorized Dietary Manifest */}
@@ -409,7 +381,7 @@ export const CateringSummaryView: React.FC<CateringSummaryViewProps> = ({ guests
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={dietaryChartData} layout="vertical" margin={{ top: 0, right: 24, bottom: 0, left: 8 }}>
                 <XAxis type="number" allowDecimals={false} tick={{ fontSize: 11, fill: 'var(--ink-soft)' }} stroke="var(--border)" />
-                <YAxis type="category" dataKey="category" width={150} tick={{ fontSize: 11, fill: 'var(--ink)' }} stroke="var(--border)" />
+                <YAxis type="category" dataKey="category" width={110} tick={{ fontSize: 11, fill: 'var(--ink)' }} stroke="var(--border)" />
                 <Tooltip cursor={{ fill: 'var(--bg-2)' }} contentStyle={{ fontSize: 12, borderRadius: 12, border: '1px solid var(--border)' }} />
                 <Bar dataKey="count" fill="var(--accent)" radius={[0, 8, 8, 0]} barSize={22} />
               </BarChart>
@@ -420,33 +392,43 @@ export const CateringSummaryView: React.FC<CateringSummaryViewProps> = ({ guests
 
       {/* Guest Dietary Table */}
       <div className="card-paper p-6 space-y-4">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-          <h3 className="font-sans text-lg font-bold text-[#4A3F35]">{tf('cateringManifestTitle', { count: String(filteredList.length) })}</h3>
+        <h3 className="font-sans text-lg font-bold text-[#4A3F35]">{tf('cateringManifestTitle', { count: String(filteredList.length) })}</h3>
 
-          <div className="flex items-center gap-2">
-            <SearchInput
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              placeholder={t.searchCateringPh}
-              className="w-48"
+        <AdminToolbar
+          primary={
+            <>
+              <div className="min-w-0 flex-1">
+                <SearchInput
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  placeholder={t.searchCateringPh}
+                  aria-label={t.searchCateringPh}
+                  className="w-full"
+                />
+              </div>
+              <ActionsMenu
+                label={t.actionsLabel}
+                items={[
+                  { label: t.exportCateringBtn, icon: <FileSpreadsheet className="w-3.5 h-3.5 shrink-0 text-emerald-600" />, onClick: handleExportCsv },
+                  { label: t.printManifestBtn, icon: <Printer className="w-3.5 h-3.5 shrink-0" />, onClick: () => printManifest(t.cateringPrintToast, 300) },
+                ]}
+              />
+            </>
+          }
+          secondary={
+            <Segmented
+              value={filterDietaryOnly ? 'dietary' : 'all'}
+              onChange={(v) => setFilterDietaryOnly(v === 'dietary')}
+              options={[
+                { value: 'all', label: t.filterAllOption },
+                { value: 'dietary', label: t.dietaryOnlyBtn },
+              ]}
             />
-
-            <button
-              type="button"
-              onClick={() => setFilterDietaryOnly(!filterDietaryOnly)}
-              className={`px-3 py-1.5 rounded-full text-xs font-bold border transition-all ${
-                filterDietaryOnly
-                  ? 'bg-amber-800 text-white border-amber-800'
-                  : 'bg-white text-[#8B735B] border-[#CBAE94] hover:bg-[#EFE6DC]'
-              }`}
-            >
-                {filterDietaryOnly ? t.showingDietaryOnlyBtn : t.dietaryOnlyBtn}
-            </button>
-          </div>
-        </div>
+          }
+        />
 
         <div className="overflow-x-auto">
-          <table className="w-full text-left text-xs font-sans">
+          <table className="w-full min-w-[640px] text-left text-xs font-sans">
             <thead>
               {table.getHeaderGroups().map((headerGroup) => (
                 <tr key={headerGroup.id} className="border-b border-[#CBAE94]/40 text-[#8B735B] font-mono text-xs uppercase">
@@ -505,6 +487,6 @@ export const CateringSummaryView: React.FC<CateringSummaryViewProps> = ({ guests
           </table>
         </div>
       </div>
-    </div>
+    </motion.div>
   );
 };
