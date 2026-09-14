@@ -478,7 +478,7 @@ export const AdminDashboard = () => {
 
             {/* Page links — the dashboard is the single admin nav, so standalone
                 admin and guest-facing pages are opened from here. */}
-            <div className="pt-3 mt-2 border-t border-[#CBAE94]/30">
+            <div className="pt-3 mt-2 border-t border-[#CBAE94]/30 space-y-1">
               <span className="label-mono block px-3 pb-1">{t.navGroupSeating}</span>
               <SidebarPageLink
                 to="/seating"
@@ -487,7 +487,7 @@ export const AdminDashboard = () => {
                 onNavigate={() => setSidebarOpen(false)}
               />
             </div>
-            <div className="pt-3 mt-2 border-t border-[#CBAE94]/30">
+            <div className="pt-3 mt-2 border-t border-[#CBAE94]/30 space-y-1">
               <span className="label-mono block px-3 pb-1">{t.navGroupGuestPages}</span>
               <SidebarPageLink
                 to="/photo-gallery"
