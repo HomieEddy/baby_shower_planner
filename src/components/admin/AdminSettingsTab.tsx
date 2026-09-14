@@ -19,6 +19,8 @@ import {
   DndContext,
   closestCenter,
   PointerSensor,
+  TouchSensor,
+  KeyboardSensor,
   useSensor,
   useSensors,
 } from '@dnd-kit/core';
@@ -28,6 +30,7 @@ import {
   useSortable,
   verticalListSortingStrategy,
   arrayMove,
+  sortableKeyboardCoordinates,
 } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import { EventSettings, ScheduleItem, Language, CustomTheme } from '../../types';
@@ -68,17 +71,17 @@ const SortableScheduleItem: React.FC<SortableScheduleItemProps> = ({ item, index
     <div
       ref={setNodeRef}
       style={{ transform: CSS.Transform.toString(transform), transition }}
-      {...attributes}
       className={`p-4 rounded-2xl bg-[#FFFDF9] border-2 border-[#CBAE94] shadow-xs space-y-3 relative group ${isDragging ? 'z-10 shadow-lg opacity-90' : ''}`}
     >
       <div className="flex items-center justify-between border-b border-[#CBAE94]/40 pb-2">
         <div className="flex items-center gap-1.5">
           <button
             type="button"
+            {...attributes}
             {...listeners}
             title={t.dragToReorderTitle}
             aria-label={tf('dragScheduleItemAria', { n: index + 1 })}
-            className="cursor-grab active:cursor-grabbing touch-none text-[#8B735B] hover:text-[#5D5449] hover:bg-[#EFE6DC] p-1 rounded-lg transition-colors"
+            className="inline-flex min-w-[44px] min-h-[44px] items-center justify-center cursor-grab active:cursor-grabbing touch-none text-[#8B735B] hover:text-[#5D5449] hover:bg-[#EFE6DC] rounded-lg transition-colors focus:outline-none focus-visible:ring-2 focus-visible:ring-[#8B735B]"
           >
             <GripVertical className="w-4 h-4" />
           </button>
@@ -156,7 +159,9 @@ export const AdminSettingsTab: React.FC<AdminSettingsTabProps> = ({ language, t,
   const [savingSettings, setSavingSettings] = useState(false);
 
   const sensors = useSensors(
-    useSensor(PointerSensor, { activationConstraint: { distance: 5 } })
+    useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
+    useSensor(TouchSensor, { activationConstraint: { delay: 150, tolerance: 6 } }),
+    useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates })
   );
 
   const handleDragEnd = (event: DragEndEvent) => {
@@ -269,7 +274,7 @@ export const AdminSettingsTab: React.FC<AdminSettingsTabProps> = ({ language, t,
 
             <div className="space-y-1">
               <label className="label-mono block mb-1">{t.eventTimeRangeLabel}</label>
-              <div className="grid grid-cols-2 gap-2 bg-[#EFE6DC]/30 p-2.5 rounded-2xl border-2 border-[#CBAE94]/60">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 bg-[#EFE6DC]/30 p-2.5 rounded-2xl border-2 border-[#CBAE94]/60">
                 <div>
                   <span className="text-xs uppercase font-mono font-bold text-[#8B735B] block mb-1">{t.startTimeLabel}</span>
                   <div className="relative">
@@ -409,7 +414,7 @@ export const AdminSettingsTab: React.FC<AdminSettingsTabProps> = ({ language, t,
                   setSelectedThemeId(v);
                   applyThemeToDocument(v === CUSTOM_THEME_ID ? getCustomTheme(customTheme, t.customThemeLabel) : getThemeById(v));
                 }}
-                  className="w-full px-4 py-3 rounded-2xl border-2 border-[#CBAE94] bg-white text-sm font-bold text-[#4A3F35] focus:outline-none focus:border-[#8B735B] shadow-xs cursor-pointer appearance-none pr-10">
+                  className="w-full min-w-0 truncate px-4 py-3 rounded-2xl border-2 border-[#CBAE94] bg-white text-sm font-bold text-[#4A3F35] focus:outline-none focus:border-[#8B735B] shadow-xs cursor-pointer appearance-none pr-10">
                   {THEME_PRESETS.map((preset) => (
                     <option key={preset.id} value={preset.id}>{preset.name} ({preset.category}) — Font: {preset.displayFontName}</option>
                   ))}
@@ -503,7 +508,7 @@ export const AdminSettingsTab: React.FC<AdminSettingsTabProps> = ({ language, t,
             })()}
           </div>
 
-          <div className="pt-2 flex justify-end">
+          <div className="sticky bottom-0 z-10 -mx-6 sm:-mx-8 px-6 sm:px-8 py-4 bg-[#FFFDF9]/95 backdrop-blur border-t border-[#CBAE94]/40 flex justify-end">
             <button type="submit" disabled={savingSettings} className="btn-accent w-full sm:w-auto px-8 py-3 text-xs flex items-center justify-center space-x-2">
               <Save className="w-4 h-4" /><span>{savingSettings ? t.savingSettingsBtn : t.saveAllSettingsBtn}</span>
             </button>
