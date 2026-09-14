@@ -368,10 +368,10 @@ export const CateringSummaryView: React.FC<CateringSummaryViewProps> = ({ guests
                 info.count > 0 ? 'bg-amber-50/60 border-amber-200' : 'bg-[#FAF6F0]/50 border-[#CBAE94]/30'
               }`}
             >
-              <div className="flex items-center justify-between mb-2">
-                <span className="text-xs font-bold font-mono text-[#4A3F35]">{dietaryCategoryLabel(cat)}</span>
+              <div className="flex items-center justify-between gap-2 mb-2">
+                <span className="text-xs font-bold font-mono text-[#4A3F35] min-w-0">{dietaryCategoryLabel(cat)}</span>
                 <span
-                  className={`px-2.5 py-0.5 rounded-full text-xs font-bold font-mono ${
+                  className={`shrink-0 whitespace-nowrap px-2.5 py-0.5 rounded-full text-xs font-bold font-mono ${
                     info.count > 0 ? 'bg-amber-200 text-amber-900' : 'bg-[#EFE6DC] text-[#8B735B]'
                   }`}
                 >

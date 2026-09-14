@@ -241,6 +241,7 @@ select option {
   align-items: center;
   justify-content: center;
   border: 1px solid var(--ink);
+  white-space: nowrap;
   transition: all 0.2s ease;
 }
 
@@ -261,6 +262,7 @@ select option {
   display: inline-flex;
   align-items: center;
   justify-content: center;
+  white-space: nowrap;
   transition: all 0.2s ease;
 }
 

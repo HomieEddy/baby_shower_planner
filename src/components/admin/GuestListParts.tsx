@@ -130,7 +130,7 @@ export const GuestFiltersBar = ({
           ['Declined', t.statusDeclinedWord],
         ] as const).map(([st, label]) => (
           <button key={st} onClick={() => onStatusFilter(st)}
-            className={`px-2.5 py-1 rounded-full transition-colors ${statusFilter === st ? 'bg-[#8B735B] text-white shadow-xs font-bold' : 'text-[#5D5449] hover:text-[#8B735B]'}`}>{label}</button>
+            className={`px-2.5 py-1 rounded-full transition-colors whitespace-nowrap ${statusFilter === st ? 'bg-[#8B735B] text-white shadow-xs font-bold' : 'text-[#5D5449] hover:text-[#8B735B]'}`}>{label}</button>
         ))}
       </div>
 
@@ -141,7 +141,7 @@ export const GuestFiltersBar = ({
           ['Guest-invited', t.sourceGuestOption],
         ] as const).map(([st, label]) => (
           <button key={st} onClick={() => onSourceFilter(st)}
-            className={`px-2.5 py-1 rounded-full transition-colors ${sourceFilter === st ? 'bg-[#D4A373] text-white shadow-xs font-bold' : 'text-[#5D5449] hover:text-[#8B735B]'}`}>{label}</button>
+            className={`px-2.5 py-1 rounded-full transition-colors whitespace-nowrap ${sourceFilter === st ? 'bg-[#D4A373] text-white shadow-xs font-bold' : 'text-[#5D5449] hover:text-[#8B735B]'}`}>{label}</button>
         ))}
       </div>
 

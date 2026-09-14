@@ -797,8 +797,8 @@ export const AdminGuestsTab: React.FC<AdminGuestsTabProps> = ({ language, t, gue
       {/* Invited Guests Table Section */}
       <motion.div variants={adminCardVariants} className="card-paper p-6 sm:p-8 space-y-6">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-          <div>
-            <h3 className="font-sans text-xl font-bold text-[#8B735B]">{t.guestListTitle}</h3>
+          <div className="shrink-0">
+            <h3 className="font-sans text-xl font-bold text-[#8B735B] whitespace-nowrap">{t.guestListTitle}</h3>
           </div>
 
           <GuestFiltersBar

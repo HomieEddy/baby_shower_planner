@@ -373,7 +373,7 @@ export const ThankYouTrackerView: React.FC<ThankYouTrackerViewProps> = ({
               <button
                 type="button"
                 onClick={() => setFilterStatus('ALL')}
-                className={`px-2.5 py-1 rounded-lg transition-all ${
+                className={`px-2.5 py-1 rounded-lg transition-all whitespace-nowrap ${
                   filterStatus === 'ALL' ? 'bg-white text-[#4A3F35] shadow-xs' : 'text-[#8B735B]'
                 }`}
               >
@@ -382,7 +382,7 @@ export const ThankYouTrackerView: React.FC<ThankYouTrackerViewProps> = ({
               <button
                 type="button"
                 onClick={() => setFilterStatus('PENDING')}
-                className={`px-2.5 py-1 rounded-lg transition-all ${
+                className={`px-2.5 py-1 rounded-lg transition-all whitespace-nowrap ${
                   filterStatus === 'PENDING' ? 'bg-white text-rose-800 shadow-xs' : 'text-[#8B735B]'
                 }`}
               >
@@ -391,7 +391,7 @@ export const ThankYouTrackerView: React.FC<ThankYouTrackerViewProps> = ({
               <button
                 type="button"
                 onClick={() => setFilterStatus('SENT')}
-                className={`px-2.5 py-1 rounded-lg transition-all ${
+                className={`px-2.5 py-1 rounded-lg transition-all whitespace-nowrap ${
                   filterStatus === 'SENT' ? 'bg-white text-emerald-800 shadow-xs' : 'text-[#8B735B]'
                 }`}
               >
