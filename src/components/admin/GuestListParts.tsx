@@ -79,7 +79,7 @@ export const GuestMetricToggle = ({
 };
 
 const selectPillClass =
-  'px-3 py-1.5 rounded-full border border-[#CBAE94] bg-white text-xs font-bold text-[#5D5449] focus:outline-none focus:ring-2 focus:ring-[#8B735B]';
+  'shrink-0 px-3 py-1.5 rounded-full border border-[#CBAE94] bg-white text-xs font-bold text-[#5D5449] focus:outline-none focus:ring-2 focus:ring-[#8B735B]';
 
 // ponytail: local overflow menu; extract to shared if a second consumer appears.
 const ActionsMenu = ({
@@ -190,14 +190,16 @@ export const GuestToolbar = ({
   onSendReminders: () => void;
 }) => {
   const t = useT();
+  // Single row at every width: search flexes, everything else stays fixed.
   return (
-    <div className="flex flex-wrap items-center gap-2">
-      <div className="flex-1 min-w-[9rem]">
+    <div className="flex items-center gap-2">
+      <div className="flex-1 min-w-0">
         <SearchInput
           value={searchTerm}
           onChange={(e) => onSearchChange(e.target.value)}
           placeholder={t.searchGuestsPh}
           aria-label={t.searchGuestsPh}
+          className="w-full"
         />
       </div>
 
