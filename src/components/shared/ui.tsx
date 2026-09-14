@@ -1,4 +1,4 @@
-import { ReactNode, ReactElement, InputHTMLAttributes, SelectHTMLAttributes, useId, cloneElement, isValidElement } from 'react';
+import { ReactNode, ReactElement, InputHTMLAttributes, SelectHTMLAttributes, TextareaHTMLAttributes, useId, cloneElement, isValidElement } from 'react';
 import { Search } from 'lucide-react';
 
 // Small, theme-consistent form primitives. Two visual variants:
@@ -56,6 +56,14 @@ interface SelectProps extends SelectHTMLAttributes<HTMLSelectElement> {
 
 export const Select = ({ variant = 'solid', className = '', ...props }: SelectProps) => (
   <select {...props} className={`${variantClass(variant)} ${className}`} />
+);
+
+interface TextAreaProps extends TextareaHTMLAttributes<HTMLTextAreaElement> {
+  variant?: Variant;
+}
+
+export const TextArea = ({ variant = 'solid', className = '', ...props }: TextAreaProps) => (
+  <textarea {...props} className={`${variantClass(variant)} ${className}`} />
 );
 
 // Search input with an embedded magnifier icon.

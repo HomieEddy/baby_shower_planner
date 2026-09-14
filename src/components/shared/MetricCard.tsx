@@ -6,7 +6,7 @@ interface MetricCardProps {
   label: string;
   value: ReactNode;
   icon: ReactNode;
-  footer: string;
+  footer?: string;
   iconClass?: string;
   onClick?: () => void;
 }
@@ -25,7 +25,9 @@ export const MetricCard = ({ label, value, icon, footer, iconClass = 'text-[#8B7
       <div className="mt-3">
         <span className="text-2xl sm:text-3xl font-sans font-bold text-[#8B735B]">{value}</span>
       </div>
-      <div className="mt-2 text-xs text-[#8B735B] font-mono font-bold break-words">{footer}</div>
+      {footer !== undefined && (
+        <div className="mt-2 text-xs text-[#8B735B] font-mono font-bold break-words">{footer}</div>
+      )}
     </>
   );
   return onClick ? (
