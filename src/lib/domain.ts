@@ -159,6 +159,8 @@ export const SettingsSchema = z.object({
   customTheme: CustomThemeSchema.optional(),
   contentOpenAt: z.string().optional(),
   contentCloseAt: z.string().optional(),
+  invitationTemplateFr: z.string().optional(),
+  invitationTemplateEn: z.string().optional(),
   hostEmail: z.string().optional(),
   hostPhone: z.string().optional(),
   reminderChannels: z.object({ email: z.boolean(), sms: z.boolean() }).optional(),
