@@ -422,7 +422,7 @@ export const AdminDashboard = () => {
         {/* Sidebar nav */}
         <aside
           className={`fixed inset-y-0 left-0 z-50 w-72 transform transition-transform duration-200 md:static md:z-auto md:translate-x-0 md:w-56 md:shrink-0 ${
-            sidebarOpen ? 'translate-x-0' : '-translate-x-full'
+            sidebarOpen ? 'translate-x-0 block' : '-translate-x-full hidden md:block'
           }`}
         >
           <div className="h-full md:h-auto bg-[#FFFDF9] border-r border-[#CBAE94]/40 md:border md:rounded-2xl md:shadow-xs p-3 space-y-1 overflow-y-auto">

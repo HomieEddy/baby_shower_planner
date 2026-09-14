@@ -6,6 +6,7 @@ import { renderTableBody, renderLandmark, SeatRing, TableLabel } from './venueSh
 import { MapPin, Users, Utensils, Info, DoorOpen, Sparkles, CheckCircle2, X } from 'lucide-react';
 import { Guest, FloorMapData } from '../../types';
 import { useT, useTf } from '../shared/i18n';
+import { useDialogA11y } from '../shared/useDialogA11y';
 import { ViewModeToggle, ViewMode } from '../shared/ViewModeToggle';
 import { getGuestPartySize, getTableOccupiedSeats, getAttendeeSeatLocation } from '../../lib/tableAssignment';
 import { getSeatLocalPosition } from './floorPlanHelpers';
@@ -28,16 +29,10 @@ export const VenueModal = ({ open, selected, floorMap, roster, onClose }: VenueM
   const [viewMode, setViewMode] = useState<ViewMode>('2d');
   const [mapWidth, setMapWidth] = useState(440);
   const mapWrapRef = useRef<HTMLDivElement>(null);
+  const panelRef = useRef<HTMLDivElement>(null);
 
-  // Escape closes the full-screen venue modal
-  useEffect(() => {
-    if (!open) return;
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') onClose();
-    };
-    window.addEventListener('keydown', onKey);
-    return () => window.removeEventListener('keydown', onKey);
-  }, [open, onClose]);
+  // Escape, focus trap, and scroll lock for the full-screen venue modal.
+  useDialogA11y(open, panelRef, onClose);
 
   // Full-width venue map: measure the card, cap at 900px (rAF so the lint rule
   // for sync setState-in-effect is not triggered). Re-measures when the venue
@@ -110,6 +105,10 @@ export const VenueModal = ({ open, selected, floorMap, roster, onClose }: VenueM
           onClick={onClose}
         >
           <motion.div
+            ref={panelRef}
+            role="dialog"
+            aria-modal="true"
+            aria-label={t.venueTitle}
             initial={{ opacity: 0, scale: 0.92, y: 24 }}
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.95, y: -12 }}
@@ -140,6 +139,7 @@ export const VenueModal = ({ open, selected, floorMap, roster, onClose }: VenueM
                 type="button"
                 onClick={onClose}
                 className="p-2 rounded-full hover:bg-[#EFE6DC] text-[#5D5449] transition-colors shrink-0"
+                aria-label={t.closeModal}
                 title={t.closeModal}
               >
                 <X className="w-5 h-5" />

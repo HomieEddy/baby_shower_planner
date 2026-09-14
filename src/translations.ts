@@ -580,6 +580,7 @@ export interface Translations {
   phoneLabel: string;
   phoneRequiredToast: string;
   photoCaptionLabel: string;
+  photoLightboxTitle: string;
   photoCompressedHint: string;
   photoQrTitle: string;
   photosLockedMsg: string;
@@ -1703,6 +1704,7 @@ export const translations: Record<Language, Translations> = {
     phoneLabel: "Phone",
     phoneRequiredToast: "Phone number is required for text invitations.",
     photoCaptionLabel: "Photo Caption / Sweet Message",
+    photoLightboxTitle: "Photo viewer",
     photoCompressedHint: "Large camera photos are automatically scaled & compressed for instant loading in the host gallery.",
     photoQrTitle: "Table Photo Sharing QR",
     photosLockedMsg: "Please check back during the celebration to share your photos.",
@@ -2822,6 +2824,7 @@ export const translations: Record<Language, Translations> = {
     phoneLabel: "Téléphone",
     phoneRequiredToast: "Un numéro de téléphone est requis pour les invitations par SMS.",
     photoCaptionLabel: "Légende photo / Message doux",
+    photoLightboxTitle: "Visionneuse photo",
     photoCompressedHint: "Les photos volumineuses sont automatiquement redimensionnées pour un chargement instantané dans la galerie.",
     photoQrTitle: "QR de partage photo de table",
     photosLockedMsg: "Revenez pendant la célébration pour partager vos photos.",

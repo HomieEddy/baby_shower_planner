@@ -1,7 +1,8 @@
-import { ReactNode, useEffect, useRef } from 'react';
+import { ReactNode, useRef } from 'react';
 import { useT } from './i18n';
 import { motion, AnimatePresence } from 'motion/react';
 import { X } from 'lucide-react';
+import { useDialogA11y } from './useDialogA11y';
 
 interface ModalProps {
   open: boolean;
@@ -35,9 +36,6 @@ const WIDTHS: Record<NonNullable<ModalProps['maxWidth']>, string> = {
   '2xl': 'max-w-3xl',
 };
 
-const FOCUSABLE =
-  'a[href],button:not([disabled]),textarea:not([disabled]),input:not([disabled]),select:not([disabled]),[tabindex]:not([tabindex="-1"])';
-
 export const Modal = ({
   open,
   onClose,
@@ -55,52 +53,8 @@ export const Modal = ({
   const t = useT();
   const panelRef = useRef<HTMLDivElement>(null);
 
-  useEffect(() => {
-    if (!open || !dismissible) return;
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') onClose();
-    };
-    window.addEventListener('keydown', onKey);
-    return () => window.removeEventListener('keydown', onKey);
-  }, [open, dismissible, onClose]);
-
-  // Focus trap + scroll lock: one shared fix covering every modal in the app.
-  useEffect(() => {
-    if (!open) return;
-    const prevActive = document.activeElement as HTMLElement | null;
-    const prevOverflow = document.body.style.overflow;
-    document.body.style.overflow = 'hidden';
-
-    const panel = panelRef.current;
-    const initial = panel?.querySelector<HTMLElement>(FOCUSABLE) ?? panel;
-    initial?.focus();
-
-    const onKeyDown = (e: KeyboardEvent) => {
-      if (e.key !== 'Tab' || !panel) return;
-      const items = Array.from(panel.querySelectorAll<HTMLElement>(FOCUSABLE)).filter(
-        (el) => el.offsetParent !== null
-      );
-      if (items.length === 0) {
-        e.preventDefault();
-        return;
-      }
-      const first = items[0];
-      const last = items[items.length - 1];
-      if (e.shiftKey && document.activeElement === first) {
-        e.preventDefault();
-        last.focus();
-      } else if (!e.shiftKey && document.activeElement === last) {
-        e.preventDefault();
-        first.focus();
-      }
-    };
-    document.addEventListener('keydown', onKeyDown);
-    return () => {
-      document.removeEventListener('keydown', onKeyDown);
-      document.body.style.overflow = prevOverflow;
-      prevActive?.focus?.();
-    };
-  }, [open]);
+  // Focus trap + scroll lock + Escape: one shared behavior for every overlay.
+  useDialogA11y(open, panelRef, onClose, dismissible);
 
   return (
     <AnimatePresence>
