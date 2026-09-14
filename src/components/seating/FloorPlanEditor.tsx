@@ -48,6 +48,7 @@ import { SeatRing, renderRoomBoundary, renderLandmark } from './venueShapes';
 import { useFloorPlanEditor } from './floorplanHooks';
 import { ViewModeToggle, ViewMode } from '../shared/ViewModeToggle';
 import { useT, useTf } from '../shared/i18n';
+import { useConfirm } from '../shared/ConfirmDialog';
 import { Language } from '../../types';
 
 interface AttendeeKey {
@@ -103,6 +104,7 @@ export const FloorPlanEditor = ({
 }: FloorPlanEditorProps) => {
   const t = useT();
   const tf = useTf();
+  const confirmDiscard = useConfirm();
   const [viewMode, setViewMode] = useState<ViewMode>('2d');
   const {
     draftFloorMap,
@@ -269,7 +271,17 @@ export const FloorPlanEditor = ({
         <div className="flex items-center gap-2 shrink-0">
           <button
             type="button"
-            onClick={handleCancelEditor}
+                onClick={async () => {
+                  if (isDirty) {
+                    const ok = await confirmDiscard({
+                      title: t.unsavedChangesBadge,
+                      message: t.discardChangesMsg,
+                      confirmText: t.discardBtn,
+                    });
+                    if (!ok) return;
+                  }
+                  handleCancelEditor();
+                }}
             className="px-3 sm:px-4 py-2.5 rounded-xl border-2 border-[#CBAE94] bg-white text-[#5D5449] hover:bg-[#EFE6DC] font-bold text-xs flex items-center gap-1.5 transition-colors shadow-sm"
           >
             <X className="w-4 h-4 text-red-500" /> <span className="hidden sm:inline">{t.cancelBtn}</span>
@@ -315,7 +327,7 @@ export const FloorPlanEditor = ({
                     : 'text-[#8B735B] hover:bg-white/60'
                 }`}
               >
-                <Square className="w-3.5 h-3.5" /> Rectangle
+                <Square className="w-3.5 h-3.5" /> {t.shapeRectangle}
               </button>
               <button
                 type="button"
@@ -326,7 +338,7 @@ export const FloorPlanEditor = ({
                     : 'text-[#8B735B] hover:bg-white/60'
                 }`}
               >
-                <CircleIcon className="w-3.5 h-3.5" /> Circle
+                <CircleIcon className="w-3.5 h-3.5" /> {t.shapeCircle}
               </button>
               <button
                 type="button"
@@ -337,7 +349,7 @@ export const FloorPlanEditor = ({
                     : 'text-[#8B735B] hover:bg-white/60'
                 }`}
               >
-                <CircleIcon className="w-3.5 h-3.5" /> Ellipse
+                <CircleIcon className="w-3.5 h-3.5" /> {t.shapeEllipse}
               </button>
             </div>
 
@@ -348,16 +360,16 @@ export const FloorPlanEditor = ({
                   {t.roomPresetsLabel}
                 </label>
                 <div className="grid grid-cols-2 gap-1.5 text-xs font-bold">
-                  <button type="button" onClick={() => handleUpdateDiameter(650)} className={`px-2 py-1.5 rounded-xl border transition-all text-left flex items-center gap-1 ${Math.min(draftFloorMap.canvasWidth, draftFloorMap.canvasHeight) === 650 ? 'bg-[#8B735B] text-white border-[#8B735B]' : 'bg-white text-[#5D5449] border-[#CBAE94]/60 hover:bg-[#EFE6DC]'}`}>
+                  <button type="button" onClick={() => handleUpdateDiameter(650)} className={`min-h-[44px] px-3 py-2 rounded-xl border transition-all text-left flex items-center gap-1 ${Math.min(draftFloorMap.canvasWidth, draftFloorMap.canvasHeight) === 650 ? 'bg-[#8B735B] text-white border-[#8B735B]' : 'bg-white text-[#5D5449] border-[#CBAE94]/60 hover:bg-[#EFE6DC]'}`}>
                     <Home className="w-3 h-3" /> Small (Ø 650)
                   </button>
-                  <button type="button" onClick={() => handleUpdateDiameter(850)} className={`px-2 py-1.5 rounded-xl border transition-all text-left flex items-center gap-1 ${Math.min(draftFloorMap.canvasWidth, draftFloorMap.canvasHeight) === 850 ? 'bg-[#8B735B] text-white border-[#8B735B]' : 'bg-white text-[#5D5449] border-[#CBAE94]/60 hover:bg-[#EFE6DC]'}`}>
+                  <button type="button" onClick={() => handleUpdateDiameter(850)} className={`min-h-[44px] px-3 py-2 rounded-xl border transition-all text-left flex items-center gap-1 ${Math.min(draftFloorMap.canvasWidth, draftFloorMap.canvasHeight) === 850 ? 'bg-[#8B735B] text-white border-[#8B735B]' : 'bg-white text-[#5D5449] border-[#CBAE94]/60 hover:bg-[#EFE6DC]'}`}>
                     <Landmark className="w-3 h-3" /> Standard (Ø 850)
                   </button>
-                  <button type="button" onClick={() => handleUpdateDiameter(1100)} className={`px-2 py-1.5 rounded-xl border transition-all text-left flex items-center gap-1 ${Math.min(draftFloorMap.canvasWidth, draftFloorMap.canvasHeight) === 1100 ? 'bg-[#8B735B] text-white border-[#8B735B]' : 'bg-white text-[#5D5449] border-[#CBAE94]/60 hover:bg-[#EFE6DC]'}`}>
+                  <button type="button" onClick={() => handleUpdateDiameter(1100)} className={`min-h-[44px] px-3 py-2 rounded-xl border transition-all text-left flex items-center gap-1 ${Math.min(draftFloorMap.canvasWidth, draftFloorMap.canvasHeight) === 1100 ? 'bg-[#8B735B] text-white border-[#8B735B]' : 'bg-white text-[#5D5449] border-[#CBAE94]/60 hover:bg-[#EFE6DC]'}`}>
                     <Castle className="w-3 h-3" /> Large (Ø 1100)
                   </button>
-                  <button type="button" onClick={() => handleUpdateDiameter(1400)} className={`px-2 py-1.5 rounded-xl border transition-all text-left flex items-center gap-1 ${Math.min(draftFloorMap.canvasWidth, draftFloorMap.canvasHeight) === 1400 ? 'bg-[#8B735B] text-white border-[#8B735B]' : 'bg-white text-[#5D5449] border-[#CBAE94]/60 hover:bg-[#EFE6DC]'}`}>
+                  <button type="button" onClick={() => handleUpdateDiameter(1400)} className={`min-h-[44px] px-3 py-2 rounded-xl border transition-all text-left flex items-center gap-1 ${Math.min(draftFloorMap.canvasWidth, draftFloorMap.canvasHeight) === 1400 ? 'bg-[#8B735B] text-white border-[#8B735B]' : 'bg-white text-[#5D5449] border-[#CBAE94]/60 hover:bg-[#EFE6DC]'}`}>
                     <Tent className="w-3 h-3" /> Grand (Ø 1400)
                   </button>
                 </div>
@@ -371,7 +383,7 @@ export const FloorPlanEditor = ({
                   <button
                     type="button"
                     onClick={() => handleUpdateDraftRoomSize(750, 550)}
-                    className={`px-2 py-1.5 rounded-xl border transition-all text-left flex items-center gap-1 ${
+                    className={`min-h-[44px] px-3 py-2 rounded-xl border transition-all text-left flex items-center gap-1 ${
                       draftFloorMap.canvasWidth === 750 && draftFloorMap.canvasHeight === 550
                         ? 'bg-[#8B735B] text-white border-[#8B735B]'
                         : 'bg-white text-[#5D5449] border-[#CBAE94]/60 hover:bg-[#EFE6DC]'
@@ -382,7 +394,7 @@ export const FloorPlanEditor = ({
                   <button
                     type="button"
                     onClick={() => handleUpdateDraftRoomSize(900, 650)}
-                    className={`px-2 py-1.5 rounded-xl border transition-all text-left flex items-center gap-1 ${
+                    className={`min-h-[44px] px-3 py-2 rounded-xl border transition-all text-left flex items-center gap-1 ${
                       draftFloorMap.canvasWidth === 900 && draftFloorMap.canvasHeight === 650
                         ? 'bg-[#8B735B] text-white border-[#8B735B]'
                         : 'bg-white text-[#5D5449] border-[#CBAE94]/60 hover:bg-[#EFE6DC]'
@@ -393,7 +405,7 @@ export const FloorPlanEditor = ({
                   <button
                     type="button"
                     onClick={() => handleUpdateDraftRoomSize(1200, 850)}
-                    className={`px-2 py-1.5 rounded-xl border transition-all text-left flex items-center gap-1 ${
+                    className={`min-h-[44px] px-3 py-2 rounded-xl border transition-all text-left flex items-center gap-1 ${
                       draftFloorMap.canvasWidth === 1200 && draftFloorMap.canvasHeight === 850
                         ? 'bg-[#8B735B] text-white border-[#8B735B]'
                         : 'bg-white text-[#5D5449] border-[#CBAE94]/60 hover:bg-[#EFE6DC]'
@@ -404,7 +416,7 @@ export const FloorPlanEditor = ({
                   <button
                     type="button"
                     onClick={() => handleUpdateDraftRoomSize(1500, 1000)}
-                    className={`px-2 py-1.5 rounded-xl border transition-all text-left flex items-center gap-1 ${
+                    className={`min-h-[44px] px-3 py-2 rounded-xl border transition-all text-left flex items-center gap-1 ${
                       draftFloorMap.canvasWidth === 1500 && draftFloorMap.canvasHeight === 1000
                         ? 'bg-[#8B735B] text-white border-[#8B735B]'
                         : 'bg-white text-[#5D5449] border-[#CBAE94]/60 hover:bg-[#EFE6DC]'
@@ -421,11 +433,11 @@ export const FloorPlanEditor = ({
               <div className="space-y-2 pt-1 border-t border-[#CBAE94]/30 text-xs">
                 <div>
                   <div className="flex justify-between items-center mb-1">
-                    <span className="font-bold text-[#4A3F35]">Diameter</span>
+                    <span className="font-bold text-[#4A3F35]">{t.roomDiameterLabel}</span>
                     <div className="flex items-center gap-1 font-mono font-bold text-[#8B735B]">
-                      <button type="button" onClick={() => handleUpdateDiameter(Math.min(draftFloorMap.canvasWidth, draftFloorMap.canvasHeight) - 100)} className="w-5 h-5 rounded bg-[#EFE6DC] hover:bg-[#CBAE94] flex items-center justify-center text-[#4A3F35]">-</button>
+                      <button type="button" onClick={() => handleUpdateDiameter(Math.min(draftFloorMap.canvasWidth, draftFloorMap.canvasHeight) - 100)} className="min-w-[44px] min-h-[44px] rounded-lg bg-[#EFE6DC] hover:bg-[#CBAE94] flex items-center justify-center text-[#4A3F35] font-bold">-</button>
                       <span>{Math.min(draftFloorMap.canvasWidth, draftFloorMap.canvasHeight)}px</span>
-                      <button type="button" onClick={() => handleUpdateDiameter(Math.min(draftFloorMap.canvasWidth, draftFloorMap.canvasHeight) + 100)} className="w-5 h-5 rounded bg-[#EFE6DC] hover:bg-[#CBAE94] flex items-center justify-center text-[#4A3F35]">+</button>
+                      <button type="button" onClick={() => handleUpdateDiameter(Math.min(draftFloorMap.canvasWidth, draftFloorMap.canvasHeight) + 100)} className="min-w-[44px] min-h-[44px] rounded-lg bg-[#EFE6DC] hover:bg-[#CBAE94] flex items-center justify-center text-[#4A3F35] font-bold">+</button>
                     </div>
                   </div>
                   <input type="range" min={500} max={2500} step={50} value={Math.min(draftFloorMap.canvasWidth, draftFloorMap.canvasHeight)} onChange={(e) => handleUpdateDiameter(parseInt(e.target.value, 10))} className="w-full accent-[#8B735B]" />
@@ -443,7 +455,7 @@ export const FloorPlanEditor = ({
                       <button
                         type="button"
                         onClick={() => handleUpdateDraftRoomSize(draftFloorMap.canvasWidth - 100, draftFloorMap.canvasHeight)}
-                        className="w-5 h-5 rounded bg-[#EFE6DC] hover:bg-[#CBAE94] flex items-center justify-center text-[#4A3F35]"
+                        className="min-w-[44px] min-h-[44px] rounded-lg bg-[#EFE6DC] hover:bg-[#CBAE94] flex items-center justify-center text-[#4A3F35] font-bold"
                       >
                         -
                       </button>
@@ -451,7 +463,7 @@ export const FloorPlanEditor = ({
                       <button
                         type="button"
                         onClick={() => handleUpdateDraftRoomSize(draftFloorMap.canvasWidth + 100, draftFloorMap.canvasHeight)}
-                        className="w-5 h-5 rounded bg-[#EFE6DC] hover:bg-[#CBAE94] flex items-center justify-center text-[#4A3F35]"
+                        className="min-w-[44px] min-h-[44px] rounded-lg bg-[#EFE6DC] hover:bg-[#CBAE94] flex items-center justify-center text-[#4A3F35] font-bold"
                       >
                         +
                       </button>
@@ -475,7 +487,7 @@ export const FloorPlanEditor = ({
                       <button
                         type="button"
                         onClick={() => handleUpdateDraftRoomSize(draftFloorMap.canvasWidth, draftFloorMap.canvasHeight - 100)}
-                        className="w-5 h-5 rounded bg-[#EFE6DC] hover:bg-[#CBAE94] flex items-center justify-center text-[#4A3F35]"
+                        className="min-w-[44px] min-h-[44px] rounded-lg bg-[#EFE6DC] hover:bg-[#CBAE94] flex items-center justify-center text-[#4A3F35] font-bold"
                       >
                         -
                       </button>
@@ -483,7 +495,7 @@ export const FloorPlanEditor = ({
                       <button
                         type="button"
                         onClick={() => handleUpdateDraftRoomSize(draftFloorMap.canvasWidth, draftFloorMap.canvasHeight + 100)}
-                        className="w-5 h-5 rounded bg-[#EFE6DC] hover:bg-[#CBAE94] flex items-center justify-center text-[#4A3F35]"
+                        className="min-w-[44px] min-h-[44px] rounded-lg bg-[#EFE6DC] hover:bg-[#CBAE94] flex items-center justify-center text-[#4A3F35] font-bold"
                       >
                         +
                       </button>

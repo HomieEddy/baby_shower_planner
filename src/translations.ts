@@ -259,6 +259,8 @@ export interface Translations {
   dietaryRestrictionsLabel: string;
   dietarySummarySubtitle: string;
   dietaryTitle: string;
+  discardBtn: string;
+  discardChangesMsg: string;
   doneReturnBtn: string;
   downloadCardBtn: string;
   downloadOriginalBtn: string;
@@ -656,6 +658,7 @@ export interface Translations {
   responseStatusLabel: string;
   roomDimensions: string;
   roomDimensionsPx: string;
+  roomDiameterLabel: string;
   roomLengthLabel: string;
   roomPresets: string;
   roomWidthLabel: string;
@@ -706,6 +709,9 @@ export interface Translations {
   seatingProposalsCount_other: string;
   seatsAssignedLabel: string;
   seatsLabel: string;
+  shapeCircle: string;
+  shapeEllipse: string;
+  shapeRectangle: string;
   selectAllBtn: string;
   selectPartyHint: string;
   selectPhotosLabel: string;
@@ -1471,6 +1477,8 @@ export const translations: Record<Language, Translations> = {
     dietaryRestrictionsLabel: "Dietary Restrictions:",
     dietarySummarySubtitle: "Guests requiring special meal options",
     dietaryTitle: "Dietary Restrictions & Allergies",
+    discardBtn: "Discard",
+    discardChangesMsg: "Your unsaved seating changes will be lost. Discard them?",
     doneReturnBtn: "Done & Return",
     downloadCardBtn: "Download Card Image (PNG)",
     downloadOriginalBtn: "Download Original",
@@ -1871,6 +1879,7 @@ export const translations: Record<Language, Translations> = {
     responseStatusLabel: "Response Status",
     roomDimensions: "Room Dimensions",
     roomDimensionsPx: "Room Dimensions (px)",
+    roomDiameterLabel: "Diameter:",
     roomLengthLabel: "Room Length:",
     roomPresets: "Room Presets",
     roomWidthLabel: "Room Width:",
@@ -1925,6 +1934,9 @@ export const translations: Record<Language, Translations> = {
     seatingProposalsCount_other: "{{count}} Seating Proposals Generated",
     seatsAssignedLabel: "Seats Assigned",
     seatsLabel: "Seats",
+    shapeCircle: "Circle",
+    shapeEllipse: "Ellipse",
+    shapeRectangle: "Rectangle",
     selectAllBtn: "Select All",
     selectPartyHint: "Select party to highlight fitting tables",
     selectPhotosLabel: "Select Photos (Multiple Supported)",
@@ -2681,6 +2693,8 @@ export const translations: Record<Language, Translations> = {
     dietarySummarySubtitle: "Invités nécessitant un menu particulier",
     dietaryTitle: "Régimes Alimentaires & Allergies",
     doneReturnBtn: "Terminer",
+    discardBtn: "Abandonner",
+    discardChangesMsg: "Vos modifications non enregistrées seront perdues. Les abandonner ?",
     downloadCardBtn: "Télécharger la carte (PNG)",
     downloadOriginalBtn: "Télécharger l'original",
     downloadQr: "Télécharger l'image QR",
@@ -3080,6 +3094,7 @@ export const translations: Record<Language, Translations> = {
     responseStatusLabel: "Statut de réponse",
     roomDimensions: "Dimensions de la salle",
     roomDimensionsPx: "Dimensions de la salle (px)",
+    roomDiameterLabel: "Diamètre :",
     roomLengthLabel: "Longueur de la salle :",
     roomPresets: "Tailles prédéfinies",
     roomWidthLabel: "Largeur de la salle :",
@@ -3134,6 +3149,9 @@ export const translations: Record<Language, Translations> = {
     seatingProposalsCount_other: "{{count}} propositions de placement générées",
     seatsAssignedLabel: "Places attribuées",
     seatsLabel: "Places",
+    shapeCircle: "Cercle",
+    shapeEllipse: "Ellipse",
+    shapeRectangle: "Rectangle",
     selectAllBtn: "Tout sélectionner",
     selectPartyHint: "Sélectionnez un groupe pour mettre en évidence les tables adaptées",
     selectPhotosLabel: "Sélectionner des photos (plusieurs possibles)",
