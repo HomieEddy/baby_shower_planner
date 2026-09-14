@@ -26,8 +26,7 @@ export const PhotoCard: React.FC<PhotoCardProps> = ({
   const hidden = photo.visible === false;
   return (
     <div
-      onClick={() => onClick(photo)}
-      className={`group relative bg-white rounded-3xl overflow-hidden border transition-all cursor-pointer flex flex-col ${
+      className={`group relative bg-white rounded-3xl overflow-hidden border transition-all flex flex-col ${
         hidden ? 'opacity-60 border-dashed' : ''
       } ${
         isSelected
@@ -35,6 +34,14 @@ export const PhotoCard: React.FC<PhotoCardProps> = ({
           : 'border-[#CBAE94]/50 shadow-sm hover:shadow-md'
       } ${layoutMode === 'masonry' ? 'break-inside-avoid mb-4' : ''}`}
     >
+      {/* Primary action: full-card hit target beneath the per-photo controls. */}
+      <button
+        type="button"
+        onClick={() => onClick(photo)}
+        aria-label={photo.caption || t.tapToViewDetails}
+        className="absolute inset-0 z-10 rounded-3xl cursor-pointer"
+      />
+
       <div
         className={`relative overflow-hidden bg-[#EFE6DC]/30 ${
           layoutMode === 'grid' ? 'aspect-square' : ''
@@ -63,7 +70,7 @@ export const PhotoCard: React.FC<PhotoCardProps> = ({
         <button
           type="button"
           onClick={(e) => { e.stopPropagation(); onSelect(photo.id); }}
-          className={`absolute top-2.5 left-2.5 z-10 p-1.5 rounded-xl transition-all shadow-sm flex items-center justify-center ${
+          className={`absolute top-2.5 left-2.5 z-20 p-1.5 rounded-xl transition-all shadow-sm flex items-center justify-center ${
             isSelected
               ? 'bg-[#8B735B] text-white ring-2 ring-white scale-105 opacity-100'
               : 'bg-black/50 text-white/90 hover:bg-black/70 group-hover:opacity-100 opacity-80 sm:opacity-0'
@@ -83,7 +90,7 @@ export const PhotoCard: React.FC<PhotoCardProps> = ({
         <button
           type="button"
           onClick={(e) => { e.stopPropagation(); onToggleHidden(photo.id); }}
-          className="absolute top-2.5 right-10 p-1.5 rounded-xl bg-black/60 text-white hover:bg-[#8B735B] transition-colors opacity-0 group-hover:opacity-100 shadow-sm"
+          className="absolute top-2.5 right-10 z-20 p-1.5 rounded-xl bg-black/60 text-white hover:bg-[#8B735B] transition-colors opacity-0 group-hover:opacity-100 shadow-sm"
           title={hidden ? t.moderationShowBtn : t.moderationHideBtn}
           aria-label={hidden ? t.moderationShowBtn : t.moderationHideBtn}
         >
@@ -93,7 +100,7 @@ export const PhotoCard: React.FC<PhotoCardProps> = ({
         <button
           type="button"
           onClick={(e) => { e.stopPropagation(); onDelete(photo.id); }}
-          className="absolute top-2.5 right-2.5 p-1.5 rounded-xl bg-black/60 text-white hover:bg-rose-600 transition-colors opacity-0 group-hover:opacity-100 shadow-sm"
+          className="absolute top-2.5 right-2.5 z-20 p-1.5 rounded-xl bg-black/60 text-white hover:bg-rose-600 transition-colors opacity-0 group-hover:opacity-100 shadow-sm"
           title={t.deletePhotoBtn}
           aria-label={t.deletePhotoBtn}
         >

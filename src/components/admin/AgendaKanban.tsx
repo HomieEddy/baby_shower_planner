@@ -59,21 +59,23 @@ const TaskCard: React.FC<{ task: AgendaTask; language: Language; onOpenTask: (ta
     <div
       ref={setNodeRef}
       style={{ transform: CSS.Transform.toString(transform), transition }}
-      {...attributes}
-      onClick={() => onOpenTask(task)}
-      className={`group bg-white rounded-xl border-2 border-[#CBAE94]/60 border-l-4 ${chipCls} p-3 shadow-xs cursor-pointer hover:border-[#8B735B] transition-colors ${isDragging ? 'opacity-40' : ''}`}
+      className={`group bg-white rounded-xl border-2 border-[#CBAE94]/60 border-l-4 ${chipCls} p-3 shadow-xs hover:border-[#8B735B] transition-colors ${isDragging ? 'opacity-40' : ''}`}
     >
       <div className="flex items-start gap-2">
         <button
           type="button"
+          {...attributes}
           {...listeners}
-          onClick={(e) => e.stopPropagation()}
           className="p-1 rounded-md text-[#A09080] hover:bg-[#EFE6DC] cursor-grab active:cursor-grabbing shrink-0"
           aria-label="Drag task"
         >
           <GripVertical className="w-3.5 h-3.5" />
         </button>
-        <div className="min-w-0 flex-1 space-y-1">
+        <button
+          type="button"
+          onClick={() => onOpenTask(task)}
+          className="min-w-0 flex-1 text-left space-y-1 cursor-pointer"
+        >
           <p className="text-xs font-bold text-[#4A3F35] leading-snug break-words">{task.title}</p>
           {task.description && (
             <p className="text-xs text-[#A09080] line-clamp-2 break-words">{task.description}</p>
@@ -85,7 +87,7 @@ const TaskCard: React.FC<{ task: AgendaTask; language: Language; onOpenTask: (ta
               {task.due_time ? ` · ${formatTime12h(task.due_time, language)}` : ''}
             </p>
           )}
-        </div>
+        </button>
       </div>
     </div>
   );

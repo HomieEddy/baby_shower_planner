@@ -93,7 +93,7 @@ export const GuestPhotoUploadPage = () => {
   };
 
   // Drag and drop handlers
-  const handleDrop = (e: React.DragEvent<HTMLDivElement>) => {
+  const handleDrop = (e: React.DragEvent<HTMLElement>) => {
     e.preventDefault();
     e.stopPropagation();
     setFileError(null);
@@ -104,7 +104,7 @@ export const GuestPhotoUploadPage = () => {
     }
   };
 
-  const handleDragOver = (e: React.DragEvent<HTMLDivElement>) => {
+  const handleDragOver = (e: React.DragEvent<HTMLElement>) => {
     e.preventDefault();
     e.stopPropagation();
   };
