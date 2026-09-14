@@ -50,10 +50,11 @@ export const AdminLogin = () => {
         <div className="bg-white rounded-2xl border border-[#CBAE94]/40 p-8 shadow-sm">
           <form onSubmit={handleSubmit} className="space-y-5">
             <div>
-              <label className="block text-xs font-bold text-[#5D5449] font-mono mb-1.5">{t.passwordLabel}</label>
+              <label htmlFor="admin-password" className="block text-xs font-bold text-[#5D5449] font-mono mb-1.5">{t.passwordLabel}</label>
               <div className="relative">
                 <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#A09080]" />
                 <input
+                  id="admin-password"
                   type={showPw ? 'text' : 'password'}
                   value={password}
                   onChange={e => setPassword(e.target.value)}
@@ -64,12 +65,14 @@ export const AdminLogin = () => {
                 <button
                   type="button"
                   onClick={() => setShowPw(!showPw)}
+                  aria-label={showPw ? t.hidePasswordLabel : t.showPasswordLabel}
+                  aria-pressed={showPw}
                   className="absolute right-3 top-1/2 -translate-y-1/2 text-[#A09080] hover:text-[#4A3F35]"
                 >
                   {showPw ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
                 </button>
               </div>
-              {error && <p className="text-red-600 text-xs mt-1.5 font-medium">{error}</p>}
+              {error && <p role="alert" className="text-red-600 text-xs mt-1.5 font-medium">{error}</p>}
             </div>
 
             <button

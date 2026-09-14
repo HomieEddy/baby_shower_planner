@@ -1,6 +1,6 @@
 import { useRef } from 'react';
 import { FieldErrors, UseFormRegister } from 'react-hook-form';
-import { motion, AnimatePresence } from 'motion/react';
+import { motion } from 'motion/react';
 import { Camera, Send, X, CheckCircle2, Sparkles } from 'lucide-react';
 import { z } from 'zod';
 import { GuestbookEntrySchema } from '../../lib/validation';
@@ -43,7 +43,7 @@ export const GuestbookForm = ({
     >
       {/* Name Input */}
       <div className="space-y-1.5">
-        <label className="label-mono block">
+        <label htmlFor="gb-name" className="label-mono block">
           {t.gbNameLabel} *
         </label>
         {(() => {
@@ -51,6 +51,7 @@ export const GuestbookForm = ({
           const { ref: nameRef, ...nameFieldProps } = nameField;
           return (
             <input
+              id="gb-name"
               type="text"
               required
               ref={(el) => { nameRef(el); nameInputRef.current = el; }}
@@ -60,36 +61,38 @@ export const GuestbookForm = ({
             />
           );
         })()}
-        {errors.guest_name && <p className="text-rose-600 text-xs">{errors.guest_name.message}</p>}
+        {errors.guest_name && <p role="alert" className="text-rose-600 text-xs">{errors.guest_name.message}</p>}
       </div>
 
       {/* Message Input */}
       <div className="space-y-1.5">
-        <label className="label-mono block">
+        <label htmlFor="gb-message" className="label-mono block">
           {t.gbMessageLabel} *
         </label>
         <textarea
+          id="gb-message"
           required
           rows={4}
           {...register('message')}
           placeholder={t.gbMessagePlaceholder}
           className="w-full px-4 py-3 rounded-2xl border-2 border-[#CBAE94] text-sm font-medium focus:outline-none focus:ring-2 focus:ring-[#8B735B] bg-white text-[#5D5449]"
         />
-        {errors.message && <p className="text-rose-600 text-xs">{errors.message.message}</p>}
+        {errors.message && <p role="alert" className="text-rose-600 text-xs">{errors.message.message}</p>}
       </div>
 
       {/* Photo Upload Input */}
       <div className="space-y-2">
-        <label className="label-mono block">
+        <label htmlFor="gb-photo" className="label-mono block">
           {t.gbPhotoLabel}
         </label>
 
         {!previewUrl ? (
-          <motion.div
+          <motion.button
+            type="button"
             whileHover={{ scale: 1.01 }}
             whileTap={{ scale: 0.99 }}
             onClick={() => fileInputRef.current?.click()}
-            className="border-2 border-dashed border-[#CBAE94] hover:border-[#8B735B] bg-[#EFE6DC]/40 hover:bg-[#EFE6DC] rounded-2xl p-6 text-center cursor-pointer transition-colors space-y-2"
+            className="w-full border-2 border-dashed border-[#CBAE94] hover:border-[#8B735B] bg-[#EFE6DC]/40 hover:bg-[#EFE6DC] rounded-2xl p-6 text-center cursor-pointer transition-colors space-y-2"
           >
             <div className="w-10 h-10 bg-white rounded-full flex items-center justify-center mx-auto border border-[#CBAE94]">
               <Camera className="w-5 h-5 text-[#8B735B]" />
@@ -100,7 +103,7 @@ export const GuestbookForm = ({
             <p className="text-xs text-[#5D5449]/70 font-mono">
               {t.gbPhotoHelper}
             </p>
-          </motion.div>
+          </motion.button>
         ) : (
           <motion.div
             initial={{ opacity: 0, scale: 0.95 }}
@@ -117,6 +120,7 @@ export const GuestbookForm = ({
               whileTap={{ scale: 0.9 }}
               type="button"
               onClick={onRemovePhoto}
+              aria-label={t.removePhotoBtn}
               className="absolute top-3 right-3 p-2 bg-[#8B735B] hover:bg-[#5D5449] text-white rounded-full transition-colors shadow-xs cursor-pointer"
               title={t.removePhotoBtn}
             >
@@ -126,6 +130,7 @@ export const GuestbookForm = ({
         )}
 
         <input
+          id="gb-photo"
           ref={fileInputRef}
           type="file"
           accept="image/*"

@@ -57,8 +57,9 @@ export const GuestPortalPage = () => {
         </div>
 
         <form onSubmit={handleSubmit} className="space-y-3 text-left">
-          <label className="label-mono block">{t.portalInputLabel}</label>
+          <label htmlFor="portal-code" className="label-mono block">{t.portalInputLabel}</label>
           <input
+            id="portal-code"
             type="text"
             value={input}
             onChange={(e) => { setInput(e.target.value); setStatus('idle'); }}

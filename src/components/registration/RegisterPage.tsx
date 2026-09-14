@@ -161,39 +161,40 @@ export const RegisterPage = () => {
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
-                <label className="label-mono block mb-1">{t.fieldName} *</label>
-                <TextInput type="text" placeholder={t.nameExamplePh} {...register('name')} />
-                {errors.name && <p className="text-rose-600 text-xs">{t.registerNameRequiredToast}</p>}
+                <label htmlFor="reg-name" className="label-mono block mb-1">{t.fieldName} *</label>
+                <TextInput id="reg-name" type="text" placeholder={t.nameExamplePh} {...register('name')} />
+                {errors.name && <p role="alert" className="text-rose-600 text-xs">{t.registerNameRequiredToast}</p>}
               </div>
               <div>
-                <label className="label-mono block mb-1">{t.fieldLanguage}</label>
-                <Select {...register('language_pref')}>
+                <label htmlFor="reg-language" className="label-mono block mb-1">{t.fieldLanguage}</label>
+                <Select id="reg-language" {...register('language_pref')}>
                   <option value="EN">{t.presetEnglish}</option>
                   <option value="FR">{t.presetFrench}</option>
                 </Select>
               </div>
               <div>
-                <label className="label-mono block mb-1">{t.fieldEmail}</label>
-                <TextInput type="email" placeholder={t.emailExamplePh} {...register('email')} />
+                <label htmlFor="reg-email" className="label-mono block mb-1">{t.fieldEmail}</label>
+                <TextInput id="reg-email" type="email" placeholder={t.emailExamplePh} {...register('email')} />
               </div>
               <div>
-                <label className="label-mono block mb-1">{t.fieldPhone}</label>
-                <TextInput type="tel" placeholder={t.fieldPhonePlaceholder} {...register('phone')} />
+                <label htmlFor="reg-phone" className="label-mono block mb-1">{t.fieldPhone}</label>
+                <TextInput id="reg-phone" type="tel" placeholder={t.fieldPhonePlaceholder} {...register('phone')} />
               </div>
             </div>
 
             <div className="space-y-3 bg-[#E9E0D2]/40 p-4 rounded-2xl border border-[#4A3F35]/20">
               <div>
-                <label className="label-mono block">{t.registerMembersTitle}</label>
+                <span className="label-mono block">{t.registerMembersTitle}</span>
               </div>
               {fields.map((field, index) => (
                 <div key={field.id} className="grid grid-cols-1 sm:grid-cols-[1fr_1fr_auto] gap-2 items-start">
-                  <TextInput type="text" placeholder={t.registerMemberPh} {...register(`members.${index}.name`)} />
-                  <TextInput type="text" placeholder={t.attendeeContactPlaceholder} {...register(`members.${index}.contact`)} />
+                  <TextInput type="text" aria-label={`${t.registerMemberPh} ${index + 1}`} placeholder={t.registerMemberPh} {...register(`members.${index}.name`)} />
+                  <TextInput type="text" aria-label={t.attendeeContactLabel} placeholder={t.attendeeContactPlaceholder} {...register(`members.${index}.contact`)} />
                   <button
                     type="button"
                     onClick={() => remove(index)}
                     className="justify-self-start p-2 text-rose-600 hover:text-rose-800 hover:bg-rose-50 rounded-lg transition-colors"
+                    aria-label={t.removeGuestBtn}
                     title={t.removeGuestBtn}
                   >
                     <XCircle className="w-4 h-4" />
@@ -211,8 +212,9 @@ export const RegisterPage = () => {
             </div>
 
             <div>
-              <label className="label-mono block mb-1">{t.dietaryLabel}</label>
+              <label htmlFor="reg-dietary" className="label-mono block mb-1">{t.dietaryLabel}</label>
               <textarea
+                id="reg-dietary"
                 rows={2}
                 {...register('dietary')}
                 placeholder={t.dietaryPlaceholder}

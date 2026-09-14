@@ -16,6 +16,13 @@
     color: #ffffff;
   }
 
+  /* Keyboard focus indicator for every interactive element. Inputs that need a
+     ring opt into it with focus:ring-* and keep their own styling. */
+  :focus-visible {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+  }
+
   body {
     background-color: var(--bg) !important;
     color: var(--ink) !important;

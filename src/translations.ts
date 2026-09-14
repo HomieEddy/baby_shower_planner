@@ -573,6 +573,8 @@ export interface Translations {
   passwordLabel: string;
   passwordPh: string;
   passwordRequiredError: string;
+  showPasswordLabel: string;
+  hidePasswordLabel: string;
   pendingOnlyLabel: string;
   pendingThankYousLabel: string;
   phoneLabel: string;
@@ -1694,6 +1696,8 @@ export const translations: Record<Language, Translations> = {
     passwordLabel: "Password",
     passwordPh: "Enter admin password",
     passwordRequiredError: "Enter the admin password",
+    showPasswordLabel: "Show password",
+    hidePasswordLabel: "Hide password",
     pendingOnlyLabel: "Pending Guests Only",
     pendingThankYousLabel: "Pending Thank Yous",
     phoneLabel: "Phone",
@@ -2811,6 +2815,8 @@ export const translations: Record<Language, Translations> = {
     passwordLabel: "Mot de passe",
     passwordPh: "Saisissez le mot de passe admin",
     passwordRequiredError: "Saisissez le mot de passe admin",
+    showPasswordLabel: "Afficher le mot de passe",
+    hidePasswordLabel: "Masquer le mot de passe",
     pendingOnlyLabel: "Invités en attente uniquement",
     pendingThankYousLabel: "Remerciements en attente",
     phoneLabel: "Téléphone",

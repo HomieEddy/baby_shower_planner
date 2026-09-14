@@ -446,7 +446,7 @@ export const AdminSettingsTab: React.FC<AdminSettingsTabProps> = ({ language, t,
                     <select
                       value={customTheme.fontFamily}
                       onChange={(e) => updateCustomTheme('fontFamily', e.target.value)}
-                      className="w-full px-3 py-2 rounded-xl border border-[#CBAE94] bg-white text-xs font-bold text-[#4A3F35] focus:outline-none">
+                      className="w-full px-3 py-2 rounded-xl border border-[#CBAE94] bg-white text-xs font-bold text-[#4A3F35]">
                       {FONT_OPTIONS.map((f) => (
                         <option key={f.fontFamily} value={f.fontFamily}>{f.label}</option>
                       ))}

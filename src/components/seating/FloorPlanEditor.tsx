@@ -1210,7 +1210,7 @@ export const FloorPlanEditor = ({
                         }
                       }}
                       defaultValue=""
-                      className="w-full px-3 py-2 rounded-xl border border-[#CBAE94] text-xs font-bold text-[#5D5449] bg-white focus:outline-none"
+                      className="w-full px-3 py-2 rounded-xl border border-[#CBAE94] text-xs font-bold text-[#5D5449] bg-white"
                     >
                       <option value="" disabled>
                         {t.chooseGuestOption}
@@ -1269,7 +1269,7 @@ export const FloorPlanEditor = ({
                   placeholder={t.filterGuestPh}
                   value={guestFilterQuery}
                   onChange={(e) => setGuestFilterQuery(e.target.value)}
-                  className="w-full px-3 py-2 rounded-xl border border-[#CBAE94] text-xs font-bold text-[#5D5449] bg-white focus:outline-none"
+                  className="w-full px-3 py-2 rounded-xl border border-[#CBAE94] text-xs font-bold text-[#5D5449] bg-white"
                 />
               </div>
 

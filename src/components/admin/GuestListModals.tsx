@@ -248,7 +248,7 @@ export const GuestDetailsModal = ({
           <label className="label-mono block text-xs font-bold text-[#8B735B]">{t.colMagicLink}</label>
           <div className="flex gap-2">
             <input readOnly value={magicUrl}
-              className="flex-1 px-3 py-2 rounded-xl border border-[#CBAE94] bg-white text-xs font-mono text-[#4A3F35] focus:outline-none" />
+              className="flex-1 px-3 py-2 rounded-xl border border-[#CBAE94] bg-white text-xs font-mono text-[#4A3F35]" />
             <button onClick={() => onCopyLink(guest.magic_token)}
               className="px-3 py-2 bg-[#EFE6DC] hover:bg-[#CBAE94] hover:text-white text-[#8B735B] rounded-xl text-xs font-bold font-mono transition-colors inline-flex items-center gap-1.5 border border-[#CBAE94] cursor-pointer shrink-0">
               {isCopied ? <Check className="w-3.5 h-3.5 text-emerald-600" /> : <Copy className="w-3.5 h-3.5" />}
@@ -298,7 +298,7 @@ export const GuestDetailsModal = ({
             <div>
               <label className="label-mono block mb-1 text-xs font-bold text-[#8B735B]">{t.promoteLeadLabel}</label>
               <select value={promoteName} onChange={(e) => setPromoteName(e.target.value)}
-                className="w-full px-3 py-2 rounded-xl border border-[#CBAE94] bg-white text-xs font-mono text-[#4A3F35] focus:outline-none">
+                className="w-full px-3 py-2 rounded-xl border border-[#CBAE94] bg-white text-xs font-mono text-[#4A3F35]">
                 {members.filter((_, i) => i !== 0).map((n) => (
                   <option key={n} value={n}>{n}</option>
                 ))}
