@@ -77,10 +77,9 @@ export const SmartSuggestionsModal = ({
           const isChecked = selectedIds.has(sug.id);
 
           return (
-            <div
+            <label
               key={sug.id}
-              onClick={() => onToggleSuggestion(sug.id)}
-              className={`p-4 rounded-2xl border-2 transition-all cursor-pointer space-y-2 ${
+              className={`block p-4 rounded-2xl border-2 transition-all cursor-pointer space-y-2 ${
                 isChecked
                   ? 'bg-amber-50/60 border-amber-500 shadow-sm ring-1 ring-amber-300'
                   : 'bg-white border-[#CBAE94]/40 opacity-75 hover:opacity-100'
@@ -91,7 +90,7 @@ export const SmartSuggestionsModal = ({
                   <input
                     type="checkbox"
                     checked={isChecked}
-                    onChange={() => {}}
+                    onChange={() => onToggleSuggestion(sug.id)}
                     className="w-4 h-4 rounded text-amber-600 focus:ring-amber-500 border-[#CBAE94]"
                   />
                   <div>
@@ -120,7 +119,7 @@ export const SmartSuggestionsModal = ({
               <div className="text-xs text-[#8B735B] bg-[#FAF6F0] p-2 rounded-xl border border-[#CBAE94]/30 font-medium">
                 {sug.reason}
               </div>
-            </div>
+            </label>
           );
         })}
       </div>

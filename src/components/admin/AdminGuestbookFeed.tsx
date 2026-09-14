@@ -122,6 +122,7 @@ export const AdminGuestbookFeed = ({ entries, onRefresh }: { entries: GuestbookE
                     onClick={() => handleToggleVisibility(entry)}
                     className="p-2 rounded-xl border border-[#CBAE94] text-[#8B735B] hover:bg-[#EFE6DC] transition-colors"
                     title={entry.visible === false ? t.moderationShowBtn : t.moderationHideBtn}
+                    aria-label={entry.visible === false ? t.moderationShowBtn : t.moderationHideBtn}
                   >
                     {entry.visible === false ? <Eye className="w-3.5 h-3.5" /> : <EyeOff className="w-3.5 h-3.5" />}
                   </button>
@@ -130,6 +131,7 @@ export const AdminGuestbookFeed = ({ entries, onRefresh }: { entries: GuestbookE
                     onClick={() => handleDelete(entry)}
                     className="p-2 rounded-xl border border-rose-300 text-rose-600 hover:bg-rose-100 transition-colors"
                     title={t.bulkDeleteBtn}
+                    aria-label={t.bulkDeleteBtn}
                   >
                     <Trash2 className="w-3.5 h-3.5" />
                   </button>

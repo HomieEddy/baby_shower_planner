@@ -240,6 +240,17 @@ export const AdminAgendaTab: React.FC<AdminAgendaTabProps> = ({ language, t, set
         </div>
       </motion.div>
 
+      {tasksQuery.isLoading && (
+        <div role="status" aria-live="polite" className="text-center py-4 text-[#A09080] font-mono text-xs">
+          {t.loadingLabel}
+        </div>
+      )}
+      {tasksQuery.isError && (
+        <div role="alert" className="rounded-2xl border-2 border-rose-300 bg-rose-50 text-rose-800 text-xs font-bold p-4 text-center">
+          {t.loadErrorMsg}
+        </div>
+      )}
+
       {/* Board / calendar */}
       <motion.div variants={adminCardVariants} className="card-paper p-4 sm:p-6">
         {view === 'kanban' ? (

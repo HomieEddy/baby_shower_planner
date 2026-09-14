@@ -526,6 +526,7 @@ export interface Translations {
   loadingGuestbookMsg: string;
   loadingInviteMsg: string;
   loadingLabel: string;
+  loadErrorMsg: string;
   logGiftBtn: string;
   logGiftSubmitBtn: string;
   logSampleGiftBtn: string;
@@ -1649,6 +1650,7 @@ export const translations: Record<Language, Translations> = {
     loadingGuestbookMsg: "Loading guestbook messages...",
     loadingInviteMsg: "Loading invitation details...",
     loadingLabel: "Loading...",
+    loadErrorMsg: "Couldn't load data. Please try again.",
     logGiftBtn: "Log New Gift Received",
     logGiftSubmitBtn: "Log Received Gift",
     logSampleGiftBtn: "Log Sample Gift",
@@ -2769,6 +2771,7 @@ export const translations: Record<Language, Translations> = {
     loadingGuestbookMsg: "Chargement des messages du livre d'or...",
     loadingInviteMsg: "Chargement des détails de l'invitation...",
     loadingLabel: "Chargement...",
+    loadErrorMsg: "Impossible de charger les données. Veuillez réessayer.",
     logGiftBtn: "Enregistrer un cadeau",
     logGiftSubmitBtn: "Enregistrer le cadeau",
     logSampleGiftBtn: "Enregistrer un exemple",

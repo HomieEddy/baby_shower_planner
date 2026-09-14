@@ -105,11 +105,9 @@ export const AgendaCalendar: React.FC<AgendaCalendarProps> = ({ tasks, t, langua
           const inMonth = isSameMonth(day, month);
           const today = isToday(day);
           return (
-            <button
+            <div
               key={ymd}
-              type="button"
-              onClick={() => onAddTask(ymd)}
-              className={`min-h-20 sm:min-h-24 rounded-2xl border-2 p-1.5 text-left transition-colors cursor-pointer flex flex-col gap-1 ${
+              className={`relative min-h-20 sm:min-h-24 rounded-2xl border-2 p-1.5 text-left transition-colors flex flex-col gap-1 ${
                 today
                   ? 'border-[#8B735B] bg-[#EFE6DC]/70'
                   : inMonth
@@ -117,30 +115,35 @@ export const AgendaCalendar: React.FC<AgendaCalendarProps> = ({ tasks, t, langua
                     : 'border-transparent bg-[#F8F5F0]/50 opacity-50'
               }`}
             >
-              <span className={`text-xs font-mono font-bold ${today ? 'text-[#8B735B]' : 'text-[#5D5449]'}`}>
+              <button
+                type="button"
+                onClick={() => onAddTask(ymd)}
+                aria-label={`${t.addTimelineEventBtn} ${format(day, 'PPP', { locale: localeFor(language) })}`}
+                className="absolute inset-0 rounded-2xl cursor-pointer"
+              />
+              <span className={`relative z-10 text-xs font-mono font-bold pointer-events-none ${today ? 'text-[#8B735B]' : 'text-[#5D5449]'}`}>
                 {format(day, 'd')}
               </span>
-              <div className="space-y-0.5 overflow-hidden flex-1">
+              <div className="relative z-10 space-y-0.5 overflow-hidden flex-1">
                 {dayTasks.slice(0, 3).map((task) => (
-                  <span
+                  <button
                     key={task.id}
-                    role="button"
-                    tabIndex={-1}
-                    onClick={(e) => { e.stopPropagation(); onOpenTask(task); }}
-                    className={`flex items-center gap-1 rounded-lg px-1.5 py-0.5 bg-white border border-[#CBAE94]/50 text-xs font-bold text-[#4A3F35] truncate hover:border-[#8B735B] transition-colors`}
+                    type="button"
+                    onClick={() => onOpenTask(task)}
+                    className={`w-full flex items-center gap-1 rounded-lg px-1.5 py-0.5 bg-white border border-[#CBAE94]/50 text-xs font-bold text-[#4A3F35] truncate hover:border-[#8B735B] transition-colors cursor-pointer`}
                   >
                     <span className={`w-1.5 h-1.5 rounded-full shrink-0 ${STATUS_DOT[task.status]}`} />
                     <span className="truncate">{task.title}</span>
                     {task.due_time && (
                       <span className="text-xs font-mono text-[#A09080] shrink-0">{formatTime12h(task.due_time, language)}</span>
                     )}
-                  </span>
+                  </button>
                 ))}
                 {dayTasks.length > 3 && (
                   <span className="text-xs font-mono font-bold text-[#8B735B]">+{dayTasks.length - 3}</span>
                 )}
               </div>
-            </button>
+            </div>
           );
         })}
         </div>

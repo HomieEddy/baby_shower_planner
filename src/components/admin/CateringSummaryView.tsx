@@ -431,7 +431,18 @@ export const CateringSummaryView: React.FC<CateringSummaryViewProps> = ({ guests
               {table.getHeaderGroups().map((headerGroup) => (
                 <tr key={headerGroup.id} className="border-b border-[#CBAE94]/40 text-[#8B735B] font-mono text-xs uppercase">
                   {headerGroup.headers.map((header) => (
-                    <th key={header.id} className="pb-3 font-bold">
+                    <th
+                      key={header.id}
+                      scope="col"
+                      aria-sort={
+                        header.column.getIsSorted() === 'asc'
+                          ? 'ascending'
+                          : header.column.getIsSorted() === 'desc'
+                            ? 'descending'
+                            : 'none'
+                      }
+                      className="pb-3 font-bold"
+                    >
                       {header.isPlaceholder ? null : (
                         <button
                           type="button"
@@ -454,6 +465,13 @@ export const CateringSummaryView: React.FC<CateringSummaryViewProps> = ({ guests
               ))}
             </thead>
             <tbody className="divide-y divide-[#CBAE94]/20">
+              {table.getRowModel().rows.length === 0 && (
+                <tr>
+                  <td colSpan={table.getAllColumns().length} className="py-6 text-center text-[#A09080] font-mono text-xs">
+                    {t.noSearchMatch}
+                  </td>
+                </tr>
+              )}
               {table.getRowModel().rows.map((row) => (
                 <tr key={row.id} className="hover:bg-[#FAF6F0]/60">
                   {row.getVisibleCells().map((cell) => (

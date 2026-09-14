@@ -391,6 +391,17 @@ export const AdminDashboard = () => {
         <span className="text-[#4A3F35]">{tabLabel(adminSubTab)}</span>
       </nav>
 
+      {overviewQuery.isLoading && (
+        <div role="status" aria-live="polite" className="text-center py-4 text-[#A09080] font-mono text-xs">
+          {t.loadingLabel}
+        </div>
+      )}
+      {overviewQuery.isError && (
+        <div role="alert" className="rounded-2xl border-2 border-rose-300 bg-rose-50 text-rose-800 text-xs font-bold p-4 text-center">
+          {t.loadErrorMsg}
+        </div>
+      )}
+
       {/* Mobile sticky bar */}
       <div className="md:hidden sticky top-0 z-30 bg-[#FDFBF7]/95 backdrop-blur-sm border border-[#CBAE94]/40 rounded-2xl px-3 py-2 flex items-center justify-between shadow-2xs">
         <button
