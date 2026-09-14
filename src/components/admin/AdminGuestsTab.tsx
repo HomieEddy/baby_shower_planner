@@ -6,7 +6,7 @@ import { useNavigate, useSearchParams } from 'react-router-dom';
 import { motion, AnimatePresence } from 'motion/react';
 import { adminContainerVariants, adminCardVariants } from '../shared/motionPresets';
 import { GuestRowCard } from './GuestRowCard';
-import { GuestMetricCard, GuestMetricToggle, GuestFiltersBar, BulkActionsBar } from './GuestListParts';
+import { GuestMetricCard, GuestMetricToggle, GuestToolbar, GuestTableView, BulkActionsBar } from './GuestListParts';
 import { GuestListModal, GuestDetailsModal } from './GuestListModals';
 import {
   Users,
@@ -131,6 +131,15 @@ export const AdminGuestsTab: React.FC<AdminGuestsTabProps> = ({ language, t, gue
   const switchMetricMode = (m: 'invites' | 'party') => {
     setMetricMode(m);
     localStorage.setItem('guestMetricMode', m);
+  };
+
+  // List rendering mode: roomy cards or a dense table for long guest lists.
+  const [listView, setListView] = useState<'cards' | 'table'>(() =>
+    localStorage.getItem('guestListView') === 'table' ? 'table' : 'cards'
+  );
+  const switchListView = (m: 'cards' | 'table') => {
+    setListView(m);
+    localStorage.setItem('guestListView', m);
   };
 
   // Guest details/edit are URL-routed: ?guest=<id> opens details, &edit=1 opens
@@ -805,24 +814,26 @@ export const AdminGuestsTab: React.FC<AdminGuestsTabProps> = ({ language, t, gue
             <h3 className="font-sans text-xl font-bold text-[#8B735B] whitespace-nowrap">{t.guestListTitle}</h3>
           </div>
 
-          <GuestFiltersBar
+          <GuestToolbar
             searchTerm={searchTerm}
             onSearchChange={setSearchTerm}
             statusFilter={statusFilter}
             onStatusFilter={setStatusFilter}
             sourceFilter={sourceFilter}
             onSourceFilter={setSourceFilter}
+            viewMode={listView}
+            onViewMode={switchListView}
             onExportCsv={handleExportCsv}
             onOpenImport={() => setShowCsvImportModal(true)}
             onSendReminders={handleSendReminders}
-            allSelected={selectedIds.length === filteredGuests.length && filteredGuests.length > 0}
-            onToggleSelectAll={toggleSelectAll}
           />
         </div>
 
         {selectedIds.length > 0 && (
           <BulkActionsBar
             count={selectedIds.length}
+            allSelected={selectedIds.length === filteredGuests.length && filteredGuests.length > 0}
+            onToggleSelectAll={toggleSelectAll}
             onResend={handleBulkResend}
             onExport={handleBulkExport}
             onDelete={handleBulkDelete}
@@ -830,6 +841,11 @@ export const AdminGuestsTab: React.FC<AdminGuestsTabProps> = ({ language, t, gue
           />
         )}
 
+        {listView === 'table' && filteredGuests.length > 0 && (
+          <GuestTableView guests={filteredGuests} onView={handleOpenViewGuest} />
+        )}
+
+        {listView === 'cards' && (
         <div className="grid grid-cols-1 gap-3">
           <AnimatePresence>
             {filteredGuests.map((guest) => (
@@ -852,12 +868,13 @@ export const AdminGuestsTab: React.FC<AdminGuestsTabProps> = ({ language, t, gue
                 actionLabel={guests.length === 0 ? t.addFirstGuestBtn : t.clearFilterBtn}
                 onAction={guests.length === 0
                   ? () => setFocus('name')
-                  : () => { setSearchTerm(''); setStatusFilter('All'); toast.info(t.filterResetToast); }
+                  : () => { setSearchTerm(''); setStatusFilter('All'); setSourceFilter('All'); toast.info(t.filterResetToast); }
                 }
               />
             </div>
           )}
         </div>
+        )}
       </motion.div>
 
       {/* Modal: Batch CSV Guest Import */}
