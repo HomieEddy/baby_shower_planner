@@ -60,6 +60,7 @@ export interface Translations {
   agendaTaskDeletedToast: string;
   agendaTitlePh: string;
   agendaTodayBtn: string;
+  actionsLabel: string;
   adminCoHostControl: string;
   adminLoginLabel: string;
   adminSubtitle: string;
@@ -841,6 +842,8 @@ export interface Translations {
   view3dUnavailable: string;
   view3dUnsupported: string;
   viewBtn: string;
+  viewCardsBtn: string;
+  viewTableBtn: string;
   viewEventDetailsBtn: string;
   viewRsvpTitle: string;
   widthLabel: string;
@@ -1264,6 +1267,7 @@ export const translations: Record<Language, Translations> = {
     agendaTaskDeletedToast: "Task deleted",
     agendaTitlePh: "e.g. Order the cake, book the venue...",
     agendaTodayBtn: "Today",
+    actionsLabel: "More actions",
     adminCoHostControl: "Co-Host Control Center",
     adminLoginLabel: "Admin Login",
     adminSubtitle: "Track RSVPs, dietary restrictions, and manage guest invites in real time.",
@@ -2052,6 +2056,8 @@ export const translations: Record<Language, Translations> = {
     view3dUnavailable: "3D view failed to load. Please re-open the map.",
     view3dUnsupported: "3D view is not supported on this device/browser. Using the 2D layout instead.",
     viewBtn: "View",
+    viewCardsBtn: "Cards",
+    viewTableBtn: "Table",
     viewEventDetailsBtn: "View Event Details & Google Maps",
     viewRsvpTitle: "Test / View RSVP Form",
     widthLabel: "Width",
@@ -2465,6 +2471,7 @@ export const translations: Record<Language, Translations> = {
     agendaTaskDeletedToast: "Tâche supprimée",
     agendaTitlePh: "ex. Commander le gâteau, réserver la salle...",
     agendaTodayBtn: "Aujourd'hui",
+    actionsLabel: "Plus d'actions",
     adminCoHostControl: "Centre de Contrôle Hôte",
     adminLoginLabel: "Connexion admin",
     adminSubtitle: "Suivez les réponses RSVP, les régimes alimentaires et gérez les invitations en temps réel.",
@@ -3253,6 +3260,8 @@ export const translations: Record<Language, Translations> = {
     view3dUnavailable: "Impossible de charger la vue 3D. Veuillez rouvrir le plan.",
     view3dUnsupported: "Vue 3D non prise en charge sur cet appareil/navigateur. Utilisation du plan 2D à la place.",
     viewBtn: "Voir",
+    viewCardsBtn: "Cartes",
+    viewTableBtn: "Tableau",
     viewEventDetailsBtn: "Voir les détails & Google Maps",
     viewRsvpTitle: "Tester / Voir le formulaire RSVP",
     widthLabel: "Largeur",
