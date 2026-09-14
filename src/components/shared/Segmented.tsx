@@ -31,7 +31,7 @@ export const Segmented = <T extends string,>({
   <div
     role="group"
     aria-label={ariaLabel}
-    className={`inline-flex items-center rounded-full bg-white p-1 border border-[#CBAE94] text-xs font-bold font-mono shrink-0 ${className}`}
+    className={`no-scrollbar inline-flex max-w-full items-center overflow-x-auto rounded-full bg-white p-1 border border-[#CBAE94] text-xs font-bold font-mono shrink-0 ${className}`}
   >
     {options.map((opt) => {
       const active = opt.value === value;
