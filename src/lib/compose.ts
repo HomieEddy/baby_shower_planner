@@ -6,6 +6,11 @@
 import { Guest, EventSettings, AgendaTask, Language } from '../types';
 import { formatDateLong, formatTaskDue } from './dateUtils';
 import { findMyTableUrl, registerUrl, rsvpUrl } from './links';
+import {
+  invitationTemplateValues,
+  renderInvitationTemplate,
+  resolveInvitationTemplate,
+} from './invitationTemplate';
 
 export type MessageKind = 'invitation' | 'reminder' | 'alert' | 'floorplan' | 'thankyou' | 'agenda';
 
@@ -139,35 +144,6 @@ export function composeInvitation(guest: Guest, settings: Partial<EventSettings>
     gift: giftBlock(settings, lang),
     paragraphs: [],
     closing: closingBlock(settings, lang),
-  };
-}
-
-// Universal invitation: everyone registers through the same link.
-export function composeUniversalInvitation(settings: Partial<EventSettings>, language: Language = 'FR', refId?: string): MessageContent {
-  const link = registerUrl(refId);
-  return {
-    kind: 'invitation',
-    language,
-    subject: invitationSubject(settings, language),
-    heading: heading(settings, language),
-    subtitle: settings.parentsNames,
-    intro: flowerLine(language),
-    rows: eventRows(settings, language),
-    deadline: deadlineText(settings, language),
-    link,
-    cta: isEN(language) ? 'Register Here' : "S'inscrire",
-    confirmBlock: confirmBlock(settings, language, link, 'register'),
-    gift: giftBlock(settings, language),
-    paragraphs: isEN(language)
-      ? [
-        'When you register, you can enter your name and the names of everyone joining you, including your partner and children. Once your registration is complete, you will receive a 4-digit code to find your table at the event.',
-        'If anything changes after you register, we will send you a notification.',
-      ]
-      : [
-        "Lors de votre inscription, vous pourrez indiquer votre nom ainsi que le nom de toutes les personnes qui vous accompagnent, conjoint(e) et enfants inclus. Une fois votre inscription complétée, vous recevrez un code à 4 chiffres qui vous permettra de retrouver votre table lors de l'événement.",
-        'Après votre inscription, si des changements surviennent, vous recevrez une notification.',
-      ],
-    closing: closingBlock(settings, language),
   };
 }
 
@@ -332,7 +308,12 @@ export function renderEmailHtml(content: MessageContent): string {
 export const buildInviteMessage = (guest: Guest, settings: Partial<EventSettings>, language: Language = 'FR'): string =>
   renderText(composeInvitation(guest, settings, language));
 
-export const buildUniversalInviteMessage = (settings: Partial<EventSettings>, language: Language = 'FR', refId?: string): string =>
-  renderText(composeUniversalInvitation(settings, language, refId));
+// The self-serve invitation is host-editable: a stored template (per language)
+// wins, otherwise the shipped default. Both are plain text with {{token}}s.
+export const buildUniversalInviteMessage = (settings: Partial<EventSettings>, language: Language = 'FR', refId?: string): string => {
+  const stored = language === 'EN' ? settings.invitationTemplateEn : settings.invitationTemplateFr;
+  const template = resolveInvitationTemplate(stored, language);
+  return renderInvitationTemplate(template, invitationTemplateValues(settings, language, registerUrl(refId)));
+};
 
 export { registerUrl as universalRegisterUrl };

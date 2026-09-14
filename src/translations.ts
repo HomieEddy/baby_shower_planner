@@ -490,6 +490,14 @@ export interface Translations {
   inviteGuestsBtn: string;
   inviteLinkForLabel: string;
   inviteMessageLabel: string;
+  invitationMessageDesc: string;
+  editInvitationMessageBtn: string;
+  invitationMessageHint: string;
+  invitationMessagePreviewLabel: string;
+  invitationMessageMissingLinkWarn: string;
+  resetToDefaultBtn: string;
+  invitePhVenue: string;
+  invitePhRegisterLink: string;
   invitationDetailsTitle: string;
   inviteNameRequiredToast: string;
   sentInvitesLabel: string;
@@ -1709,6 +1717,14 @@ export const translations: Record<Language, Translations> = {
     inviteGuestsBtn: "Invite Guests",
     inviteLinkForLabel: "Invitation link for",
     inviteMessageLabel: "Invitation Message",
+    invitationMessageDesc: "Write the message guests receive to sign up. Use placeholders so event details update automatically.",
+    editInvitationMessageBtn: "Edit invitation message",
+    invitationMessageHint: "Insert an event detail where you want it to appear:",
+    invitationMessagePreviewLabel: "Preview",
+    invitationMessageMissingLinkWarn: "This message has no registration link, so guests cannot sign up.",
+    resetToDefaultBtn: "Reset to default",
+    invitePhVenue: "Venue (name + address)",
+    invitePhRegisterLink: "Registration link",
     invitationDetailsTitle: "Invitation Details",
     inviteNameRequiredToast: "Add the invitee's full name",
     sentInvitesLabel: "Invites Sent",
@@ -2924,6 +2940,14 @@ export const translations: Record<Language, Translations> = {
     inviteGuestsBtn: "Inviter des invités",
     inviteLinkForLabel: "Lien d'invitation pour",
     inviteMessageLabel: "Message d'invitation",
+    invitationMessageDesc: "Rédigez le message que les invités reçoivent pour s'inscrire. Utilisez des variables pour que les détails se mettent à jour automatiquement.",
+    editInvitationMessageBtn: "Modifier le message d'invitation",
+    invitationMessageHint: "Insérez un détail de l'événement à l'endroit voulu :",
+    invitationMessagePreviewLabel: "Aperçu",
+    invitationMessageMissingLinkWarn: "Ce message ne contient aucun lien d'inscription : les invités ne pourront pas s'inscrire.",
+    resetToDefaultBtn: "Rétablir par défaut",
+    invitePhVenue: "Lieu (nom + adresse)",
+    invitePhRegisterLink: "Lien d'inscription",
     invitationDetailsTitle: "Détails de l'invitation",
     inviteNameRequiredToast: "Ajoutez le nom complet de l'invité",
     sentInvitesLabel: "Invitations envoyées",

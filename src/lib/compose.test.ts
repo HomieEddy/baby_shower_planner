@@ -4,10 +4,10 @@ import {
   buildInviteMessage,
   buildUniversalInviteMessage,
   composeInvitation,
-  composeUniversalInvitation,
   renderSms,
   renderText,
 } from './compose';
+import { renderInvitationTemplate } from './invitationTemplate';
 
 const guest = (over: Partial<Guest> = {}): Guest => ({
   id: 'g1',
@@ -38,26 +38,43 @@ const settings = (over: Partial<EventSettings> = {}): Partial<EventSettings> => 
   ...over,
 });
 
-describe('composeUniversalInvitation', () => {
+describe('buildUniversalInviteMessage (self-serve)', () => {
   it('renders event details, registry and deadline, with no em-dashes', () => {
     const msg = buildUniversalInviteMessage(settings(), 'FR');
-    expect(msg).toContain('Baby Shower de Eddy & Nana');
+    expect(msg).toContain('BABY SHOWER');
+    expect(msg).toContain('Eddy & Nana');
     expect(msg).toContain('7 novembre 2026');
     expect(msg).toContain('La salle St-Gilles, 226 des Alouettes H7G 3W1');
     expect(msg).toContain('https://www.amazon.ca/list');
     expect(msg).toContain('/register');
     expect(msg).toContain('au plus tard le jeudi 1 octobre 2026');
     expect(msg).not.toMatch(/[\u2014\u2013\u2E3B]/);
+    expect(msg).not.toContain('{{');
   });
 
   it('carries the inviter ref into the register link', () => {
     expect(buildUniversalInviteMessage({}, 'EN', 'inv1')).toContain('ref=inv1');
   });
 
-  it('omits the deadline sentence when unset', () => {
+  it('leaves no unreplaced placeholder when a setting is unset', () => {
     const msg = buildUniversalInviteMessage({}, 'EN');
-    expect(msg).not.toContain('attendance by');
     expect(msg).toContain('/register');
+    expect(msg).not.toContain('{{');
+  });
+
+  it('prefers a stored template over the default', () => {
+    const msg = buildUniversalInviteMessage(
+      { ...settings(), invitationTemplateFr: 'Salut {{parentsNames}} — {{date}} — {{registerLink}}' },
+      'FR'
+    );
+    expect(msg).toMatch(/^Salut Eddy & Nana — 7 novembre 2026 — https?:\/\/.+\/register$/);
+    expect(msg).not.toContain('BABY SHOWER');
+  });
+});
+
+describe('renderInvitationTemplate', () => {
+  it('substitutes tokens and drops unknown/empty ones', () => {
+    expect(renderInvitationTemplate('a {{ date }} b {{missing}} c', { date: 'X' })).toBe('a X b  c');
   });
 });
 
@@ -91,11 +108,5 @@ describe('renderSms', () => {
     const sms = renderSms(composeInvitation(guest({ language_pref: 'FR' }), settings()));
     expect(sms).toContain('Baby Shower de Eddy & Nana');
     expect(sms).toContain('RSVP: ');
-  });
-});
-
-describe('composeUniversalInvitation type guard', () => {
-  it('is a MessageContent', () => {
-    expect(composeUniversalInvitation({}, 'EN').kind).toBe('invitation');
   });
 });
