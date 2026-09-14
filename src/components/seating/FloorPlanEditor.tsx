@@ -443,7 +443,7 @@ export const FloorPlanEditor = ({
                   <input type="range" min={500} max={2500} step={50} value={Math.min(draftFloorMap.canvasWidth, draftFloorMap.canvasHeight)} onChange={(e) => handleUpdateDiameter(parseInt(e.target.value, 10))} className="w-full accent-[#8B735B]" />
                 </div>
                 <button type="button" onClick={() => handleUpdateDiameter(Math.min(draftFloorMap.canvasWidth, draftFloorMap.canvasHeight) + 150)} className="w-full py-2 px-3 rounded-xl bg-[#EFE6DC] hover:bg-[#CBAE94] text-[#4A3F35] font-bold text-xs transition-colors flex items-center justify-center gap-1">
-                  <Maximize2 className="w-3.5 h-3.5 text-[#8B735B]" /> + Expand Room (+150px Ø)
+                  <Maximize2 className="w-3.5 h-3.5 text-[#8B735B]" /> {t.expandRoomDiameterBtn}
                 </button>
               </div>
             ) : (
@@ -517,7 +517,7 @@ export const FloorPlanEditor = ({
                   onClick={() => handleUpdateDraftRoomSize(draftFloorMap.canvasWidth + 200, draftFloorMap.canvasHeight + 150)}
                   className="w-full py-2 px-3 rounded-xl bg-[#EFE6DC] hover:bg-[#CBAE94] text-[#4A3F35] font-bold text-xs transition-colors flex items-center justify-center gap-1"
                 >
-                  <Maximize2 className="w-3.5 h-3.5 text-[#8B735B]" /> + Expand Room (+200×150px)
+                  <Maximize2 className="w-3.5 h-3.5 text-[#8B735B]" /> {t.expandRoomBtn}
                 </button>
               </div>
             )}
