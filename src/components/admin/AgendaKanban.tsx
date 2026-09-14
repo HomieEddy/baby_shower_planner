@@ -22,6 +22,7 @@ import { GripVertical, Clock } from 'lucide-react';
 import { AgendaStatus, AgendaTask, Language } from '../../types';
 import { Translations } from '../../translations';
 import { formatTime12h } from '../../lib/dateUtils';
+import { useT } from '../shared/i18n';
 
 interface AgendaKanbanProps {
   tasks: AgendaTask[];
@@ -53,6 +54,7 @@ function shortDueDate(ymd: string, lang: Language): string {
 }
 
 const TaskCard: React.FC<{ task: AgendaTask; language: Language; onOpenTask: (task: AgendaTask) => void }> = ({ task, language, onOpenTask }) => {
+  const t = useT();
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: task.id });
   const chipCls = COLUMNS.find(c => c.id === task.status)?.chipCls ?? 'border-l-sky-400';
   return (
@@ -67,7 +69,7 @@ const TaskCard: React.FC<{ task: AgendaTask; language: Language; onOpenTask: (ta
           {...attributes}
           {...listeners}
           className="p-1 rounded-md text-[#A09080] hover:bg-[#EFE6DC] cursor-grab active:cursor-grabbing shrink-0"
-          aria-label="Drag task"
+          aria-label={t.dragTaskLabel}
         >
           <GripVertical className="w-3.5 h-3.5" />
         </button>

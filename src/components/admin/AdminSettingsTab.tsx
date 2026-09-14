@@ -76,8 +76,8 @@ const SortableScheduleItem: React.FC<SortableScheduleItemProps> = ({ item, index
           <button
             type="button"
             {...listeners}
-            title="Drag to reorder"
-            aria-label={`Drag schedule item ${index + 1} to reorder`}
+            title={t.dragToReorderTitle}
+            aria-label={tf('dragScheduleItemAria', { n: index + 1 })}
             className="cursor-grab active:cursor-grabbing touch-none text-[#8B735B] hover:text-[#5D5449] hover:bg-[#EFE6DC] p-1 rounded-lg transition-colors"
           >
             <GripVertical className="w-4 h-4" />

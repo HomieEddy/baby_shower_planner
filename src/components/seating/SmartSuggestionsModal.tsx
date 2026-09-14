@@ -45,10 +45,10 @@ export const SmartSuggestionsModal = ({
           </div>
           <div>
             <h3 className="font-gaegu text-2xl font-bold text-[#4A3F35] leading-none">
-              Smart Seating Suggestions
+              {t.smartSuggestTitle}
             </h3>
             <p className="text-xs text-[#8B735B] font-medium mt-1">
-              Auto-matches unassigned guest parties to available venue tables by optimal capacity fit.
+              {t.smartSuggestSubtitle}
             </p>
           </div>
         </div>
@@ -101,7 +101,7 @@ export const SmartSuggestionsModal = ({
                       </span>
                     </h4>
                     <p className="text-xs text-[#5D5449] mt-0.5">
-                      Party Size: <strong className="text-[#4A3F35]">{sug.partySize} guest(s)</strong>
+                      {t.partySizeInline} <strong className="text-[#4A3F35]">{tf('guestsCount', { count: sug.partySize })}</strong>
                     </p>
                   </div>
                 </div>
@@ -111,7 +111,7 @@ export const SmartSuggestionsModal = ({
                     {sug.matchBadge}
                   </span>
                   <div className="text-xs font-bold text-[#8B735B] mt-1">
-                    Assign to <span className="text-[#4A3F35] underline">{sug.table.name}</span>
+                    {t.assignToLabel} <span className="text-[#4A3F35] underline">{sug.table.name}</span>
                   </div>
                 </div>
               </div>

@@ -33,6 +33,8 @@ export const ERROR_REGISTRY = {
   NO_EMAIL: { status: 400, message: 'No email address on file' },
   NO_PHONE: { status: 400, message: 'No phone number on file' },
   SEND_FAILED: { status: 500, message: 'Could not send the message' },
+  INVALID_CHANNEL: { status: 400, message: 'Invalid delivery channel' },
+  MESSAGE_REQUIRED: { status: 400, message: 'Thank-you message is required' },
 
   // Seating
   TABLE_OVER_CAPACITY: { status: 400, message: 'Table exceeds its capacity' },

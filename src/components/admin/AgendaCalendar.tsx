@@ -66,7 +66,7 @@ export const AgendaCalendar: React.FC<AgendaCalendarProps> = ({ tasks, t, langua
           type="button"
           onClick={() => setMonth(subMonths(month, 1))}
           className="p-2 rounded-xl border-2 border-[#CBAE94]/60 text-[#5D5449] hover:bg-[#EFE6DC] transition-colors cursor-pointer"
-          aria-label="Previous month"
+          aria-label={t.previousMonthLabel}
         >
           <ChevronLeft className="w-4 h-4" />
         </button>
@@ -86,7 +86,7 @@ export const AgendaCalendar: React.FC<AgendaCalendarProps> = ({ tasks, t, langua
           type="button"
           onClick={() => setMonth(addMonths(month, 1))}
           className="p-2 rounded-xl border-2 border-[#CBAE94]/60 text-[#5D5449] hover:bg-[#EFE6DC] transition-colors cursor-pointer"
-          aria-label="Next month"
+          aria-label={t.nextMonthLabel}
         >
           <ChevronRight className="w-4 h-4" />
         </button>

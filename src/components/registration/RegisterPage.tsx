@@ -6,12 +6,13 @@ import { useSearchParams, useNavigate } from 'react-router-dom';
 import { motion } from 'motion/react';
 import { CheckCircle2, Clock, Send, Users, XCircle } from 'lucide-react';
 import { EventDetailsCard } from '../rsvp/EventDetailsCard';
-import { useT, useTf } from '../shared/i18n';
+import { useT, useTf, useApiErrorMessage } from '../shared/i18n';
 import { BackButton } from '../shared/BackButton';
 import { useToast } from '../shared/ToastContext';
 import { useAppStore } from '../../stores/appStore';
 import { fadeUp } from '../shared/motionPresets';
 import { TextInput, Select } from '../shared/ui';
+import { decodeApiError } from '../../lib/errors';
 import type { Guest } from '../../types';
 
 const RegisterSchema = z.object({
@@ -31,6 +32,7 @@ type RegisterResult = { guest: Guest; already: boolean };
 export const RegisterPage = () => {
   const t = useT();
   const tf = useTf();
+  const apiError = useApiErrorMessage();
   const { toast } = useToast();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
@@ -85,7 +87,8 @@ export const RegisterPage = () => {
       if (res.ok && json.guest) {
         setResult({ guest: json.guest, already: !!json.already_registered });
       } else {
-        toast.error(json.message || t.registerErrorToast);
+        const { code, message } = decodeApiError(json, res.status);
+        toast.error(apiError(code, message || t.registerErrorToast));
       }
     } catch {
       toast.error(t.registerErrorToast);

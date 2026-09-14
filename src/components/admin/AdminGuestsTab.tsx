@@ -36,7 +36,8 @@ import { useConfirm } from '../shared/ConfirmDialog';
 import { useCopyFeedback } from '../shared/hooks';
 import { Modal } from '../shared/Modal';
 import { useToast } from '../shared/ToastContext';
-import { useTf } from '../shared/i18n';
+import { useTf, useApiErrorMessage } from '../shared/i18n';
+import { decodeApiError } from '../../lib/errors';
 import { EmptyState } from '../shared/EmptyState';
 import { TextInput, Select } from '../shared/ui';
 
@@ -81,6 +82,7 @@ export const AdminGuestsTab: React.FC<AdminGuestsTabProps> = ({ language, t, gue
   const [searchParams, setSearchParams] = useSearchParams();
   const { toast } = useToast();
   const tf = useTf();
+  const apiError = useApiErrorMessage();
   const confirm = useConfirm();
 
   const [submittingGuest, setSubmittingGuest] = useState(false);
@@ -267,7 +269,8 @@ export const AdminGuestsTab: React.FC<AdminGuestsTabProps> = ({ language, t, gue
         toast.love(tf('guestUpdatedToast', { name: data.guest.name }));
         await onRefresh();
       } else {
-        toast.error(data.error || data.message || t.invitesErrorToast);
+        const { code, message } = decodeApiError(data, res.status);
+        toast.error(apiError(code, message || t.invitesErrorToast));
       }
     } catch (err) {
       console.error('Failed to update guest:', err);
@@ -309,7 +312,8 @@ export const AdminGuestsTab: React.FC<AdminGuestsTabProps> = ({ language, t, gue
         toast.info(tf(data.deleted ? 'guestDeletedToast' : 'attendeeRemovedToast', { name: removedName }));
         await onRefresh();
       } else {
-        toast.error(data.message || data.error || t.invitesErrorToast);
+        const { code, message } = decodeApiError(data, res.status);
+        toast.error(apiError(code, message || t.invitesErrorToast));
       }
     } catch (err) {
       console.error('Failed to remove attendee:', err);
@@ -504,7 +508,7 @@ export const AdminGuestsTab: React.FC<AdminGuestsTabProps> = ({ language, t, gue
           setValue('phone', '');
           await onRefresh();
         } else if (data.error) {
-          toast.error(data.error);
+          toast.error(apiError(data.error, t.invitesErrorToast));
         }
       } else if (data.guest && data.magic_token) {
         const contactInfo = [data.guest.email, data.guest.phone].filter(Boolean).join(' | ');
@@ -519,7 +523,7 @@ export const AdminGuestsTab: React.FC<AdminGuestsTabProps> = ({ language, t, gue
         setValue('phone', '');
         await onRefresh();
       } else if (data.error) {
-        toast.error(data.error);
+        toast.error(apiError(data.error, t.invitesErrorToast));
       }
     } catch (err) {
       console.error('Error adding guest:', err);

@@ -72,7 +72,7 @@ export const DayOfQrModal: React.FC<DayOfQrModalProps> = ({
                     : 'text-[#8B735B] hover:bg-[#EFE6DC]'
                 }`}
               >
-                Français (FR)
+                {t.presetFrench}
               </button>
               <button
                 type="button"
@@ -83,7 +83,7 @@ export const DayOfQrModal: React.FC<DayOfQrModalProps> = ({
                     : 'text-[#8B735B] hover:bg-[#EFE6DC]'
                 }`}
               >
-                English (EN)
+                {t.presetEnglish}
               </button>
             </div>
           </div>

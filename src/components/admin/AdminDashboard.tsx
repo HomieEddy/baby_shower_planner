@@ -385,7 +385,7 @@ export const AdminDashboard = () => {
       </motion.div>
 
       {/* Breadcrumbs */}
-      <nav className="flex items-center gap-1.5 text-xs font-mono font-bold text-[#8B735B]" aria-label="Breadcrumb">
+      <nav className="flex items-center gap-1.5 text-xs font-mono font-bold text-[#8B735B]" aria-label={t.breadcrumbLabel}>
         <span className="text-[#A09080]">{t.adminTitle}</span>
         <ChevronRight className="w-3.5 h-3.5 text-[#CBAE94]" />
         <span className="text-[#4A3F35]">{tabLabel(adminSubTab)}</span>
@@ -408,7 +408,7 @@ export const AdminDashboard = () => {
           type="button"
           onClick={() => setSidebarOpen(true)}
           className="p-2 rounded-xl hover:bg-[#EFE6DC] text-[#4A3F35] transition-colors cursor-pointer"
-          aria-label="Open navigation"
+          aria-label={t.openNavLabel}
         >
           <Menu className="w-5 h-5" />
         </button>
@@ -443,7 +443,7 @@ export const AdminDashboard = () => {
                 type="button"
                 onClick={() => setSidebarOpen(false)}
                 className="p-3 rounded-lg hover:bg-[#EFE6DC] text-[#5D5449] transition-colors cursor-pointer"
-                aria-label="Close navigation"
+                aria-label={t.closeNavLabel}
               >
                 <X className="w-4 h-4" />
               </button>

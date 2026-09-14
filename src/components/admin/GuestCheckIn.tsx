@@ -4,12 +4,14 @@ import { adminFetch } from '../../lib/api';
 import { getPartyMembers, isMemberCheckedIn } from '../../lib/guestAttendees';
 import { useToast } from '../shared/ToastContext';
 import { CheckCircle2, RotateCcw, Users, UserCheck, UserX, ChevronDown, ChevronRight } from 'lucide-react';
-import { useT, useTf } from '../shared/i18n';
+import { useT, useTf, useApiErrorMessage } from '../shared/i18n';
+import { decodeApiError } from '../../lib/errors';
 import { SearchInput } from '../shared/ui';
 
 export const GuestCheckIn = () => {
   const t = useT();
   const tf = useTf();
+  const apiError = useApiErrorMessage();
   const { toast } = useToast();
   const [guests, setGuests] = useState<Guest[]>([]);
   const [search, setSearch] = useState('');
@@ -56,7 +58,8 @@ export const GuestCheckIn = () => {
       });
       if (!res.ok) {
         const data = await res.json().catch(() => ({}));
-        toast.error(data.message || data.error || t.checkinFailedToast);
+        const { code, message } = decodeApiError(data, res.status);
+        toast.error(apiError(code, message || t.checkinFailedToast));
         return;
       }
       toast.success(successMsg);

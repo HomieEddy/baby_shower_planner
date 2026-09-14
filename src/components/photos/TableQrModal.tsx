@@ -2,47 +2,52 @@ import { useState } from 'react';
 import { QrCode, Printer } from 'lucide-react';
 import { TableElement } from '../../types';
 import { Modal } from '../shared/Modal';
-import { useT } from '../shared/i18n';
+import { useT, useTf } from '../shared/i18n';
 
 const qrUrl = (tableId: string) =>
   `https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encodeURIComponent(
     `${window.location.origin}/upload-photos?tableId=${tableId}`
   )}`;
 
-const QrStandeeCard = ({ table, last }: { table: TableElement; last?: boolean }) => (
-  <div
-    className={`printable-qr-card p-6 bg-[#FAF6F0] rounded-3xl border-2 border-dashed border-[#8B735B] text-center space-y-4 ${
-      last ? '' : 'page-break-after'
-    }`}
-  >
-    <span className="inline-block px-3 py-1 rounded-full bg-amber-200 text-amber-900 text-xs font-bold uppercase tracking-wider">
-      {table.name} • Photo Drop
-    </span>
+const QrStandeeCard = ({ table, last }: { table: TableElement; last?: boolean }) => {
+  const t = useT();
+  const tf = useTf();
+  return (
+    <div
+      className={`printable-qr-card p-6 bg-[#FAF6F0] rounded-3xl border-2 border-dashed border-[#8B735B] text-center space-y-4 ${
+        last ? '' : 'page-break-after'
+      }`}
+    >
+      <span className="inline-block px-3 py-1 rounded-full bg-amber-200 text-amber-900 text-xs font-bold uppercase tracking-wider">
+        {table.name} • {t.tableQrPhotoDrop}
+      </span>
 
-    <h4 className="font-gaegu text-3xl font-bold text-[#4A3F35]">
-      Share Your Baby Shower Photos!
-    </h4>
+      <h4 className="font-gaegu text-3xl font-bold text-[#4A3F35]">
+        {t.tableQrShareTitle}
+      </h4>
 
-    <div className="w-40 h-40 mx-auto bg-white p-3 rounded-2xl border-2 border-[#CBAE94] shadow-md flex items-center justify-center">
-      <img
-        src={qrUrl(table.id)}
-        alt={`QR code for ${table.name}`}
-        className="w-full h-full object-contain"
-      />
+      <div className="w-40 h-40 mx-auto bg-white p-3 rounded-2xl border-2 border-[#CBAE94] shadow-md flex items-center justify-center">
+        <img
+          src={qrUrl(table.id)}
+          alt={tf('tableQrAlt', { name: table.name })}
+          className="w-full h-full object-contain"
+        />
+      </div>
+
+      <p className="text-xs font-medium text-[#8B735B] max-w-sm mx-auto leading-relaxed">
+        {t.tableQrScanDesc}
+      </p>
+
+      <div className="text-xs font-mono text-[#8B735B] pt-2 border-t border-dashed border-[#CBAE94]/60">
+        {tf('tableQrCardFooter', { name: table.name })}
+      </div>
     </div>
-
-    <p className="text-xs font-medium text-[#8B735B] max-w-sm mx-auto leading-relaxed">
-      Scan this QR code with your smartphone camera to instantly upload table photos into the hosts' memory library!
-    </p>
-
-    <div className="text-xs font-mono text-[#8B735B] pt-2 border-t border-dashed border-[#CBAE94]/60">
-      Table: {table.name} • Scan & Upload • No App Required
-    </div>
-  </div>
-);
+  );
+};
 
 export const TableQrModal = ({ open, onClose, tables }: { open: boolean; onClose: () => void; tables: TableElement[] }) => {
   const t = useT();
+  const tf = useTf();
   const [printScope, setPrintScope] = useState<'single' | 'all'>('single');
   const [selectedPrintTable, setSelectedPrintTable] = useState<TableElement | null>(null);
 
@@ -58,22 +63,22 @@ export const TableQrModal = ({ open, onClose, tables }: { open: boolean; onClose
           </div>
           <div>
             <h3 className="font-gaegu text-2xl font-bold text-[#4A3F35]">
-              Print Table Photo Upload Standees
+              {t.tableQrPrintTitle}
             </h3>
             <p className="text-xs text-[#8B735B]">
-              Place these QR standees on every table so guests can upload photos!
+              {t.tableQrPrintSubtitle}
             </p>
           </div>
         </div>
       }>
       <div className="p-4 rounded-2xl bg-amber-500/10 border border-amber-500/30 text-amber-900 text-xs print:hidden">
-        <strong>{t.howItWorksLabel}</strong> Guests scan the QR code placed on their table. It opens the Photo Upload portal directly with their table pre-selected!
+        <strong>{t.howItWorksLabel}</strong> {t.tableQrHowItWorks}
       </div>
 
       {/* Print Scope Switcher */}
       <div className="space-y-2 print:hidden">
         <label className="block text-xs font-bold text-[#4A3F35]">
-          Print Mode:
+          {t.tableQrPrintModeLabel}
         </label>
         <div className="flex gap-2">
           <button
@@ -85,7 +90,7 @@ export const TableQrModal = ({ open, onClose, tables }: { open: boolean; onClose
                 : 'bg-white text-[#4A3F35] border-[#CBAE94]/60 hover:bg-[#EFE6DC]'
             }`}
           >
-            Single Table Standee
+            {t.tableQrSingleStandee}
           </button>
           <button
             type="button"
@@ -96,7 +101,7 @@ export const TableQrModal = ({ open, onClose, tables }: { open: boolean; onClose
                 : 'bg-white text-[#4A3F35] border-[#CBAE94]/60 hover:bg-[#EFE6DC]'
             }`}
           >
-            All Venue Tables ({tables.length} Standees)
+            {tf('tableQrAllStandees', { count: tables.length })}
           </button>
         </div>
       </div>
@@ -105,7 +110,7 @@ export const TableQrModal = ({ open, onClose, tables }: { open: boolean; onClose
       {printScope === 'single' && (
         <div className="print:hidden">
           <label className="block text-xs font-bold text-[#4A3F35] mb-2">
-            Select Venue Table Standee:
+            {t.tableQrSelectTable}
           </label>
           <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 max-h-40 overflow-y-auto">
             {tables.map((tbl) => (
@@ -147,7 +152,7 @@ export const TableQrModal = ({ open, onClose, tables }: { open: boolean; onClose
           onClick={onClose}
           className="px-4 py-2.5 rounded-xl border border-[#CBAE94] text-xs font-bold text-[#4A3F35]"
         >
-          Close
+          {t.closeModal}
         </button>
 
         <button
@@ -156,7 +161,7 @@ export const TableQrModal = ({ open, onClose, tables }: { open: boolean; onClose
           className="px-5 py-2.5 rounded-xl bg-[#8B735B] text-white text-xs font-bold flex items-center gap-2 hover:bg-[#705C47]"
         >
           <Printer className="w-4 h-4" />
-          <span>Print {printScope === 'all' ? `All (${tables.length})` : 'Selected'} Standees</span>
+          <span>{printScope === 'all' ? tf('tableQrPrintAllBtn', { count: tables.length }) : t.tableQrPrintSelectedBtn}</span>
         </button>
       </div>
     </Modal>

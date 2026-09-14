@@ -11,7 +11,7 @@ import { useCapabilities, availableChannels, channelLabel } from '../../lib/capa
 import { motion, AnimatePresence } from 'motion/react';
 import { useToast } from '../shared/ToastContext';
 import { useConfirm } from '../shared/ConfirmDialog';
-import { useT, useTf } from '../shared/i18n';
+import { useT, useTf, useApiErrorMessage } from '../shared/i18n';
 import { useCopyFeedback } from '../shared/hooks';
 import { Modal } from '../shared/Modal';
 import { ConfirmationView } from './ConfirmationView';
@@ -46,6 +46,7 @@ export const RsvpPage = () => {
   const { token } = useParams<{ token: string }>();
   const t = useT();
   const tf = useTf();
+  const apiError = useApiErrorMessage();
   const { toast } = useToast();
 
   const [guest, setGuest] = useState<Guest | null>(null);
@@ -198,7 +199,8 @@ export const RsvpPage = () => {
         setGuest(data.guest);
         toast.love(t.contactSavedToast);
       } else {
-        toast.error(data.message || t.contactSaveErrorToast);
+        const { code, message } = decodeApiError(data, res.status);
+        toast.error(apiError(code, message || t.contactSaveErrorToast));
       }
     } catch (err) {
       console.error('Contact save error:', err);
@@ -230,7 +232,8 @@ export const RsvpPage = () => {
         setInviteNote('');
         fetchInvites();
       } else {
-        toast.error(data.message || t.inviteFailedToast);
+        const { code, message } = decodeApiError(data, res.status);
+        toast.error(apiError(code, message || t.inviteFailedToast));
       }
     } catch (err) {
       console.error('Invite error:', err);
@@ -301,7 +304,7 @@ export const RsvpPage = () => {
         }
       } else {
         const { code, message } = decodeApiError(dataRes, res.status);
-        toast.error(code === 'RSVP_CLOSED' ? t.rsvpClosedToast : message || t.rsvpSubmitErrorToast);
+        toast.error(code === 'RSVP_CLOSED' ? t.rsvpClosedToast : apiError(code, message || t.rsvpSubmitErrorToast));
       }
     } catch (err) {
       console.error('RSVP submit error:', err);

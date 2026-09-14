@@ -609,11 +609,7 @@ export const FloorPlanEditor = ({
               <Info className="w-3.5 h-3.5" /> {t.quickGuideLabel}
             </p>
             <p className="text-xs leading-relaxed">
-              • Click elements on the canvas stage to select them.
-              <br />
-              • Drag elements to position them around the venue floor.
-              <br />
-              • Click <strong>{t.btnSaveChanges}</strong> at top right when done!
+              {tf('quickGuideText', { save: t.btnSaveChanges })}
             </p>
           </div>
         </div>

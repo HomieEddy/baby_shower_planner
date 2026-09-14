@@ -23,7 +23,7 @@ import { BackButton } from '../shared/BackButton';
 import { LockedNotice } from '../shared/LockedNotice';
 import { uploadPhotoBase64 } from '../../lib/fileUtils';
 import { useAppStore } from '../../stores/appStore';
-import { useT, useTf } from '../shared/i18n';
+import { useT, useTf, useApiErrorMessage } from '../shared/i18n';
 import { useFloorMapTables } from '../shared/hooks';
 import { isValidCode } from '../../lib/validation';
 import { PhotoDropzone, PhotoFileCard, UploadSuccessScreen } from './PhotoUploadParts';
@@ -42,6 +42,7 @@ export const GuestPhotoUploadPage = () => {
   const language = useAppStore((s) => s.language);
   const t = useT();
   const tf = useTf();
+  const apiError = useApiErrorMessage();
   const [searchParams] = useSearchParams();
   const initialTableId = searchParams.get('tableId') || undefined;
   const { toast } = useToast();
@@ -262,7 +263,7 @@ export const GuestPhotoUploadPage = () => {
         if (code === 'PHOTO_SIZE_LIMIT_REACHED') {
           throw new Error(t.uploadPhotoSizeLimitToast);
         }
-        throw new Error(message || t.uploadFailedGeneric);
+        throw new Error(apiError(code, message || t.uploadFailedGeneric));
       }
 
       setUploadProgress(100);

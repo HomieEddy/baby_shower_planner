@@ -16,6 +16,7 @@ import { adminFetch } from '../../lib/api';
 import { useToast } from '../shared/ToastContext';
 import { useConfirm } from '../shared/ConfirmDialog';
 import { adminContainerVariants, adminCardVariants } from '../shared/motionPresets';
+import { useApiErrorMessage } from '../shared/i18n';
 import { AgendaCalendar } from './AgendaCalendar';
 import { AgendaKanban } from './AgendaKanban';
 import { AgendaTaskModal } from './AgendaTaskModal';
@@ -46,6 +47,7 @@ export const AdminAgendaTab: React.FC<AdminAgendaTabProps> = ({ language, t, set
   const { toast } = useToast();
   const confirm = useConfirm();
   const queryClient = useQueryClient();
+  const apiError = useApiErrorMessage();
 
   const [view, setView] = useState<'calendar' | 'kanban'>('kanban');
   const [modal, setModal] = useState<ModalState>(null);
@@ -145,7 +147,7 @@ export const AdminAgendaTab: React.FC<AdminAgendaTabProps> = ({ language, t, set
     });
     const data = await res.json();
     if (!res.ok || !data.success) {
-      throw new Error(data.error || 'Failed to save task');
+      throw new Error(apiError(data.error, t.SERVER_ERROR));
     }
     setModal(null);
     toast.success(t.agendaTaskSavedToast);
@@ -282,12 +284,12 @@ export const AdminAgendaTab: React.FC<AdminAgendaTabProps> = ({ language, t, set
           <button type="button" onClick={() => setReminderForm((f) => ({ ...f, emailOn: !f.emailOn }))} className={toggleCls(emailOn)}>
             <Mail className="w-4 h-4" />
             {t.agendaReminderEmailLabel}
-            {caps?.email ? null : <span className="ml-auto text-xs font-mono text-amber-700 bg-amber-100 px-1.5 py-0.5 rounded-full">MOCK</span>}
+            {caps?.email ? null : <span className="ml-auto text-xs font-mono text-amber-700 bg-amber-100 px-1.5 py-0.5 rounded-full">{t.mockBadge}</span>}
           </button>
           <button type="button" onClick={() => setReminderForm((f) => ({ ...f, smsOn: !f.smsOn }))} className={toggleCls(smsOn)}>
             <MessageSquare className="w-4 h-4" />
             {t.agendaReminderSmsLabel}
-            {caps?.sms ? null : <span className="ml-auto text-xs font-mono text-amber-700 bg-amber-100 px-1.5 py-0.5 rounded-full">MOCK</span>}
+            {caps?.sms ? null : <span className="ml-auto text-xs font-mono text-amber-700 bg-amber-100 px-1.5 py-0.5 rounded-full">{t.mockBadge}</span>}
           </button>
         </div>
 
@@ -315,8 +317,8 @@ export const AdminAgendaTab: React.FC<AdminAgendaTabProps> = ({ language, t, set
           <div>
             <label className="label-mono block mb-1">{t.agendaReminderLangLabel}</label>
             <select value={hostLang} onChange={(e) => setReminderForm((f) => ({ ...f, hostLang: e.target.value as Language }))} className={inputCls}>
-              <option value="EN">English</option>
-              <option value="FR">Français</option>
+              <option value="EN">{t.presetEnglish}</option>
+              <option value="FR">{t.presetFrench}</option>
             </select>
           </div>
         </div>

@@ -1120,6 +1120,87 @@ export interface Translations {
   pageNotFoundTitle: string;
   pageNotFoundMsg: string;
   skipToContent: string;
+  // Hardcoded-string cleanup
+  escortTitle: string;
+  escortSubtitle: string;
+  escortPrintBtn: string;
+  escortPrintBtn_one: string;
+  escortPrintBtn_other: string;
+  escortItemsCount: string;
+  escortItemsCount_one: string;
+  escortItemsCount_other: string;
+  escortPaperLayout: string;
+  escortHeaderWithBaby: string;
+  escortHeaderDefault: string;
+  qrCodeAlt: string;
+  mockBadge: string;
+  breadcrumbLabel: string;
+  openNavLabel: string;
+  closeNavLabel: string;
+  dragToReorderTitle: string;
+  dragScheduleItemAria: string;
+  previousMonthLabel: string;
+  nextMonthLabel: string;
+  dragTaskLabel: string;
+  switchLanguageTitle: string;
+  selectedUploadPreviewAlt: string;
+  smartSuggestTitle: string;
+  smartSuggestSubtitle: string;
+  partySizeInline: string;
+  guestsCount: string;
+  guestsCount_one: string;
+  guestsCount_other: string;
+  assignToLabel: string;
+  tableQrPhotoDrop: string;
+  tableQrShareTitle: string;
+  tableQrAlt: string;
+  tableQrScanDesc: string;
+  tableQrCardFooter: string;
+  tableQrPrintTitle: string;
+  tableQrPrintSubtitle: string;
+  tableQrHowItWorks: string;
+  tableQrPrintModeLabel: string;
+  tableQrSingleStandee: string;
+  tableQrAllStandees: string;
+  tableQrSelectTable: string;
+  tableQrPrintAllBtn: string;
+  tableQrPrintSelectedBtn: string;
+  // API error codes (keyed by the domain error code)
+  INVALID_TOKEN: string;
+  PENDING_APPROVAL: string;
+  REGISTRATION_REJECTED: string;
+  RSVP_ALREADY_SUBMITTED: string;
+  RSVP_CLOSED: string;
+  RSVP_READ_ONLY: string;
+  EMAIL_REQUIRED: string;
+  PHONE_REQUIRED: string;
+  CONTACT_UPDATE_FAILED: string;
+  NAME_REQUIRED: string;
+  INVALID_EMAIL: string;
+  PARTY_TOO_LARGE: string;
+  RATE_LIMITED: string;
+  GUEST_DECLINED: string;
+  DECLINED: string;
+  NOT_IN_PARTY: string;
+  ONLY_LEAD: string;
+  ATTENDEE_NOT_FOUND: string;
+  GUEST_NOT_FOUND: string;
+  NO_EMAIL: string;
+  NO_PHONE: string;
+  SEND_FAILED: string;
+  INVALID_CHANNEL: string;
+  MESSAGE_REQUIRED: string;
+  TABLE_OVER_CAPACITY: string;
+  SEAT_UNKNOWN_GUEST: string;
+  SEAT_GUEST_NOT_ATTENDING: string;
+  SEAT_INDEX_OUT_OF_RANGE: string;
+  SEAT_DUPLICATE_ATTENDEE: string;
+  INVALID_CODE: string;
+  NOT_FOUND: string;
+  GUEST_CONTENT_LOCKED: string;
+  PHOTO_LIMIT_REACHED: string;
+  PHOTO_SIZE_LIMIT_REACHED: string;
+  SERVER_ERROR: string;
 }
 
 export const translations: Record<Language, Translations> = {
@@ -2243,6 +2324,86 @@ export const translations: Record<Language, Translations> = {
     pageNotFoundTitle: "Page Not Found",
     pageNotFoundMsg: "That page doesn't exist or was moved.",
     skipToContent: "Skip to content",
+    // Hardcoded-string cleanup
+    escortTitle: "Table Escort Cards & Name Tags",
+    escortSubtitle: "Print ready-to-fold place cards and wearable name tags with custom table assignments and QR codes.",
+    escortPrintBtn: "Print {{count}} Cards",
+    escortPrintBtn_one: "Print {{count}} Card",
+    escortPrintBtn_other: "Print {{count}} Cards",
+    escortItemsCount: "{{count}} items",
+    escortItemsCount_one: "{{count}} item",
+    escortItemsCount_other: "{{count}} items",
+    escortPaperLayout: "2-Column Grid (Standard A4 / Letter)",
+    escortHeaderWithBaby: "Celebrating Baby {{name}}",
+    escortHeaderDefault: "Welcome to Our Baby Shower",
+    qrCodeAlt: "QR code",
+    mockBadge: "MOCK",
+    breadcrumbLabel: "Breadcrumb",
+    openNavLabel: "Open navigation",
+    closeNavLabel: "Close navigation",
+    dragToReorderTitle: "Drag to reorder",
+    dragScheduleItemAria: "Drag schedule item {{n}} to reorder",
+    previousMonthLabel: "Previous month",
+    nextMonthLabel: "Next month",
+    dragTaskLabel: "Drag task",
+    switchLanguageTitle: "Switch language",
+    selectedUploadPreviewAlt: "Selected upload preview",
+    smartSuggestTitle: "Smart Seating Suggestions",
+    smartSuggestSubtitle: "Auto-matches unassigned guest parties to available venue tables by optimal capacity fit.",
+    partySizeInline: "Party Size:",
+    guestsCount: "{{count}} guest(s)",
+    guestsCount_one: "{{count}} guest",
+    guestsCount_other: "{{count}} guests",
+    assignToLabel: "Assign to",
+    tableQrPhotoDrop: "Photo Drop",
+    tableQrShareTitle: "Share Your Baby Shower Photos!",
+    tableQrAlt: "QR code for {{name}}",
+    tableQrScanDesc: "Scan this QR code with your smartphone camera to instantly upload table photos into the hosts' memory library!",
+    tableQrCardFooter: "Table: {{name}} • Scan & Upload • No App Required",
+    tableQrPrintTitle: "Print Table Photo Upload Standees",
+    tableQrPrintSubtitle: "Place these QR standees on every table so guests can upload photos!",
+    tableQrHowItWorks: "Guests scan the QR code placed on their table. It opens the Photo Upload portal directly with their table pre-selected!",
+    tableQrPrintModeLabel: "Print Mode:",
+    tableQrSingleStandee: "Single Table Standee",
+    tableQrAllStandees: "All Venue Tables ({{count}} Standees)",
+    tableQrSelectTable: "Select Venue Table Standee:",
+    tableQrPrintAllBtn: "Print All ({{count}}) Standees",
+    tableQrPrintSelectedBtn: "Print Selected Standees",
+    INVALID_TOKEN: "Invitation token not found",
+    PENDING_APPROVAL: "This registration is awaiting host approval.",
+    REGISTRATION_REJECTED: "This registration was not approved.",
+    RSVP_ALREADY_SUBMITTED: "This RSVP was already submitted. Edit it from the confirmation screen.",
+    RSVP_CLOSED: "RSVPs are closed — the event has already passed.",
+    RSVP_READ_ONLY: "This RSVP is read-only.",
+    EMAIL_REQUIRED: "Email is required for email delivery",
+    PHONE_REQUIRED: "Phone number is required for SMS delivery",
+    CONTACT_UPDATE_FAILED: "Could not update contact details",
+    NAME_REQUIRED: "Name is required",
+    INVALID_EMAIL: "Invalid email address",
+    PARTY_TOO_LARGE: "Party size cannot exceed 20",
+    RATE_LIMITED: "Too many requests. Try again later.",
+    GUEST_DECLINED: "This guest declined the invitation.",
+    DECLINED: "This guest declined the invitation.",
+    NOT_IN_PARTY: "Name is not part of this party.",
+    ONLY_LEAD: "Only the party lead can do that",
+    ATTENDEE_NOT_FOUND: "Attendee not found in this party.",
+    GUEST_NOT_FOUND: "Guest not found",
+    NO_EMAIL: "No email address on file",
+    NO_PHONE: "No phone number on file",
+    SEND_FAILED: "Could not send the message",
+    INVALID_CHANNEL: "Invalid delivery channel",
+    MESSAGE_REQUIRED: "Thank-you message is required",
+    TABLE_OVER_CAPACITY: "Table exceeds its capacity",
+    SEAT_UNKNOWN_GUEST: "Seat references an unknown guest",
+    SEAT_GUEST_NOT_ATTENDING: "Only attending guests can be seated",
+    SEAT_INDEX_OUT_OF_RANGE: "Seat attendee index is out of range",
+    SEAT_DUPLICATE_ATTENDEE: "An attendee cannot occupy two seats",
+    INVALID_CODE: "Invalid reservation code",
+    NOT_FOUND: "Not found",
+    GUEST_CONTENT_LOCKED: "Guest content is locked",
+    PHOTO_LIMIT_REACHED: "Photo limit reached",
+    PHOTO_SIZE_LIMIT_REACHED: "Photo size limit reached",
+    SERVER_ERROR: "Something went wrong",
   },
   FR: {
     activeAlertsHistory: "Historique des alertes diffusées",
@@ -3220,7 +3381,7 @@ export const translations: Record<Language, Translations> = {
     printPreviewLabel: "Apercu d'impression",
     paperLayoutLabel: "Disposition papier",
     noAttendingGuestsMsg: "Aucun invite confirme pour l'instant - les cartes apparaitront ici une fois les invites confirmes.",
-    seatedAtLabel: "Place a",
+    seatedAtLabel: "Placé à",
     helloMyNameIsLabel: "Bonjour, je m'appelle",
     pauseBtn: "Pause",
     playBtn: "Lecture",
@@ -3364,5 +3525,85 @@ export const translations: Record<Language, Translations> = {
     pageNotFoundTitle: "Page introuvable",
     pageNotFoundMsg: "Cette page n'existe pas ou a été déplacée.",
     skipToContent: "Aller au contenu",
+    // Hardcoded-string cleanup
+    escortTitle: "Cartes de table & badges nominatifs",
+    escortSubtitle: "Imprimez des cartes à plier et des badges nominatifs avec l'attribution des tables et des codes QR personnalisés.",
+    escortPrintBtn: "Imprimer {{count}} cartes",
+    escortPrintBtn_one: "Imprimer {{count}} carte",
+    escortPrintBtn_other: "Imprimer {{count}} cartes",
+    escortItemsCount: "{{count}} éléments",
+    escortItemsCount_one: "{{count}} élément",
+    escortItemsCount_other: "{{count}} éléments",
+    escortPaperLayout: "Grille 2 colonnes (A4 / Letter standard)",
+    escortHeaderWithBaby: "Célébration de bébé {{name}}",
+    escortHeaderDefault: "Bienvenue à notre baby shower",
+    qrCodeAlt: "Code QR",
+    mockBadge: "SIMULÉ",
+    breadcrumbLabel: "Fil d'Ariane",
+    openNavLabel: "Ouvrir la navigation",
+    closeNavLabel: "Fermer la navigation",
+    dragToReorderTitle: "Glisser pour réordonner",
+    dragScheduleItemAria: "Glisser l'élément {{n}} pour réordonner",
+    previousMonthLabel: "Mois précédent",
+    nextMonthLabel: "Mois suivant",
+    dragTaskLabel: "Déplacer la tâche",
+    switchLanguageTitle: "Changer de langue",
+    selectedUploadPreviewAlt: "Aperçu de la photo sélectionnée",
+    smartSuggestTitle: "Suggestions de placement intelligentes",
+    smartSuggestSubtitle: "Associe automatiquement les groupes non placés aux tables disponibles selon la capacité optimale.",
+    partySizeInline: "Taille du groupe :",
+    guestsCount: "{{count}} invité(s)",
+    guestsCount_one: "{{count}} invité",
+    guestsCount_other: "{{count}} invités",
+    assignToLabel: "Assigner à",
+    tableQrPhotoDrop: "Dépôt photo",
+    tableQrShareTitle: "Partagez vos photos du baby shower !",
+    tableQrAlt: "Code QR pour {{name}}",
+    tableQrScanDesc: "Scannez ce code QR avec l'appareil photo de votre téléphone pour envoyer instantanément les photos de votre table dans la galerie des hôtes !",
+    tableQrCardFooter: "Table : {{name}} • Scannez et envoyez • Aucune appli requise",
+    tableQrPrintTitle: "Imprimer les chevalets QR de partage photo",
+    tableQrPrintSubtitle: "Placez ces chevalets QR sur chaque table pour que les invités puissent envoyer des photos !",
+    tableQrHowItWorks: "Les invités scannent le code QR placé sur leur table. Il ouvre le portail d'envoi de photos avec leur table déjà sélectionnée !",
+    tableQrPrintModeLabel: "Mode d'impression :",
+    tableQrSingleStandee: "Chevalet d'une table",
+    tableQrAllStandees: "Toutes les tables ({{count}} chevalets)",
+    tableQrSelectTable: "Sélectionnez la table :",
+    tableQrPrintAllBtn: "Imprimer tout ({{count}})",
+    tableQrPrintSelectedBtn: "Imprimer la sélection",
+    INVALID_TOKEN: "Jeton d'invitation introuvable",
+    PENDING_APPROVAL: "Cette inscription est en attente de l'approbation de l'hôte.",
+    REGISTRATION_REJECTED: "Cette inscription n'a pas été approuvée.",
+    RSVP_ALREADY_SUBMITTED: "Cette réponse a déjà été envoyée. Modifiez-la depuis l'écran de confirmation.",
+    RSVP_CLOSED: "Les réponses sont closes — l'événement est déjà passé.",
+    RSVP_READ_ONLY: "Cette réponse est en lecture seule.",
+    EMAIL_REQUIRED: "Un e-mail est requis pour l'envoi par e-mail",
+    PHONE_REQUIRED: "Un numéro de téléphone est requis pour l'envoi par SMS",
+    CONTACT_UPDATE_FAILED: "Impossible de mettre à jour les coordonnées",
+    NAME_REQUIRED: "Le nom est requis",
+    INVALID_EMAIL: "Adresse e-mail invalide",
+    PARTY_TOO_LARGE: "La taille du groupe ne peut pas dépasser 20",
+    RATE_LIMITED: "Trop de requêtes. Réessayez plus tard.",
+    GUEST_DECLINED: "Cet invité a refusé l'invitation.",
+    DECLINED: "Cet invité a refusé l'invitation.",
+    NOT_IN_PARTY: "Ce nom ne fait pas partie de ce groupe.",
+    ONLY_LEAD: "Seul le responsable du groupe peut le faire",
+    ATTENDEE_NOT_FOUND: "Personne introuvable dans ce groupe.",
+    GUEST_NOT_FOUND: "Invité introuvable",
+    NO_EMAIL: "Aucune adresse e-mail enregistrée",
+    NO_PHONE: "Aucun numéro de téléphone enregistré",
+    SEND_FAILED: "Impossible d'envoyer le message",
+    INVALID_CHANNEL: "Canal d'envoi invalide",
+    MESSAGE_REQUIRED: "Le message de remerciement est requis",
+    TABLE_OVER_CAPACITY: "La table dépasse sa capacité",
+    SEAT_UNKNOWN_GUEST: "Le siège référence un invité inconnu",
+    SEAT_GUEST_NOT_ATTENDING: "Seuls les invités présents peuvent être placés",
+    SEAT_INDEX_OUT_OF_RANGE: "L'index du siège est hors limites",
+    SEAT_DUPLICATE_ATTENDEE: "Une personne ne peut pas occuper deux sièges",
+    INVALID_CODE: "Code de réservation invalide",
+    NOT_FOUND: "Introuvable",
+    GUEST_CONTENT_LOCKED: "Le contenu invité est verrouillé",
+    PHOTO_LIMIT_REACHED: "Limite de photos atteinte",
+    PHOTO_SIZE_LIMIT_REACHED: "Limite de taille des photos atteinte",
+    SERVER_ERROR: "Une erreur est survenue",
   },
 };

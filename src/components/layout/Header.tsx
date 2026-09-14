@@ -35,7 +35,7 @@ export const Header: React.FC<HeaderProps> = ({ minimal = false, sticky = true }
             whileHover={{ scale: 1.05, rotate: 3 }}
             whileTap={{ scale: 0.95 }}
             className="inline-flex px-4 py-2.5 rounded-full bg-white border border-[#4A3F35]/15 hover:bg-[#E9E0D2]/50 text-[#4A3F35] text-xs font-mono font-bold items-center space-x-1.5 shadow-2xs cursor-pointer"
-            title="Switch Language / Changer de langue"
+            title={t.switchLanguageTitle}
           >
             <Globe className="w-4 h-4" />
             <span>{language === 'EN' ? 'FR' : 'EN'}</span>
@@ -87,7 +87,7 @@ export const Header: React.FC<HeaderProps> = ({ minimal = false, sticky = true }
               whileHover={{ scale: 1.05, rotate: 3 }}
               whileTap={{ scale: 0.95 }}
               className="inline-flex px-4 py-3 rounded-full bg-white border border-[#4A3F35]/15 hover:bg-[#E9E0D2]/50 text-[#4A3F35] text-xs font-mono font-bold items-center space-x-1 shadow-2xs cursor-pointer"
-              title="Switch Language / Changer de langue"
+              title={t.switchLanguageTitle}
             >
               <Globe className="w-4 h-4" />
               <span>{language === 'EN' ? 'FR' : 'EN'}</span>

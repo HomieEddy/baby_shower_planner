@@ -51,7 +51,7 @@ test('admin login gates and dashboard loads', async ({ page }) => {
 
   // On mobile the sidebar is off-canvas until the menu button opens it.
   // Desktop renders it inline (the menu button is hidden there).
-  const menuButton = page.getByRole('button', { name: /Open navigation/i });
+  const menuButton = page.getByRole('button', { name: /Open navigation|Ouvrir la navigation/i });
   try {
     await menuButton.waitFor({ state: 'visible', timeout: 3000 });
     await menuButton.click();

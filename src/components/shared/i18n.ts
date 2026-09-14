@@ -56,3 +56,16 @@ export const useTf = (): ((key: keyof Translations, vars?: Record<string, string
     [t]
   );
 };
+
+// Translate a decoded API error by its domain code, falling back to the
+// server-provided message when the code has no translation.
+export const useApiErrorMessage = (): ((code: string, fallback: string) => string) => {
+  const { t } = useTranslation();
+  return useCallback(
+    (code, fallback) => {
+      const translated = t(code) as string;
+      return translated && translated !== code ? translated : fallback;
+    },
+    [t]
+  );
+};

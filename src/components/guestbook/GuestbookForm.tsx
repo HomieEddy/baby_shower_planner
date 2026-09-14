@@ -112,7 +112,7 @@ export const GuestbookForm = ({
           >
             <img
               src={previewUrl}
-              alt="Selected upload preview"
+              alt={t.selectedUploadPreviewAlt}
               className="w-full h-48 object-cover"
             />
             <motion.button
