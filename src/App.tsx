@@ -113,6 +113,13 @@ function MainAppContent() {
     document.documentElement.lang = language === 'FR' ? 'fr' : 'en';
   }, [language]);
 
+  // Localized document title (brand + event name).
+  useEffect(() => {
+    document.title = settings?.babyName
+      ? `${t.appTitle} ${settings.babyName}`
+      : `${t.appTitle} ${t.appSubtitle}`;
+  }, [t, settings?.babyName]);
+
   return (
     <div className="min-h-screen bg-[#FDFBF7] text-[#5D5449] font-sans flex flex-col selection:bg-[#CBAE94] selection:text-white">
       <a

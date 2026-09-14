@@ -11,11 +11,13 @@ export default defineConfig(() => {
       tailwindcss(),
       VitePWA({
         registerType: 'autoUpdate',
-        includeAssets: ['icon.svg'],
+        includeAssets: ['icon.svg', 'manifest.en.webmanifest'],
         manifest: {
-          name: 'Bébé Baby Shower Planner',
+          name: 'Bébé — Planificateur de Baby Shower',
           short_name: 'Bébé Planner',
-          description: 'Baby shower invitations, RSVPs, seating, guestbook and photo sharing.',
+          description: "Invitations, RSVP, plan de salle, livre d'or et partage de photos pour votre baby shower.",
+          lang: 'fr',
+          dir: 'ltr',
           theme_color: '#8B735B',
           background_color: '#FDFBF7',
           display: 'standalone',
