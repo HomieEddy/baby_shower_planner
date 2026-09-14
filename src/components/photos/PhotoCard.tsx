@@ -1,6 +1,7 @@
 import React from 'react';
 import { useT } from '../shared/i18n';
 import { Trash2, Check, Square, EyeOff, Eye } from 'lucide-react';
+import { IconButton } from '../shared/IconButton';
 import { EventPhoto } from '../../types';
 
 interface PhotoCardProps {
@@ -70,11 +71,11 @@ export const PhotoCard: React.FC<PhotoCardProps> = ({
         <button
           type="button"
           onClick={(e) => { e.stopPropagation(); onSelect(photo.id); }}
-          className={`absolute top-2.5 left-2.5 z-20 p-1.5 rounded-xl transition-all shadow-sm flex items-center justify-center ${
+          className={`absolute top-2.5 z-20 min-w-[44px] min-h-[44px] rounded-xl transition-all shadow-sm flex items-center justify-center ${
             isSelected
               ? 'bg-[#8B735B] text-white ring-2 ring-white scale-105 opacity-100'
-              : 'bg-black/50 text-white/90 hover:bg-black/70 group-hover:opacity-100 opacity-80 sm:opacity-0'
-          } ${hidden ? 'left-16' : ''}`}
+              : 'bg-black/50 text-white/90 hover:bg-black/70 opacity-90 sm:opacity-70'
+          } ${hidden ? 'left-16' : 'left-2.5'}`}
           title={isSelected ? t.deselectPhotoTitle : t.selectPhotoTitle}
           aria-label={isSelected ? t.deselectPhotoTitle : t.selectPhotoTitle}
         >
@@ -86,26 +87,6 @@ export const PhotoCard: React.FC<PhotoCardProps> = ({
             {photo.table_name}
           </span>
         )}
-
-        <button
-          type="button"
-          onClick={(e) => { e.stopPropagation(); onToggleHidden(photo.id); }}
-          className="absolute top-2.5 right-10 z-20 p-1.5 rounded-xl bg-black/60 text-white hover:bg-[#8B735B] transition-colors opacity-0 group-hover:opacity-100 shadow-sm"
-          title={hidden ? t.moderationShowBtn : t.moderationHideBtn}
-          aria-label={hidden ? t.moderationShowBtn : t.moderationHideBtn}
-        >
-          {hidden ? <Eye className="w-3.5 h-3.5" /> : <EyeOff className="w-3.5 h-3.5" />}
-        </button>
-
-        <button
-          type="button"
-          onClick={(e) => { e.stopPropagation(); onDelete(photo.id); }}
-          className="absolute top-2.5 right-2.5 z-20 p-1.5 rounded-xl bg-black/60 text-white hover:bg-rose-600 transition-colors opacity-0 group-hover:opacity-100 shadow-sm"
-          title={t.deletePhotoBtn}
-          aria-label={t.deletePhotoBtn}
-        >
-          <Trash2 className="w-3.5 h-3.5" />
-        </button>
       </div>
 
       <div className="p-3.5 bg-[#FFFDF9] flex items-center justify-between gap-2 border-t border-[#CBAE94]/30">
@@ -116,6 +97,25 @@ export const PhotoCard: React.FC<PhotoCardProps> = ({
           <p className="text-xs text-[#8B735B]">
             {new Date(photo.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
           </p>
+        </div>
+
+        {/* Always-visible moderation controls (were hover-only, unreachable on touch). */}
+        <div className="relative z-20 flex items-center gap-0.5 shrink-0">
+          <IconButton
+            variant="plain"
+            label={hidden ? t.moderationShowBtn : t.moderationHideBtn}
+            onClick={(e) => { e.stopPropagation(); onToggleHidden(photo.id); }}
+          >
+            {hidden ? <Eye className="w-4 h-4" /> : <EyeOff className="w-4 h-4" />}
+          </IconButton>
+          <IconButton
+            variant="plain"
+            label={t.deletePhotoBtn}
+            className="text-rose-600 hover:bg-rose-50"
+            onClick={(e) => { e.stopPropagation(); onDelete(photo.id); }}
+          >
+            <Trash2 className="w-4 h-4" />
+          </IconButton>
         </div>
       </div>
     </div>

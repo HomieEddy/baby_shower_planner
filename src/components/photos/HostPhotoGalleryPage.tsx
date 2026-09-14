@@ -6,8 +6,6 @@ import {
   Trash2,
   QrCode,
   Play,
-  Filter,
-  Search,
   Building2,
   RefreshCw,
   LayoutGrid,
@@ -29,6 +27,9 @@ import { TableQrModal } from './TableQrModal';
 import { EventPhoto } from '../../types';
 import { useT, useTf } from '../shared/i18n';
 import { useFloorMapTables } from '../shared/hooks';
+import { AdminToolbar } from '../admin/AdminToolbar';
+import { Segmented } from '../shared/Segmented';
+import { SearchInput } from '../shared/ui';
 
 export const HostPhotoGalleryPage: React.FC = () => {
   const t = useT();
@@ -351,7 +352,7 @@ export const HostPhotoGalleryPage: React.FC = () => {
         </div>
 
         {/* Gallery Stats Row */}
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div className="bg-[#FFFDF9] p-5 rounded-2xl border border-[#CBAE94]/40 shadow-sm flex items-center justify-between">
             <div>
               <p className="text-xs font-bold uppercase tracking-wider text-[#8B735B]">
@@ -380,94 +381,76 @@ export const HostPhotoGalleryPage: React.FC = () => {
         </div>
 
         {/* Filter and Search Bar */}
-        <div className="flex flex-col sm:flex-row items-center justify-between gap-3 bg-[#FFFDF9] p-4 rounded-2xl border border-[#CBAE94]/50">
-          <div className="relative w-full sm:w-72">
-            <Search className="w-4 h-4 absolute left-3.5 top-3.5 text-[#8B735B]" />
-            <input
-              type="text"
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder={t.searchPhotosPh}
-              className="w-full pl-9 pr-4 py-2 rounded-xl bg-[#FAF6F0] border border-[#CBAE94]/60 text-xs text-[#4A3F35] focus:outline-none focus:ring-2 focus:ring-[#8B735B]"
-            />
-          </div>
-
-          <div className="flex items-center gap-3 w-full sm:w-auto justify-between sm:justify-end">
-            {/* Select All Toggle Button */}
-            {filteredPhotos.length > 0 && (
-              <button
-                type="button"
-                onClick={handleSelectAllFiltered}
-                className={`px-3 py-2 rounded-xl text-xs font-bold border transition-all flex items-center gap-1.5 ${
-                  filteredPhotos.length > 0 && filteredPhotos.every((p) => selectedPhotoIds.includes(p.id))
-                    ? 'bg-[#8B735B] text-white border-[#8B735B] shadow-xs'
-                    : 'bg-[#FAF6F0] text-[#4A3F35] border-[#CBAE94]/60 hover:bg-[#EFE6DC]'
-                }`}
-              >
-                {filteredPhotos.length > 0 && filteredPhotos.every((p) => selectedPhotoIds.includes(p.id)) ? (
-                  <CheckSquare className="w-4 h-4 text-white" />
-                ) : (
-                  <Square className="w-4 h-4 text-[#8B735B]" />
+        <div className="bg-[#FFFDF9] p-4 rounded-2xl border border-[#CBAE94]/50">
+          <AdminToolbar
+            primary={
+              <>
+                <div className="min-w-0 flex-1">
+                  <SearchInput
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    placeholder={t.searchPhotosPh}
+                    aria-label={t.searchPhotosPh}
+                    className="w-full"
+                  />
+                </div>
+                {filteredPhotos.length > 0 && (
+                  <button
+                    type="button"
+                    onClick={handleSelectAllFiltered}
+                    className={`shrink-0 min-h-[44px] px-3 rounded-full text-xs font-bold border transition-all flex items-center gap-1.5 ${
+                      filteredPhotos.every((p) => selectedPhotoIds.includes(p.id))
+                        ? 'bg-[#8B735B] text-white border-[#8B735B] shadow-xs'
+                        : 'bg-[#FAF6F0] text-[#4A3F35] border-[#CBAE94]/60 hover:bg-[#EFE6DC]'
+                    }`}
+                  >
+                    {filteredPhotos.every((p) => selectedPhotoIds.includes(p.id)) ? (
+                      <CheckSquare className="w-4 h-4 text-white" />
+                    ) : (
+                      <Square className="w-4 h-4 text-[#8B735B]" />
+                    )}
+                    <span className="hidden sm:inline">
+                      {filteredPhotos.every((p) => selectedPhotoIds.includes(p.id))
+                        ? t.deselectAllBtn
+                        : tf('selectAllCount', { count: filteredPhotos.length })}
+                    </span>
+                  </button>
                 )}
-                <span className="hidden sm:inline">
-                  {filteredPhotos.length > 0 && filteredPhotos.every((p) => selectedPhotoIds.includes(p.id))
-                    ? t.deselectAllBtn
-                    : tf('selectAllCount', { count: filteredPhotos.length })}
-                </span>
-              </button>
-            )}
+              </>
+            }
+            secondary={
+              <>
+                <select
+                  value={selectedTableFilter}
+                  onChange={(e) => setSelectedTableFilter(e.target.value)}
+                  aria-label={t.filterByTableLabel}
+                  className="shrink-0 px-3 py-1.5 rounded-full border border-[#CBAE94] bg-white text-xs font-bold text-[#5D5449] focus:outline-none focus:ring-2 focus:ring-[#8B735B]"
+                >
+                  <option value="all">{tf('allVenueTablesCount', { count: photos.length })}</option>
+                  {tables.map((tbl) => {
+                    const count = photos.filter(
+                      (p) => p.table_id === tbl.id || p.table_name === tbl.name
+                    ).length;
+                    return (
+                      <option key={tbl.id} value={tbl.id}>
+                        {tf('tablePhotoCount', { name: tbl.name, count })}
+                      </option>
+                    );
+                  })}
+                </select>
 
-            <div className="flex items-center gap-2">
-              <Filter className="w-4 h-4 text-[#8B735B]" />
-              <select
-                value={selectedTableFilter}
-                onChange={(e) => setSelectedTableFilter(e.target.value)}
-                className="px-3 py-2 rounded-xl bg-[#FAF6F0] border border-[#CBAE94]/60 text-xs font-bold text-[#4A3F35]"
-              >
-                <option value="all">{tf('allVenueTablesCount', { count: photos.length })}</option>
-                {tables.map((t) => {
-                  const count = photos.filter(
-                    (p) => p.table_id === t.id || p.table_name === t.name
-                  ).length;
-                  return (
-                    <option key={t.id} value={t.id}>
-                      {tf('tablePhotoCount', { name: t.name, count })}
-                    </option>
-                  );
-                })}
-              </select>
-            </div>
-
-            {/* Layout Mode Switcher */}
-            <div className="flex items-center bg-[#FAF6F0] p-1 rounded-xl border border-[#CBAE94]/60">
-              <button
-                type="button"
-                onClick={() => setLayoutMode('masonry')}
-                className={`p-1.5 rounded-lg text-xs font-bold flex items-center gap-1 transition-all ${
-                  layoutMode === 'masonry'
-                    ? 'bg-[#8B735B] text-white shadow-xs'
-                    : 'text-[#8B735B] hover:text-[#4A3F35]'
-                }`}
-                title={t.masonryLayoutLabel}
-              >
-                <Columns className="w-4 h-4" />
-                <span className="hidden sm:inline text-xs">{t.masonryLabel}</span>
-              </button>
-              <button
-                type="button"
-                onClick={() => setLayoutMode('grid')}
-                className={`p-1.5 rounded-lg text-xs font-bold flex items-center gap-1 transition-all ${
-                  layoutMode === 'grid'
-                    ? 'bg-[#8B735B] text-white shadow-xs'
-                    : 'text-[#8B735B] hover:text-[#4A3F35]'
-                }`}
-                title={t.gridLayoutLabel}
-              >
-                <LayoutGrid className="w-4 h-4" />
-                <span className="hidden sm:inline text-xs">{t.gridLabel}</span>
-              </button>
-            </div>
-          </div>
+                <Segmented
+                  ariaLabel={`${t.masonryLayoutLabel} / ${t.gridLayoutLabel}`}
+                  value={layoutMode}
+                  onChange={setLayoutMode}
+                  options={[
+                    { value: 'masonry', icon: <Columns className="w-3.5 h-3.5" />, ariaLabel: t.masonryLayoutLabel },
+                    { value: 'grid', icon: <LayoutGrid className="w-3.5 h-3.5" />, ariaLabel: t.gridLayoutLabel },
+                  ]}
+                />
+              </>
+            }
+          />
         </div>
 
         {/* Sticky Batch Actions Toolbar */}
