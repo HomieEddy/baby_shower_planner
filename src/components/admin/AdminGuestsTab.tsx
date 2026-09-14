@@ -6,7 +6,9 @@ import { useSearchParams } from 'react-router-dom';
 import { motion, AnimatePresence } from 'motion/react';
 import { adminContainerVariants, adminCardVariants } from '../shared/motionPresets';
 import { GuestRowCard } from './GuestRowCard';
-import { GuestMetricCard, GuestMetricToggle, GuestToolbar, GuestTableView, BulkActionsBar } from './GuestListParts';
+import { GuestToolbar, GuestTableView, BulkActionsBar } from './GuestListParts';
+import { MetricCard } from '../shared/MetricCard';
+import { Segmented } from '../shared/Segmented';
 import { GuestDetailsModal } from './GuestListModals';
 import {
   Users,
@@ -620,22 +622,30 @@ export const AdminGuestsTab: React.FC<AdminGuestsTabProps> = ({ language, t, gue
     >
       {/* Metrics Cards Grid */}
       <div className="flex justify-end mb-3">
-        <GuestMetricToggle metricMode={metricMode} onSwitch={switchMetricMode} />
+        <Segmented
+          ariaLabel={`${t.metricInvitesLabel} / ${t.colPartySize}`}
+          value={metricMode}
+          onChange={switchMetricMode}
+          options={[
+            { value: 'invites', label: t.metricInvitesLabel },
+            { value: 'party', label: t.colPartySize },
+          ]}
+        />
       </div>
       <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
-        <GuestMetricCard label={t.statAttending} icon={<CheckCircle2 className="w-5 h-5" />}
+        <MetricCard label={t.statAttending} icon={<CheckCircle2 className="w-5 h-5" />}
           value={metricMode === 'party' ? totalAttendingPartySize : attendingGuests.length}
           footer={t.statTotalAttendingParty} onClick={() => { setStatusFilter('Attending'); scrollToList(); }} />
-        <GuestMetricCard label={t.statPending} icon={<Clock className="w-5 h-5" />}
+        <MetricCard label={t.statPending} icon={<Clock className="w-5 h-5" />}
           value={metricMode === 'party' ? pendingPartySize : pendingGuests.length}
           footer={t.awaitingResponse} iconClass="text-[#5D5449]" onClick={() => { setStatusFilter('Pending'); scrollToList(); }} />
-        <GuestMetricCard label={t.statDeclined} icon={<XCircle className="w-5 h-5 text-rose-500" />}
+        <MetricCard label={t.statDeclined} icon={<XCircle className="w-5 h-5 text-rose-500" />}
           value={metricMode === 'party' ? declinedPartySize : declinedGuests.length}
           footer={t.unableToAttend} iconClass="text-rose-600" onClick={() => { setStatusFilter('Declined'); scrollToList(); }} />
-        <GuestMetricCard label={t.statAwaitingApproval} icon={<Clock className="w-5 h-5 text-amber-600" />}
+        <MetricCard label={t.statAwaitingApproval} icon={<Clock className="w-5 h-5 text-amber-600" />}
           value={pendingApprovals.length}
           footer={t.approvalPendingBadge} iconClass="text-amber-700" onClick={() => approvalRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })} />
-        <GuestMetricCard label={t.statTotalGuests} icon={<Users className="w-5 h-5" />}
+        <MetricCard label={t.statTotalGuests} icon={<Users className="w-5 h-5" />}
           value={metricMode === 'party' ? totalPartySize : guests.length}
           footer={t.totalGuestInvites} onClick={() => { setStatusFilter('All'); scrollToList(); }} />
       </div>

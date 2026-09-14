@@ -1,4 +1,3 @@
-import { useEffect, useRef, useState } from 'react';
 import { motion } from 'motion/react';
 import {
   Download,
@@ -9,160 +8,16 @@ import {
   Trash2,
   X,
   BellRing,
-  MoreVertical,
   LayoutGrid,
   List,
 } from 'lucide-react';
 import { Guest } from '../../types';
 import { useT, useTf } from '../shared/i18n';
-import { adminCardVariants } from '../shared/motionPresets';
 import { SearchInput } from '../shared/ui';
+import { ActionsMenu } from '../shared/ActionsMenu';
+import { Segmented } from '../shared/Segmented';
+import { AdminToolbar } from './AdminToolbar';
 import { getGuestPartySize } from '../../lib/tableAssignment';
-
-export const GuestMetricCard = ({
-  label,
-  value,
-  icon,
-  footer,
-  iconClass = 'text-[#8B735B]',
-  onClick,
-}: {
-  label: string;
-  value: React.ReactNode;
-  icon: React.ReactNode;
-  footer: string;
-  iconClass?: string;
-  onClick?: () => void;
-}) => {
-  const cardClass = `card-paper-sm p-4 sm:p-5 min-w-0 overflow-hidden text-left ${
-    onClick ? 'cursor-pointer hover:-translate-y-0.5 transition-transform w-full' : ''
-  }`;
-  const inner = (
-    <>
-      <div className="flex items-start justify-between gap-2 min-w-0">
-        <span className="label-mono min-w-0 break-words">{label}</span>
-        <span className={`shrink-0 ${iconClass}`}>{icon}</span>
-      </div>
-      <div className="mt-3">
-        <span className="text-2xl sm:text-3xl font-sans font-bold text-[#8B735B]">{value}</span>
-      </div>
-      <div className="mt-2 text-xs text-[#8B735B] font-mono font-bold break-words">{footer}</div>
-    </>
-  );
-  return onClick ? (
-    <motion.button type="button" variants={adminCardVariants} onClick={onClick} className={cardClass}>
-      {inner}
-    </motion.button>
-  ) : (
-    <motion.div variants={adminCardVariants} className={cardClass}>
-      {inner}
-    </motion.div>
-  );
-};
-
-export const GuestMetricToggle = ({
-  metricMode,
-  onSwitch,
-}: {
-  metricMode: 'invites' | 'party';
-  onSwitch: (m: 'invites' | 'party') => void;
-}) => {
-  const t = useT();
-  return (
-    <div className="flex items-center space-x-1 bg-white p-1 rounded-full text-xs font-bold font-mono border border-[#CBAE94] shadow-2xs">
-      <button onClick={() => onSwitch('invites')}
-        className={`px-3 py-1 rounded-full transition-colors ${metricMode === 'invites' ? 'bg-[#8B735B] text-white shadow-xs' : 'text-[#5D5449] hover:text-[#8B735B]'}`}>{t.metricInvitesLabel}</button>
-      <button onClick={() => onSwitch('party')}
-        className={`px-3 py-1 rounded-full transition-colors ${metricMode === 'party' ? 'bg-[#8B735B] text-white shadow-xs' : 'text-[#5D5449] hover:text-[#8B735B]'}`}>{t.colPartySize}</button>
-    </div>
-  );
-};
-
-const selectPillClass =
-  'px-3 py-1.5 rounded-full border border-[#CBAE94] bg-white text-xs font-bold text-[#5D5449] focus:outline-none focus:ring-2 focus:ring-[#8B735B]';
-
-// ponytail: local overflow menu; extract to shared if a second consumer appears.
-const ActionsMenu = ({
-  onExportCsv,
-  onOpenImport,
-  onSendReminders,
-}: {
-  onExportCsv: () => void;
-  onOpenImport: () => void;
-  onSendReminders: () => void;
-}) => {
-  const t = useT();
-  const [open, setOpen] = useState(false);
-  const ref = useRef<HTMLDivElement>(null);
-
-  useEffect(() => {
-    if (!open) return;
-    const onDown = (e: MouseEvent) => {
-      if (ref.current && !ref.current.contains(e.target as Node)) setOpen(false);
-    };
-    const onKey = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') setOpen(false);
-    };
-    document.addEventListener('mousedown', onDown);
-    document.addEventListener('keydown', onKey);
-    return () => {
-      document.removeEventListener('mousedown', onDown);
-      document.removeEventListener('keydown', onKey);
-    };
-  }, [open]);
-
-  const itemClass =
-    'w-full text-left px-3 py-2 rounded-xl text-xs font-bold text-[#5D5449] hover:bg-[#EFE6DC] transition-colors flex items-center gap-2 cursor-pointer';
-  return (
-    <div className="relative" ref={ref}>
-      <button type="button" onClick={() => setOpen((o) => !o)}
-        aria-label={t.actionsLabel} aria-expanded={open} aria-haspopup="menu"
-        className="p-2 rounded-full border border-[#CBAE94] bg-white text-[#8B735B] hover:bg-[#EFE6DC] transition-colors cursor-pointer shrink-0">
-        <MoreVertical className="w-4 h-4" />
-      </button>
-      {open && (
-        <div className="absolute right-0 top-full mt-1 z-20 w-48 p-1.5 rounded-2xl border border-[#CBAE94] bg-white shadow-lg">
-          <button type="button" role="menuitem" className={itemClass}
-            onClick={() => { setOpen(false); onOpenImport(); }}>
-            <Upload className="w-3.5 h-3.5 shrink-0" />{t.importCsvBtn}
-          </button>
-          <button type="button" role="menuitem" className={itemClass}
-            onClick={() => { setOpen(false); onExportCsv(); }}>
-            <Download className="w-3.5 h-3.5 shrink-0" />{t.exportCsvBtn}
-          </button>
-          <button type="button" role="menuitem" className={itemClass}
-            onClick={() => { setOpen(false); onSendReminders(); }}>
-            <BellRing className="w-3.5 h-3.5 shrink-0" />{t.remindBtn}
-          </button>
-        </div>
-      )}
-    </div>
-  );
-};
-
-const ViewToggle = ({
-  viewMode,
-  onViewMode,
-}: {
-  viewMode: 'cards' | 'table';
-  onViewMode: (m: 'cards' | 'table') => void;
-}) => {
-  const t = useT();
-  const btnClass = (active: boolean) =>
-    `px-2.5 py-1 rounded-full transition-colors inline-flex items-center gap-1 ${
-      active ? 'bg-[#8B735B] text-white shadow-xs' : 'text-[#5D5449] hover:text-[#8B735B]'
-    }`;
-  return (
-    <div role="group" className="flex items-center p-1 rounded-full bg-white border border-[#CBAE94] text-xs font-bold font-mono shrink-0">
-      <button type="button" onClick={() => onViewMode('cards')} aria-pressed={viewMode === 'cards'} className={btnClass(viewMode === 'cards')}>
-        <LayoutGrid className="w-3.5 h-3.5" /><span className="hidden xl:inline">{t.viewCardsBtn}</span>
-      </button>
-      <button type="button" onClick={() => onViewMode('table')} aria-pressed={viewMode === 'table'} className={btnClass(viewMode === 'table')}>
-        <List className="w-3.5 h-3.5" /><span className="hidden xl:inline">{t.viewTableBtn}</span>
-      </button>
-    </div>
-  );
-};
 
 export const GuestToolbar = ({
   className = '',
@@ -192,45 +47,65 @@ export const GuestToolbar = ({
   onSendReminders: () => void;
 }) => {
   const t = useT();
-  // Phones: two tidy rows — search + overflow menu, then the two selects and
-  // the view toggle (selects flex to share the row). sm+: the row wrappers
-  // dissolve (display:contents) so every control sits on one line; the search
-  // and selects shrink when the line is tight, so nothing ever overlaps.
   return (
-    <div className={`flex flex-wrap items-center gap-2 ${className}`}>
-      <div className="flex w-full min-w-0 items-center gap-2 sm:contents">
-        <div className="min-w-0 flex-1">
-          <SearchInput
-            value={searchTerm}
-            onChange={(e) => onSearchChange(e.target.value)}
-            placeholder={t.searchGuestsPh}
-            aria-label={t.searchGuestsPh}
-            className="w-full"
+    <AdminToolbar
+      className={className}
+      primary={
+        <>
+          <div className="min-w-0 flex-1">
+            <SearchInput
+              value={searchTerm}
+              onChange={(e) => onSearchChange(e.target.value)}
+              placeholder={t.searchGuestsPh}
+              aria-label={t.searchGuestsPh}
+              className="w-full"
+            />
+          </div>
+          <Segmented
+            ariaLabel={`${t.viewCardsBtn} / ${t.viewTableBtn}`}
+            value={viewMode}
+            onChange={onViewMode}
+            options={[
+              { value: 'cards', icon: <LayoutGrid className="w-3.5 h-3.5" />, ariaLabel: t.viewCardsBtn },
+              { value: 'table', icon: <List className="w-3.5 h-3.5" />, ariaLabel: t.viewTableBtn },
+            ]}
           />
-        </div>
-
-        <ActionsMenu onExportCsv={onExportCsv} onOpenImport={onOpenImport} onSendReminders={onSendReminders} />
-      </div>
-
-      <div className="flex w-full min-w-0 items-center gap-2 sm:contents">
-        <select value={statusFilter} onChange={(e) => onStatusFilter(e.target.value as typeof statusFilter)}
-          aria-label={t.rsvpStatusLabel} className={`${selectPillClass} min-w-0 flex-1 sm:max-w-[10rem]`}>
-          <option value="All">{t.filterStatusAll}</option>
-          <option value="Attending">{t.statusAttendingWord}</option>
-          <option value="Pending">{t.statusPendingWord}</option>
-          <option value="Declined">{t.statusDeclinedWord}</option>
-        </select>
-
-        <select value={sourceFilter} onChange={(e) => onSourceFilter(e.target.value as typeof sourceFilter)}
-          aria-label={t.sourceFilterTitle} title={t.sourceFilterTitle} className={`${selectPillClass} min-w-0 flex-1 sm:max-w-[10rem]`}>
-          <option value="All">{t.filterAllOption}</option>
-          <option value="Host">{t.sourceHostOption}</option>
-          <option value="Guest-invited">{t.sourceGuestOption}</option>
-        </select>
-
-        <ViewToggle viewMode={viewMode} onViewMode={onViewMode} />
-      </div>
-    </div>
+          <ActionsMenu
+            label={t.actionsLabel}
+            items={[
+              { label: t.importCsvBtn, icon: <Upload className="w-3.5 h-3.5 shrink-0" />, onClick: onOpenImport },
+              { label: t.exportCsvBtn, icon: <Download className="w-3.5 h-3.5 shrink-0" />, onClick: onExportCsv },
+              { label: t.remindBtn, icon: <BellRing className="w-3.5 h-3.5 shrink-0" />, onClick: onSendReminders },
+            ]}
+          />
+        </>
+      }
+      secondary={
+        <>
+          <Segmented
+            ariaLabel={t.rsvpStatusLabel}
+            value={statusFilter}
+            onChange={onStatusFilter}
+            options={[
+              { value: 'All', label: t.filterStatusAll },
+              { value: 'Attending', label: t.statusAttendingWord },
+              { value: 'Pending', label: t.statusPendingWord },
+              { value: 'Declined', label: t.statusDeclinedWord },
+            ]}
+          />
+          <Segmented
+            ariaLabel={t.sourceFilterTitle}
+            value={sourceFilter}
+            onChange={onSourceFilter}
+            options={[
+              { value: 'All', label: t.filterAllOption },
+              { value: 'Host', label: t.sourceHostOption },
+              { value: 'Guest-invited', label: t.sourceGuestOption },
+            ]}
+          />
+        </>
+      }
+    />
   );
 };
 
