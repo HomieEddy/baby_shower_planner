@@ -241,6 +241,8 @@ export interface Translations {
   deleteAlertTitle: string;
   deleteAllDataTitle: string;
   deleteElementBtn: string;
+  deleteGiftConfirmMsg: string;
+  deleteGiftConfirmTitle: string;
   deleteGiftTitle2: string;
   deleteGuestTitle: string;
   deleteLandmarkBtn: string;
@@ -1448,6 +1450,8 @@ export const translations: Record<Language, Translations> = {
     deleteAlertTitle: "Delete alert",
     deleteAllDataTitle: "Permanently delete all guest & event data (settings kept)",
     deleteElementBtn: "Delete",
+    deleteGiftConfirmMsg: "Are you sure you want to remove this gift record?",
+    deleteGiftConfirmTitle: "Delete Gift Entry?",
     deleteGiftTitle2: "Delete gift entry",
     deleteGuestTitle: "Delete Guest Invitation",
     deleteLandmarkBtn: "Delete Landmark",
@@ -1630,8 +1634,8 @@ export const translations: Record<Language, Translations> = {
     giftDescPh: "e.g., Wooden Stroller & Blanket",
     giftDescRequired: "Gift Description *",
     giftFilterAll: "All",
-    giftFilterPending: "Pending ({{count}})",
-    giftFilterSent: "Sent ({{count}})",
+    giftFilterPending: "Pending",
+    giftFilterSent: "Sent",
     giftGuestNamePh: "e.g., Aunt Sarah",
     giftGuestNameRequired: "Guest Name *",
     giftGuestSelectLabel: "Guest (from invitation list)",
@@ -2652,6 +2656,8 @@ export const translations: Record<Language, Translations> = {
     deleteAlertTitle: "Supprimer l'alerte",
     deleteAllDataTitle: "Supprimer définitivement toutes les données invités & événement (réglages conservés)",
     deleteElementBtn: "Supprimer",
+    deleteGiftConfirmMsg: "Voulez-vous vraiment supprimer ce cadeau ?",
+    deleteGiftConfirmTitle: "Supprimer ce cadeau ?",
     deleteGiftTitle2: "Supprimer le cadeau",
     deleteGuestTitle: "Supprimer l'invitation",
     deleteLandmarkBtn: "Supprimer le repère",
@@ -2834,8 +2840,8 @@ export const translations: Record<Language, Translations> = {
     giftDescPh: "ex : Poussette en bois & couverture",
     giftDescRequired: "Description du cadeau *",
     giftFilterAll: "Tous",
-    giftFilterPending: "En attente ({{count}})",
-    giftFilterSent: "Envoyés ({{count}})",
+    giftFilterPending: "En attente",
+    giftFilterSent: "Envoyés",
     giftGuestNamePh: "ex : Tante Sarah",
     giftGuestNameRequired: "Nom de l'invité *",
     giftGuestSelectLabel: "Invité (liste d'invitations)",
