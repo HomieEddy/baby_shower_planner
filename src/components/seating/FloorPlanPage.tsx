@@ -962,6 +962,7 @@ export const FloorPlanPage = () => {
                         floorMap={floorMap}
                         guests={guests}
                         selectedGuest={selectedUnassignedGuest}
+                        tableStatusFilter={tableStatusFilter}
                         onTableHover={(table, x, y) => handleTableHover(table, guests, x, y)}
                         onSeatHover={(table, idx, x, y) => handleSeatHover(table, idx, guests, x, y)}
                         onLandmarkHover={(lm, x, y) => handleLandmarkHover(lm, x, y)}

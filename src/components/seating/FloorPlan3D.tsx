@@ -13,7 +13,7 @@ import {
   tableRotationY,
   seatLocalWorld,
 } from './floorPlan3Dhelpers';
-import { getGuestPartySize, getTableOccupiedSeats, getTableSeats } from '../../lib/tableAssignment';
+import { getGuestPartySize, getTableOccupiedSeats, getTableSeats, getTableStatus } from '../../lib/tableAssignment';
 import { useT } from '../shared/i18n';
 
 // ─── Palette (matches the 2D floor plan) ─────────────────────────
@@ -49,6 +49,14 @@ const CHAIR_W = 0.34;
 const BACKREST_H = 0.24;
 const LANDMARK_H = 0.55;
 
+export type TableStatusFilter = 'all' | 'empty' | 'partial' | 'full';
+
+const STATUS_GLOW: Record<Exclude<TableStatusFilter, 'all'>, string> = {
+  empty: '#10B981',
+  partial: '#F59E0B',
+  full: '#EF4444',
+};
+
 export interface FloorPlan3DProps {
   floorMap: FloorMapData;
   guests: Guest[];
@@ -59,6 +67,8 @@ export interface FloorPlan3DProps {
   targetSeatIndex?: number | null;
   /** true (default) = host seating mode; false = read-only highlight (guest). */
   seating?: boolean;
+  /** Host table-status filter: dim non-matching tables, glow matching ones. */
+  tableStatusFilter?: TableStatusFilter;
   onTableHover?: (table: TableElement, x: number, y: number) => void;
   onSeatHover?: (table: TableElement, seatIndex: number, x: number, y: number) => void;
   onLandmarkHover?: (landmark: LandmarkElement, x: number, y: number) => void;
@@ -132,11 +142,12 @@ interface ChairProps {
   table: TableElement;
   seatIndex: number;
   fill: string;
+  dimmed?: boolean;
   onSeatHover?: FloorPlan3DProps['onSeatHover'];
   onLeave?: () => void;
 }
 
-const Chair3D = ({ table, seatIndex, fill, onSeatHover, onLeave }: ChairProps) => {
+const Chair3D = ({ table, seatIndex, fill, dimmed = false, onSeatHover, onLeave }: ChairProps) => {
   const pos = seatLocalWorld(table, seatIndex);
   const events = useHover({
     onOver: (e) => onSeatHover?.(table, seatIndex, e.clientX, e.clientY),
@@ -147,15 +158,15 @@ const Chair3D = ({ table, seatIndex, fill, onSeatHover, onLeave }: ChairProps) =
     <group position={[pos.x, 0, pos.z]} rotation={[0, pos.yaw, 0]} {...events}>
       <mesh position={[0, CHAIR_SEAT_H, 0]} castShadow>
         <boxGeometry args={[CHAIR_W, 0.07, CHAIR_W]} />
-        <meshStandardMaterial color={fill} />
+        <meshStandardMaterial color={fill} transparent={dimmed} opacity={dimmed ? 0.2 : 1} />
       </mesh>
       <mesh position={[0, CHAIR_SEAT_H + BACKREST_H / 2, CHAIR_W / 2 - 0.02]} castShadow>
         <boxGeometry args={[CHAIR_W, BACKREST_H, 0.05]} />
-        <meshStandardMaterial color={fill} />
+        <meshStandardMaterial color={fill} transparent={dimmed} opacity={dimmed ? 0.2 : 1} />
       </mesh>
       <mesh position={[0, CHAIR_SEAT_H / 2, 0]} castShadow>
         <cylinderGeometry args={[0.02, 0.02, CHAIR_SEAT_H, 8]} />
-        <meshStandardMaterial color={C.leg} />
+        <meshStandardMaterial color={C.leg} transparent={dimmed} opacity={dimmed ? 0.2 : 1} />
       </mesh>
     </group>
   );
@@ -171,6 +182,7 @@ interface TableProps {
   targetTableId?: string | null;
   targetSeatIndex?: number | null;
   seating: boolean;
+  tableStatusFilter?: TableStatusFilter;
   onTableHover?: FloorPlan3DProps['onTableHover'];
   onSeatHover?: FloorPlan3DProps['onSeatHover'];
   onTableClick?: FloorPlan3DProps['onTableClick'];
@@ -185,6 +197,7 @@ const Table3D = ({
   targetTableId,
   targetSeatIndex,
   seating,
+  tableStatusFilter = 'all',
   onTableHover,
   onSeatHover,
   onTableClick,
@@ -206,9 +219,16 @@ const Table3D = ({
   const d = table.height * WORLD_SCALE;
 
   const topColor = table.color || '#F1E3CD';
+
+  // Status filter: non-matching tables fade out, matching ones glow in their status colour.
+  const status = getTableStatus(table, guests);
+  const matchesFilter = tableStatusFilter === 'all' || status === tableStatusFilter;
+  const dimmed = tableStatusFilter !== 'all' && !matchesFilter;
+
   let glow: string | null = null;
   if (isTarget) glow = C.glowTarget;
   else if (seating && selectedGuest) glow = canFit ? C.canFit : C.cannotFit;
+  else if (!dimmed && tableStatusFilter !== 'all') glow = STATUS_GLOW[tableStatusFilter];
 
   const events = useHover({
     onOver: (e) => onTableHover?.(table, e.clientX, e.clientY),
@@ -231,6 +251,8 @@ const Table3D = ({
               color={topColor}
               emissive={glow || '#000000'}
               emissiveIntensity={glow ? 0.35 : 0}
+              transparent={dimmed}
+              opacity={dimmed ? 0.18 : 1}
             />
           </mesh>
         ) : (
@@ -240,6 +262,8 @@ const Table3D = ({
               color={topColor}
               emissive={glow || '#000000'}
               emissiveIntensity={glow ? 0.35 : 0}
+              transparent={dimmed}
+              opacity={dimmed ? 0.18 : 1}
             />
           </mesh>
         )}
@@ -249,11 +273,11 @@ const Table3D = ({
           <group>
             <mesh position={[0, 0.02, 0]} castShadow>
               <cylinderGeometry args={[r * 0.22, r * 0.26, 0.05, 24]} />
-              <meshStandardMaterial color={C.leg} />
+              <meshStandardMaterial color={C.leg} transparent={dimmed} opacity={dimmed ? 0.18 : 1} />
             </mesh>
             <mesh position={[0, TABLE_TOP_H / 2, 0]} castShadow>
               <cylinderGeometry args={[r * 0.12, r * 0.16, TABLE_TOP_H - 0.05, 16]} />
-              <meshStandardMaterial color={C.leg} />
+              <meshStandardMaterial color={C.leg} transparent={dimmed} opacity={dimmed ? 0.18 : 1} />
             </mesh>
           </group>
         ) : (
@@ -266,7 +290,7 @@ const Table3D = ({
             ].map(([lx, lz], i) => (
               <mesh key={i} position={[lx, (TABLE_TOP_H - 0.05) / 2, lz]} castShadow>
                 <boxGeometry args={[0.08, TABLE_TOP_H - 0.05, 0.08]} />
-                <meshStandardMaterial color={C.leg} />
+                <meshStandardMaterial color={C.leg} transparent={dimmed} opacity={dimmed ? 0.18 : 1} />
               </mesh>
             ))}
           </>
@@ -278,6 +302,7 @@ const Table3D = ({
             key={idx}
             table={table}
             seatIndex={idx}
+            dimmed={dimmed}
             fill={
               isTarget && targetSeatIndex === idx
                 ? C.mine
@@ -558,6 +583,7 @@ const Scene = (props: FloorPlan3DProps) => {
           targetTableId={props.targetTableId}
           targetSeatIndex={props.targetSeatIndex}
           seating={props.seating ?? true}
+          tableStatusFilter={props.tableStatusFilter}
           onTableHover={props.onTableHover}
           onSeatHover={props.onSeatHover}
           onTableClick={props.onTableClick}
