@@ -48,6 +48,16 @@ test('admin login gates and dashboard loads', async ({ page }) => {
   await page.fill('input[type=password]', 'babyshower-admin-2026');
   await page.click('button[type=submit]');
   await expect(page).toHaveURL(/\/admin/);
+
+  // On mobile the sidebar is off-canvas until the menu button opens it.
+  // Desktop renders it inline (the menu button is hidden there).
+  const menuButton = page.getByRole('button', { name: /Open navigation/i });
+  try {
+    await menuButton.waitFor({ state: 'visible', timeout: 3000 });
+    await menuButton.click();
+  } catch {
+    // Desktop: sidebar is already inline.
+  }
   await expect(page.locator('aside')).toBeVisible();
   await expect(page.locator('aside button:visible').first()).toBeVisible();
 });
