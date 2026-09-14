@@ -135,11 +135,13 @@ export const GuestCheckIn = () => {
                 }`}
               >
                 {/* Row header — click to expand the party */}
-                <div
-                  className="flex items-center justify-between gap-3 p-4 cursor-pointer"
-                  onClick={() => setExpandedId(isExpanded ? null : guest.id)}
-                >
-                  <div className="flex items-center gap-2 min-w-0">
+                <div className="flex items-center justify-between gap-3 p-4">
+                  <button
+                    type="button"
+                    onClick={() => setExpandedId(isExpanded ? null : guest.id)}
+                    aria-expanded={isExpanded}
+                    className="flex items-center gap-2 min-w-0 flex-1 text-left cursor-pointer"
+                  >
                     {members.length > 1 ? (
                       isExpanded ? (
                         <ChevronDown className="w-4 h-4 text-[#8B735B] shrink-0" />
@@ -169,9 +171,9 @@ export const GuestCheckIn = () => {
                         {guest.checked_in_at && ` · ${new Date(guest.checked_in_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`}
                       </div>
                     </div>
-                  </div>
+                  </button>
 
-                  <div className="flex items-center gap-2 shrink-0" onClick={e => e.stopPropagation()}>
+                  <div className="flex items-center gap-2 shrink-0">
                     {anyChecked && (
                       <button
                         onClick={() => handleUndo(guest.id)}
