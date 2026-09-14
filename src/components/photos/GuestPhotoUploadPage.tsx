@@ -492,7 +492,7 @@ export const GuestPhotoUploadPage = () => {
                   <button
                     type="button"
                     onClick={handleClearAllFiles}
-                    className="text-rose-600 hover:underline text-xs font-bold"
+                    className="min-h-[44px] px-3 rounded-xl border border-rose-300 text-rose-600 hover:bg-rose-50 text-xs font-bold transition-colors"
                   >
                     {t.clearAllBtn}
                   </button>

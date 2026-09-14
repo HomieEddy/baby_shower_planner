@@ -1,4 +1,4 @@
-import { RefObject } from 'react';
+import { RefObject, useState } from 'react';
 import { motion } from 'motion/react';
 import {
   UploadCloud,
@@ -26,17 +26,23 @@ export const PhotoDropzone = ({
   onDragOver: (e: React.DragEvent<HTMLElement>) => void;
 }) => {
   const t = useT();
+  const [dragActive, setDragActive] = useState(false);
   return (
     <label
-      onDrop={onDrop}
-      onDragOver={onDragOver}
-      className="block border-2 border-dashed border-[#CBAE94] hover:border-[#8B735B] bg-[#FAF6F0]/60 hover:bg-[#EFE6DC]/40 rounded-3xl p-6 sm:p-8 text-center cursor-pointer transition-all space-y-3 group"
+      onDrop={(e) => { setDragActive(false); onDrop(e); }}
+      onDragOver={(e) => { setDragActive(true); onDragOver(e); }}
+      onDragLeave={(e) => { if (e.currentTarget === e.target) setDragActive(false); }}
+      className={`block border-2 border-dashed rounded-3xl p-6 sm:p-8 text-center cursor-pointer transition-all space-y-3 group ${
+        dragActive
+          ? 'border-[#8B735B] bg-[#EFE6DC]/60 ring-2 ring-[#8B735B]/30'
+          : 'border-[#CBAE94] hover:border-[#8B735B] bg-[#FAF6F0]/60 hover:bg-[#EFE6DC]/40'
+      }`}
     >
       <input
         ref={fileInputRef}
         type="file"
         multiple
-        accept="image/jpeg,image/png,image/webp,image/heic,image/gif"
+        accept="image/jpeg,image/png,image/webp,image/heic,image/heif,image/gif"
         onChange={onFileChange}
         className="sr-only"
       />
@@ -94,10 +100,11 @@ export const PhotoFileCard = ({
             e.stopPropagation();
             onRemove(item.id);
           }}
-          className="absolute top-1.5 right-1.5 p-1 rounded-full bg-black/60 text-white hover:bg-rose-600 transition-colors shadow-sm z-10"
+          className="absolute top-1.5 right-1.5 min-w-[44px] min-h-[44px] rounded-full bg-black/60 text-white hover:bg-rose-600 transition-colors shadow-sm z-10 flex items-center justify-center"
           title={t.removePhotoTitle}
+          aria-label={t.removePhotoTitle}
         >
-          <X className="w-3.5 h-3.5" />
+          <X className="w-4 h-4" />
         </button>
 
         <span className="absolute bottom-1.5 left-1.5 px-1.5 py-0.5 rounded bg-black/60 text-xs font-mono text-white">
