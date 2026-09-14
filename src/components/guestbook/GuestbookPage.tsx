@@ -51,6 +51,9 @@ export const GuestbookPage = () => {
 
   const [entries, setEntries] = useState<GuestbookEntry[]>([]);
   const [loadingEntries, setLoadingEntries] = useState(true);
+  // While printing, render every entry (the virtualizer only mounts visible rows,
+  // which made the "memory book" print just the visible slice).
+  const [printing, setPrinting] = useState(false);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
   const feedScrollRef = useRef<HTMLDivElement>(null);
@@ -89,6 +92,12 @@ export const GuestbookPage = () => {
 
   useEffect(() => {
     fetchEntries();
+  }, []);
+
+  useEffect(() => {
+    const after = () => setPrinting(false);
+    window.addEventListener('afterprint', after);
+    return () => window.removeEventListener('afterprint', after);
   }, []);
 
   // File selection handler
@@ -226,8 +235,8 @@ export const GuestbookPage = () => {
         <div className="pt-2 flex justify-end border-t border-[#CBAE94]/30">
           <button
             type="button"
-            onClick={() => printKeepsake(t.gbPrintToast)}
-            className="px-3.5 py-2 rounded-xl bg-[#8B735B] text-white font-bold text-xs hover:bg-[#705C47] transition-all flex items-center gap-1.5 shadow-xs"
+            onClick={() => { setPrinting(true); printKeepsake(t.gbPrintToast); }}
+            className="min-h-[44px] px-4 rounded-xl bg-[#8B735B] text-white font-bold text-xs hover:bg-[#705C47] transition-all flex items-center gap-1.5 shadow-xs"
           >
             <Printer className="w-3.5 h-3.5" />
             <span>{t.printMemoryBookBtn}</span>
@@ -236,7 +245,7 @@ export const GuestbookPage = () => {
       </motion.div>
 
       {/* Main Form or Success Card */}
-      <div className="card-paper p-6 sm:p-8">
+      <div className="card-paper p-6 sm:p-8 print:hidden">
         <AnimatePresence mode="wait">
           
           {submitted ? (
@@ -277,6 +286,12 @@ export const GuestbookPage = () => {
             actionLabel={t.gbWriteFirstNoteBtn}
             onAction={() => nameInputRef.current?.focus()}
           />
+        ) : printing ? (
+          <div className="space-y-4">
+            {entries.map((entry) => (
+              <GuestbookEntryCard key={entry.id} entry={entry} />
+            ))}
+          </div>
         ) : (
           <div ref={feedScrollRef} className="max-h-[60vh] overflow-y-auto pr-1">
             <div className="relative w-full" style={{ height: `${rowVirtualizer.getTotalSize()}px` }}>

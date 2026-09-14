@@ -121,7 +121,7 @@ export const GuestbookForm = ({
               type="button"
               onClick={onRemovePhoto}
               aria-label={t.removePhotoBtn}
-              className="absolute top-3 right-3 p-2 bg-[#8B735B] hover:bg-[#5D5449] text-white rounded-full transition-colors shadow-xs cursor-pointer"
+              className="absolute top-3 right-3 min-w-[44px] min-h-[44px] bg-[#8B735B] hover:bg-[#5D5449] text-white rounded-full transition-colors shadow-xs cursor-pointer flex items-center justify-center"
               title={t.removePhotoBtn}
             >
               <X className="w-4 h-4" />
