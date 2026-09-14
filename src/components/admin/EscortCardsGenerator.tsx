@@ -3,6 +3,8 @@ import { Guest, EventSettings, FloorMapData } from '../../types';
 import { Printer, Scissors, Tag, Ticket } from 'lucide-react';
 import { useT, useTf } from '../shared/i18n';
 import { usePrint } from '../shared/hooks';
+import { Select, TextInput } from '../shared/ui';
+import { Segmented } from '../shared/Segmented';
 import { getAttendeeLocations } from '../../lib/tableAssignment';
 import { getPartyMembers } from '../../lib/guestAttendees';
 
@@ -107,34 +109,23 @@ export const EscortCardsGenerator: React.FC<EscortCardsGeneratorProps> = ({ gues
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
           <div>
             <label className="label-mono block text-xs font-bold mb-1">{t.stationeryFormatLabel}</label>
-            <div className="inline-flex rounded-xl bg-[#EFE6DC] p-1 w-full border border-[#CBAE94]/40">
-              <button
-                type="button"
-                onClick={() => setCardType('tent')}
-                className={`flex-1 py-1.5 text-xs font-bold rounded-lg transition-all ${
-                  cardType === 'tent' ? 'bg-white text-[#4A3F35] shadow-xs' : 'text-[#8B735B]'
-                }`}
-              >
-                <Ticket className="w-3.5 h-3.5 inline" /> {t.foldedTentCardsBtn}
-              </button>
-              <button
-                type="button"
-                onClick={() => setCardType('nametag')}
-                className={`flex-1 py-1.5 text-xs font-bold rounded-lg transition-all ${
-                  cardType === 'nametag' ? 'bg-white text-[#4A3F35] shadow-xs' : 'text-[#8B735B]'
-                }`}
-              >
-                <Tag className="w-3.5 h-3.5 inline" /> {t.nameBadgesBtn}
-              </button>
-            </div>
+            <Segmented
+              ariaLabel={t.stationeryFormatLabel}
+              value={cardType}
+              onChange={setCardType}
+              options={[
+                { value: 'tent', icon: <Ticket className="w-3.5 h-3.5" />, label: t.foldedTentCardsBtn },
+                { value: 'nametag', icon: <Tag className="w-3.5 h-3.5" />, label: t.nameBadgesBtn },
+              ]}
+            />
           </div>
 
           <div>
             <label className="label-mono block text-xs font-bold mb-1">{t.filterByTableLabel}</label>
-            <select
+            <Select
+              variant="soft"
               value={selectedTableFilter}
               onChange={(e) => setSelectedTableFilter(e.target.value)}
-              className="w-full px-3 py-2 rounded-xl border border-[#CBAE94] text-xs font-bold bg-white text-[#4A3F35]"
             >
               <option value="ALL">{tf('allTablesOption', { count: rows.length })}</option>
               {uniqueTables.map((tbl) => (
@@ -142,16 +133,16 @@ export const EscortCardsGenerator: React.FC<EscortCardsGeneratorProps> = ({ gues
                   {tbl === UNASSIGNED ? t.unassignedWord : `${t.tableFilterLabel} ${tbl}`}
                 </option>
               ))}
-            </select>
+            </Select>
           </div>
 
           <div>
             <label className="label-mono block text-xs font-bold mb-1">{t.customHeaderLabel}</label>
-            <input
+            <TextInput
+              variant="soft"
               type="text"
               value={customHeader}
               onChange={(e) => setCustomHeader(e.target.value)}
-              className="w-full px-3 py-2 rounded-xl border border-[#CBAE94] text-xs font-bold bg-white text-[#4A3F35]"
             />
           </div>
 
@@ -201,15 +192,15 @@ export const EscortCardsGenerator: React.FC<EscortCardsGeneratorProps> = ({ gues
                 return (
                   <div
                     key={row.key}
-                    className="border-2 border-dashed border-[#CBAE94] rounded-2xl bg-[#FAF6F0] h-56 relative shadow-xs print:shadow-none print:border-solid print:border-slate-300 break-inside-avoid"
+                    className="border-2 border-dashed border-[#CBAE94] rounded-2xl bg-[#FAF6F0] h-56 relative shadow-xs overflow-hidden print:shadow-none print:border-solid print:border-slate-300 break-inside-avoid"
                   >
                     {/* Top Fold (Folded Back / Front Header) â€” occupies the top half, centered */}
-                    <div className="h-1/2 flex items-center justify-center opacity-75 transform rotate-180 print:rotate-180 text-center px-4">
-                      <div className="space-y-1">
-                        <p className="text-xs font-mono uppercase tracking-widest text-[#8B735B]">
+                    <div className="h-1/2 flex items-center justify-center opacity-75 transform rotate-180 print:rotate-180 text-center px-4 min-w-0">
+                      <div className="space-y-1 min-w-0 w-full">
+                        <p className="text-xs font-mono uppercase tracking-widest text-[#8B735B] truncate">
                           {customHeader}
                         </p>
-                        <h4 className="font-newsreader text-xl font-bold text-[#4A3F35]">
+                        <h4 className="font-newsreader text-xl font-bold text-[#4A3F35] truncate">
                           {row.name}
                         </h4>
                       </div>
@@ -223,20 +214,20 @@ export const EscortCardsGenerator: React.FC<EscortCardsGeneratorProps> = ({ gues
                     </div>
 
                     {/* Bottom Fold (Primary Front Facing Display) â€” occupies the bottom half, centered */}
-                    <div className="h-1/2 flex items-center justify-between px-4">
-                      <div className="space-y-1">
-                        <p className="text-xs font-mono uppercase tracking-widest text-[#8B735B]">
+                    <div className="h-1/2 flex items-center justify-between gap-3 px-4">
+                      <div className="space-y-1 min-w-0">
+                        <p className="text-xs font-mono uppercase tracking-widest text-[#8B735B] truncate">
                           {customHeader}
                         </p>
-                        <h3 className="font-newsreader text-2xl font-bold text-[#4A3F35]">
+                        <h3 className="font-newsreader text-2xl font-bold text-[#4A3F35] leading-tight break-words line-clamp-2">
                           {row.name}
                         </h3>
-                        <p className="text-xs font-mono font-bold text-[#8B735B]">
+                        <p className="text-xs font-mono font-bold text-[#8B735B] truncate">
                           {seatLine}
                         </p>
                       </div>
 
-                      <div className="flex flex-col items-center justify-center text-right">
+                      <div className="flex flex-col items-center justify-center text-right shrink-0">
                         <span className="text-xs font-mono text-[#8B735B] uppercase font-bold">
                           {t.seatedAtLabel}
                         </span>
@@ -259,19 +250,19 @@ export const EscortCardsGenerator: React.FC<EscortCardsGeneratorProps> = ({ gues
                   /* Wearable Name Badge */
                   <div
                     key={row.key}
-                    className="border-2 border-[#4A3F35] rounded-2xl p-5 bg-white flex flex-col justify-between h-48 relative shadow-sm print:shadow-none print:border-slate-800 break-inside-avoid"
+                    className="border-2 border-[#4A3F35] rounded-2xl p-5 bg-white flex flex-col justify-between h-48 relative shadow-sm overflow-hidden print:shadow-none print:border-slate-800 break-inside-avoid"
                   >
-                    <div className="text-center border-b border-[#CBAE94]/40 pb-2">
-                      <span className="text-xs font-mono font-bold text-[#8B735B] uppercase tracking-wider">
+                    <div className="text-center border-b border-[#CBAE94]/40 pb-2 min-w-0">
+                      <span className="text-xs font-mono font-bold text-[#8B735B] uppercase tracking-wider block truncate">
                         {customHeader}
                       </span>
                     </div>
 
-                    <div className="text-center my-auto py-2">
+                    <div className="text-center my-auto py-2 min-w-0">
                       <p className="text-xs text-[#8B735B] uppercase font-mono tracking-widest">
                         {t.helloMyNameIsLabel}
                       </p>
-                      <h2 className="font-newsreader text-3xl font-bold text-[#4A3F35] mt-1">
+                      <h2 className="font-newsreader text-3xl font-bold text-[#4A3F35] mt-1 leading-tight break-words line-clamp-2">
                         {row.name}
                       </h2>
                     </div>
