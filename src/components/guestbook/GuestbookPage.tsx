@@ -12,6 +12,7 @@ import {
 import { useToast } from '../shared/ToastContext';
 import { useVirtualizer } from '@tanstack/react-virtual';
 import { EmptyState } from '../shared/EmptyState';
+import { BackButton } from '../shared/BackButton';
 import { LockedNotice } from '../shared/LockedNotice';
 import { readGuestLock } from '../../lib/guestLock';
 import { uploadPhotoBase64 } from '../../lib/fileUtils';
@@ -199,7 +200,8 @@ export const GuestbookPage = () => {
       transition={{ duration: 0.35, ease: 'easeOut' }}
       className="max-w-2xl mx-auto space-y-6"
     >
-      
+      <BackButton />
+
       {/* Header Banner */}
       <motion.div
         whileHover={{ y: -2 }}

@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { motion } from 'motion/react';
-import { ArrowLeft, ArrowRight, Ticket, AlertCircle } from 'lucide-react';
+import { ArrowRight, Ticket, AlertCircle } from 'lucide-react';
 import { useT } from '../shared/i18n';
+import { BackButton } from '../shared/BackButton';
 import { fadeUp } from '../shared/motionPresets';
 import { isValidCode } from '../../lib/validation';
 
@@ -90,14 +91,7 @@ export const GuestPortalPage = () => {
           </motion.button>
         </form>
 
-        <button
-          type="button"
-          onClick={() => navigate('/')}
-          className="text-xs font-bold font-mono text-[#8B735B] hover:text-[#D4A373] inline-flex items-center gap-1 transition-colors cursor-pointer"
-        >
-          <ArrowLeft className="w-3.5 h-3.5" />
-          {t.portalBackBtn}
-        </button>
+        <BackButton label={t.portalBackBtn} />
       </div>
     </motion.div>
   );

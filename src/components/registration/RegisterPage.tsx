@@ -4,9 +4,10 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { motion } from 'motion/react';
-import { ArrowLeft, CheckCircle2, Clock, Send, Users, XCircle } from 'lucide-react';
+import { CheckCircle2, Clock, Send, Users, XCircle } from 'lucide-react';
 import { EventDetailsCard } from '../rsvp/EventDetailsCard';
 import { useT, useTf } from '../shared/i18n';
+import { BackButton } from '../shared/BackButton';
 import { useToast } from '../shared/ToastContext';
 import { useAppStore } from '../../stores/appStore';
 import { fadeUp } from '../shared/motionPresets';
@@ -143,14 +144,7 @@ export const RegisterPage = () => {
             >
               {t.portalContinueBtn}
             </button>
-            <button
-              type="button"
-              onClick={() => navigate('/')}
-              className="btn-outline-accent px-5 py-2.5 text-xs font-bold inline-flex items-center gap-1.5"
-            >
-              <ArrowLeft className="w-3.5 h-3.5" />
-              <span>{t.backHomeBtn}</span>
-            </button>
+            <BackButton to="/" label={t.backHomeBtn} variant="outline" />
           </div>
         </div>
       )}
@@ -250,14 +244,7 @@ export const RegisterPage = () => {
 
       {!showForm && !result && (
         <p className="text-center">
-          <button
-            type="button"
-            onClick={() => navigate('/')}
-            className="text-xs font-bold font-mono text-[#8B735B] hover:text-[#D4A373] inline-flex items-center gap-1 transition-colors cursor-pointer"
-          >
-            <ArrowLeft className="w-3.5 h-3.5" />
-            {t.backHomeBtn}
-          </button>
+          <BackButton to="/" label={t.backHomeBtn} />
         </p>
       )}
     </motion.div>

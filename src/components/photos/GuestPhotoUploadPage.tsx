@@ -19,6 +19,7 @@ import { decodeApiError } from '../../lib/errors';
 import { readGuestLock } from '../../lib/guestLock';
 import { compressImage, formatFileSize } from '../../lib/imageCompressor';
 import { useToast } from '../shared/ToastContext';
+import { BackButton } from '../shared/BackButton';
 import { LockedNotice } from '../shared/LockedNotice';
 import { uploadPhotoBase64 } from '../../lib/fileUtils';
 import { useAppStore } from '../../stores/appStore';
@@ -316,6 +317,7 @@ export const GuestPhotoUploadPage = () => {
   return (
     <div className="min-h-screen bg-[#FAF6F0] py-8 px-4 sm:px-6 lg:px-8 font-sans">
       <div className="max-w-3xl mx-auto space-y-6">
+        <BackButton />
         {/* Header Hero Banner */}
         <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-[#8B735B] via-[#705C47] to-[#4A3F35] text-white p-6 sm:p-8 shadow-xl border border-[#CBAE94]/40">
           <div className="absolute -right-8 -bottom-8 opacity-10 pointer-events-none">
