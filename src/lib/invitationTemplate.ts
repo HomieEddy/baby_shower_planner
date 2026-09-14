@@ -27,6 +27,8 @@ export const INVITATION_PLACEHOLDERS: InvitationPlaceholder[] = [
   { token: 'parentsNames', labelKey: 'parentsNamesLabel2' },
   { token: 'babyName', labelKey: 'babyNameOptionalLabel' },
   { token: 'registerLink', labelKey: 'invitePhRegisterLink' },
+  { token: 'guestName', labelKey: 'guestNameCol' },
+  { token: 'code', labelKey: 'reservationCodeCol' },
 ];
 
 export const DEFAULT_INVITATION_TEMPLATE: Record<'FR' | 'EN', string> = {
@@ -98,12 +100,14 @@ export const DEFAULT_INVITATION_TEMPLATE: Record<'FR' | 'EN', string> = {
   ].join('\n'),
 };
 
-// Event settings → token values for one language. The register link is passed in
-// (server builds it with APP_URL; the editor preview uses the browser origin).
+// Event settings → token values for one language. `link` is context-resolved:
+// the /register link for the self-serve message, or a guest's personal RSVP
+// link for a host-added guest. Per-guest tokens stay blank otherwise.
 export function invitationTemplateValues(
   settings: Partial<EventSettings>,
   language: 'FR' | 'EN',
-  registerLink: string
+  link: string,
+  extra: { guestName?: string; code?: string } = {}
 ): Record<string, string> {
   const venueName = settings.venueName || '';
   const venueAddress = settings.venueAddress || '';
@@ -123,7 +127,11 @@ export function invitationTemplateValues(
     rsvpDeadline,
     parentsNames: settings.parentsNames || settings.babyName || '',
     babyName: settings.babyName || '',
-    registerLink,
+    registerLink: link,
+    // Alias: a template may use either link token; both resolve to `link`.
+    rsvpLink: link,
+    guestName: extra.guestName || '',
+    code: extra.code || '',
   };
 }
 

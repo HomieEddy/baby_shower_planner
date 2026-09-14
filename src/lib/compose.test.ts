@@ -4,6 +4,7 @@ import {
   buildInviteMessage,
   buildUniversalInviteMessage,
   composeInvitation,
+  renderEmailHtml,
   renderSms,
   renderText,
 } from './compose';
@@ -75,6 +76,37 @@ describe('buildUniversalInviteMessage (self-serve)', () => {
 describe('renderInvitationTemplate', () => {
   it('substitutes tokens and drops unknown/empty ones', () => {
     expect(renderInvitationTemplate('a {{ date }} b {{missing}} c', { date: 'X' })).toBe('a X b  c');
+  });
+});
+
+describe('per-guest invitation shares the universal template', () => {
+  it('resolves the RSVP link, guest name and code', () => {
+    const msg = buildInviteMessage(guest(), {
+      ...settings(),
+      invitationTemplateFr: 'Bonjour {{guestName}} : {{rsvpLink}}',
+    });
+    expect(msg).toContain('Bonjour Alice');
+    expect(msg).toContain('/rsvp/tok-123');
+  });
+
+  it('appends the reservation code when the template omits {{code}}', () => {
+    const msg = buildInviteMessage(guest(), { ...settings(), invitationTemplateFr: 'Salut {{guestName}}' });
+    expect(msg).toContain('Salut Alice');
+    expect(msg).toContain('Votre code de réservation : 2468');
+  });
+
+  it('does not duplicate the code when the template places it', () => {
+    const msg = buildInviteMessage(guest(), { ...settings(), invitationTemplateFr: 'Code {{code}}' });
+    expect(msg).toBe('Code 2468');
+  });
+
+  it('falls back to the shipped default message', () => {
+    expect(buildInviteMessage(guest(), {})).toContain('Une petite fleur est en chemin');
+  });
+
+  it('uses the template as the email body', () => {
+    const html = renderEmailHtml(composeInvitation(guest(), settings()));
+    expect(html).toContain('Une petite fleur est en chemin');
   });
 });
 
