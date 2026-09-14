@@ -5,6 +5,8 @@ import {
   DragStartEvent,
   DragEndEvent,
   PointerSensor,
+  TouchSensor,
+  KeyboardSensor,
   useSensor,
   useSensors,
   closestCorners,
@@ -14,6 +16,7 @@ import {
   SortableContext,
   useSortable,
   verticalListSortingStrategy,
+  sortableKeyboardCoordinates,
 } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import { format, parse } from 'date-fns';
@@ -68,10 +71,10 @@ const TaskCard: React.FC<{ task: AgendaTask; language: Language; onOpenTask: (ta
           type="button"
           {...attributes}
           {...listeners}
-          className="p-1 rounded-md text-[#A09080] hover:bg-[#EFE6DC] cursor-grab active:cursor-grabbing shrink-0"
+          className="inline-flex min-w-[44px] min-h-[44px] items-center justify-center rounded-md text-[#A09080] hover:bg-[#EFE6DC] cursor-grab active:cursor-grabbing shrink-0 focus:outline-none focus-visible:ring-2 focus-visible:ring-[#8B735B]"
           aria-label={t.dragTaskLabel}
         >
-          <GripVertical className="w-3.5 h-3.5" />
+          <GripVertical className="w-4 h-4" />
         </button>
         <button
           type="button"
@@ -79,6 +82,9 @@ const TaskCard: React.FC<{ task: AgendaTask; language: Language; onOpenTask: (ta
           className="min-w-0 flex-1 text-left space-y-1 cursor-pointer"
         >
           <p className="text-xs font-bold text-[#4A3F35] leading-snug break-words">{task.title}</p>
+          <span className="inline-block text-[10px] font-mono font-bold uppercase tracking-wide text-[#8B735B]">
+            {statusLabel(t, task.status)}
+          </span>
           {task.description && (
             <p className="text-xs text-[#A09080] line-clamp-2 break-words">{task.description}</p>
           )}
@@ -133,7 +139,12 @@ const KanbanColumn: React.FC<{
 
 export const AgendaKanban: React.FC<AgendaKanbanProps> = ({ tasks, t, language, onOpenTask, onReorder }) => {
   const [activeId, setActiveId] = useState<string | null>(null);
-  const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 5 } }));
+  const sensors = useSensors(
+    useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
+    // Touch drag needs a short press before it activates (doesn't fight scroll).
+    useSensor(TouchSensor, { activationConstraint: { delay: 150, tolerance: 6 } }),
+    useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates })
+  );
 
   const byStatus = useMemo(() => {
     const map: Record<AgendaStatus, AgendaTask[]> = { todo: [], in_progress: [], done: [] };
