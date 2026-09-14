@@ -12,6 +12,7 @@ import { SmartSuggestionsModal } from './SmartSuggestionsModal';
 import { HoverTooltip } from './HoverTooltip';
 import { FloorPlanEditor } from './FloorPlanEditor';
 import { ViewModeToggle, ViewMode } from '../shared/ViewModeToggle';
+import { Segmented } from '../shared/Segmented';
 import { motion, AnimatePresence } from 'motion/react';
 import { Modal } from '../shared/Modal';
 import { useSettings } from '../../lib/settingsQuery';
@@ -746,7 +747,7 @@ export const FloorPlanPage = () => {
         return (
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
           {/* Left Column: Unassigned Guests Sidebar & Host Actions (lg:col-span-4) */}
-          <div className="lg:col-span-4 space-y-4">
+          <div className="lg:col-span-4 space-y-4 order-2 lg:order-1">
             <UnassignedGuestsSidebar
               unassignedGuests={unassignedGuestsList}
               floorMap={floorMap}
@@ -822,7 +823,7 @@ export const FloorPlanPage = () => {
           </div>
 
           {/* Right Column: Stats, Progress Bar & Read-Only Floor Canvas (lg:col-span-8) */}
-          <div className="lg:col-span-8 space-y-4">
+          <div className="lg:col-span-8 space-y-4 order-1 lg:order-2">
             {/* Seating Progress Bar Banner */}
             <div className="bg-[#FFFDF9] rounded-2xl p-4 border-2 border-[#CBAE94] shadow-md space-y-2.5">
               <div className="flex flex-wrap items-center justify-between gap-2">
@@ -897,7 +898,7 @@ export const FloorPlanPage = () => {
               ref={containerRef}
               className="bg-[#FFFDF9] rounded-3xl p-5 shadow-xl border-2 border-[#CBAE94] overflow-hidden relative space-y-3"
             >
-              <div className="flex items-center justify-between px-1 border-b border-[#CBAE94]/30 pb-3">
+              <div className="flex flex-wrap items-center justify-between gap-3 px-1 border-b border-[#CBAE94]/30 pb-3">
                 <div className="flex items-center gap-2">
                   <div className="w-8 h-8 rounded-xl bg-[#8B735B]/10 text-[#8B735B] flex items-center justify-center">
                     <Layers className="w-4 h-4" />
@@ -932,55 +933,17 @@ export const FloorPlanPage = () => {
                   <PieChart className="w-4 h-4 text-[#8B735B]" />
                   <span>{t.tableStatusFilterLabel}</span>
                 </div>
-                <div className="flex flex-wrap items-center gap-1.5">
-                  <button
-                    type="button"
-                    onClick={() => setTableStatusFilter('all')}
-                    className={`px-3 py-1 rounded-xl text-xs font-bold transition-all ${
-                      tableStatusFilter === 'all'
-                        ? 'bg-[#8B735B] text-white shadow-sm'
-                        : 'bg-white hover:bg-[#EFE6DC] text-[#5D5449] border border-[#CBAE94]/60'
-                    }`}
-                  >
-                    {tf('allTablesFilterLabel', { count: String(floorMap ? floorMap.tables.length : 0) })}
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setTableStatusFilter('empty')}
-                    className={`px-3 py-1 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 ${
-                      tableStatusFilter === 'empty'
-                        ? 'bg-emerald-600 text-white shadow-sm'
-                        : 'bg-white hover:bg-emerald-50 text-emerald-800 border border-emerald-300'
-                    }`}
-                  >
-                    <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-                    {tf('emptyTablesFilterLabel', { count: String(emptyTablesCount) })}
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setTableStatusFilter('partial')}
-                    className={`px-3 py-1 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 ${
-                      tableStatusFilter === 'partial'
-                        ? 'bg-amber-600 text-white shadow-sm'
-                        : 'bg-white hover:bg-amber-50 text-amber-800 border border-amber-300'
-                    }`}
-                  >
-                    <span className="w-2 h-2 rounded-full bg-amber-500" />
-                    {tf('partialTablesFilterLabel', { count: String(partialTablesCount) })}
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => setTableStatusFilter('full')}
-                    className={`px-3 py-1 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 ${
-                      tableStatusFilter === 'full'
-                        ? 'bg-rose-600 text-white shadow-sm'
-                        : 'bg-white hover:bg-rose-50 text-rose-800 border border-rose-300'
-                    }`}
-                  >
-                    <span className="w-2 h-2 rounded-full bg-rose-500" />
-                    {tf('fullTablesFilterLabel', { count: String(fullTablesCount) })}
-                  </button>
-                </div>
+                <Segmented
+                  ariaLabel={t.tableStatusFilterLabel}
+                  value={tableStatusFilter}
+                  onChange={setTableStatusFilter}
+                  options={[
+                    { value: 'all', label: tf('allTablesFilterLabel', { count: String(floorMap ? floorMap.tables.length : 0) }) },
+                    { value: 'empty', icon: <span className="w-2 h-2 rounded-full bg-emerald-500" />, label: tf('emptyTablesFilterLabel', { count: String(emptyTablesCount) }) },
+                    { value: 'partial', icon: <span className="w-2 h-2 rounded-full bg-amber-500" />, label: tf('partialTablesFilterLabel', { count: String(partialTablesCount) }) },
+                    { value: 'full', icon: <span className="w-2 h-2 rounded-full bg-rose-500" />, label: tf('fullTablesFilterLabel', { count: String(fullTablesCount) }) },
+                  ]}
+                />
               </div>
 
               {/* Canvas Outer Wrapper */}
