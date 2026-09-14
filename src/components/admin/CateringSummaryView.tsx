@@ -388,10 +388,10 @@ export const CateringSummaryView: React.FC<CateringSummaryViewProps> = ({ guests
           <div className="h-64">
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={dietaryChartData} layout="vertical" margin={{ top: 0, right: 24, bottom: 0, left: 8 }}>
-                <XAxis type="number" allowDecimals={false} tick={{ fontSize: 11, fill: '#8B735B' }} stroke="#CBAE94" />
-                <YAxis type="category" dataKey="category" width={150} tick={{ fontSize: 11, fill: '#4A3F35' }} stroke="#CBAE94" />
-                <Tooltip cursor={{ fill: '#FAF6F0' }} contentStyle={{ fontSize: 12, borderRadius: 12, border: '1px solid #CBAE94' }} />
-                <Bar dataKey="count" fill="#D97706" radius={[0, 8, 8, 0]} barSize={22} />
+                <XAxis type="number" allowDecimals={false} tick={{ fontSize: 11, fill: 'var(--ink-soft)' }} stroke="var(--border)" />
+                <YAxis type="category" dataKey="category" width={150} tick={{ fontSize: 11, fill: 'var(--ink)' }} stroke="var(--border)" />
+                <Tooltip cursor={{ fill: 'var(--bg-2)' }} contentStyle={{ fontSize: 12, borderRadius: 12, border: '1px solid var(--border)' }} />
+                <Bar dataKey="count" fill="var(--accent)" radius={[0, 8, 8, 0]} barSize={22} />
               </BarChart>
             </ResponsiveContainer>
           </div>

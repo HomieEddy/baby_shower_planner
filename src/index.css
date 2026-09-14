@@ -9,6 +9,12 @@
     --input-bg: #FFFFFF;
     --heading-font: 'Gaegu', cursive;
     --ink-faint: rgba(74, 63, 53, 0.1);
+    /* Derived tones — recalculate automatically when the theme vars change. */
+    --ink-soft: color-mix(in srgb, var(--ink) 82%, var(--bg));
+    --muted: color-mix(in srgb, var(--ink) 55%, var(--bg));
+    --surface-2: color-mix(in srgb, var(--accent) 14%, var(--surface));
+    --bg-2: color-mix(in srgb, var(--accent) 6%, var(--bg));
+    --border: var(--accent);
   }
 
   ::selection {
@@ -139,18 +145,63 @@ select option {
   color: #F8FAFC !important;
 }
 
-/* Light mode accent overrides */
-:root:not(.dark) [class*="text-[#4A3F35]"] {
+/* Light mode: route the hardcoded palette through the theme vars so presets
+   actually restyle the UI instead of leaving every surface tan. */
+:root:not(.dark) [class*="text-[#4A3F35]"],
+:root:not(.dark) [class*="text-[#33281E]"],
+:root:not(.dark) [class*="text-[#3D3126]"] {
   color: var(--ink);
 }
 
-:root:not(.dark) [class*="bg-[#4A3F35]"] {
+:root:not(.dark) [class*="text-[#8B735B]"],
+:root:not(.dark) [class*="text-[#5D5449]"] {
+  color: var(--ink-soft);
+}
+
+:root:not(.dark) [class*="text-[#A09080]"] {
+  color: var(--muted);
+}
+
+:root:not(.dark) [class*="bg-[#4A3F35]"],
+:root:not(.dark) [class*="bg-[#382F27]"] {
   background-color: var(--ink);
   color: var(--bg);
 }
 
-:root:not(.dark) [class*="border-[#CBAE94]"] {
-  border-color: var(--accent);
+:root:not(.dark) [class*="bg-[#8B735B]"] {
+  background-color: var(--ink);
+  color: var(--bg);
+}
+
+:root:not(.dark) [class*="bg-[#D4A373]"],
+:root:not(.dark) [class*="bg-[#C08D5C]"] {
+  background-color: var(--accent);
+  color: #ffffff;
+}
+
+:root:not(.dark) [class*="bg-[#EFE6DC]"],
+:root:not(.dark) [class*="bg-[#E9E0D2]"] {
+  background-color: var(--surface-2);
+}
+
+:root:not(.dark) [class*="bg-[#FAF6F0]"],
+:root:not(.dark) [class*="bg-[#F8F5F0]"],
+:root:not(.dark) [class*="bg-[#FDFBF7]"] {
+  background-color: var(--bg-2);
+}
+
+:root:not(.dark) [class*="bg-[#FFFDF9]"],
+:root:not(.dark) [class~="bg-white"] {
+  background-color: var(--surface);
+}
+
+:root:not(.dark) [class*="border-[#CBAE94]"],
+:root:not(.dark) [class*="border-[#4A3F35]"] {
+  border-color: var(--border);
+}
+
+:root:not(.dark) [class*="text-[#CBAE94]"] {
+  color: var(--accent);
 }
 
 .font-gaegu {

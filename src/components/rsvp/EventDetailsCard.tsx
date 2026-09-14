@@ -124,7 +124,7 @@ export const EventDetailsCard = ({
       <motion.section
         variants={cardItem}
         className="relative flex flex-col min-h-[calc(100vh-9.5rem)] sm:min-h-0 rounded-[36px] sm:rounded-[44px] px-2.5 sm:px-5 pt-9 sm:pt-12 pb-2.5 sm:pb-5 overflow-hidden"
-        style={{ background: 'linear-gradient(135deg, #FFF1F4 0%, #FFE4EC 50%, #FFD6E2 100%)' }}
+        style={{ background: 'linear-gradient(135deg, var(--surface) 0%, var(--surface-2) 55%, var(--bg-2) 100%)' }}
       >
         {/* dot texture, theme accent */}
         <div
@@ -140,7 +140,7 @@ export const EventDetailsCard = ({
           className="relative flex-1 flex flex-col rounded-t-[110px] sm:rounded-t-[170px] rounded-b-[24px] px-3 sm:px-10 pt-9 sm:pt-16 pb-4 sm:pb-10 text-center"
           style={{
             border: '3px solid var(--accent)',
-            boxShadow: '0 10px 40px -12px rgba(180,80,110,0.2)',
+            boxShadow: '0 10px 40px -12px color-mix(in srgb, var(--ink) 28%, transparent)',
           }}
         >
           {/* Watercolor invitation background */}
