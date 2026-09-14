@@ -776,12 +776,13 @@ export const AdminGuestsTab: React.FC<AdminGuestsTabProps> = ({ language, t, gue
 
       {/* Invited Guests Table Section */}
       <motion.div ref={listRef} variants={adminCardVariants} className="card-paper p-6 sm:p-8 space-y-6">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
           <div className="shrink-0">
             <h3 className="font-sans text-xl font-bold text-[#8B735B] whitespace-nowrap">{t.guestListTitle}</h3>
           </div>
 
           <GuestToolbar
+            className="lg:flex-1 lg:min-w-0"
             searchTerm={searchTerm}
             onSearchChange={setSearchTerm}
             statusFilter={statusFilter}

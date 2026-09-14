@@ -79,7 +79,7 @@ export const GuestMetricToggle = ({
 };
 
 const selectPillClass =
-  'shrink-0 px-3 py-1.5 rounded-full border border-[#CBAE94] bg-white text-xs font-bold text-[#5D5449] focus:outline-none focus:ring-2 focus:ring-[#8B735B]';
+  'px-3 py-1.5 rounded-full border border-[#CBAE94] bg-white text-xs font-bold text-[#5D5449] focus:outline-none focus:ring-2 focus:ring-[#8B735B]';
 
 // ponytail: local overflow menu; extract to shared if a second consumer appears.
 const ActionsMenu = ({
@@ -155,16 +155,17 @@ const ViewToggle = ({
   return (
     <div role="group" className="flex items-center p-1 rounded-full bg-white border border-[#CBAE94] text-xs font-bold font-mono shrink-0">
       <button type="button" onClick={() => onViewMode('cards')} aria-pressed={viewMode === 'cards'} className={btnClass(viewMode === 'cards')}>
-        <LayoutGrid className="w-3.5 h-3.5" /><span className="hidden md:inline">{t.viewCardsBtn}</span>
+        <LayoutGrid className="w-3.5 h-3.5" /><span className="hidden xl:inline">{t.viewCardsBtn}</span>
       </button>
       <button type="button" onClick={() => onViewMode('table')} aria-pressed={viewMode === 'table'} className={btnClass(viewMode === 'table')}>
-        <List className="w-3.5 h-3.5" /><span className="hidden md:inline">{t.viewTableBtn}</span>
+        <List className="w-3.5 h-3.5" /><span className="hidden xl:inline">{t.viewTableBtn}</span>
       </button>
     </div>
   );
 };
 
 export const GuestToolbar = ({
+  className = '',
   searchTerm,
   onSearchChange,
   statusFilter,
@@ -177,6 +178,7 @@ export const GuestToolbar = ({
   onOpenImport,
   onSendReminders,
 }: {
+  className?: string;
   searchTerm: string;
   onSearchChange: (v: string) => void;
   statusFilter: 'All' | 'Attending' | 'Pending' | 'Declined';
@@ -190,36 +192,44 @@ export const GuestToolbar = ({
   onSendReminders: () => void;
 }) => {
   const t = useT();
-  // Single row at every width: search flexes, everything else stays fixed.
+  // Phones: two tidy rows — search + overflow menu, then the two selects and
+  // the view toggle (selects flex to share the row). sm+: the row wrappers
+  // dissolve (display:contents) so every control sits on one line; the search
+  // and selects shrink when the line is tight, so nothing ever overlaps.
   return (
-    <div className="flex items-center gap-2">
-      <div className="flex-1 min-w-0">
-        <SearchInput
-          value={searchTerm}
-          onChange={(e) => onSearchChange(e.target.value)}
-          placeholder={t.searchGuestsPh}
-          aria-label={t.searchGuestsPh}
-          className="w-full"
-        />
+    <div className={`flex flex-wrap items-center gap-2 ${className}`}>
+      <div className="flex w-full min-w-0 items-center gap-2 sm:contents">
+        <div className="min-w-0 flex-1">
+          <SearchInput
+            value={searchTerm}
+            onChange={(e) => onSearchChange(e.target.value)}
+            placeholder={t.searchGuestsPh}
+            aria-label={t.searchGuestsPh}
+            className="w-full"
+          />
+        </div>
+
+        <ActionsMenu onExportCsv={onExportCsv} onOpenImport={onOpenImport} onSendReminders={onSendReminders} />
       </div>
 
-      <select value={statusFilter} onChange={(e) => onStatusFilter(e.target.value as typeof statusFilter)}
-        aria-label={t.rsvpStatusLabel} className={selectPillClass}>
-        <option value="All">{t.filterStatusAll}</option>
-        <option value="Attending">{t.statusAttendingWord}</option>
-        <option value="Pending">{t.statusPendingWord}</option>
-        <option value="Declined">{t.statusDeclinedWord}</option>
-      </select>
+      <div className="flex w-full min-w-0 items-center gap-2 sm:contents">
+        <select value={statusFilter} onChange={(e) => onStatusFilter(e.target.value as typeof statusFilter)}
+          aria-label={t.rsvpStatusLabel} className={`${selectPillClass} min-w-0 flex-1 sm:max-w-[10rem]`}>
+          <option value="All">{t.filterStatusAll}</option>
+          <option value="Attending">{t.statusAttendingWord}</option>
+          <option value="Pending">{t.statusPendingWord}</option>
+          <option value="Declined">{t.statusDeclinedWord}</option>
+        </select>
 
-      <select value={sourceFilter} onChange={(e) => onSourceFilter(e.target.value as typeof sourceFilter)}
-        aria-label={t.sourceFilterTitle} title={t.sourceFilterTitle} className={selectPillClass}>
-        <option value="All">{t.filterAllOption}</option>
-        <option value="Host">{t.sourceHostOption}</option>
-        <option value="Guest-invited">{t.sourceGuestOption}</option>
-      </select>
+        <select value={sourceFilter} onChange={(e) => onSourceFilter(e.target.value as typeof sourceFilter)}
+          aria-label={t.sourceFilterTitle} title={t.sourceFilterTitle} className={`${selectPillClass} min-w-0 flex-1 sm:max-w-[10rem]`}>
+          <option value="All">{t.filterAllOption}</option>
+          <option value="Host">{t.sourceHostOption}</option>
+          <option value="Guest-invited">{t.sourceGuestOption}</option>
+        </select>
 
-      <ViewToggle viewMode={viewMode} onViewMode={onViewMode} />
-      <ActionsMenu onExportCsv={onExportCsv} onOpenImport={onOpenImport} onSendReminders={onSendReminders} />
+        <ViewToggle viewMode={viewMode} onViewMode={onViewMode} />
+      </div>
     </div>
   );
 };
