@@ -65,7 +65,7 @@ export const AgendaCalendar: React.FC<AgendaCalendarProps> = ({ tasks, t, langua
         <button
           type="button"
           onClick={() => setMonth(subMonths(month, 1))}
-          className="p-2 rounded-xl border-2 border-[#CBAE94]/60 text-[#5D5449] hover:bg-[#EFE6DC] transition-colors cursor-pointer"
+          className="inline-flex min-w-[44px] min-h-[44px] items-center justify-center rounded-xl border-2 border-[#CBAE94]/60 text-[#5D5449] hover:bg-[#EFE6DC] transition-colors cursor-pointer"
           aria-label={t.previousMonthLabel}
         >
           <ChevronLeft className="w-4 h-4" />
@@ -85,15 +85,15 @@ export const AgendaCalendar: React.FC<AgendaCalendarProps> = ({ tasks, t, langua
         <button
           type="button"
           onClick={() => setMonth(addMonths(month, 1))}
-          className="p-2 rounded-xl border-2 border-[#CBAE94]/60 text-[#5D5449] hover:bg-[#EFE6DC] transition-colors cursor-pointer"
+          className="inline-flex min-w-[44px] min-h-[44px] items-center justify-center rounded-xl border-2 border-[#CBAE94]/60 text-[#5D5449] hover:bg-[#EFE6DC] transition-colors cursor-pointer"
           aria-label={t.nextMonthLabel}
         >
           <ChevronRight className="w-4 h-4" />
         </button>
       </div>
 
-      <div className="overflow-x-auto -mx-1 px-1">
-        <div className="grid grid-cols-7 gap-1.5 min-w-[560px]">
+      <div className="overflow-x-auto -mx-1 px-1 snap-x">
+        <div className="grid grid-cols-7 gap-1.5 min-w-[460px]">
           {weekdays.map((day) => (
             <div key={day.toISOString()} className="text-center text-xs font-mono font-bold uppercase text-[#A09080] py-1">
               {format(day, 'EEE', { locale: localeFor(language) })}
@@ -130,7 +130,7 @@ export const AgendaCalendar: React.FC<AgendaCalendarProps> = ({ tasks, t, langua
                     key={task.id}
                     type="button"
                     onClick={() => onOpenTask(task)}
-                    className={`w-full flex items-center gap-1 rounded-lg px-1.5 py-0.5 bg-white border border-[#CBAE94]/50 text-xs font-bold text-[#4A3F35] truncate hover:border-[#8B735B] transition-colors cursor-pointer`}
+                    className={`w-full flex items-center gap-1 rounded-lg px-1.5 py-1 bg-white border border-[#CBAE94]/50 text-xs font-bold text-[#4A3F35] truncate hover:border-[#8B735B] transition-colors cursor-pointer`}
                   >
                     <span className={`w-1.5 h-1.5 rounded-full shrink-0 ${STATUS_DOT[task.status]}`} />
                     <span className="truncate">{task.title}</span>

@@ -17,6 +17,7 @@ import { useToast } from '../shared/ToastContext';
 import { useConfirm } from '../shared/ConfirmDialog';
 import { adminContainerVariants, adminCardVariants } from '../shared/motionPresets';
 import { useApiErrorMessage } from '../shared/i18n';
+import { Segmented } from '../shared/Segmented';
 import { AgendaCalendar } from './AgendaCalendar';
 import { AgendaKanban } from './AgendaKanban';
 import { AgendaTaskModal } from './AgendaTaskModal';
@@ -208,29 +209,16 @@ export const AdminAgendaTab: React.FC<AdminAgendaTabProps> = ({ language, t, set
           </h3>
           <p className="text-xs text-[#5D5449] mt-1">{t.agendaReminderPanelDesc}</p>
         </div>
-        <div className="flex items-center gap-3">
-          <div className="flex rounded-2xl border-2 border-[#CBAE94]/60 p-1 bg-white">
-            <button
-              type="button"
-              onClick={() => setView('kanban')}
-              className={`px-4 py-2 rounded-xl text-xs font-bold font-mono transition-colors cursor-pointer flex items-center gap-1.5 ${
-                view === 'kanban' ? 'bg-[#8B735B] text-white' : 'text-[#5D5449] hover:bg-[#EFE6DC]'
-              }`}
-            >
-              <SquareKanban className="w-3.5 h-3.5" />
-              {t.agendaKanbanView}
-            </button>
-            <button
-              type="button"
-              onClick={() => setView('calendar')}
-              className={`px-4 py-2 rounded-xl text-xs font-bold font-mono transition-colors cursor-pointer flex items-center gap-1.5 ${
-                view === 'calendar' ? 'bg-[#8B735B] text-white' : 'text-[#5D5449] hover:bg-[#EFE6DC]'
-              }`}
-            >
-              <CalendarDays className="w-3.5 h-3.5" />
-              {t.agendaCalendarView}
-            </button>
-          </div>
+        <div className="flex flex-wrap items-center gap-3">
+          <Segmented
+            ariaLabel={t.tabAgenda}
+            value={view}
+            onChange={setView}
+            options={[
+              { value: 'kanban', icon: <SquareKanban className="w-3.5 h-3.5" />, label: t.agendaKanbanView },
+              { value: 'calendar', icon: <CalendarDays className="w-3.5 h-3.5" />, label: t.agendaCalendarView },
+            ]}
+          />
           <button
             type="button"
             onClick={() => setModal({ mode: 'create' })}

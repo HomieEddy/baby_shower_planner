@@ -61,6 +61,7 @@ export const AgendaTaskModal: React.FC<AgendaTaskModalProps> = ({ open, task, pr
       open={open}
       onClose={onClose}
       maxWidth="md"
+      ariaLabel={task ? t.agendaEditTaskTitle : t.agendaNewTaskTitle}
       title={
         <div className="flex items-center gap-2">
           <h3 className="font-sans text-xl font-bold text-[#8B735B]">
