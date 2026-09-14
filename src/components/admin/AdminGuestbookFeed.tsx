@@ -1,3 +1,4 @@
+import { useMemo, useState } from 'react';
 import { motion } from 'motion/react';
 import { Heart, MessageSquare, Trash2, Eye, EyeOff } from 'lucide-react';
 import { GuestbookEntry } from '../../types';
@@ -5,6 +6,10 @@ import { adminCardVariants, adminContainerVariants } from '../shared/motionPrese
 import { useT, useTf } from '../shared/i18n';
 import { useToast } from '../shared/ToastContext';
 import { useConfirm } from '../shared/ConfirmDialog';
+import { SearchInput } from '../shared/ui';
+import { Segmented } from '../shared/Segmented';
+import { IconButton } from '../shared/IconButton';
+import { AdminToolbar } from './AdminToolbar';
 import { adminFetch } from '../../lib/api';
 
 export const AdminGuestbookFeed = ({ entries, onRefresh }: { entries: GuestbookEntry[]; onRefresh: () => Promise<void> }) => {
@@ -12,6 +17,21 @@ export const AdminGuestbookFeed = ({ entries, onRefresh }: { entries: GuestbookE
   const tf = useTf();
   const { toast } = useToast();
   const confirm = useConfirm();
+  const [searchTerm, setSearchTerm] = useState('');
+  const [visibilityFilter, setVisibilityFilter] = useState<'all' | 'visible' | 'hidden'>('all');
+
+  const hiddenCount = entries.filter((e) => e.visible === false).length;
+
+  const filteredEntries = useMemo(() => {
+    const q = searchTerm.toLowerCase();
+    return entries.filter((e) => {
+      const matchesSearch = e.guest_name.toLowerCase().includes(q) || e.message.toLowerCase().includes(q);
+      const matchesVisibility =
+        visibilityFilter === 'all' ||
+        (visibilityFilter === 'hidden' ? e.visible === false : e.visible !== false);
+      return matchesSearch && matchesVisibility;
+    });
+  }, [entries, searchTerm, visibilityFilter]);
 
   const handleToggleVisibility = async (entry: GuestbookEntry) => {
     try {
@@ -62,6 +82,33 @@ export const AdminGuestbookFeed = ({ entries, onRefresh }: { entries: GuestbookE
           </div>
         </div>
 
+        {entries.length > 0 && (
+          <AdminToolbar
+            primary={
+              <div className="min-w-0 flex-1">
+                <SearchInput
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  placeholder={t.searchGuestbookPh}
+                  aria-label={t.searchGuestbookPh}
+                  className="w-full"
+                />
+              </div>
+            }
+            secondary={
+              <Segmented
+                value={visibilityFilter}
+                onChange={setVisibilityFilter}
+                options={[
+                  { value: 'all', label: t.filterAllOption, count: entries.length },
+                  { value: 'visible', label: t.moderationVisibleBadge, count: entries.length - hiddenCount },
+                  { value: 'hidden', label: t.moderationHiddenBadge, count: hiddenCount },
+                ]}
+              />
+            }
+          />
+        )}
+
         {entries.length === 0 ? (
           <div className="text-center py-12 bg-[#EFE6DC]/30 rounded-3xl border-2 border-dashed border-[#CBAE94]">
             <MessageSquare className="w-10 h-10 text-[#CBAE94] mx-auto mb-2" />
@@ -69,9 +116,11 @@ export const AdminGuestbookFeed = ({ entries, onRefresh }: { entries: GuestbookE
               {t.noEntriesYet}
             </p>
           </div>
+        ) : filteredEntries.length === 0 ? (
+          <p className="text-center py-10 text-[#A09080] font-mono text-xs">{t.noSearchMatch}</p>
         ) : (
           <motion.div variants={adminContainerVariants} className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {entries.map((entry) => (
+            {filteredEntries.map((entry) => (
               <motion.div
                 key={entry.id}
                 variants={adminCardVariants}
@@ -117,24 +166,20 @@ export const AdminGuestbookFeed = ({ entries, onRefresh }: { entries: GuestbookE
 
                 {/* Moderation */}
                 <div className="flex items-center justify-end gap-1.5">
-                  <button
-                    type="button"
+                  <IconButton
+                    variant="outline"
+                    label={entry.visible === false ? t.moderationShowBtn : t.moderationHideBtn}
                     onClick={() => handleToggleVisibility(entry)}
-                    className="p-2 rounded-xl border border-[#CBAE94] text-[#8B735B] hover:bg-[#EFE6DC] transition-colors"
-                    title={entry.visible === false ? t.moderationShowBtn : t.moderationHideBtn}
-                    aria-label={entry.visible === false ? t.moderationShowBtn : t.moderationHideBtn}
                   >
-                    {entry.visible === false ? <Eye className="w-3.5 h-3.5" /> : <EyeOff className="w-3.5 h-3.5" />}
-                  </button>
-                  <button
-                    type="button"
+                    {entry.visible === false ? <Eye className="w-4 h-4" /> : <EyeOff className="w-4 h-4" />}
+                  </IconButton>
+                  <IconButton
+                    variant="danger"
+                    label={t.deleteGbEntryBtn}
                     onClick={() => handleDelete(entry)}
-                    className="p-2 rounded-xl border border-rose-300 text-rose-600 hover:bg-rose-100 transition-colors"
-                    title={t.bulkDeleteBtn}
-                    aria-label={t.bulkDeleteBtn}
                   >
-                    <Trash2 className="w-3.5 h-3.5" />
-                  </button>
+                    <Trash2 className="w-4 h-4" />
+                  </IconButton>
                 </div>
               </motion.div>
             ))}

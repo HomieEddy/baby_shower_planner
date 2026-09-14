@@ -398,6 +398,7 @@ export interface Translations {
   moderationHiddenBadge: string;
   moderationHideBtn: string;
   moderationShowBtn: string;
+  moderationVisibleBadge: string;
   photoHiddenToast: string;
   photoShownToast: string;
   gbLeaveAnotherBtn: string;
@@ -690,6 +691,7 @@ export interface Translations {
   searchGiftsPh: string;
   searchGuestName: string;
   searchGuestPlaceholder: string;
+  searchGuestbookPh: string;
   searchGuestsPh: string;
   searchPhotosPh: string;
   seatPartyHere: string;
@@ -1607,6 +1609,7 @@ export const translations: Record<Language, Translations> = {
     moderationHiddenBadge: "Hidden",
     moderationHideBtn: "Hide from guests",
     moderationShowBtn: "Show to guests",
+    moderationVisibleBadge: "Visible",
     photoHiddenToast: "Photo hidden from guests.",
     photoShownToast: "Photo visible again.",
     galleryPrintQrBtn2: "Print Table QR Cards",
@@ -1906,6 +1909,7 @@ export const translations: Record<Language, Translations> = {
     searchGiftsPh: "Search gifts...",
     searchGuestName: "Search guest name...",
     searchGuestPlaceholder: "Search guests by name, email, or code...",
+    searchGuestbookPh: "Search wishes...",
     searchGuestsPh: "Search guests...",
     searchPhotosPh: "Search captions or guest names...",
     seatPartyHere: "Seat Party Here",
@@ -2813,6 +2817,7 @@ export const translations: Record<Language, Translations> = {
     moderationHiddenBadge: "Masqué",
     moderationHideBtn: "Masquer aux invités",
     moderationShowBtn: "Montrer aux invités",
+    moderationVisibleBadge: "Visible",
     photoHiddenToast: "Photo masquée pour les invités.",
     photoShownToast: "Photo à nouveau visible.",
     galleryPrintQrBtn2: "Imprimer les QR de table",
@@ -3112,6 +3117,7 @@ export const translations: Record<Language, Translations> = {
     searchGiftsPh: "Rechercher des cadeaux...",
     searchGuestName: "Rechercher le nom d'un invité...",
     searchGuestPlaceholder: "Rechercher par nom, e-mail ou code...",
+    searchGuestbookPh: "Rechercher des messages...",
     searchGuestsPh: "Rechercher des invités...",
     searchPhotosPh: "Rechercher légendes ou noms d'invités...",
     seatPartyHere: "Placer le groupe ici",
