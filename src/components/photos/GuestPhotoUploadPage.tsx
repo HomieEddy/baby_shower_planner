@@ -19,10 +19,11 @@ import { decodeApiError } from '../../lib/errors';
 import { readGuestLock } from '../../lib/guestLock';
 import { compressImage, formatFileSize } from '../../lib/imageCompressor';
 import { useToast } from '../shared/ToastContext';
+import { BackButton } from '../shared/BackButton';
 import { LockedNotice } from '../shared/LockedNotice';
 import { uploadPhotoBase64 } from '../../lib/fileUtils';
 import { useAppStore } from '../../stores/appStore';
-import { useT, useTf } from '../shared/i18n';
+import { useT, useTf, useApiErrorMessage } from '../shared/i18n';
 import { useFloorMapTables } from '../shared/hooks';
 import { isValidCode } from '../../lib/validation';
 import { PhotoDropzone, PhotoFileCard, UploadSuccessScreen } from './PhotoUploadParts';
@@ -41,6 +42,7 @@ export const GuestPhotoUploadPage = () => {
   const language = useAppStore((s) => s.language);
   const t = useT();
   const tf = useTf();
+  const apiError = useApiErrorMessage();
   const [searchParams] = useSearchParams();
   const initialTableId = searchParams.get('tableId') || undefined;
   const { toast } = useToast();
@@ -92,7 +94,7 @@ export const GuestPhotoUploadPage = () => {
   };
 
   // Drag and drop handlers
-  const handleDrop = (e: React.DragEvent<HTMLDivElement>) => {
+  const handleDrop = (e: React.DragEvent<HTMLElement>) => {
     e.preventDefault();
     e.stopPropagation();
     setFileError(null);
@@ -103,7 +105,7 @@ export const GuestPhotoUploadPage = () => {
     }
   };
 
-  const handleDragOver = (e: React.DragEvent<HTMLDivElement>) => {
+  const handleDragOver = (e: React.DragEvent<HTMLElement>) => {
     e.preventDefault();
     e.stopPropagation();
   };
@@ -261,7 +263,7 @@ export const GuestPhotoUploadPage = () => {
         if (code === 'PHOTO_SIZE_LIMIT_REACHED') {
           throw new Error(t.uploadPhotoSizeLimitToast);
         }
-        throw new Error(message || t.uploadFailedGeneric);
+        throw new Error(apiError(code, message || t.uploadFailedGeneric));
       }
 
       setUploadProgress(100);
@@ -316,6 +318,7 @@ export const GuestPhotoUploadPage = () => {
   return (
     <div className="min-h-screen bg-[#FAF6F0] py-8 px-4 sm:px-6 lg:px-8 font-sans">
       <div className="max-w-3xl mx-auto space-y-6">
+        <BackButton />
         {/* Header Hero Banner */}
         <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-[#8B735B] via-[#705C47] to-[#4A3F35] text-white p-6 sm:p-8 shadow-xl border border-[#CBAE94]/40">
           <div className="absolute -right-8 -bottom-8 opacity-10 pointer-events-none">

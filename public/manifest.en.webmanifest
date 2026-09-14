@@ -1,0 +1,14 @@
+{
+  "name": "Bébé — Baby Shower Planner",
+  "short_name": "Bébé Planner",
+  "description": "Invitations, RSVPs, seating plan, guestbook and photo sharing for your baby shower.",
+  "lang": "en",
+  "dir": "ltr",
+  "theme_color": "#8B735B",
+  "background_color": "#FDFBF7",
+  "display": "standalone",
+  "start_url": "/",
+  "icons": [
+    { "src": "/icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any" }
+  ]
+}

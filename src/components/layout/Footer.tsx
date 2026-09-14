@@ -44,7 +44,7 @@ export const Footer = () => {
         type="button"
         onClick={() => useAppStore.getState().toggleLanguage()}
         className="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full border border-[#CBAE94]/60 bg-white/60 hover:bg-[#EFE6DC] text-xs font-bold font-mono text-[#8B735B] transition-colors cursor-pointer"
-        title="Switch Language / Changer de langue"
+        title={t.switchLanguageTitle}
       >
         {language === 'EN' ? 'Français (FR)' : 'English (EN)'}
       </button>

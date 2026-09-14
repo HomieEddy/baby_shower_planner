@@ -76,8 +76,8 @@ const SortableScheduleItem: React.FC<SortableScheduleItemProps> = ({ item, index
           <button
             type="button"
             {...listeners}
-            title="Drag to reorder"
-            aria-label={`Drag schedule item ${index + 1} to reorder`}
+            title={t.dragToReorderTitle}
+            aria-label={tf('dragScheduleItemAria', { n: index + 1 })}
             className="cursor-grab active:cursor-grabbing touch-none text-[#8B735B] hover:text-[#5D5449] hover:bg-[#EFE6DC] p-1 rounded-lg transition-colors"
           >
             <GripVertical className="w-4 h-4" />
@@ -446,7 +446,7 @@ export const AdminSettingsTab: React.FC<AdminSettingsTabProps> = ({ language, t,
                     <select
                       value={customTheme.fontFamily}
                       onChange={(e) => updateCustomTheme('fontFamily', e.target.value)}
-                      className="w-full px-3 py-2 rounded-xl border border-[#CBAE94] bg-white text-xs font-bold text-[#4A3F35] focus:outline-none">
+                      className="w-full px-3 py-2 rounded-xl border border-[#CBAE94] bg-white text-xs font-bold text-[#4A3F35]">
                       {FONT_OPTIONS.map((f) => (
                         <option key={f.fontFamily} value={f.fontFamily}>{f.label}</option>
                       ))}

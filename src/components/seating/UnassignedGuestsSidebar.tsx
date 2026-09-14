@@ -153,13 +153,18 @@ export const UnassignedGuestsSidebar = ({
             return (
               <div
                 key={g.id}
-                onClick={() => onSelectGuest(isSelected ? null : g)}
-                className={`p-3 rounded-2xl border-2 transition-all cursor-pointer space-y-2 ${
+                className={`relative p-3 rounded-2xl border-2 transition-all space-y-2 ${
                   isSelected
                     ? 'bg-emerald-50/80 border-emerald-500 shadow-md ring-2 ring-emerald-300'
                     : 'bg-white hover:bg-[#EFE6DC]/40 border-[#CBAE94]/60'
                 }`}
               >
+                <button
+                  type="button"
+                  onClick={() => onSelectGuest(isSelected ? null : g)}
+                  aria-label={isSelected ? t.highlightingTablesBtn : t.selectHighlightBtn}
+                  className="absolute inset-0 z-0 rounded-2xl cursor-pointer"
+                />
                 <div className="flex items-start justify-between gap-2">
                   <div>
                     <h4 className="font-bold text-[#4A3F35] text-xs">
@@ -193,7 +198,7 @@ export const UnassignedGuestsSidebar = ({
                     e.stopPropagation();
                     onSelectGuest(isSelected ? null : g);
                   }}
-                  className={`w-full py-1.5 px-3 rounded-xl text-xs font-bold transition-colors flex items-center justify-center gap-1.5 ${
+                  className={`relative z-10 w-full py-1.5 px-3 rounded-xl text-xs font-bold transition-colors flex items-center justify-center gap-1.5 ${
                     isSelected
                       ? 'bg-emerald-600 text-white shadow-sm'
                       : 'bg-[#EFE6DC] hover:bg-[#CBAE94]/40 text-[#8B735B]'

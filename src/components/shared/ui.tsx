@@ -1,4 +1,4 @@
-import { ReactNode, InputHTMLAttributes, SelectHTMLAttributes } from 'react';
+import { ReactNode, ReactElement, InputHTMLAttributes, SelectHTMLAttributes, useId, cloneElement, isValidElement } from 'react';
 import { Search } from 'lucide-react';
 
 // Small, theme-consistent form primitives. Two visual variants:
@@ -20,12 +20,27 @@ interface FieldProps {
   className?: string;
 }
 
-export const Field = ({ label, children, className = '' }: FieldProps) => (
-  <div className={className}>
-    <label className="label-mono block text-xs font-bold mb-1">{label}</label>
-    {children}
-  </div>
-);
+// Associates the label with its control: the generated id is injected into the
+// child element (inputs/selects/textareas and the primitives above forward it).
+export const Field = ({ label, children, className = '' }: FieldProps) => {
+  const generatedId = useId();
+  const childProps = isValidElement(children)
+    ? (children.props as { id?: string })
+    : undefined;
+  const controlId = childProps?.id ?? generatedId;
+  const control = isValidElement(children)
+    ? cloneElement(children as ReactElement<{ id?: string }>, { id: controlId })
+    : children;
+
+  return (
+    <div className={className}>
+      <label htmlFor={controlId} className="label-mono block text-xs font-bold mb-1">
+        {label}
+      </label>
+      {control}
+    </div>
+  );
+};
 
 interface TextInputProps extends InputHTMLAttributes<HTMLInputElement> {
   variant?: Variant;

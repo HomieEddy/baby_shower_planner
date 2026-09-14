@@ -96,9 +96,9 @@ export async function handleGiftRoutes(ctx: RouteCtx): Promise<boolean> {
     const body = await parseJson(req);
     const { channel, text } = body;
     if (!['email', 'text', 'both'].includes(channel)) {
-      return sendJson(res, 400, { error: 'Invalid delivery channel' });
+      return sendJson(res, 400, { error: 'INVALID_CHANNEL', message: 'Invalid delivery channel' });
     }
-    if (!text || !text.trim()) return sendJson(res, 400, { error: 'Thank-you message is required' });
+    if (!text || !text.trim()) return sendJson(res, 400, { error: 'MESSAGE_REQUIRED', message: 'Thank-you message is required' });
     try {
       const { sendGiftThankYou } = await import('./thankyou');
       const result = await sendGiftThankYou(id, channel, text.trim());

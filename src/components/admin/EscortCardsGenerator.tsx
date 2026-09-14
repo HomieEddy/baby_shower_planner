@@ -19,6 +19,8 @@ interface CardRow {
   seatNumber: number | null;
 }
 
+const UNASSIGNED = '__unassigned__';
+
 export const EscortCardsGenerator: React.FC<EscortCardsGeneratorProps> = ({ guests, settings }) => {
     const t = useT();
     const tf = useTf();
@@ -27,7 +29,7 @@ export const EscortCardsGenerator: React.FC<EscortCardsGeneratorProps> = ({ gues
   const [selectedTableFilter, setSelectedTableFilter] = useState<string>('ALL');
   const [showQrCode, setShowQrCode] = useState(true);
   const [customHeader, setCustomHeader] = useState(
-    settings?.babyName ? `Celebrating Baby ${settings.babyName}` : 'Welcome to Our Baby Shower'
+    settings?.babyName ? tf('escortHeaderWithBaby', { name: settings.babyName }) : t.escortHeaderDefault
   );
   const [floorMap, setFloorMap] = useState<FloorMapData | null>(null);
 
@@ -65,12 +67,12 @@ export const EscortCardsGenerator: React.FC<EscortCardsGeneratorProps> = ({ gues
 
   // Extract unique tables
   const uniqueTables = Array.from(
-    new Set(rows.map((r) => r.tableName || 'Unassigned'))
+    new Set(rows.map((r) => r.tableName || UNASSIGNED))
   ).sort();
 
   const filteredRows = rows.filter((r) => {
     if (selectedTableFilter === 'ALL') return true;
-    return (r.tableName || 'Unassigned') === selectedTableFilter;
+    return (r.tableName || UNASSIGNED) === selectedTableFilter;
   });
 
   return (
@@ -84,10 +86,10 @@ export const EscortCardsGenerator: React.FC<EscortCardsGeneratorProps> = ({ gues
               <span>{t.stationeryTitle}</span>
             </div>
             <h2 className="font-newsreader text-3xl font-bold text-[#4A3F35] mt-1">
-              Table Escort Cards & Name Tags
+              {t.escortTitle}
             </h2>
             <p className="text-xs text-[#8B735B] font-sans">
-              Print ready-to-fold place cards and wearable name tags with custom table assignments and QR codes.
+              {t.escortSubtitle}
             </p>
           </div>
 
@@ -97,7 +99,7 @@ export const EscortCardsGenerator: React.FC<EscortCardsGeneratorProps> = ({ gues
             className="px-5 py-3 rounded-xl bg-[#8B735B] text-white font-bold text-xs hover:bg-[#705C47] transition-all flex items-center gap-2 shadow-md cursor-pointer shrink-0"
           >
             <Printer className="w-4 h-4" />
-            <span>Print {filteredRows.length} Cards</span>
+            <span>{tf('escortPrintBtn', { count: filteredRows.length })}</span>
           </button>
         </div>
 
@@ -137,7 +139,7 @@ export const EscortCardsGenerator: React.FC<EscortCardsGeneratorProps> = ({ gues
               <option value="ALL">{tf('allTablesOption', { count: rows.length })}</option>
               {uniqueTables.map((tbl) => (
                 <option key={tbl} value={tbl}>
-                  {t.tableFilterLabel} {tbl}
+                  {tbl === UNASSIGNED ? t.unassignedWord : `${t.tableFilterLabel} ${tbl}`}
                 </option>
               ))}
             </select>
@@ -171,10 +173,10 @@ export const EscortCardsGenerator: React.FC<EscortCardsGeneratorProps> = ({ gues
       <div className="card-paper p-6 sm:p-8 space-y-4">
         <div className="flex items-center justify-between border-b border-[#CBAE94]/30 pb-3 print:hidden">
           <h3 className="font-sans text-lg font-bold text-[#4A3F35]">
-            {t.printPreviewLabel} ({filteredRows.length} items)
+            {t.printPreviewLabel} ({tf('escortItemsCount', { count: filteredRows.length })})
           </h3>
           <span className="text-xs font-mono text-[#8B735B]">
-            {t.paperLayoutLabel}: 2-Column Grid (Standard A4 / Letter)
+            {t.paperLayoutLabel}: {t.escortPaperLayout}
           </span>
         </div>
 
@@ -244,7 +246,7 @@ export const EscortCardsGenerator: React.FC<EscortCardsGeneratorProps> = ({ gues
                         {showQrCode && (
                           <img
                             src={qrApi}
-                            alt="QR"
+                            alt={t.qrCodeAlt}
                             className="w-10 h-10 mt-1.5 rounded-md border border-[#CBAE94]"
                           />
                         )}

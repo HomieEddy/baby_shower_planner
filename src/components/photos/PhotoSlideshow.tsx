@@ -1,8 +1,9 @@
-import React from 'react';
+import React, { useRef } from 'react';
 import { Sparkles, Play, Pause, X } from 'lucide-react';
 import { EventPhoto } from '../../types';
 import { useSettings } from '../../lib/settingsQuery';
 import { useT } from '../shared/i18n';
+import { useDialogA11y } from '../shared/useDialogA11y';
 
 interface PhotoSlideshowProps {
   photos: EventPhoto[];
@@ -21,13 +22,21 @@ export const PhotoSlideshow: React.FC<PhotoSlideshowProps> = ({
 }) => {
   const t = useT();
   const settings = useSettings();
+  const panelRef = useRef<HTMLDivElement>(null);
+  useDialogA11y(true, panelRef, onClose);
   const photo = photos[currentIndex];
 
   // The last photo may be deleted while the slideshow is open.
   if (!photo) return null;
 
   return (
-    <div className="fixed inset-0 z-50 bg-black flex flex-col items-center justify-between p-6 animate-fadeIn">
+    <div
+      ref={panelRef}
+      role="dialog"
+      aria-modal="true"
+      aria-label={t.memoryMomentTitle}
+      className="fixed inset-0 z-50 bg-black flex flex-col items-center justify-between p-6 animate-fadeIn"
+    >
       <div className="w-full flex items-center justify-between text-white/80 text-xs">
         <div className="flex items-center gap-2">
           <Sparkles className="w-5 h-5 text-amber-400" />
@@ -49,6 +58,7 @@ export const PhotoSlideshow: React.FC<PhotoSlideshowProps> = ({
           <button
             type="button"
             onClick={onClose}
+            aria-label={t.closeModal}
             className="p-2 rounded-xl bg-white/20 hover:bg-white/30 text-white"
           >
             <X className="w-5 h-5" />

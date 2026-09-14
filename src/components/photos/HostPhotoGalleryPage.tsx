@@ -422,7 +422,7 @@ export const HostPhotoGalleryPage: React.FC = () => {
               <select
                 value={selectedTableFilter}
                 onChange={(e) => setSelectedTableFilter(e.target.value)}
-                className="px-3 py-2 rounded-xl bg-[#FAF6F0] border border-[#CBAE94]/60 text-xs font-bold text-[#4A3F35] focus:outline-none"
+                className="px-3 py-2 rounded-xl bg-[#FAF6F0] border border-[#CBAE94]/60 text-xs font-bold text-[#4A3F35]"
               >
                 <option value="all">{tf('allVenueTablesCount', { count: photos.length })}</option>
                 {tables.map((t) => {

@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { useSearchParams } from 'react-router-dom';
+import { Link, useSearchParams } from 'react-router-dom';
 import { Guest, GuestbookEntry, EventSettings, EventAlert, GiftLog } from '../../types';
-import { HostPhotoGalleryPage } from '../photos/HostPhotoGalleryPage';
 import { CateringSummaryView } from './CateringSummaryView';
 import { EscortCardsGenerator } from './EscortCardsGenerator';
 import { ThankYouTrackerView } from './ThankYouTrackerView';
@@ -25,11 +24,13 @@ import {
   Utensils,
   Tag,
   Gift,
-  Heart,
   Settings,
   AlertTriangle,
   MessageSquare,
   Camera,
+  MapPin,
+  BookOpen,
+  Image as ImageIcon,
   Trash2,
   UserCheck,
   Menu,
@@ -54,7 +55,6 @@ const TABS = [
   { id: 'settings', icon: Settings },
   { id: 'alerts', icon: AlertTriangle },
   { id: 'guestbook', icon: MessageSquare },
-  { id: 'photos', icon: Camera },
 ] as const;
 
 type TabId = (typeof TABS)[number]['id'];
@@ -68,6 +68,28 @@ const TabPane = ({ children }: { children: React.ReactNode }) => (
   >
     {children}
   </motion.div>
+);
+
+const SidebarPageLink = ({
+  to,
+  icon: Icon,
+  label,
+  onNavigate,
+}: {
+  to: string;
+  icon: React.ComponentType<{ className?: string }>;
+  label: string;
+  onNavigate: () => void;
+}) => (
+  <Link
+    to={to}
+    onClick={onNavigate}
+    className="w-full flex items-center gap-2.5 px-3 py-3 rounded-xl text-xs font-bold font-mono text-left text-[#5D5449] hover:bg-[#EFE6DC] transition-colors"
+  >
+    <Icon className="w-4 h-4 shrink-0" />
+    <span className="truncate flex-1">{label}</span>
+    <ExternalLink className="w-3 h-3 shrink-0 opacity-60" />
+  </Link>
 );
 
 export const AdminDashboard = () => {
@@ -111,7 +133,6 @@ export const AdminDashboard = () => {
       case 'settings': return t.tabHostSettings;
       case 'alerts': return t.tabUrgentAlerts;
       case 'guestbook': return `${t.tabGuestbookFeed} (${guestbookEntries.length})`;
-      case 'photos': return t.navPhotoGallery;
     }
   };
 
@@ -364,11 +385,22 @@ export const AdminDashboard = () => {
       </motion.div>
 
       {/* Breadcrumbs */}
-      <nav className="flex items-center gap-1.5 text-xs font-mono font-bold text-[#8B735B]" aria-label="Breadcrumb">
+      <nav className="flex items-center gap-1.5 text-xs font-mono font-bold text-[#8B735B]" aria-label={t.breadcrumbLabel}>
         <span className="text-[#A09080]">{t.adminTitle}</span>
         <ChevronRight className="w-3.5 h-3.5 text-[#CBAE94]" />
         <span className="text-[#4A3F35]">{tabLabel(adminSubTab)}</span>
       </nav>
+
+      {overviewQuery.isLoading && (
+        <div role="status" aria-live="polite" className="text-center py-4 text-[#A09080] font-mono text-xs">
+          {t.loadingLabel}
+        </div>
+      )}
+      {overviewQuery.isError && (
+        <div role="alert" className="rounded-2xl border-2 border-rose-300 bg-rose-50 text-rose-800 text-xs font-bold p-4 text-center">
+          {t.loadErrorMsg}
+        </div>
+      )}
 
       {/* Mobile sticky bar */}
       <div className="md:hidden sticky top-0 z-30 bg-[#FDFBF7]/95 backdrop-blur-sm border border-[#CBAE94]/40 rounded-2xl px-3 py-2 flex items-center justify-between shadow-2xs">
@@ -376,7 +408,7 @@ export const AdminDashboard = () => {
           type="button"
           onClick={() => setSidebarOpen(true)}
           className="p-2 rounded-xl hover:bg-[#EFE6DC] text-[#4A3F35] transition-colors cursor-pointer"
-          aria-label="Open navigation"
+          aria-label={t.openNavLabel}
         >
           <Menu className="w-5 h-5" />
         </button>
@@ -401,7 +433,7 @@ export const AdminDashboard = () => {
         {/* Sidebar nav */}
         <aside
           className={`fixed inset-y-0 left-0 z-50 w-72 transform transition-transform duration-200 md:static md:z-auto md:translate-x-0 md:w-56 md:shrink-0 ${
-            sidebarOpen ? 'translate-x-0' : '-translate-x-full'
+            sidebarOpen ? 'translate-x-0 block' : '-translate-x-full hidden md:block'
           }`}
         >
           <div className="h-full md:h-auto bg-[#FFFDF9] border-r border-[#CBAE94]/40 md:border md:rounded-2xl md:shadow-xs p-3 space-y-1 overflow-y-auto">
@@ -411,7 +443,7 @@ export const AdminDashboard = () => {
                 type="button"
                 onClick={() => setSidebarOpen(false)}
                 className="p-3 rounded-lg hover:bg-[#EFE6DC] text-[#5D5449] transition-colors cursor-pointer"
-                aria-label="Close navigation"
+                aria-label={t.closeNavLabel}
               >
                 <X className="w-4 h-4" />
               </button>
@@ -443,6 +475,45 @@ export const AdminDashboard = () => {
                 </button>
               );
             })}
+
+            {/* Page links — the dashboard is the single admin nav, so standalone
+                admin and guest-facing pages are opened from here. */}
+            <div className="pt-3 mt-2 border-t border-[#CBAE94]/30 space-y-1">
+              <span className="label-mono block px-3 pb-1">{t.navGroupSeating}</span>
+              <SidebarPageLink
+                to="/seating"
+                icon={MapPin}
+                label={t.navFloorplan}
+                onNavigate={() => setSidebarOpen(false)}
+              />
+            </div>
+            <div className="pt-3 mt-2 border-t border-[#CBAE94]/30 space-y-1">
+              <span className="label-mono block px-3 pb-1">{t.navGroupGuestPages}</span>
+              <SidebarPageLink
+                to="/photo-gallery"
+                icon={ImageIcon}
+                label={t.navPhotoGallery}
+                onNavigate={() => setSidebarOpen(false)}
+              />
+              <SidebarPageLink
+                to="/guestbook"
+                icon={BookOpen}
+                label={t.navGuestbook}
+                onNavigate={() => setSidebarOpen(false)}
+              />
+              <SidebarPageLink
+                to="/upload-photos"
+                icon={Camera}
+                label={t.navUploadPhotos}
+                onNavigate={() => setSidebarOpen(false)}
+              />
+              <SidebarPageLink
+                to="/event"
+                icon={CalendarDays}
+                label={t.landingEventBtn}
+                onNavigate={() => setSidebarOpen(false)}
+              />
+            </div>
           </div>
         </aside>
 
@@ -482,12 +553,6 @@ export const AdminDashboard = () => {
 
       {adminSubTab === 'guestbook' && (
         <AdminGuestbookFeed entries={guestbookEntries} onRefresh={refreshOverview} />
-      )}
-
-      {adminSubTab === 'photos' && (
-        <TabPane>
-          <HostPhotoGalleryPage />
-        </TabPane>
       )}
 
       {adminSubTab === 'checkin' && (

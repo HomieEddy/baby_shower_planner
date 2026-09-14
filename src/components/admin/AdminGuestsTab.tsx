@@ -13,7 +13,6 @@ import {
   CheckCircle2,
   Clock,
   XCircle,
-  UtensilsCrossed,
   UserPlus,
   Send,
   Copy,
@@ -37,7 +36,8 @@ import { useConfirm } from '../shared/ConfirmDialog';
 import { useCopyFeedback } from '../shared/hooks';
 import { Modal } from '../shared/Modal';
 import { useToast } from '../shared/ToastContext';
-import { useTf } from '../shared/i18n';
+import { useTf, useApiErrorMessage } from '../shared/i18n';
+import { decodeApiError } from '../../lib/errors';
 import { EmptyState } from '../shared/EmptyState';
 import { TextInput, Select } from '../shared/ui';
 
@@ -82,6 +82,7 @@ export const AdminGuestsTab: React.FC<AdminGuestsTabProps> = ({ language, t, gue
   const [searchParams, setSearchParams] = useSearchParams();
   const { toast } = useToast();
   const tf = useTf();
+  const apiError = useApiErrorMessage();
   const confirm = useConfirm();
 
   const [submittingGuest, setSubmittingGuest] = useState(false);
@@ -190,13 +191,6 @@ export const AdminGuestsTab: React.FC<AdminGuestsTabProps> = ({ language, t, gue
   const declinedPartySize = declinedGuests.reduce((acc, g) => acc + getGuestPartySize(g), 0);
   const totalPartySize = guests.reduce((acc, g) => acc + getGuestPartySize(g), 0);
 
-  const dietaryList = approvedGuests
-    .filter((g) => g.rsvp_status === 'Attending' && g.dietary_restrictions && g.dietary_restrictions.trim() !== '')
-    .map((g) => ({
-      guestName: g.name,
-      restriction: g.dietary_restrictions.trim(),
-    }));
-
   const filteredGuests = guests.filter((g) => {
     const matchesSearch =
       g.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -275,7 +269,8 @@ export const AdminGuestsTab: React.FC<AdminGuestsTabProps> = ({ language, t, gue
         toast.love(tf('guestUpdatedToast', { name: data.guest.name }));
         await onRefresh();
       } else {
-        toast.error(data.error || data.message || t.invitesErrorToast);
+        const { code, message } = decodeApiError(data, res.status);
+        toast.error(apiError(code, message || t.invitesErrorToast));
       }
     } catch (err) {
       console.error('Failed to update guest:', err);
@@ -317,7 +312,8 @@ export const AdminGuestsTab: React.FC<AdminGuestsTabProps> = ({ language, t, gue
         toast.info(tf(data.deleted ? 'guestDeletedToast' : 'attendeeRemovedToast', { name: removedName }));
         await onRefresh();
       } else {
-        toast.error(data.message || data.error || t.invitesErrorToast);
+        const { code, message } = decodeApiError(data, res.status);
+        toast.error(apiError(code, message || t.invitesErrorToast));
       }
     } catch (err) {
       console.error('Failed to remove attendee:', err);
@@ -512,7 +508,7 @@ export const AdminGuestsTab: React.FC<AdminGuestsTabProps> = ({ language, t, gue
           setValue('phone', '');
           await onRefresh();
         } else if (data.error) {
-          toast.error(data.error);
+          toast.error(apiError(data.error, t.invitesErrorToast));
         }
       } else if (data.guest && data.magic_token) {
         const contactInfo = [data.guest.email, data.guest.phone].filter(Boolean).join(' | ');
@@ -527,7 +523,7 @@ export const AdminGuestsTab: React.FC<AdminGuestsTabProps> = ({ language, t, gue
         setValue('phone', '');
         await onRefresh();
       } else if (data.error) {
-        toast.error(data.error);
+        toast.error(apiError(data.error, t.invitesErrorToast));
       }
     } catch (err) {
       console.error('Error adding guest:', err);
@@ -668,21 +664,20 @@ export const AdminGuestsTab: React.FC<AdminGuestsTabProps> = ({ language, t, gue
           footer={t.totalGuestInvites} onClick={() => setMetricModal('Total')} />
       </div>
 
-      {/* Middle Section: Add Guest Form & Dietary Restriction Summary */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <motion.div variants={adminCardVariants} className="lg:col-span-2 card-paper p-6 sm:p-8 space-y-6">
+      {/* Add Guest Form */}
+      <motion.div variants={adminCardVariants} className="card-paper p-5 sm:p-6 space-y-4">
           <div className="flex items-center space-x-3">
-            <div className="p-2.5 bg-[#EFE6DC] text-[#8B735B] rounded-2xl border border-[#CBAE94]">
+            <div className="p-2 bg-[#EFE6DC] text-[#8B735B] rounded-2xl border border-[#CBAE94]">
               <UserPlus className="w-5 h-5" />
             </div>
             <div>
-              <h3 className="font-sans text-xl font-bold text-[#8B735B]">{t.addGuestTitle}</h3>
+              <h3 className="font-sans text-lg font-bold text-[#8B735B]">{t.addGuestTitle}</h3>
               <p className="text-xs text-[#5D5449]">{t.addGuestSubtitle}</p>
             </div>
           </div>
 
-          <form onSubmit={handleSubmit(handleAddGuest)} className="space-y-4">
-            <label className="flex items-start gap-3 p-3.5 rounded-2xl border border-[#CBAE94]/60 bg-[#EFE6DC]/40 cursor-pointer">
+          <form onSubmit={handleSubmit(handleAddGuest)} className="space-y-3">
+            <label className="flex items-start gap-3 p-3 rounded-2xl border border-[#CBAE94]/60 bg-[#EFE6DC]/40 cursor-pointer">
               <input type="checkbox" checked={markGoing} onChange={(e) => setMarkGoing(e.target.checked)}
                 className="mt-0.5 w-4 h-4 accent-[#8B735B] shrink-0" />
               <span>
@@ -692,12 +687,12 @@ export const AdminGuestsTab: React.FC<AdminGuestsTabProps> = ({ language, t, gue
             </label>
 
             {!markGoing && (
-            <div className="bg-[#EFE6DC]/40 p-3.5 rounded-2xl border border-[#CBAE94]/60 space-y-2">
+            <div className="bg-[#EFE6DC]/40 p-3 rounded-2xl border border-[#CBAE94]/60 space-y-2">
               <label className="label-mono block text-xs font-bold text-[#8B735B]">{t.fieldSendVia} *</label>
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
+              <div className="flex flex-wrap gap-2">
                 {channelOptions.map((c) => (
                   <button key={c} type="button" onClick={() => setValue('delivery_channel', c)}
-                    className={`py-2 px-3 rounded-xl border text-xs font-bold transition-all flex items-center justify-center gap-1.5 ${deliveryChannel === c ? 'bg-[#8B735B] text-white border-[#8B735B] shadow-xs' : 'bg-white text-[#5D5449] border-[#CBAE94] hover:bg-[#EFE6DC]'}`}>
+                    className={`flex-1 min-w-[7rem] py-2 px-3 rounded-xl border text-xs font-bold transition-all flex items-center justify-center gap-1.5 ${deliveryChannel === c ? 'bg-[#8B735B] text-white border-[#8B735B] shadow-xs' : 'bg-white text-[#5D5449] border-[#CBAE94] hover:bg-[#EFE6DC]'}`}>
                     {c === 'none' ? <Link2 className="w-3.5 h-3.5" />
                       : c === 'email' ? <Mail className="w-3.5 h-3.5" />
                       : c === 'text' ? <MessageSquare className="w-3.5 h-3.5" />
@@ -714,7 +709,7 @@ export const AdminGuestsTab: React.FC<AdminGuestsTabProps> = ({ language, t, gue
             </div>
             )}
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
               <div>
                 <label className="label-mono block mb-1">{t.fieldName} *</label>
                 <TextInput type="text" required placeholder={t.nameExamplePh} {...register('name')} />
@@ -742,42 +737,16 @@ export const AdminGuestsTab: React.FC<AdminGuestsTabProps> = ({ language, t, gue
                 <TextInput type="number" min="1" max="20" required {...register('max_party_size', { valueAsNumber: true })} />
                 {errors.max_party_size && <p className="text-rose-600 text-xs">{errors.max_party_size.message}</p>}
               </div>
+              <div className="flex items-end">
+                <motion.button whileTap={{ scale: 0.98 }} type="submit" disabled={submittingGuest}
+                  className="btn-accent w-full py-2.5 px-6 text-sm disabled:opacity-50">
+                  <Send className="w-4 h-4 mr-2" />
+                  <span>{submittingGuest ? t.sendingInviteBtn : markGoing ? t.createInviteBtn : t.sendInviteBtn}</span>
+                </motion.button>
+              </div>
             </div>
-
-            <motion.button whileTap={{ scale: 0.98 }} type="submit" disabled={submittingGuest}
-              className="btn-accent w-full sm:w-auto py-3 px-6 text-sm disabled:opacity-50">
-              <Send className="w-4 h-4 mr-2" />
-              <span>{submittingGuest ? t.sendingInviteBtn : markGoing ? t.createInviteBtn : t.sendInviteBtn}</span>
-            </motion.button>
           </form>
-        </motion.div>
-
-        <motion.div variants={adminCardVariants} className="card-paper p-6 flex flex-col justify-between">
-          <div>
-            <div className="flex items-center space-x-2.5 mb-4">
-              <div className="p-2 bg-[#EFE6DC] text-[#8B735B] rounded-xl border border-[#CBAE94]">
-                <UtensilsCrossed className="w-5 h-5" />
-              </div>
-              <h3 className="font-sans text-lg font-bold text-[#8B735B]">{t.dietaryTitle}</h3>
-            </div>
-            {dietaryList.length === 0 ? (
-              <p className="text-xs text-[#5D5449]/70 italic py-6 text-center font-mono">{t.noDietaryMsg}</p>
-            ) : (
-              <div className="space-y-2.5 max-h-60 overflow-y-auto pr-1">
-                {dietaryList.map((item, idx) => (
-                  <div key={idx} className="p-3 bg-white rounded-2xl border border-[#CBAE94] text-xs text-[#5D5449] flex flex-col space-y-0.5 shadow-2xs">
-                    <span className="font-bold text-[#8B735B]">{item.guestName}:</span>
-                    <span className="text-[#5D5449] bg-[#EFE6DC] px-2 py-0.5 rounded-md inline-block self-start font-medium mt-1">{item.restriction}</span>
-                  </div>
-                ))}
-              </div>
-            )}
-          </div>
-          <div className="mt-4 pt-3 border-t border-dashed border-[#CBAE94] text-xs text-[#8B735B] font-mono font-bold text-center">
-                {tf('totalDietaryNeedsLabel', { count: String(dietaryList.length) })}
-          </div>
-        </motion.div>
-      </div>
+      </motion.div>
 
       {/* Pending self-registrations awaiting host approval */}
       {pendingApprovals.length > 0 && (
@@ -832,8 +801,8 @@ export const AdminGuestsTab: React.FC<AdminGuestsTabProps> = ({ language, t, gue
       {/* Invited Guests Table Section */}
       <motion.div variants={adminCardVariants} className="card-paper p-6 sm:p-8 space-y-6">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-          <div>
-            <h3 className="font-sans text-xl font-bold text-[#8B735B]">{t.guestListTitle}</h3>
+          <div className="shrink-0">
+            <h3 className="font-sans text-xl font-bold text-[#8B735B] whitespace-nowrap">{t.guestListTitle}</h3>
           </div>
 
           <GuestFiltersBar

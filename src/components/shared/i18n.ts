@@ -1,4 +1,4 @@
-import { useCallback } from 'react';
+import { useCallback, useMemo } from 'react';
 import i18n from 'i18next';
 import { initReactI18next, useTranslation } from 'react-i18next';
 import { translations, Translations } from '../../translations';
@@ -35,9 +35,16 @@ export const useT = (): Translations => {
   const { t } = useTranslation();
   // Proxy the i18next `t(key)` lookup behind the Translations object shape.
   // Unchecked cast: i18next keys are flat (no dots), matching the Translations interface.
-  return new Proxy({} as Translations, {
-    get: (_target, prop: string) => t(prop) as string,
-  });
+  // Memoized so `t` keeps a stable identity between renders (only the language
+  // change swaps it) — otherwise every memo/effect that depends on `t` (and
+  // TanStack Table's columns/data) is invalidated on every render.
+  return useMemo(
+    () =>
+      new Proxy({} as Translations, {
+        get: (_target, prop: string) => t(prop) as string,
+      }),
+    [t]
+  );
 };
 
 // Interpolating translator for the keys that carry `{{var}}` placeholders.
@@ -46,6 +53,19 @@ export const useTf = (): ((key: keyof Translations, vars?: Record<string, string
   const { t } = useTranslation();
   return useCallback(
     (key, vars) => t(key, vars) as string,
+    [t]
+  );
+};
+
+// Translate a decoded API error by its domain code, falling back to the
+// server-provided message when the code has no translation.
+export const useApiErrorMessage = (): ((code: string, fallback: string) => string) => {
+  const { t } = useTranslation();
+  return useCallback(
+    (code, fallback) => {
+      const translated = t(code) as string;
+      return translated && translated !== code ? translated : fallback;
+    },
     [t]
   );
 };

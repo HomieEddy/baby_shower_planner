@@ -1,7 +1,8 @@
-import React from 'react';
+import React, { useRef } from 'react';
 import { X, ChevronLeft, ChevronRight, Download, Trash2 } from 'lucide-react';
 import { EventPhoto } from '../../types';
 import { useT } from '../shared/i18n';
+import { useDialogA11y } from '../shared/useDialogA11y';
 
 interface PhotoLightboxProps {
   photo: EventPhoto;
@@ -19,11 +20,20 @@ export const PhotoLightbox: React.FC<PhotoLightboxProps> = ({
   onDelete,
 }) => {
     const t = useT();
+    const panelRef = useRef<HTMLDivElement>(null);
+    useDialogA11y(true, panelRef, onClose);
   return (
-    <div className="fixed inset-0 z-50 bg-black/90 backdrop-blur-md flex items-center justify-center p-4">
+    <div
+      ref={panelRef}
+      role="dialog"
+      aria-modal="true"
+      aria-label={photo.caption || t.photoLightboxTitle}
+      className="fixed inset-0 z-50 bg-black/90 backdrop-blur-md flex items-center justify-center p-4"
+    >
       <button
         type="button"
         onClick={onClose}
+        aria-label={t.closeModal}
         className="absolute top-4 right-4 p-2.5 rounded-full bg-white/20 text-white hover:bg-white/40 transition-colors"
       >
         <X className="w-6 h-6" />
@@ -33,6 +43,7 @@ export const PhotoLightbox: React.FC<PhotoLightboxProps> = ({
         <button
           type="button"
           onClick={onPrev}
+          aria-label={t.prevSlideBtn}
           className="absolute left-4 p-3 rounded-full bg-white/20 text-white hover:bg-white/40 transition-colors"
         >
           <ChevronLeft className="w-6 h-6" />
@@ -43,6 +54,7 @@ export const PhotoLightbox: React.FC<PhotoLightboxProps> = ({
         <button
           type="button"
           onClick={onNext}
+          aria-label={t.nextSlideBtn}
           className="absolute right-4 p-3 rounded-full bg-white/20 text-white hover:bg-white/40 transition-colors"
         >
           <ChevronRight className="w-6 h-6" />

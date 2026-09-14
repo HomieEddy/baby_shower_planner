@@ -13,7 +13,7 @@ import {
   UserCheck,
 } from 'lucide-react';
 import { Guest, FloorMapData } from '../../types';
-import { useT, useTf } from '../shared/i18n';
+import { useT, useTf, useApiErrorMessage } from '../shared/i18n';
 import { useToast } from '../shared/ToastContext';
 import { getPartyMembers, isMemberCheckedIn, isPartyLead } from '../../lib/guestAttendees';
 import { getGuestPartySize } from '../../lib/tableAssignment';
@@ -68,6 +68,7 @@ const item = {
 export const GuestFinderPage: React.FC = () => {
   const t = useT();
   const tf = useTf();
+  const apiError = useApiErrorMessage();
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const [searchParams] = useSearchParams();
@@ -180,7 +181,7 @@ export const GuestFinderPage: React.FC = () => {
       const data = await res.json().catch(() => ({}));
       if (!res.ok) {
         const { code, message } = decodeApiError(data, res.status);
-        toast.error(code === 'DECLINED' ? t.checkinDeclinedError : message || 'Check-in failed');
+        toast.error(code === 'DECLINED' ? t.checkinDeclinedError : apiError(code, message || t.checkinFailedToast));
         return;
       }
       const updated: Guest | undefined = data.guest;

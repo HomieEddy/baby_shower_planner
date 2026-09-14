@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useMemo, useState } from 'react';
 import { Guest, FloorMapData } from '../../types';
 import { Utensils, Printer, AlertTriangle, CheckCircle2, Users, FileSpreadsheet, ArrowUpDown, ChevronUp, ChevronDown, BarChart3 } from 'lucide-react';
 import { useToast } from '../shared/ToastContext';
@@ -36,6 +36,8 @@ interface CateringRow {
   seatNumber: number | null;
 }
 
+const columnHelper = createColumnHelper<CateringRow>();
+
 export const CateringSummaryView: React.FC<CateringSummaryViewProps> = ({ guests }) => {
     const t = useT();
     const tf = useTf();
@@ -59,27 +61,40 @@ export const CateringSummaryView: React.FC<CateringSummaryViewProps> = ({ guests
   }, []);
 
   // Filter attending guests only for catering
-  const attendingGuests = guests.filter((g) => g.rsvp_status === 'Attending');
-  const totalHeadcount = attendingGuests.reduce((acc, g) => acc + partySize(g), 0);
+  const attendingGuests = useMemo(
+    () => guests.filter((g) => g.rsvp_status === 'Attending'),
+    [guests]
+  );
+  const totalHeadcount = useMemo(
+    () => attendingGuests.reduce((acc, g) => acc + partySize(g), 0),
+    [attendingGuests]
+  );
 
   // One row per individual person, each with their group's code and own table/seat.
-  const individuals: CateringRow[] = attendingGuests.flatMap((g) => {
-    const names = getPartyMembers(g);
-    const locations = getAttendeeLocations(g.id, floorMap, guests);
-    return names.map((name, i) => {
-      const loc = locations.find((l) => l.attendeeIndex === i) ?? null;
-      return {
-        id: `${g.id}:${i}`,
-        guest: g,
-        name,
-        tableName: loc?.tableName ?? null,
-        seatNumber: loc ? loc.seatIndex + 1 : null,
-      };
-    });
-  });
+  const individuals: CateringRow[] = useMemo(
+    () =>
+      attendingGuests.flatMap((g) => {
+        const names = getPartyMembers(g);
+        const locations = getAttendeeLocations(g.id, floorMap, guests);
+        return names.map((name, i) => {
+          const loc = locations.find((l) => l.attendeeIndex === i) ?? null;
+          return {
+            id: `${g.id}:${i}`,
+            guest: g,
+            name,
+            tableName: loc?.tableName ?? null,
+            seatNumber: loc ? loc.seatIndex + 1 : null,
+          };
+        });
+      }),
+    [attendingGuests, floorMap, guests]
+  );
 
   // Analyze Dietary Restrictions
-  const guestsWithDietary = attendingGuests.filter(hasDietaryRestriction);
+  const guestsWithDietary = useMemo(
+    () => attendingGuests.filter(hasDietaryRestriction),
+    [attendingGuests]
+  );
 
   // Group dietary restrictions into categories
   const dietaryCategories: { [key: string]: { count: number; guests: string[] } } = {
@@ -143,73 +158,78 @@ export const CateringSummaryView: React.FC<CateringSummaryViewProps> = ({ guests
     .slice(0, 6);
 
   // Filtered List for Table
-  const filteredList = individuals.filter((r) => {
-    const g = r.guest;
-    const q = searchTerm.toLowerCase();
-    const matchesSearch =
-      r.name.toLowerCase().includes(q) ||
-      g.name.toLowerCase().includes(q) ||
-      (g.code || '').toLowerCase().includes(q) ||
-      (g.dietary_restrictions || '').toLowerCase().includes(q) ||
-      (r.tableName || '').toLowerCase().includes(q);
-    const matchesDietary = !filterDietaryOnly || hasDietaryRestriction(g);
-    return matchesSearch && matchesDietary;
-  });
+  const filteredList = useMemo(
+    () =>
+      individuals.filter((r) => {
+        const g = r.guest;
+        const q = searchTerm.toLowerCase();
+        const matchesSearch =
+          r.name.toLowerCase().includes(q) ||
+          g.name.toLowerCase().includes(q) ||
+          (g.code || '').toLowerCase().includes(q) ||
+          (g.dietary_restrictions || '').toLowerCase().includes(q) ||
+          (r.tableName || '').toLowerCase().includes(q);
+        const matchesDietary = !filterDietaryOnly || hasDietaryRestriction(g);
+        return matchesSearch && matchesDietary;
+      }),
+    [individuals, searchTerm, filterDietaryOnly]
+  );
 
-  const columnHelper = createColumnHelper<CateringRow>();
-
-  const columns = [
-    columnHelper.accessor((r) => r.name, {
-      id: 'name',
-      header: () => <span>{t.guestNameCol}</span>,
-      cell: (info) => <span className="font-bold text-[#4A3F35]">{info.getValue()}</span>,
-    }),
-    columnHelper.accessor((r) => r.guest.name, {
-      id: 'group',
-      header: () => <span>{t.groupCol}</span>,
-      cell: (info) => <span className="text-[#5D5449]">{info.getValue()}</span>,
-    }),
-    columnHelper.accessor((r) => r.guest.code, {
-      id: 'code',
-      header: () => <span>{t.reservationCodeCol}</span>,
-      cell: (info) => <span className="font-mono text-[#4A3F35]">{info.getValue()}</span>,
-    }),
-    columnHelper.accessor((r) => partySize(r.guest), {
-      id: 'partySize',
-      header: () => <span>{t.partySizeCol}</span>,
-      cell: (info) => <span className="font-mono text-[#4A3F35]">{info.getValue()} {t.guestSingular}</span>,
-    }),
-    columnHelper.accessor((r) => (r.guest.dietary_restrictions || '').trim(), {
-      id: 'dietary',
-      header: () => <span>{t.dietaryCol}</span>,
-      cell: (info) => {
-        const g = info.row.original.guest;
-        const hasRestriction = hasDietaryRestriction(g);
-        return hasRestriction ? (
-          <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-amber-100 text-amber-900 font-bold border border-amber-300">
-            <AlertTriangle className="w-3 h-3 shrink-0" />
-            <span>{g.dietary_restrictions}</span>
-          </span>
-        ) : (
-          <span className="text-[#8B735B] italic">{t.noDietaryNote}</span>
-        );
-      },
-    }),
-    columnHelper.accessor((r) => r.tableName || '', {
-      id: 'tableId',
-      header: () => <span>{t.tableIdCol}</span>,
-      cell: (info) => {
-        const r = info.row.original;
-        return (
-          <span className="font-mono text-[#4A3F35]">
-            {r.tableName
-              ? `${r.tableName}${r.seatNumber ? ` · ${tf('seatedAtSeatLabel', { seat: String(r.seatNumber) })}` : ''}`
-              : t.unassignedWord}
-          </span>
-        );
-      },
-    }),
-  ];
+  const columns = useMemo(
+    () => [
+      columnHelper.accessor((r) => r.name, {
+        id: 'name',
+        header: () => <span>{t.guestNameCol}</span>,
+        cell: (info) => <span className="font-bold text-[#4A3F35]">{info.getValue()}</span>,
+      }),
+      columnHelper.accessor((r) => r.guest.name, {
+        id: 'group',
+        header: () => <span>{t.groupCol}</span>,
+        cell: (info) => <span className="text-[#5D5449]">{info.getValue()}</span>,
+      }),
+      columnHelper.accessor((r) => r.guest.code, {
+        id: 'code',
+        header: () => <span>{t.reservationCodeCol}</span>,
+        cell: (info) => <span className="font-mono text-[#4A3F35]">{info.getValue()}</span>,
+      }),
+      columnHelper.accessor((r) => partySize(r.guest), {
+        id: 'partySize',
+        header: () => <span>{t.partySizeCol}</span>,
+        cell: (info) => <span className="font-mono text-[#4A3F35]">{info.getValue()} {t.guestSingular}</span>,
+      }),
+      columnHelper.accessor((r) => (r.guest.dietary_restrictions || '').trim(), {
+        id: 'dietary',
+        header: () => <span>{t.dietaryCol}</span>,
+        cell: (info) => {
+          const g = info.row.original.guest;
+          const hasRestriction = hasDietaryRestriction(g);
+          return hasRestriction ? (
+            <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-amber-100 text-amber-900 font-bold border border-amber-300">
+              <AlertTriangle className="w-3 h-3 shrink-0" />
+              <span>{g.dietary_restrictions}</span>
+            </span>
+          ) : (
+            <span className="text-[#8B735B] italic">{t.noDietaryNote}</span>
+          );
+        },
+      }),
+      columnHelper.accessor((r) => r.tableName || '', {
+        id: 'tableId',
+        header: () => <span>{t.tableIdCol}</span>,
+        cell: (info) => {
+          const r = info.row.original;
+          return (
+            <span className="font-mono text-[#4A3F35]">
+              {r.tableName
+                ? `${r.tableName}${r.seatNumber ? ` · ${tf('seatedAtSeatLabel', { seat: String(r.seatNumber) })}` : ''}`
+                : t.unassignedWord}
+            </span>
+          );
+        },
+      }),
+    ],
+    [t, tf]
+  );
 
   const table = useReactTable({
     data: filteredList,
@@ -348,10 +368,10 @@ export const CateringSummaryView: React.FC<CateringSummaryViewProps> = ({ guests
                 info.count > 0 ? 'bg-amber-50/60 border-amber-200' : 'bg-[#FAF6F0]/50 border-[#CBAE94]/30'
               }`}
             >
-              <div className="flex items-center justify-between mb-2">
-                <span className="text-xs font-bold font-mono text-[#4A3F35]">{dietaryCategoryLabel(cat)}</span>
+              <div className="flex items-center justify-between gap-2 mb-2">
+                <span className="text-xs font-bold font-mono text-[#4A3F35] min-w-0">{dietaryCategoryLabel(cat)}</span>
                 <span
-                  className={`px-2.5 py-0.5 rounded-full text-xs font-bold font-mono ${
+                  className={`shrink-0 whitespace-nowrap px-2.5 py-0.5 rounded-full text-xs font-bold font-mono ${
                     info.count > 0 ? 'bg-amber-200 text-amber-900' : 'bg-[#EFE6DC] text-[#8B735B]'
                   }`}
                 >
@@ -388,10 +408,10 @@ export const CateringSummaryView: React.FC<CateringSummaryViewProps> = ({ guests
           <div className="h-64">
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={dietaryChartData} layout="vertical" margin={{ top: 0, right: 24, bottom: 0, left: 8 }}>
-                <XAxis type="number" allowDecimals={false} tick={{ fontSize: 11, fill: '#8B735B' }} stroke="#CBAE94" />
-                <YAxis type="category" dataKey="category" width={150} tick={{ fontSize: 11, fill: '#4A3F35' }} stroke="#CBAE94" />
-                <Tooltip cursor={{ fill: '#FAF6F0' }} contentStyle={{ fontSize: 12, borderRadius: 12, border: '1px solid #CBAE94' }} />
-                <Bar dataKey="count" fill="#D97706" radius={[0, 8, 8, 0]} barSize={22} />
+                <XAxis type="number" allowDecimals={false} tick={{ fontSize: 11, fill: 'var(--ink-soft)' }} stroke="var(--border)" />
+                <YAxis type="category" dataKey="category" width={150} tick={{ fontSize: 11, fill: 'var(--ink)' }} stroke="var(--border)" />
+                <Tooltip cursor={{ fill: 'var(--bg-2)' }} contentStyle={{ fontSize: 12, borderRadius: 12, border: '1px solid var(--border)' }} />
+                <Bar dataKey="count" fill="var(--accent)" radius={[0, 8, 8, 0]} barSize={22} />
               </BarChart>
             </ResponsiveContainer>
           </div>
@@ -431,7 +451,18 @@ export const CateringSummaryView: React.FC<CateringSummaryViewProps> = ({ guests
               {table.getHeaderGroups().map((headerGroup) => (
                 <tr key={headerGroup.id} className="border-b border-[#CBAE94]/40 text-[#8B735B] font-mono text-xs uppercase">
                   {headerGroup.headers.map((header) => (
-                    <th key={header.id} className="pb-3 font-bold">
+                    <th
+                      key={header.id}
+                      scope="col"
+                      aria-sort={
+                        header.column.getIsSorted() === 'asc'
+                          ? 'ascending'
+                          : header.column.getIsSorted() === 'desc'
+                            ? 'descending'
+                            : 'none'
+                      }
+                      className="pb-3 font-bold"
+                    >
                       {header.isPlaceholder ? null : (
                         <button
                           type="button"
@@ -454,6 +485,13 @@ export const CateringSummaryView: React.FC<CateringSummaryViewProps> = ({ guests
               ))}
             </thead>
             <tbody className="divide-y divide-[#CBAE94]/20">
+              {table.getRowModel().rows.length === 0 && (
+                <tr>
+                  <td colSpan={table.getAllColumns().length} className="py-6 text-center text-[#A09080] font-mono text-xs">
+                    {t.noSearchMatch}
+                  </td>
+                </tr>
+              )}
               {table.getRowModel().rows.map((row) => (
                 <tr key={row.id} className="hover:bg-[#FAF6F0]/60">
                   {row.getVisibleCells().map((cell) => (

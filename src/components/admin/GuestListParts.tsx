@@ -27,22 +27,32 @@ export const GuestMetricCard = ({
   footer: string;
   iconClass?: string;
   onClick?: () => void;
-}) => (
-  <motion.div
-    variants={adminCardVariants}
-    onClick={onClick}
-    className={`card-paper-sm p-4 sm:p-5 min-w-0 overflow-hidden ${onClick ? 'cursor-pointer hover:-translate-y-0.5 transition-transform' : ''}`}
-  >
-    <div className="flex items-start justify-between gap-2 min-w-0">
-      <span className="label-mono min-w-0 break-words">{label}</span>
-      <span className={`shrink-0 ${iconClass}`}>{icon}</span>
-    </div>
-    <div className="mt-3">
-      <span className="text-2xl sm:text-3xl font-sans font-bold text-[#8B735B]">{value}</span>
-    </div>
-    <div className="mt-2 text-xs text-[#8B735B] font-mono font-bold break-words">{footer}</div>
-  </motion.div>
-);
+}) => {
+  const cardClass = `card-paper-sm p-4 sm:p-5 min-w-0 overflow-hidden text-left ${
+    onClick ? 'cursor-pointer hover:-translate-y-0.5 transition-transform w-full' : ''
+  }`;
+  const inner = (
+    <>
+      <div className="flex items-start justify-between gap-2 min-w-0">
+        <span className="label-mono min-w-0 break-words">{label}</span>
+        <span className={`shrink-0 ${iconClass}`}>{icon}</span>
+      </div>
+      <div className="mt-3">
+        <span className="text-2xl sm:text-3xl font-sans font-bold text-[#8B735B]">{value}</span>
+      </div>
+      <div className="mt-2 text-xs text-[#8B735B] font-mono font-bold break-words">{footer}</div>
+    </>
+  );
+  return onClick ? (
+    <motion.button type="button" variants={adminCardVariants} onClick={onClick} className={cardClass}>
+      {inner}
+    </motion.button>
+  ) : (
+    <motion.div variants={adminCardVariants} className={cardClass}>
+      {inner}
+    </motion.div>
+  );
+};
 
 export const GuestMetricToggle = ({
   metricMode,
@@ -120,7 +130,7 @@ export const GuestFiltersBar = ({
           ['Declined', t.statusDeclinedWord],
         ] as const).map(([st, label]) => (
           <button key={st} onClick={() => onStatusFilter(st)}
-            className={`px-2.5 py-1 rounded-full transition-colors ${statusFilter === st ? 'bg-[#8B735B] text-white shadow-xs font-bold' : 'text-[#5D5449] hover:text-[#8B735B]'}`}>{label}</button>
+            className={`px-2.5 py-1 rounded-full transition-colors whitespace-nowrap ${statusFilter === st ? 'bg-[#8B735B] text-white shadow-xs font-bold' : 'text-[#5D5449] hover:text-[#8B735B]'}`}>{label}</button>
         ))}
       </div>
 
@@ -131,7 +141,7 @@ export const GuestFiltersBar = ({
           ['Guest-invited', t.sourceGuestOption],
         ] as const).map(([st, label]) => (
           <button key={st} onClick={() => onSourceFilter(st)}
-            className={`px-2.5 py-1 rounded-full transition-colors ${sourceFilter === st ? 'bg-[#D4A373] text-white shadow-xs font-bold' : 'text-[#5D5449] hover:text-[#8B735B]'}`}>{label}</button>
+            className={`px-2.5 py-1 rounded-full transition-colors whitespace-nowrap ${sourceFilter === st ? 'bg-[#D4A373] text-white shadow-xs font-bold' : 'text-[#5D5449] hover:text-[#8B735B]'}`}>{label}</button>
         ))}
       </div>
 

@@ -4,12 +4,14 @@ import { adminFetch } from '../../lib/api';
 import { getPartyMembers, isMemberCheckedIn } from '../../lib/guestAttendees';
 import { useToast } from '../shared/ToastContext';
 import { CheckCircle2, RotateCcw, Users, UserCheck, UserX, ChevronDown, ChevronRight } from 'lucide-react';
-import { useT, useTf } from '../shared/i18n';
+import { useT, useTf, useApiErrorMessage } from '../shared/i18n';
+import { decodeApiError } from '../../lib/errors';
 import { SearchInput } from '../shared/ui';
 
 export const GuestCheckIn = () => {
   const t = useT();
   const tf = useTf();
+  const apiError = useApiErrorMessage();
   const { toast } = useToast();
   const [guests, setGuests] = useState<Guest[]>([]);
   const [search, setSearch] = useState('');
@@ -56,7 +58,8 @@ export const GuestCheckIn = () => {
       });
       if (!res.ok) {
         const data = await res.json().catch(() => ({}));
-        toast.error(data.message || data.error || t.checkinFailedToast);
+        const { code, message } = decodeApiError(data, res.status);
+        toast.error(apiError(code, message || t.checkinFailedToast));
         return;
       }
       toast.success(successMsg);
@@ -83,7 +86,7 @@ export const GuestCheckIn = () => {
   return (
     <div className="space-y-6">
       {/* Stats bar — individuals: expected vs checked in */}
-      <div className="grid grid-cols-3 gap-3">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
         <div className="bg-white rounded-2xl border border-[#CBAE94]/30 p-4 text-center">
           <Users className="w-5 h-5 text-[#8B735B] mx-auto mb-1" />
           <div className="text-2xl font-bold text-[#4A3F35]">{stats.total}</div>
@@ -135,11 +138,13 @@ export const GuestCheckIn = () => {
                 }`}
               >
                 {/* Row header — click to expand the party */}
-                <div
-                  className="flex items-center justify-between gap-3 p-4 cursor-pointer"
-                  onClick={() => setExpandedId(isExpanded ? null : guest.id)}
-                >
-                  <div className="flex items-center gap-2 min-w-0">
+                <div className="flex items-center justify-between gap-3 p-4">
+                  <button
+                    type="button"
+                    onClick={() => setExpandedId(isExpanded ? null : guest.id)}
+                    aria-expanded={isExpanded}
+                    className="flex items-center gap-2 min-w-0 flex-1 text-left cursor-pointer"
+                  >
                     {members.length > 1 ? (
                       isExpanded ? (
                         <ChevronDown className="w-4 h-4 text-[#8B735B] shrink-0" />
@@ -169,9 +174,9 @@ export const GuestCheckIn = () => {
                         {guest.checked_in_at && ` · ${new Date(guest.checked_in_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`}
                       </div>
                     </div>
-                  </div>
+                  </button>
 
-                  <div className="flex items-center gap-2 shrink-0" onClick={e => e.stopPropagation()}>
+                  <div className="flex items-center gap-2 shrink-0">
                     {anyChecked && (
                       <button
                         onClick={() => handleUndo(guest.id)}

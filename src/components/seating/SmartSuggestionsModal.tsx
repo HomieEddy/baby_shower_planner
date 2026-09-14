@@ -45,10 +45,10 @@ export const SmartSuggestionsModal = ({
           </div>
           <div>
             <h3 className="font-gaegu text-2xl font-bold text-[#4A3F35] leading-none">
-              Smart Seating Suggestions
+              {t.smartSuggestTitle}
             </h3>
             <p className="text-xs text-[#8B735B] font-medium mt-1">
-              Auto-matches unassigned guest parties to available venue tables by optimal capacity fit.
+              {t.smartSuggestSubtitle}
             </p>
           </div>
         </div>
@@ -77,10 +77,9 @@ export const SmartSuggestionsModal = ({
           const isChecked = selectedIds.has(sug.id);
 
           return (
-            <div
+            <label
               key={sug.id}
-              onClick={() => onToggleSuggestion(sug.id)}
-              className={`p-4 rounded-2xl border-2 transition-all cursor-pointer space-y-2 ${
+              className={`block p-4 rounded-2xl border-2 transition-all cursor-pointer space-y-2 ${
                 isChecked
                   ? 'bg-amber-50/60 border-amber-500 shadow-sm ring-1 ring-amber-300'
                   : 'bg-white border-[#CBAE94]/40 opacity-75 hover:opacity-100'
@@ -91,7 +90,7 @@ export const SmartSuggestionsModal = ({
                   <input
                     type="checkbox"
                     checked={isChecked}
-                    onChange={() => {}}
+                    onChange={() => onToggleSuggestion(sug.id)}
                     className="w-4 h-4 rounded text-amber-600 focus:ring-amber-500 border-[#CBAE94]"
                   />
                   <div>
@@ -102,7 +101,7 @@ export const SmartSuggestionsModal = ({
                       </span>
                     </h4>
                     <p className="text-xs text-[#5D5449] mt-0.5">
-                      Party Size: <strong className="text-[#4A3F35]">{sug.partySize} guest(s)</strong>
+                      {t.partySizeInline} <strong className="text-[#4A3F35]">{tf('guestsCount', { count: sug.partySize })}</strong>
                     </p>
                   </div>
                 </div>
@@ -112,7 +111,7 @@ export const SmartSuggestionsModal = ({
                     {sug.matchBadge}
                   </span>
                   <div className="text-xs font-bold text-[#8B735B] mt-1">
-                    Assign to <span className="text-[#4A3F35] underline">{sug.table.name}</span>
+                    {t.assignToLabel} <span className="text-[#4A3F35] underline">{sug.table.name}</span>
                   </div>
                 </div>
               </div>
@@ -120,7 +119,7 @@ export const SmartSuggestionsModal = ({
               <div className="text-xs text-[#8B735B] bg-[#FAF6F0] p-2 rounded-xl border border-[#CBAE94]/30 font-medium">
                 {sug.reason}
               </div>
-            </div>
+            </label>
           );
         })}
       </div>

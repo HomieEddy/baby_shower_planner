@@ -11,7 +11,7 @@ import { useCapabilities, availableChannels, channelLabel } from '../../lib/capa
 import { motion, AnimatePresence } from 'motion/react';
 import { useToast } from '../shared/ToastContext';
 import { useConfirm } from '../shared/ConfirmDialog';
-import { useT, useTf } from '../shared/i18n';
+import { useT, useTf, useApiErrorMessage } from '../shared/i18n';
 import { useCopyFeedback } from '../shared/hooks';
 import { Modal } from '../shared/Modal';
 import { ConfirmationView } from './ConfirmationView';
@@ -46,6 +46,7 @@ export const RsvpPage = () => {
   const { token } = useParams<{ token: string }>();
   const t = useT();
   const tf = useTf();
+  const apiError = useApiErrorMessage();
   const { toast } = useToast();
 
   const [guest, setGuest] = useState<Guest | null>(null);
@@ -64,7 +65,6 @@ export const RsvpPage = () => {
     handleSubmit,
     watch,
     reset,
-    setValue,
     control,
   } = useForm<RsvpFormValues>({
     resolver: zodResolver(RsvpFormSchema),
@@ -199,7 +199,8 @@ export const RsvpPage = () => {
         setGuest(data.guest);
         toast.love(t.contactSavedToast);
       } else {
-        toast.error(data.message || t.contactSaveErrorToast);
+        const { code, message } = decodeApiError(data, res.status);
+        toast.error(apiError(code, message || t.contactSaveErrorToast));
       }
     } catch (err) {
       console.error('Contact save error:', err);
@@ -231,7 +232,8 @@ export const RsvpPage = () => {
         setInviteNote('');
         fetchInvites();
       } else {
-        toast.error(data.message || t.inviteFailedToast);
+        const { code, message } = decodeApiError(data, res.status);
+        toast.error(apiError(code, message || t.inviteFailedToast));
       }
     } catch (err) {
       console.error('Invite error:', err);
@@ -302,7 +304,7 @@ export const RsvpPage = () => {
         }
       } else {
         const { code, message } = decodeApiError(dataRes, res.status);
-        toast.error(code === 'RSVP_CLOSED' ? t.rsvpClosedToast : message || t.rsvpSubmitErrorToast);
+        toast.error(code === 'RSVP_CLOSED' ? t.rsvpClosedToast : apiError(code, message || t.rsvpSubmitErrorToast));
       }
     } catch (err) {
       console.error('RSVP submit error:', err);
@@ -555,8 +557,7 @@ export const RsvpPage = () => {
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
 
                       {/* Option: Attending */}
-                      <div
-                        onClick={() => setValue('rsvpStatus', 'Attending')}
+                      <label
                         className={`p-4 rounded-2xl border-2 cursor-pointer transition-all flex items-start space-x-3 ${
                           rsvpStatus === 'Attending'
                             ? 'border-[#4A3F35] bg-[#E9E0D2]/50 shadow-2xs'
@@ -577,11 +578,10 @@ export const RsvpPage = () => {
                             {t.attendingHappyText}
                           </span>
                         </div>
-                      </div>
+                      </label>
 
                       {/* Option: Declined */}
-                      <div
-                        onClick={() => setValue('rsvpStatus', 'Declined')}
+                      <label
                         className={`p-4 rounded-2xl border-2 cursor-pointer transition-all flex items-start space-x-3 ${
                           rsvpStatus === 'Declined'
                             ? 'border-[#4A3F35] bg-[#E9E0D2]/50 shadow-2xs'
@@ -602,7 +602,7 @@ export const RsvpPage = () => {
                             {t.declinedWarmText}
                           </span>
                         </div>
-                      </div>
+                      </label>
 
                     </div>
                   </div>
@@ -638,6 +638,7 @@ export const RsvpPage = () => {
                                 type="button"
                                 onClick={() => remove(index)}
                                 className="p-1 text-rose-600 hover:text-rose-800 hover:bg-rose-50 rounded-lg transition-colors"
+                                aria-label={t.removeGuestBtn}
                                 title={t.removeGuestBtn}
                               >
                                 <XCircle className="w-4 h-4" />
@@ -650,6 +651,7 @@ export const RsvpPage = () => {
                                   type="text"
                                   required
                                   {...register(`attendees.${index}.name`)}
+                                  aria-label={`${t.fullNamePlaceholder} ${index + 1}`}
                                   placeholder={t.fullNamePlaceholder}
                                   className="w-full px-3 py-2 rounded-lg border border-[#4A3F35]/20 bg-white font-bold text-xs text-[#4A3F35] focus:outline-none focus:ring-2 focus:ring-[#4A3F35]"
                                 />
@@ -658,6 +660,7 @@ export const RsvpPage = () => {
                                 <input
                                   type="text"
                                   {...register(`attendees.${index}.contact`)}
+                                  aria-label={t.attendeeContactLabel}
                                   placeholder={t.attendeeContactPlaceholder}
                                   className="w-full px-3 py-2 rounded-lg border border-[#4A3F35]/20 bg-white font-medium text-xs text-[#4A3F35] focus:outline-none focus:ring-2 focus:ring-[#4A3F35]"
                                 />
@@ -681,10 +684,11 @@ export const RsvpPage = () => {
                   {/* Dietary Restrictions (Only when Attending) */}
                   {rsvpStatus === 'Attending' && (
                     <div className="space-y-2">
-                      <label className="label-mono block">
+                      <label htmlFor="rsvp-dietary" className="label-mono block">
                         {t.dietaryLabel}
                       </label>
                       <textarea
+                        id="rsvp-dietary"
                         rows={2}
                         {...register('dietary')}
                         placeholder={t.dietaryPlaceholder}
@@ -733,8 +737,9 @@ export const RsvpPage = () => {
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
-              <label className="label-mono block mb-1">{t.inviteeNameLabel} *</label>
+              <label htmlFor="invite-name" className="label-mono block mb-1">{t.inviteeNameLabel} *</label>
               <input
+                id="invite-name"
                 type="text"
                 value={inviteName}
                 onChange={(e) => setInviteName(e.target.value)}
@@ -743,8 +748,9 @@ export const RsvpPage = () => {
               />
             </div>
             <div>
-              <label className="label-mono block mb-1">{t.inviteeContactLabel}</label>
+              <label htmlFor="invite-contact" className="label-mono block mb-1">{t.inviteeContactLabel}</label>
               <input
+                id="invite-contact"
                 type="text"
                 value={inviteContact}
                 onChange={(e) => setInviteContact(e.target.value)}
@@ -758,8 +764,9 @@ export const RsvpPage = () => {
             {t.linkOnlyHint}
           </p>
           <div>
-            <label className="label-mono block mb-1">{t.inviteeNoteLabel}</label>
+            <label htmlFor="invite-note" className="label-mono block mb-1">{t.inviteeNoteLabel}</label>
             <input
+              id="invite-note"
               type="text"
               value={inviteNote}
               onChange={(e) => setInviteNote(e.target.value)}

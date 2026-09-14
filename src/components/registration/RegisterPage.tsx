@@ -4,13 +4,15 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import { motion } from 'motion/react';
-import { ArrowLeft, CheckCircle2, Clock, Send, Users, XCircle } from 'lucide-react';
+import { CheckCircle2, Clock, Send, Users, XCircle } from 'lucide-react';
 import { EventDetailsCard } from '../rsvp/EventDetailsCard';
-import { useT, useTf } from '../shared/i18n';
+import { useT, useTf, useApiErrorMessage } from '../shared/i18n';
+import { BackButton } from '../shared/BackButton';
 import { useToast } from '../shared/ToastContext';
 import { useAppStore } from '../../stores/appStore';
 import { fadeUp } from '../shared/motionPresets';
 import { TextInput, Select } from '../shared/ui';
+import { decodeApiError } from '../../lib/errors';
 import type { Guest } from '../../types';
 
 const RegisterSchema = z.object({
@@ -30,6 +32,7 @@ type RegisterResult = { guest: Guest; already: boolean };
 export const RegisterPage = () => {
   const t = useT();
   const tf = useTf();
+  const apiError = useApiErrorMessage();
   const { toast } = useToast();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
@@ -84,7 +87,8 @@ export const RegisterPage = () => {
       if (res.ok && json.guest) {
         setResult({ guest: json.guest, already: !!json.already_registered });
       } else {
-        toast.error(json.message || t.registerErrorToast);
+        const { code, message } = decodeApiError(json, res.status);
+        toast.error(apiError(code, message || t.registerErrorToast));
       }
     } catch {
       toast.error(t.registerErrorToast);
@@ -143,14 +147,7 @@ export const RegisterPage = () => {
             >
               {t.portalContinueBtn}
             </button>
-            <button
-              type="button"
-              onClick={() => navigate('/')}
-              className="btn-outline-accent px-5 py-2.5 text-xs font-bold inline-flex items-center gap-1.5"
-            >
-              <ArrowLeft className="w-3.5 h-3.5" />
-              <span>{t.backHomeBtn}</span>
-            </button>
+            <BackButton to="/" label={t.backHomeBtn} variant="outline" />
           </div>
         </div>
       )}
@@ -167,39 +164,40 @@ export const RegisterPage = () => {
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
-                <label className="label-mono block mb-1">{t.fieldName} *</label>
-                <TextInput type="text" placeholder={t.nameExamplePh} {...register('name')} />
-                {errors.name && <p className="text-rose-600 text-xs">{t.registerNameRequiredToast}</p>}
+                <label htmlFor="reg-name" className="label-mono block mb-1">{t.fieldName} *</label>
+                <TextInput id="reg-name" type="text" placeholder={t.nameExamplePh} {...register('name')} />
+                {errors.name && <p role="alert" className="text-rose-600 text-xs">{t.registerNameRequiredToast}</p>}
               </div>
               <div>
-                <label className="label-mono block mb-1">{t.fieldLanguage}</label>
-                <Select {...register('language_pref')}>
+                <label htmlFor="reg-language" className="label-mono block mb-1">{t.fieldLanguage}</label>
+                <Select id="reg-language" {...register('language_pref')}>
                   <option value="EN">{t.presetEnglish}</option>
                   <option value="FR">{t.presetFrench}</option>
                 </Select>
               </div>
               <div>
-                <label className="label-mono block mb-1">{t.fieldEmail}</label>
-                <TextInput type="email" placeholder={t.emailExamplePh} {...register('email')} />
+                <label htmlFor="reg-email" className="label-mono block mb-1">{t.fieldEmail}</label>
+                <TextInput id="reg-email" type="email" placeholder={t.emailExamplePh} {...register('email')} />
               </div>
               <div>
-                <label className="label-mono block mb-1">{t.fieldPhone}</label>
-                <TextInput type="tel" placeholder={t.fieldPhonePlaceholder} {...register('phone')} />
+                <label htmlFor="reg-phone" className="label-mono block mb-1">{t.fieldPhone}</label>
+                <TextInput id="reg-phone" type="tel" placeholder={t.fieldPhonePlaceholder} {...register('phone')} />
               </div>
             </div>
 
             <div className="space-y-3 bg-[#E9E0D2]/40 p-4 rounded-2xl border border-[#4A3F35]/20">
               <div>
-                <label className="label-mono block">{t.registerMembersTitle}</label>
+                <span className="label-mono block">{t.registerMembersTitle}</span>
               </div>
               {fields.map((field, index) => (
                 <div key={field.id} className="grid grid-cols-1 sm:grid-cols-[1fr_1fr_auto] gap-2 items-start">
-                  <TextInput type="text" placeholder={t.registerMemberPh} {...register(`members.${index}.name`)} />
-                  <TextInput type="text" placeholder={t.attendeeContactPlaceholder} {...register(`members.${index}.contact`)} />
+                  <TextInput type="text" aria-label={`${t.registerMemberPh} ${index + 1}`} placeholder={t.registerMemberPh} {...register(`members.${index}.name`)} />
+                  <TextInput type="text" aria-label={t.attendeeContactLabel} placeholder={t.attendeeContactPlaceholder} {...register(`members.${index}.contact`)} />
                   <button
                     type="button"
                     onClick={() => remove(index)}
                     className="justify-self-start p-2 text-rose-600 hover:text-rose-800 hover:bg-rose-50 rounded-lg transition-colors"
+                    aria-label={t.removeGuestBtn}
                     title={t.removeGuestBtn}
                   >
                     <XCircle className="w-4 h-4" />
@@ -217,8 +215,9 @@ export const RegisterPage = () => {
             </div>
 
             <div>
-              <label className="label-mono block mb-1">{t.dietaryLabel}</label>
+              <label htmlFor="reg-dietary" className="label-mono block mb-1">{t.dietaryLabel}</label>
               <textarea
+                id="reg-dietary"
                 rows={2}
                 {...register('dietary')}
                 placeholder={t.dietaryPlaceholder}
@@ -250,14 +249,7 @@ export const RegisterPage = () => {
 
       {!showForm && !result && (
         <p className="text-center">
-          <button
-            type="button"
-            onClick={() => navigate('/')}
-            className="text-xs font-bold font-mono text-[#8B735B] hover:text-[#D4A373] inline-flex items-center gap-1 transition-colors cursor-pointer"
-          >
-            <ArrowLeft className="w-3.5 h-3.5" />
-            {t.backHomeBtn}
-          </button>
+          <BackButton to="/" label={t.backHomeBtn} />
         </p>
       )}
     </motion.div>

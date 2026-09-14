@@ -22,16 +22,15 @@ export const PhotoDropzone = ({
 }: {
   fileInputRef: RefObject<HTMLInputElement | null>;
   onFileChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
-  onDrop: (e: React.DragEvent<HTMLDivElement>) => void;
-  onDragOver: (e: React.DragEvent<HTMLDivElement>) => void;
+  onDrop: (e: React.DragEvent<HTMLElement>) => void;
+  onDragOver: (e: React.DragEvent<HTMLElement>) => void;
 }) => {
   const t = useT();
   return (
-    <div
+    <label
       onDrop={onDrop}
       onDragOver={onDragOver}
-      onClick={() => fileInputRef.current?.click()}
-      className="border-2 border-dashed border-[#CBAE94] hover:border-[#8B735B] bg-[#FAF6F0]/60 hover:bg-[#EFE6DC]/40 rounded-3xl p-6 sm:p-8 text-center cursor-pointer transition-all space-y-3 group"
+      className="block border-2 border-dashed border-[#CBAE94] hover:border-[#8B735B] bg-[#FAF6F0]/60 hover:bg-[#EFE6DC]/40 rounded-3xl p-6 sm:p-8 text-center cursor-pointer transition-all space-y-3 group"
     >
       <input
         ref={fileInputRef}
@@ -39,7 +38,7 @@ export const PhotoDropzone = ({
         multiple
         accept="image/jpeg,image/png,image/webp,image/heic,image/gif"
         onChange={onFileChange}
-        className="hidden"
+        className="sr-only"
       />
 
       <div className="w-14 h-14 mx-auto rounded-2xl bg-[#EFE6DC] group-hover:bg-[#8B735B] text-[#8B735B] group-hover:text-white flex items-center justify-center transition-colors shadow-sm">
@@ -59,7 +58,7 @@ export const PhotoDropzone = ({
         <Zap className="w-3 h-3 text-amber-600 shrink-0" />
         <span>{t.photoCompressedHint}</span>
       </div>
-    </div>
+    </label>
   );
 };
 
