@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
+import { motion } from 'motion/react';
 import { Guest } from '../../types';
 import { adminFetch } from '../../lib/api';
 import { getPartyMembers, isMemberCheckedIn } from '../../lib/guestAttendees';
@@ -7,6 +8,8 @@ import { CheckCircle2, RotateCcw, Users, UserCheck, UserX, ChevronDown, ChevronR
 import { useT, useTf, useApiErrorMessage } from '../shared/i18n';
 import { decodeApiError } from '../../lib/errors';
 import { SearchInput } from '../shared/ui';
+import { MetricCard } from '../shared/MetricCard';
+import { adminContainerVariants } from '../shared/motionPresets';
 
 export const GuestCheckIn = () => {
   const t = useT();
@@ -84,24 +87,12 @@ export const GuestCheckIn = () => {
   const notYet = Math.max(0, stats.expected - stats.checkedIn);
 
   return (
-    <div className="space-y-6">
+    <motion.div variants={adminContainerVariants} initial="hidden" animate="show" className="space-y-6">
       {/* Stats bar — individuals: expected vs checked in */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-        <div className="bg-white rounded-2xl border border-[#CBAE94]/30 p-4 text-center">
-          <Users className="w-5 h-5 text-[#8B735B] mx-auto mb-1" />
-          <div className="text-2xl font-bold text-[#4A3F35]">{stats.total}</div>
-          <div className="text-xs text-[#A09080] font-mono">{t.totalGuestsLabel}</div>
-        </div>
-        <div className="bg-white rounded-2xl border border-[#CBAE94]/30 p-4 text-center">
-          <UserCheck className="w-5 h-5 text-green-600 mx-auto mb-1" />
-          <div className="text-2xl font-bold text-green-700">{stats.checkedIn}</div>
-          <div className="text-xs text-[#A09080] font-mono">{t.checkedInLabel}</div>
-        </div>
-        <div className="bg-white rounded-2xl border border-[#CBAE94]/30 p-4 text-center">
-          <UserX className="w-5 h-5 text-amber-600 mx-auto mb-1" />
-          <div className="text-2xl font-bold text-amber-700">{notYet}</div>
-          <div className="text-xs text-[#A09080] font-mono">{t.notYetLabel}</div>
-        </div>
+        <MetricCard label={t.totalGuestsLabel} value={stats.total} icon={<Users className="w-5 h-5" />} />
+        <MetricCard label={t.checkedInLabel} value={stats.checkedIn} icon={<UserCheck className="w-5 h-5" />} iconClass="text-green-600" />
+        <MetricCard label={t.notYetLabel} value={notYet} icon={<UserX className="w-5 h-5" />} iconClass="text-amber-600" />
       </div>
 
       {/* Search */}
@@ -138,7 +129,7 @@ export const GuestCheckIn = () => {
                 }`}
               >
                 {/* Row header — click to expand the party */}
-                <div className="flex items-center justify-between gap-3 p-4">
+                <div className="flex flex-wrap items-center justify-between gap-3 p-4">
                   <button
                     type="button"
                     onClick={() => setExpandedId(isExpanded ? null : guest.id)}
@@ -181,9 +172,9 @@ export const GuestCheckIn = () => {
                       <button
                         onClick={() => handleUndo(guest.id)}
                         disabled={isBusy}
-                        className="px-3 py-1.5 rounded-full text-xs font-bold border border-green-300 text-green-700 bg-white hover:bg-green-50 transition-colors flex items-center space-x-1 disabled:opacity-50"
+                        className="px-4 min-h-[44px] rounded-full text-xs font-bold border border-green-300 text-green-700 bg-white hover:bg-green-50 transition-colors flex items-center space-x-1 disabled:opacity-50"
                       >
-                        <RotateCcw className="w-3 h-3" />
+                        <RotateCcw className="w-3.5 h-3.5" />
                         <span>{t.undoCheckinBtn}</span>
                       </button>
                     )}
@@ -191,11 +182,11 @@ export const GuestCheckIn = () => {
                       <button
                         onClick={() => handleCheckIn(guest.id)}
                         disabled={isBusy}
-                        className={`px-4 py-1.5 rounded-full text-xs font-bold text-white transition-colors flex items-center space-x-1 disabled:opacity-50 ${
+                        className={`px-4 min-h-[44px] rounded-full text-xs font-bold text-white transition-colors flex items-center space-x-1 disabled:opacity-50 ${
                           checkedCount === 0 ? 'bg-[#8B735B] hover:bg-[#4A3F35]' : 'bg-[#C9A227] hover:bg-[#A8861C]'
                         }`}
                       >
-                        <CheckCircle2 className="w-3 h-3" />
+                        <CheckCircle2 className="w-3.5 h-3.5" />
                         <span>{checkedCount === 0 ? t.checkInBtn : t.checkinAllBtn}</span>
                       </button>
                     )}
@@ -228,17 +219,17 @@ export const GuestCheckIn = () => {
                             <button
                               onClick={() => handleMemberUndo(guest.id, member)}
                               disabled={isBusy}
-                              className="flex items-center gap-1 text-xs font-bold text-green-700 hover:text-green-900 disabled:opacity-50"
+                              className="flex items-center gap-1 px-2 min-h-[44px] text-xs font-bold text-green-700 hover:text-green-900 disabled:opacity-50"
                             >
-                              <CheckCircle2 className="w-3 h-3" />
+                              <CheckCircle2 className="w-3.5 h-3.5" />
                               <span>{t.checkedInLabel}</span>
-                              <RotateCcw className="w-2.5 h-2.5 ml-0.5" />
+                              <RotateCcw className="w-3 h-3 ml-0.5" />
                             </button>
                           ) : (
                             <button
                               onClick={() => handleMemberCheckIn(guest.id, member)}
                               disabled={isBusy}
-                              className="px-2.5 py-1 rounded-full text-xs font-bold bg-[#8B735B] text-white hover:bg-[#4A3F35] transition-colors disabled:opacity-50"
+                              className="px-3 min-h-[44px] rounded-full text-xs font-bold bg-[#8B735B] text-white hover:bg-[#4A3F35] transition-colors disabled:opacity-50"
                             >
                               {t.checkInBtn}
                             </button>
@@ -256,6 +247,6 @@ export const GuestCheckIn = () => {
           )}
         </div>
       )}
-    </div>
+    </motion.div>
   );
 };
