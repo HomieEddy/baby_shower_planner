@@ -83,7 +83,7 @@ export const GuestCheckIn = () => {
   return (
     <div className="space-y-6">
       {/* Stats bar — individuals: expected vs checked in */}
-      <div className="grid grid-cols-3 gap-3">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
         <div className="bg-white rounded-2xl border border-[#CBAE94]/30 p-4 text-center">
           <Users className="w-5 h-5 text-[#8B735B] mx-auto mb-1" />
           <div className="text-2xl font-bold text-[#4A3F35]">{stats.total}</div>

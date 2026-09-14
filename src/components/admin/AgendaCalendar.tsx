@@ -92,12 +92,13 @@ export const AgendaCalendar: React.FC<AgendaCalendarProps> = ({ tasks, t, langua
         </button>
       </div>
 
-      <div className="grid grid-cols-7 gap-1.5">
-        {weekdays.map((day) => (
-          <div key={day.toISOString()} className="text-center text-xs font-mono font-bold uppercase text-[#A09080] py-1">
-            {format(day, 'EEE', { locale: localeFor(language) })}
-          </div>
-        ))}
+      <div className="overflow-x-auto -mx-1 px-1">
+        <div className="grid grid-cols-7 gap-1.5 min-w-[560px]">
+          {weekdays.map((day) => (
+            <div key={day.toISOString()} className="text-center text-xs font-mono font-bold uppercase text-[#A09080] py-1">
+              {format(day, 'EEE', { locale: localeFor(language) })}
+            </div>
+          ))}
         {days.map((day) => {
           const ymd = format(day, 'yyyy-MM-dd');
           const dayTasks = tasksByDay.get(ymd) ?? [];
@@ -142,6 +143,7 @@ export const AgendaCalendar: React.FC<AgendaCalendarProps> = ({ tasks, t, langua
             </button>
           );
         })}
+        </div>
       </div>
     </div>
   );

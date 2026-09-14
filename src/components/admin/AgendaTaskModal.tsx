@@ -129,7 +129,7 @@ export const AgendaTaskModal: React.FC<AgendaTaskModalProps> = ({ open, task, pr
           />
         </div>
 
-        <div className="grid grid-cols-2 gap-3">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <div>
             <label className={labelCls}>{t.agendaTaskDueDateLabel}</label>
             <input type="date" {...register('due_date')} className={inputCls} />

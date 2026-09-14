@@ -38,6 +38,7 @@ export const LandingPage = () => {
           <Users className="w-4 h-4" />
           {t.landingRegisterBtn}
         </button>
+        <p className="text-xs text-[#A09080] font-sans text-center">{t.landingRegisterCaption}</p>
         <button
           type="button"
           onClick={() => navigate('/portal')}
@@ -46,6 +47,7 @@ export const LandingPage = () => {
           <UserRound className="w-4 h-4" />
           {t.landingGuestBtn}
         </button>
+        <p className="text-xs text-[#A09080] font-sans text-center">{t.landingGuestCaption}</p>
 
         <div className="flex items-center gap-3 py-1" aria-hidden>
           <span className="flex-1 border-t border-[#CBAE94]/50" />
