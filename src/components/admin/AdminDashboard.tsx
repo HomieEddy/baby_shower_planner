@@ -1,7 +1,6 @@
 import React, { useState, useEffect } from 'react';
-import { useSearchParams } from 'react-router-dom';
+import { Link, useSearchParams } from 'react-router-dom';
 import { Guest, GuestbookEntry, EventSettings, EventAlert, GiftLog } from '../../types';
-import { HostPhotoGalleryPage } from '../photos/HostPhotoGalleryPage';
 import { CateringSummaryView } from './CateringSummaryView';
 import { EscortCardsGenerator } from './EscortCardsGenerator';
 import { ThankYouTrackerView } from './ThankYouTrackerView';
@@ -25,11 +24,13 @@ import {
   Utensils,
   Tag,
   Gift,
-  Heart,
   Settings,
   AlertTriangle,
   MessageSquare,
   Camera,
+  MapPin,
+  BookOpen,
+  Image as ImageIcon,
   Trash2,
   UserCheck,
   Menu,
@@ -54,7 +55,6 @@ const TABS = [
   { id: 'settings', icon: Settings },
   { id: 'alerts', icon: AlertTriangle },
   { id: 'guestbook', icon: MessageSquare },
-  { id: 'photos', icon: Camera },
 ] as const;
 
 type TabId = (typeof TABS)[number]['id'];
@@ -68,6 +68,28 @@ const TabPane = ({ children }: { children: React.ReactNode }) => (
   >
     {children}
   </motion.div>
+);
+
+const SidebarPageLink = ({
+  to,
+  icon: Icon,
+  label,
+  onNavigate,
+}: {
+  to: string;
+  icon: React.ComponentType<{ className?: string }>;
+  label: string;
+  onNavigate: () => void;
+}) => (
+  <Link
+    to={to}
+    onClick={onNavigate}
+    className="w-full flex items-center gap-2.5 px-3 py-3 rounded-xl text-xs font-bold font-mono text-left text-[#5D5449] hover:bg-[#EFE6DC] transition-colors"
+  >
+    <Icon className="w-4 h-4 shrink-0" />
+    <span className="truncate flex-1">{label}</span>
+    <ExternalLink className="w-3 h-3 shrink-0 opacity-60" />
+  </Link>
 );
 
 export const AdminDashboard = () => {
@@ -111,7 +133,6 @@ export const AdminDashboard = () => {
       case 'settings': return t.tabHostSettings;
       case 'alerts': return t.tabUrgentAlerts;
       case 'guestbook': return `${t.tabGuestbookFeed} (${guestbookEntries.length})`;
-      case 'photos': return t.navPhotoGallery;
     }
   };
 
@@ -443,6 +464,45 @@ export const AdminDashboard = () => {
                 </button>
               );
             })}
+
+            {/* Page links — the dashboard is the single admin nav, so standalone
+                admin and guest-facing pages are opened from here. */}
+            <div className="pt-3 mt-2 border-t border-[#CBAE94]/30">
+              <span className="label-mono block px-3 pb-1">{t.navGroupSeating}</span>
+              <SidebarPageLink
+                to="/seating"
+                icon={MapPin}
+                label={t.navFloorplan}
+                onNavigate={() => setSidebarOpen(false)}
+              />
+            </div>
+            <div className="pt-3 mt-2 border-t border-[#CBAE94]/30">
+              <span className="label-mono block px-3 pb-1">{t.navGroupGuestPages}</span>
+              <SidebarPageLink
+                to="/photo-gallery"
+                icon={ImageIcon}
+                label={t.navPhotoGallery}
+                onNavigate={() => setSidebarOpen(false)}
+              />
+              <SidebarPageLink
+                to="/guestbook"
+                icon={BookOpen}
+                label={t.navGuestbook}
+                onNavigate={() => setSidebarOpen(false)}
+              />
+              <SidebarPageLink
+                to="/upload-photos"
+                icon={Camera}
+                label={t.navUploadPhotos}
+                onNavigate={() => setSidebarOpen(false)}
+              />
+              <SidebarPageLink
+                to="/event"
+                icon={CalendarDays}
+                label={t.landingEventBtn}
+                onNavigate={() => setSidebarOpen(false)}
+              />
+            </div>
           </div>
         </aside>
 
@@ -482,12 +542,6 @@ export const AdminDashboard = () => {
 
       {adminSubTab === 'guestbook' && (
         <AdminGuestbookFeed entries={guestbookEntries} onRefresh={refreshOverview} />
-      )}
-
-      {adminSubTab === 'photos' && (
-        <TabPane>
-          <HostPhotoGalleryPage />
-        </TabPane>
       )}
 
       {adminSubTab === 'checkin' && (

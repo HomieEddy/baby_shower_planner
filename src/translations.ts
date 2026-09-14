@@ -1107,6 +1107,13 @@ export interface Translations {
   deletePhotosBtn: string;
   zipInitializingStatus: string;
   zipAddingPhotoStatus: string;
+  // UI navigation audit additions
+  backBtn: string;
+  navGroupGuestPages: string;
+  navGroupSeating: string;
+  pageNotFoundTitle: string;
+  pageNotFoundMsg: string;
+  skipToContent: string;
 }
 
 export const translations: Record<Language, Translations> = {
@@ -2217,6 +2224,13 @@ export const translations: Record<Language, Translations> = {
     deletePhotosBtn: "Delete Photos",
     zipInitializingStatus: "Initializing ZIP archive...",
     zipAddingPhotoStatus: "Adding photo {{current}} of {{total}}...",
+    // UI navigation audit additions
+    backBtn: "Back",
+    navGroupGuestPages: "Guest Pages",
+    navGroupSeating: "Seating",
+    pageNotFoundTitle: "Page Not Found",
+    pageNotFoundMsg: "That page doesn't exist or was moved.",
+    skipToContent: "Skip to content",
   },
   FR: {
     activeAlertsHistory: "Historique des alertes diffusées",
@@ -3325,5 +3339,12 @@ export const translations: Record<Language, Translations> = {
     deletePhotosBtn: "Supprimer les photos",
     zipInitializingStatus: "Initialisation de l'archive ZIP...",
     zipAddingPhotoStatus: "Ajout de la photo {{current}} sur {{total}}...",
+    // UI navigation audit additions
+    backBtn: "Retour",
+    navGroupGuestPages: "Pages invités",
+    navGroupSeating: "Placement",
+    pageNotFoundTitle: "Page introuvable",
+    pageNotFoundMsg: "Cette page n'existe pas ou a été déplacée.",
+    skipToContent: "Aller au contenu",
   },
 };
