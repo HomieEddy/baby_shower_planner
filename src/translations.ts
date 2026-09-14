@@ -1042,6 +1042,7 @@ export interface Translations {
   alertAudienceInvited: string;
   alertAudiencePending: string;
   alertDispatchMeta: string;
+  alertDispatchedToast: string;
   alertTargetPrefix: string;
   allTablesFullMsg: string;
   allVenueTablesCount: string;
@@ -2253,6 +2254,7 @@ export const translations: Record<Language, Translations> = {
     alertAudienceInvited: "Broadcasted to invited guests",
     alertAudiencePending: "Reminder sent to pending guests",
     alertDispatchMeta: "Dispatched on {{date}} • {{count}} guest(s) notified",
+    alertDispatchedToast: "Alert dispatched to {{count}} guest(s).",
     alertTargetPrefix: "Target:",
     allTablesFullMsg: "Every table is full. Add a table or free a chair to seat the rest of this party.",
     allVenueTablesCount: "All Venue Tables ({{count}})",
@@ -3461,6 +3463,7 @@ export const translations: Record<Language, Translations> = {
     alertAudienceInvited: "Diffusé aux invités",
     alertAudiencePending: "Rappel envoyé aux invités en attente",
     alertDispatchMeta: "Diffusée le {{date}} • {{count}} invité(s) notifié(s)",
+    alertDispatchedToast: "Alerte diffusée à {{count}} invité(s).",
     alertTargetPrefix: "Cible :",
     allTablesFullMsg: "Toutes les tables sont pleines. Ajoutez une table ou libérez une place pour installer le reste du groupe.",
     allVenueTablesCount: "Toutes les tables du lieu ({{count}})",

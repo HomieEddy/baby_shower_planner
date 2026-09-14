@@ -11,7 +11,9 @@ import {
 import { Language, Guest, EventAlert, AlertType, EventSettings } from '../../types';
 import { Translations } from '../../translations';
 import { adminFetch } from '../../lib/api';
-import { Modal } from '../shared/Modal';
+import { TextInput, TextArea } from '../shared/ui';
+import { Segmented } from '../shared/Segmented';
+import { IconButton } from '../shared/IconButton';
 import { formatDateLong } from '../../lib/dateUtils';
 import { useToast } from '../shared/ToastContext';
 import { useTf } from '../shared/i18n';
@@ -35,7 +37,13 @@ export const AdminAlertsTab: React.FC<AdminAlertsTabProps> = ({ language, t, gue
   const [alertTitle, setAlertTitle] = useState('RSVP Reminder: Baby Shower');
   const [alertMessage, setAlertMessage] = useState('Friendly reminder! We haven\'t received your RSVP yet for our baby shower. Please click below to confirm if you will be able to join us!');
   const [dispatchingAlert, setDispatchingAlert] = useState(false);
-  const [alertSuccessModal, setAlertSuccessModal] = useState<{ title: string; count: number } | null>(null);
+
+  const recipients = guests.filter((g) => {
+    if (g.rsvp_status === 'Declined') return false;
+    if (targetAudience === 'PENDING') return g.rsvp_status === 'Pending';
+    if (targetAudience === 'ATTENDING') return g.rsvp_status === 'Attending';
+    return true;
+  });
 
   const handlePresetAlert = (type: AlertType) => {
     setAlertType(type);
@@ -82,7 +90,7 @@ export const AdminAlertsTab: React.FC<AdminAlertsTabProps> = ({ language, t, gue
       });
       const data = await res.json();
       if (data.alert) {
-        setAlertSuccessModal({ title: data.alert.title, count: data.notified_count });
+        toast.love(tf('alertDispatchedToast', { count: String(data.notified_count) }));
         await onRefresh();
       }
     } catch (err) {
@@ -114,7 +122,7 @@ export const AdminAlertsTab: React.FC<AdminAlertsTabProps> = ({ language, t, gue
 
         <div className="space-y-2">
           <label className="label-mono block">{t.quickTemplatesLabel}</label>
-          <div className="grid grid-cols-2 sm:grid-cols-5 gap-2.5">
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2.5">
             <button type="button" onClick={() => handlePresetAlert('REMINDER')}
               className={`p-3 rounded-2xl border-2 text-xs font-bold text-left transition-all flex flex-col space-y-1 ${alertType === 'REMINDER' ? 'border-amber-600 bg-amber-50 text-amber-900' : 'border-[#CBAE94]/50 bg-white hover:bg-[#EFE6DC]/40 text-[#5D5449]'}`}>
               <span className="font-bold">{t.rsvpReminderTemplate}</span>
@@ -145,58 +153,35 @@ export const AdminAlertsTab: React.FC<AdminAlertsTabProps> = ({ language, t, gue
 
         <div className="space-y-2 pt-1 border-t border-[#CBAE94]/30">
           <label className="label-mono block">{t.targetGroupLabel}</label>
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
-            <button type="button" onClick={() => setTargetAudience('ALL')}
-              className={`p-3 rounded-2xl border-2 text-xs font-bold text-left transition-all flex items-center justify-between ${targetAudience === 'ALL' ? 'border-[#8B735B] bg-[#EFE6DC] text-[#8B735B]' : 'border-[#CBAE94]/40 bg-white text-[#5D5449] hover:bg-[#EFE6DC]/30'}`}>
-              <span>{t.allNonDeclinedLabel}</span>
-              <span className="px-2 py-0.5 rounded-full text-xs font-mono bg-white border border-current font-bold">{guests.filter((g) => g.rsvp_status !== 'Declined').length}</span>
-            </button>
-            <button type="button" onClick={() => setTargetAudience('PENDING')}
-              className={`p-3 rounded-2xl border-2 text-xs font-bold text-left transition-all flex items-center justify-between ${targetAudience === 'PENDING' ? 'border-amber-600 bg-amber-50 text-amber-900' : 'border-[#CBAE94]/40 bg-white text-[#5D5449] hover:bg-[#EFE6DC]/30'}`}>
-              <span>{t.pendingOnlyLabel}</span>
-              <span className="px-2 py-0.5 rounded-full text-xs font-mono bg-white border border-current font-bold">{guests.filter((g) => g.rsvp_status === 'Pending').length}</span>
-            </button>
-            <button type="button" onClick={() => setTargetAudience('ATTENDING')}
-              className={`p-3 rounded-2xl border-2 text-xs font-bold text-left transition-all flex items-center justify-between ${targetAudience === 'ATTENDING' ? 'border-emerald-600 bg-emerald-50 text-emerald-900' : 'border-[#CBAE94]/40 bg-white text-[#5D5449] hover:bg-[#EFE6DC]/30'}`}>
-              <span>{t.attendingOnlyLabel}</span>
-              <span className="px-2 py-0.5 rounded-full text-xs font-mono bg-white border border-current font-bold">{guests.filter((g) => g.rsvp_status === 'Attending').length}</span>
-            </button>
-          </div>
+          <Segmented
+            ariaLabel={t.targetGroupLabel}
+            value={targetAudience}
+            onChange={setTargetAudience}
+            options={[
+              { value: 'ALL', label: t.allNonDeclinedLabel, count: guests.filter((g) => g.rsvp_status !== 'Declined').length },
+              { value: 'PENDING', label: t.pendingOnlyLabel, count: guests.filter((g) => g.rsvp_status === 'Pending').length },
+              { value: 'ATTENDING', label: t.attendingOnlyLabel, count: guests.filter((g) => g.rsvp_status === 'Attending').length },
+            ]}
+          />
           <p className="text-xs text-[#8B735B] font-mono">{t.declinedNote}</p>
         </div>
 
         <form onSubmit={handleDispatchAlert} className="space-y-4">
           <div>
             <label className="label-mono block mb-1">{t.alertTitleLabel}</label>
-            <input type="text" required value={alertTitle} onChange={(e) => setAlertTitle(e.target.value)}
-              placeholder={t.alertTitlePh}
-              className="w-full px-4 py-2.5 rounded-2xl border-2 border-[#CBAE94] text-xs font-bold text-[#5D5449] focus:outline-none focus:ring-2 focus:ring-[#8B735B] bg-white" />
+            <TextInput type="text" required value={alertTitle} onChange={(e) => setAlertTitle(e.target.value)}
+              placeholder={t.alertTitlePh} />
           </div>
           <div>
             <label className="label-mono block mb-1">{t.alertMessageLabel2}</label>
-            <textarea rows={4} required value={alertMessage} onChange={(e) => setAlertMessage(e.target.value)}
-              placeholder={t.alertMessagePh}
-              className="w-full p-4 rounded-2xl border-2 border-[#CBAE94] text-xs font-bold text-[#5D5449] focus:outline-none focus:ring-2 focus:ring-[#8B735B] bg-white resize-none" />
+            <TextArea rows={4} required value={alertMessage} onChange={(e) => setAlertMessage(e.target.value)}
+              placeholder={t.alertMessagePh} className="resize-none" />
           </div>
 
           <div className="pt-2 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
             <span className="text-xs text-[#5D5449] font-mono flex items-center space-x-1">
               <Mail className="w-3.5 h-3.5 text-[#8B735B]" />
-              <span>{t.willNotifyLabel} <strong>{
-                guests.filter((g) => {
-                  if (g.rsvp_status === 'Declined') return false;
-                  if (targetAudience === 'PENDING') return g.rsvp_status === 'Pending';
-                  if (targetAudience === 'ATTENDING') return g.rsvp_status === 'Attending';
-                  return true;
-                }).filter((g) => !!g.email).length
-              }</strong> {t.willNotifyOfLabel} <strong>{
-                guests.filter((g) => {
-                  if (g.rsvp_status === 'Declined') return false;
-                  if (targetAudience === 'PENDING') return g.rsvp_status === 'Pending';
-                  if (targetAudience === 'ATTENDING') return g.rsvp_status === 'Attending';
-                  return true;
-                }).length
-              }</strong> {t.guestEmailsLabel}</span>
+              <span>{t.willNotifyLabel} <strong>{recipients.filter((g) => !!g.email).length}</strong> {t.willNotifyOfLabel} <strong>{recipients.length}</strong> {t.guestEmailsLabel}</span>
             </span>
             <button type="submit" disabled={dispatchingAlert}
               className="btn-accent px-6 py-3 text-xs flex items-center space-x-2 bg-amber-800 hover:bg-amber-900">
@@ -227,34 +212,14 @@ export const AdminAlertsTab: React.FC<AdminAlertsTabProps> = ({ language, t, gue
                   <p className="text-xs italic leading-relaxed">{alt.message}</p>
                   <span className="text-xs font-mono opacity-70 block">{tf('alertDispatchMeta', { date: new Date(alt.created_at).toLocaleString(), count: String(alt.notified_guests_count) })}</span>
                 </div>
-                <button onClick={() => onDeleteAlert(alt.id)}
-                  className="p-2 text-rose-600 hover:bg-rose-100 rounded-xl transition-colors shrink-0 self-end sm:self-center" title={t.deleteAlertTitle}>
+                <IconButton variant="danger" label={t.deleteAlertTitle} onClick={() => onDeleteAlert(alt.id)} className="shrink-0 self-end sm:self-center">
                   <Trash2 className="w-4 h-4" />
-                </button>
+                </IconButton>
               </div>
             ))}
           </div>
         )}
       </motion.div>
-
-      {/* Modal: Broadcast Alert Dispatched Confirmation */}
-      <Modal open={!!alertSuccessModal} onClose={() => setAlertSuccessModal(null)} maxWidth="md">
-        <div className="w-14 h-14 bg-amber-100 text-amber-800 rounded-full flex items-center justify-center mx-auto border-2 border-amber-400">
-          <ShieldAlert className="w-7 h-7" />
-        </div>
-        <div className="space-y-1 text-center">
-          <h3 className="font-sans text-2xl font-bold text-[#8B735B]">{t.broadcastDispatchedTitle}</h3>
-          <p className="text-xs text-[#5D5449]">"{alertSuccessModal?.title}"</p>
-        </div>
-        <div className="bg-[#EFE6DC] p-4 rounded-2xl border border-[#CBAE94] text-xs text-[#5D5449] space-y-2 font-mono text-left">
-          <div className="flex items-center space-x-2 text-[#8B735B] font-bold">
-            <Mail className="w-4 h-4 shrink-0" /><span>{t.simulatedDispatchLabel}</span>
-          </div>
-          <p className="text-xs">{t.emailsTriggeredLabel} <strong>{alertSuccessModal?.count}</strong> {t.invitedGuestsLabel}</p>
-          <p className="text-xs text-amber-800 font-bold">{t.bannerVisibleNote}</p>
-        </div>
-        <button onClick={() => setAlertSuccessModal(null)} className="btn-accent w-full py-3 text-xs">{t.doneReturnBtn}</button>
-      </Modal>
     </motion.div>
   );
 };
