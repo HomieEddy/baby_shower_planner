@@ -13,6 +13,7 @@ import {
   Trash2,
   Plus,
   Lock,
+  Mail,
   GripVertical,
 } from 'lucide-react';
 import {
@@ -39,6 +40,7 @@ import { parseToYmd, formatDateLong, parseTimeRange, formatTimeRangeString } fro
 import { THEME_PRESETS, getThemeById, applyThemeToDocument, getContrastTextColor, getCustomTheme, CUSTOM_THEME_ID, FONT_OPTIONS, DEFAULT_CUSTOM_THEME } from '../../themePresets';
 import { useToast } from '../shared/ToastContext';
 import { useTf } from '../shared/i18n';
+import { InvitationMessageModal } from './InvitationMessageModal';
 
 // ISO timestamp -> <TextInput type="datetime-local"> value (local time)
 function isoToLocalInput(iso: string): string {
@@ -147,6 +149,9 @@ export const AdminSettingsTab: React.FC<AdminSettingsTabProps> = ({ language, t,
   const [rsvpDeadline, setRsvpDeadline] = useState(settings?.rsvpDeadline ?? '');
   const [contentOpenAt, setContentOpenAt] = useState(settings?.contentOpenAt ? isoToLocalInput(settings.contentOpenAt) : '');
   const [contentCloseAt, setContentCloseAt] = useState(settings?.contentCloseAt ? isoToLocalInput(settings.contentCloseAt) : '');
+  const [invitationTemplateFr, setInvitationTemplateFr] = useState(settings?.invitationTemplateFr ?? '');
+  const [invitationTemplateEn, setInvitationTemplateEn] = useState(settings?.invitationTemplateEn ?? '');
+  const [invitationModalOpen, setInvitationModalOpen] = useState(false);
   const [showScheduleTime, setShowScheduleTime] = useState(settings?.showScheduleTime ?? true);
   const [selectedThemeId, setSelectedThemeId] = useState<string>(settings?.themeId || 'teddy-warmth');
   const [customTheme, setCustomTheme] = useState<CustomTheme>(settings?.customTheme ?? DEFAULT_CUSTOM_THEME);
@@ -215,6 +220,8 @@ export const AdminSettingsTab: React.FC<AdminSettingsTabProps> = ({ language, t,
         customTheme,
         contentOpenAt: contentOpenAt ? new Date(contentOpenAt).toISOString() : '',
         contentCloseAt: contentCloseAt ? new Date(contentCloseAt).toISOString() : '',
+        invitationTemplateFr,
+        invitationTemplateEn,
       });
       toast.love(t.settingsSavedToast);
     } catch (err) {
@@ -359,6 +366,22 @@ export const AdminSettingsTab: React.FC<AdminSettingsTabProps> = ({ language, t,
                 />
               </div>
             </div>
+          </div>
+
+          <div className="pt-6 border-t-2 border-[#CBAE94]/40 space-y-3">
+            <div>
+              <h4 className="font-sans text-xl font-bold text-[#8B735B] flex items-center gap-2">
+                <Mail className="w-5 h-5 text-[#8B735B]" />{t.inviteMessageLabel}
+              </h4>
+              <p className="text-xs text-[#5D5449] mt-0.5">{t.invitationMessageDesc}</p>
+            </div>
+            <button
+              type="button"
+              onClick={() => setInvitationModalOpen(true)}
+              className="inline-flex items-center gap-2 min-h-[44px] px-4 rounded-2xl border-2 border-[#CBAE94] text-xs font-bold text-[#5D5449] bg-white hover:bg-[#EFE6DC] transition-colors"
+            >
+              <Mail className="w-4 h-4 text-[#8B735B]" /> {t.editInvitationMessageBtn}
+            </button>
           </div>
 
           <div className="pt-6 border-t-2 border-[#CBAE94]/40 space-y-4">
@@ -515,6 +538,16 @@ export const AdminSettingsTab: React.FC<AdminSettingsTabProps> = ({ language, t,
           </div>
         </form>
       </motion.div>
+
+      <InvitationMessageModal
+        open={invitationModalOpen}
+        onClose={() => setInvitationModalOpen(false)}
+        settings={settings}
+        onSave={({ invitationTemplateFr: f, invitationTemplateEn: e }) => {
+          setInvitationTemplateFr(f);
+          setInvitationTemplateEn(e);
+        }}
+      />
     </motion.div>
   );
 };
