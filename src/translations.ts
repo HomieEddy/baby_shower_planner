@@ -439,8 +439,7 @@ export interface Translations {
   giftLoggedToast: string;
   giftRemovedToast: string;
   gratitudeTitle: string;
-  greenLegend: string;
-  greenLegendHint: string;
+  highlightedTablesHint: string;
   gridLabel: string;
   gridLayoutLabel: string;
   guestConfirmationBtn: string;
@@ -913,6 +912,7 @@ export interface Translations {
   roomPresetLarge: string;
   roomPresetGrand: string;
   expandRoomBtn: string;
+  expandRoomDiameterBtn: string;
   addTablesLabel: string;
   addVenueFeaturesLabel: string;
   entranceBtn: string;
@@ -1658,8 +1658,7 @@ export const translations: Record<Language, Translations> = {
     giftLoggedToast: "Gift logged into tracker!",
     giftRemovedToast: "Gift record removed.",
     gratitudeTitle: "Gratitude Management System",
-    greenLegend: "GREEN",
-    greenLegendHint: "on the floor plan. Click a green table to seat them!",
+    highlightedTablesHint: "Available tables with at least {{seats}} free seats are highlighted in GREEN on the floor plan. Click a green table to seat them!",
     gridLabel: "Grid",
     gridLayoutLabel: "Uniform Square Grid Layout",
     guestAddedGoingToast: "{{name}} added as going.",
@@ -2138,6 +2137,7 @@ export const translations: Record<Language, Translations> = {
     roomPresetLarge: "Large (1200×850)",
     roomPresetGrand: "Grand (1500×1000)",
     expandRoomBtn: "+ Expand Room (+200×150px)",
+    expandRoomDiameterBtn: "+ Expand Room (+150px Ø)",
     addTablesLabel: "Add Tables",
     addVenueFeaturesLabel: "Add Venue Features",
     entranceBtn: "Entrance",
@@ -2873,8 +2873,7 @@ export const translations: Record<Language, Translations> = {
     giftLoggedToast: "Cadeau enregistré !",
     giftRemovedToast: "Cadeau supprimé.",
     gratitudeTitle: "Système de gestion des remerciements",
-    greenLegend: "VERT",
-    greenLegendHint: "sur le plan. Cliquez sur une table verte pour les placer !",
+    highlightedTablesHint: "Les tables avec au moins {{seats}} places libres sont surlignées en VERT sur le plan. Cliquez sur une table verte pour les placer !",
     gridLabel: "Grille",
     gridLayoutLabel: "Grille carrée uniforme",
     guestAddedGoingToast: "{{name}} ajouté comme présent.",
@@ -3353,6 +3352,7 @@ export const translations: Record<Language, Translations> = {
     roomPresetLarge: "Grande (1200x850)",
     roomPresetGrand: "Tres grande (1500x1000)",
     expandRoomBtn: "+ Agrandir la salle (+200x150px)",
+    expandRoomDiameterBtn: "+ Agrandir la salle (+150 px Ø)",
     addTablesLabel: "Ajouter des tables",
     addVenueFeaturesLabel: "Ajouter des elements du lieu",
     entranceBtn: "Entree",

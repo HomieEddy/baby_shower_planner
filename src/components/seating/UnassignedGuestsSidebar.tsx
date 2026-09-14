@@ -94,7 +94,7 @@ export const UnassignedGuestsSidebar = ({
           </div>
 
           <p className="text-xs text-emerald-900 bg-emerald-100/70 p-2 rounded-xl border border-emerald-200 leading-snug">
-            <strong>{t.mapGuidanceLabel}</strong> Available tables with at least {pSize} free seats are highlighted in <strong className="text-emerald-700 font-extrabold">{t.greenLegend}</strong> {t.greenLegendHint}
+            <strong>{t.mapGuidanceLabel}</strong> {tf('highlightedTablesHint', { seats: String(pSize) })}
           </p>
 
           {/* Available Table Direct Seating Buttons */}
