@@ -118,12 +118,12 @@ export const EventDetailsCard = ({
   };
 
   return (
-    <motion.div variants={cardStagger} {...revealProps} className="relative mb-8 -mx-4 sm:mx-0">
+    <motion.div variants={cardStagger} {...revealProps} className="relative mb-8 -mx-4 sm:mx-0 sm:max-w-3xl sm:mx-auto">
       {/* Persistent arch frame — the inner content slides horizontally.
           Slide 1 = invitation details, slide 2 = schedule of the day. */}
       <motion.section
         variants={cardItem}
-        className="relative flex flex-col min-h-[calc(100vh-9.5rem)] sm:min-h-0 rounded-[36px] sm:rounded-[44px] px-2.5 sm:px-5 pt-9 sm:pt-12 pb-2.5 sm:pb-5 overflow-hidden"
+        className="relative flex flex-col rounded-[36px] sm:rounded-[44px] px-2.5 sm:px-5 pt-9 sm:pt-12 pb-2.5 sm:pb-5 overflow-hidden"
         style={{ background: 'linear-gradient(135deg, var(--surface) 0%, var(--surface-2) 55%, var(--bg-2) 100%)' }}
       >
         {/* dot texture, theme accent */}
@@ -245,13 +245,13 @@ export const EventDetailsCard = ({
                 {/* Date · time triple badge (centered) */}
                 {settings.date ? (
                   dateParts.month ? (
-                    <div className="w-full max-w-[360px] sm:max-w-[430px] flex items-center justify-between my-2 sm:my-3 pt-2">
-                      <div className="flex-1 py-1.5 text-center border-y-2" style={{ borderColor: 'var(--accent)' }}>
-                        <span className="text-base sm:text-lg font-bold tracking-wide" style={{ ...ink, ...headingFont }}>
+                    <div className="w-full max-w-[360px] sm:max-w-[430px] flex items-center justify-between gap-1 sm:gap-0 my-2 sm:my-3 pt-2">
+                      <div className="flex-1 min-w-0 py-1.5 text-center border-y-2" style={{ borderColor: 'var(--accent)' }}>
+                        <span className="block text-sm sm:text-lg font-bold tracking-wide truncate" style={{ ...ink, ...headingFont }}>
                           {dateParts.weekday}
                         </span>
                       </div>
-                      <div className="px-3 sm:px-5 flex flex-col items-center justify-center min-w-[74px]">
+                      <div className="px-3 sm:px-5 flex flex-col items-center justify-center min-w-[64px] sm:min-w-[74px] shrink-0">
                         <span className="text-sm sm:text-base font-bold uppercase tracking-widest" style={{ ...ink, ...headingFont, opacity: 0.7 }}>
                           {dateParts.month}
                         </span>
@@ -262,8 +262,8 @@ export const EventDetailsCard = ({
                           {dateParts.year}
                         </span>
                       </div>
-                      <div className="flex-1 py-1.5 text-center border-y-2" style={{ borderColor: 'var(--accent)' }}>
-                        <span className="text-base sm:text-lg font-bold tracking-wide whitespace-nowrap" style={{ ...ink, ...headingFont }}>
+                      <div className="flex-1 min-w-0 py-1.5 text-center border-y-2" style={{ borderColor: 'var(--accent)' }}>
+                        <span className="block text-sm sm:text-lg font-bold tracking-wide whitespace-nowrap truncate" style={{ ...ink, ...headingFont }}>
                           {startTimeOnly}
                         </span>
                       </div>
