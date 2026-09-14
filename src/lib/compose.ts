@@ -37,6 +37,9 @@ export interface MessageContent {
   code?: string;
   codeLine?: string;
   gift?: string;
+  /** Full plain-text body (host-editable template) — used by email instead of
+   *  the structured blocks. SMS ignores it and stays concise. */
+  body?: string;
   paragraphs: string[];
   closing?: string;
   footer?: string;
@@ -118,6 +121,26 @@ function invitationSubject(settings: Partial<EventSettings>, language: Language)
   return `Vous êtes invité${host ? ` au baby shower de ${host}` : ' au baby shower'} !`;
 }
 
+function guestCodeLine(code: string, language: Language): string {
+  return isEN(language)
+    ? `Your reservation code: ${code}\nIt will let you find your table at the event.`
+    : `Votre code de réservation : ${code}\nIl vous permettra de retrouver votre table lors de l'événement.`;
+}
+
+// One invitation message for both flows: the host-editable template (or the
+// shipped default) with the recipient's link + per-guest tokens filled in.
+function renderGuestInvitation(guest: Guest, settings: Partial<EventSettings>, language: Language): string {
+  const stored = language === 'EN' ? settings.invitationTemplateEn : settings.invitationTemplateFr;
+  const template = resolveInvitationTemplate(stored, language);
+  const text = renderInvitationTemplate(
+    template,
+    invitationTemplateValues(settings, language, rsvpUrl(guest.magic_token), { guestName: guest.name, code: guest.code })
+  );
+  // Keep the reservation code unless the template already places it.
+  const hasCodeToken = /\{\{\s*code\s*\}\}/.test(template);
+  return !hasCodeToken && guest.code ? `${text}\n\n${guestCodeLine(guest.code, language)}` : text;
+}
+
 // ─── Composers ─────────────────────────────────────────────────────
 
 // Personal invitation for a host-added guest: straight to their RSVP link.
@@ -138,9 +161,8 @@ export function composeInvitation(guest: Guest, settings: Partial<EventSettings>
     cta: isEN(lang) ? 'RSVP Now' : 'Répondre',
     confirmBlock: confirmBlock(settings, lang, link, 'rsvp'),
     code: guest.code,
-    codeLine: isEN(lang)
-      ? `Your reservation code: ${guest.code}\nIt will let you find your table at the event.`
-      : `Votre code de réservation : ${guest.code}\nIl vous permettra de retrouver votre table lors de l'événement.`,
+    codeLine: guestCodeLine(guest.code, lang),
+    body: renderGuestInvitation(guest, settings, lang),
     gift: giftBlock(settings, lang),
     paragraphs: [],
     closing: closingBlock(settings, lang),
@@ -264,6 +286,7 @@ export function renderSms(content: MessageContent): string {
 // Shared email HTML shell. One template for every kind; only the content varies.
 export function renderEmailHtml(content: MessageContent): string {
   const fr = !isEN(content.language);
+  const escapeHtml = (s: string) => s.replace(/[&<>]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' }[c] as string));
   const greet = content.greetingName ? (fr ? `Bonjour ${content.greetingName},` : `Dear ${content.greetingName},`) : '';
   const rowsHtml = content.rows
     .map((r) => `<tr><td style="padding: 4px 0; color: #8B735B;${r === content.rows[0] ? ' width: 70px;' : ''}">${r.label}</td><td style="padding: 4px 0;"><strong>${r.value}</strong></td></tr>`)
@@ -292,13 +315,15 @@ export function renderEmailHtml(content: MessageContent): string {
       </div>` : ''}
       <div style="background: white; border-radius: 16px; padding: 24px; border: 1px solid #E8E0D4;">
         ${greet ? `<p style="font-size: 16px; margin: 0 0 16px;">${greet}</p>` : ''}
-        ${content.intro ? `<p style="font-size: 14px; line-height: 1.6; color: #5D5449;">${content.intro}</p>` : ''}
+        ${content.body
+          ? `<div style="white-space: pre-wrap; font-size: 13px; line-height: 1.6; color: #5D5449;">${escapeHtml(content.body)}</div>`
+          : `${content.intro ? `<p style="font-size: 14px; line-height: 1.6; color: #5D5449;">${content.intro}</p>` : ''}
         ${rowsHtml ? `<table style="width: 100%; margin: 16px 0; font-size: 13px;">${rowsHtml}</table>` : ''}
         ${deadlineHtml}
-        ${paragraphsHtml}
+        ${paragraphsHtml}`}
         ${buttonHtml}
         ${codeHtml}
-        ${linkHtml}
+        ${content.body ? '' : linkHtml}
       </div>
       <div style="text-align: center; margin-top: 16px; font-size: 11px; color: #A09080;">${content.footer || content.closing || ''}</div>
     </div>`;
@@ -306,7 +331,7 @@ export function renderEmailHtml(content: MessageContent): string {
 
 // Back-compat text builders (clipboard / universal host message).
 export const buildInviteMessage = (guest: Guest, settings: Partial<EventSettings>, language: Language = 'FR'): string =>
-  renderText(composeInvitation(guest, settings, language));
+  renderGuestInvitation(guest, settings, language);
 
 // The self-serve invitation is host-editable: a stored template (per language)
 // wins, otherwise the shipped default. Both are plain text with {{token}}s.

@@ -58,8 +58,12 @@ export const InvitationMessageModal = ({ open, onClose, settings, onSave }: Invi
   };
 
   const registerLink = `${window.location.origin}/register`;
-  const preview = renderInvitationTemplate(current, invitationTemplateValues(settings ?? {}, lang, registerLink));
-  const missingLink = !/\{\{\s*registerLink\s*\}\}/.test(current);
+  const preview = renderInvitationTemplate(
+    current,
+    // Sample a guest name + code so the per-guest tokens render in the preview.
+    invitationTemplateValues(settings ?? {}, lang, registerLink, { guestName: 'Marie', code: '1234' })
+  );
+  const missingLink = !/\{\{\s*(registerLink|rsvpLink)\s*\}\}/.test(current);
 
   return (
     <Modal
