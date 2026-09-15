@@ -3,6 +3,7 @@ import { motion } from 'motion/react';
 import { Guest, FloorMapData } from '../../types';
 import { Utensils, Printer, AlertTriangle, CheckCircle2, Users, FileSpreadsheet, ArrowUpDown, ChevronUp, ChevronDown, BarChart3 } from 'lucide-react';
 import { useToast } from '../shared/ToastContext';
+import { useActionConfirm } from '../shared/ConfirmDialog';
 import { useT, useTf } from '../shared/i18n';
 import { usePrint } from '../shared/hooks';
 import { SearchInput } from '../shared/ui';
@@ -49,6 +50,7 @@ export const CateringSummaryView: React.FC<CateringSummaryViewProps> = ({ guests
     const t = useT();
     const tf = useTf();
   const { toast } = useToast();
+  const confirmAction = useActionConfirm();
   const [searchTerm, setSearchTerm] = useState('');
   const [filterDietaryOnly, setFilterDietaryOnly] = useState(false);
   const [sorting, setSorting] = useState<SortingState>([]);
@@ -247,11 +249,12 @@ export const CateringSummaryView: React.FC<CateringSummaryViewProps> = ({ guests
     getSortedRowModel: getSortedRowModel(),
   });
 
-  const handleExportCsv = () => {
+  const handleExportCsv = async () => {
     if (attendingGuests.length === 0) {
       toast.error(t.cateringNoExportToast);
       return;
     }
+    if (!(await confirmAction(t.exportCateringBtn))) return;
 
     const headers = ['Individual Guest', 'Group / Party', 'Reservation Code', 'Attending Party Size', 'Dietary Restrictions & Allergies', 'Table', 'Seat', 'Contact Email', 'Contact Phone'];
     const esc = csvCell;
