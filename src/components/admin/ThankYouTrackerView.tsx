@@ -13,6 +13,8 @@ import { Field, TextInput, Select, SearchInput, TextArea } from '../shared/ui';
 import { MetricCard } from '../shared/MetricCard';
 import { Segmented } from '../shared/Segmented';
 import { IconButton } from '../shared/IconButton';
+import { Pagination } from '../shared/Pagination';
+import { usePagination } from '../shared/hooks';
 import { AdminToolbar } from './AdminToolbar';
 import { adminContainerVariants } from '../shared/motionPresets';
 import { GiftLogSchema } from '../../lib/validation';
@@ -202,6 +204,8 @@ export const ThankYouTrackerView: React.FC<ThankYouTrackerViewProps> = ({
     if (filterStatus === 'SENT') return matchesSearch && g.thank_you_sent;
     return matchesSearch;
   });
+
+  const giftsPager = usePagination(filteredGifts);
 
   const totalGifts = gifts.length;
   const sentCount = gifts.filter((g) => g.thank_you_sent).length;
@@ -400,7 +404,7 @@ export const ThankYouTrackerView: React.FC<ThankYouTrackerViewProps> = ({
           />
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {filteredGifts.map((gift) => (
+            {giftsPager.pageItems.map((gift) => (
               <div
                 key={gift.id}
                 className={`p-4 rounded-2xl border transition-all flex flex-col justify-between gap-3 ${
@@ -475,6 +479,15 @@ export const ThankYouTrackerView: React.FC<ThankYouTrackerViewProps> = ({
             ))}
           </div>
         )}
+
+        <Pagination
+          page={giftsPager.page}
+          totalPages={giftsPager.totalPages}
+          rangeStart={giftsPager.rangeStart}
+          rangeEnd={giftsPager.rangeEnd}
+          total={giftsPager.total}
+          onPageChange={giftsPager.setPage}
+        />
       </div>
 
       {/* Auto-Draft Modal */}

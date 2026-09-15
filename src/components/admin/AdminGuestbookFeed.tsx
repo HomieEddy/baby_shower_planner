@@ -9,6 +9,8 @@ import { useConfirm, useActionConfirm } from '../shared/ConfirmDialog';
 import { SearchInput } from '../shared/ui';
 import { Segmented } from '../shared/Segmented';
 import { IconButton } from '../shared/IconButton';
+import { Pagination } from '../shared/Pagination';
+import { usePagination } from '../shared/hooks';
 import { AdminToolbar } from './AdminToolbar';
 import { adminFetch } from '../../lib/api';
 
@@ -33,6 +35,8 @@ export const AdminGuestbookFeed = ({ entries, onRefresh }: { entries: GuestbookE
       return matchesSearch && matchesVisibility;
     });
   }, [entries, searchTerm, visibilityFilter]);
+
+  const entriesPager = usePagination(filteredEntries);
 
   const handleToggleVisibility = async (entry: GuestbookEntry) => {
     const label = entry.visible === false ? t.moderationShowBtn : t.moderationHideBtn;
@@ -123,7 +127,7 @@ export const AdminGuestbookFeed = ({ entries, onRefresh }: { entries: GuestbookE
           <p className="text-center py-10 text-[#A09080] font-mono text-xs">{t.noSearchMatch}</p>
         ) : (
           <motion.div variants={adminContainerVariants} className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {filteredEntries.map((entry) => (
+            {entriesPager.pageItems.map((entry) => (
               <motion.div
                 key={entry.id}
                 variants={adminCardVariants}
@@ -188,6 +192,15 @@ export const AdminGuestbookFeed = ({ entries, onRefresh }: { entries: GuestbookE
             ))}
           </motion.div>
         )}
+
+        <Pagination
+          page={entriesPager.page}
+          totalPages={entriesPager.totalPages}
+          rangeStart={entriesPager.rangeStart}
+          rangeEnd={entriesPager.rangeEnd}
+          total={entriesPager.total}
+          onPageChange={entriesPager.setPage}
+        />
       </motion.div>
     </motion.div>
   );

@@ -10,6 +10,8 @@ import { useT, useTf, useApiErrorMessage } from '../shared/i18n';
 import { decodeApiError } from '../../lib/errors';
 import { SearchInput } from '../shared/ui';
 import { MetricCard } from '../shared/MetricCard';
+import { Pagination } from '../shared/Pagination';
+import { usePagination } from '../shared/hooks';
 import { adminContainerVariants } from '../shared/motionPresets';
 
 export const GuestCheckIn = () => {
@@ -88,6 +90,8 @@ export const GuestCheckIn = () => {
     (g.email || '').toLowerCase().includes(search.toLowerCase())
   );
 
+  const pager = usePagination(filtered);
+
   const notYet = Math.max(0, stats.expected - stats.checkedIn);
 
   return (
@@ -113,7 +117,7 @@ export const GuestCheckIn = () => {
         <div className="text-center py-8 text-[#A09080]">{t.loadingLabel}</div>
       ) : (
         <div className="space-y-2">
-          {filtered.map(guest => {
+          {pager.pageItems.map(guest => {
             const members = getPartyMembers(guest);
             const checkedCount = members.filter(m => isMemberCheckedIn(guest, m)).length;
             const anyChecked = checkedCount > 0;
@@ -251,6 +255,15 @@ export const GuestCheckIn = () => {
           )}
         </div>
       )}
+
+      <Pagination
+        page={pager.page}
+        totalPages={pager.totalPages}
+        rangeStart={pager.rangeStart}
+        rangeEnd={pager.rangeEnd}
+        total={pager.total}
+        onPageChange={pager.setPage}
+      />
     </motion.div>
   );
 };

@@ -14,6 +14,8 @@ import { adminFetch } from '../../lib/api';
 import { TextInput, TextArea } from '../shared/ui';
 import { Segmented } from '../shared/Segmented';
 import { IconButton } from '../shared/IconButton';
+import { Pagination } from '../shared/Pagination';
+import { usePagination } from '../shared/hooks';
 import { formatDateLong } from '../../lib/dateUtils';
 import { useToast } from '../shared/ToastContext';
 import { useActionConfirm } from '../shared/ConfirmDialog';
@@ -39,6 +41,8 @@ export const AdminAlertsTab: React.FC<AdminAlertsTabProps> = ({ language, t, gue
   const [alertTitle, setAlertTitle] = useState('RSVP Reminder: Baby Shower');
   const [alertMessage, setAlertMessage] = useState('Friendly reminder! We haven\'t received your RSVP yet for our baby shower. Please click below to confirm if you will be able to join us!');
   const [dispatchingAlert, setDispatchingAlert] = useState(false);
+
+  const alertsPager = usePagination(alerts);
 
   const recipients = guests.filter((g) => {
     if (g.rsvp_status === 'Declined') return false;
@@ -203,7 +207,7 @@ export const AdminAlertsTab: React.FC<AdminAlertsTabProps> = ({ language, t, gue
           <p className="text-xs text-[#5D5449] italic font-mono bg-[#EFE6DC]/40 p-4 rounded-2xl border border-dashed border-[#CBAE94] text-center">{t.noAlertsYetMsg}</p>
         ) : (
           <div className="space-y-3">
-            {alerts.map((alt) => (
+            {alertsPager.pageItems.map((alt) => (
               <div key={alt.id}
                 className={`p-4 rounded-2xl border-2 flex flex-col sm:flex-row sm:items-center justify-between gap-4 ${alt.type === 'CANCELLATION' ? 'bg-rose-50 border-rose-300 text-rose-950' : alt.type === 'REMINDER' ? 'bg-amber-50 border-amber-300 text-amber-950' : 'bg-[#F8F5F0] border-[#CBAE94] text-[#5D5449]'}`}>
                 <div className="space-y-1">
@@ -222,6 +226,15 @@ export const AdminAlertsTab: React.FC<AdminAlertsTabProps> = ({ language, t, gue
             ))}
           </div>
         )}
+
+        <Pagination
+          page={alertsPager.page}
+          totalPages={alertsPager.totalPages}
+          rangeStart={alertsPager.rangeStart}
+          rangeEnd={alertsPager.rangeEnd}
+          total={alertsPager.total}
+          onPageChange={alertsPager.setPage}
+        />
       </motion.div>
     </motion.div>
   );
