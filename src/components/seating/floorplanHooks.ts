@@ -365,8 +365,10 @@ export function useFloorPlanEditor({ floorMap, guests, notify, onSave, onCancel 
   };
 
   const handleSaveChanges = async () => {
+    // On success the parent closes the editor (draft unmounts). On a cancelled
+    // or failed save the draft must stay dirty so the discard guard still fires —
+    // never clear the flag here.
     await onSave(draftFloorMap, draftGuests);
-    setIsDirty(false);
   };
 
   const handleCancelEditor = () => {

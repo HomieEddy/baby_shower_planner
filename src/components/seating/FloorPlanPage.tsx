@@ -16,6 +16,7 @@ import { Segmented } from '../shared/Segmented';
 import { motion, AnimatePresence } from 'motion/react';
 import { Modal } from '../shared/Modal';
 import { useActionConfirm } from '../shared/ConfirmDialog';
+import { useToast } from '../shared/ToastContext';
 import { useSettings } from '../../lib/settingsQuery';
 import {
   Stage,
@@ -69,6 +70,7 @@ export const FloorPlanPage = () => {
   const t = useT();
   const tf = useTf();
   const confirmAction = useActionConfirm();
+  const { toast } = useToast();
   const { data: caps } = useCapabilities();
   const sendsBlocked = noProviders(caps);
 
@@ -109,19 +111,20 @@ export const FloorPlanPage = () => {
 
   // Save Floor Map to Backend
   const saveFloorMap = async (newMapData: FloorMapData) => {
+    setSaving(true);
     try {
-      setSaving(true);
       const res = await adminFetch('/api/floorplan', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(newMapData),
       });
-      const data = await res.json();
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        throw new Error(data.message || data.error || `Save failed (${res.status})`);
+      }
       if (data.floorMap) {
         setFloorMap(data.floorMap);
       }
-    } catch (err) {
-      console.error('Error saving floor map:', err);
     } finally {
       setSaving(false);
     }
@@ -495,7 +498,16 @@ export const FloorPlanPage = () => {
   // Save Full Screen Editor Draft Changes
   const handleSaveEditorChanges = async (map: FloorMapData, editedGuests: Guest[]) => {
     if (!(await confirmAction(t.btnSaveChanges))) return;
-    await saveFloorMap(map);
+    try {
+      await saveFloorMap(map);
+    } catch (err) {
+      // Keep the editor + draft open: a failed save must not look successful.
+      // The in-page notification sits under the full-screen editor, so use the
+      // global toast (z-[9999]) that stays visible above it.
+      console.error('Error saving floor map:', err);
+      toast.error(t.fpSaveFailedToast);
+      return;
+    }
     setGuests(editedGuests);
     setIsEditorModalOpen(false);
     setNotification(t.fpSavedToast);

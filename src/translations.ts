@@ -381,6 +381,7 @@ export interface Translations {
   fpRedidToast: string;
   fpRoomSizeToast: string;
   fpSavedToast: string;
+  fpSaveFailedToast: string;
   fpSeatedToast: string;
   fpSelectSuggestionToast: string;
   fpTableAddedToast: string;
@@ -1621,6 +1622,7 @@ export const translations: Record<Language, Translations> = {
     fpRedidToast: "↪ Redid seating change",
     fpRoomSizeToast: "Room dimensions set to {{width}} × {{height}} px",
     fpSavedToast: "Floor plan changes saved successfully!",
+    fpSaveFailedToast: "Could not save the floor plan. Your changes are still here — please try again.",
     fpSeatedToast: "Seated {{guest}} (Party of {{size}}) at {{table}}",
     fpSelectSuggestionToast: "Please select at least one suggestion to apply",
     fpTableAddedToast: "Added {{name}}",
@@ -2857,6 +2859,7 @@ export const translations: Record<Language, Translations> = {
     fpRedidToast: "↪ Changement de placement rétabli",
     fpRoomSizeToast: "Dimensions de la salle : {{width}} × {{height}} px",
     fpSavedToast: "Modifications du plan enregistrées !",
+    fpSaveFailedToast: "Impossible d'enregistrer le plan. Vos modifications sont conservées — veuillez réessayer.",
     fpSeatedToast: "{{guest}} (groupe de {{size}}) placé(e) à {{table}}",
     fpSelectSuggestionToast: "Veuillez sélectionner au moins une suggestion",
     fpTableAddedToast: "{{name}} ajoutée",
