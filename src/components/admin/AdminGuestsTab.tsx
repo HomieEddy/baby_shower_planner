@@ -184,7 +184,7 @@ export const AdminGuestsTab: React.FC<AdminGuestsTabProps> = ({ language, t, gue
                 <motion.button whileTap={{ scale: 0.98 }} type="submit" disabled={submittingGuest}
                   className="btn-accent w-full py-2.5 px-6 text-sm disabled:opacity-50">
                   <Send className="w-4 h-4 mr-2" />
-                  <span>{submittingGuest ? t.sendingInviteBtn : markGoing ? t.createInviteBtn : t.sendInviteBtn}</span>
+                  <span>{submittingGuest ? t.sendingInviteBtn : markGoing || deliveryChannel === 'none' ? t.createInviteBtn : t.sendInviteBtn}</span>
                 </motion.button>
               </div>
             </div>
@@ -221,17 +221,17 @@ export const AdminGuestsTab: React.FC<AdminGuestsTabProps> = ({ language, t, gue
                   <button
                     type="button"
                     onClick={() => handleApproval(g, 'approve')}
-                    className="px-3 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold inline-flex items-center gap-1.5 transition-colors"
+                    className="px-4 min-h-[44px] rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold inline-flex items-center gap-1.5 transition-colors cursor-pointer"
                   >
-                    <CheckCircle2 className="w-3.5 h-3.5" />
+                    <CheckCircle2 className="w-4 h-4" />
                     <span>{t.approveBtn}</span>
                   </button>
                   <button
                     type="button"
                     onClick={() => handleApproval(g, 'reject')}
-                    className="px-3 py-1.5 rounded-xl border border-rose-300 bg-rose-50 hover:bg-rose-100 text-rose-700 text-xs font-bold inline-flex items-center gap-1.5 transition-colors"
+                    className="px-4 min-h-[44px] rounded-xl border border-rose-300 bg-rose-50 hover:bg-rose-100 text-rose-700 text-xs font-bold inline-flex items-center gap-1.5 transition-colors cursor-pointer"
                   >
-                    <XCircle className="w-3.5 h-3.5" />
+                    <XCircle className="w-4 h-4" />
                     <span>{t.rejectBtn}</span>
                   </button>
                 </div>
@@ -486,6 +486,7 @@ export const AdminGuestsTab: React.FC<AdminGuestsTabProps> = ({ language, t, gue
         onEdit={handleOpenEditGuest}
         onDelete={handleDeleteGuest}
         onRemoveAttendee={handleRemoveAttendee}
+        onApproval={handleApproval}
       />
     </motion.div>
   );
