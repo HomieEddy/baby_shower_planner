@@ -11,6 +11,7 @@ import { useAppStore } from '../../stores/appStore';
 import { useT } from '../shared/i18n';
 import { cardStagger, cardItem, fadeUp } from '../shared/motionPresets';
 import { parseToYmd, parseTimeRange, formatTimeRangeString } from '../../lib/dateUtils';
+import { formatScheduleTime } from '../../lib/schedule';
 import {
   WatercolorBow,
   FloatingTeddyBalloons,
@@ -377,7 +378,7 @@ export const EventDetailsCard = ({
                               <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
                                 {showTime && item.time ? (
                                   <span className="px-2 py-0.5 rounded-md bg-[#EFE6DC] border border-[#CBAE94]/40 text-[#8B735B] font-mono font-bold text-xs">
-                                    {item.time}
+                                    {formatScheduleTime(item.time, language)}
                                   </span>
                                 ) : null}
                                 <h4 className="font-bold text-[#4A3F35] text-base sm:text-lg font-sans">{title}</h4>
