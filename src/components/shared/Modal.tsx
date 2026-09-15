@@ -26,6 +26,8 @@ interface ModalProps {
   panelClassName?: string;
   /** Extra classes on the scrollable content area. */
   contentClassName?: string;
+  /** Fires once the close/exit animation has finished and the modal is gone. */
+  onExitComplete?: () => void;
 }
 
 const WIDTHS: Record<NonNullable<ModalProps['maxWidth']>, string> = {
@@ -49,6 +51,7 @@ export const Modal = ({
   wrapperClassName = '',
   panelClassName = '',
   contentClassName = '',
+  onExitComplete,
 }: ModalProps) => {
   const t = useT();
   const panelRef = useRef<HTMLDivElement>(null);
@@ -57,7 +60,7 @@ export const Modal = ({
   useDialogA11y(open, panelRef, onClose, dismissible);
 
   return (
-    <AnimatePresence>
+    <AnimatePresence onExitComplete={onExitComplete}>
       {open && (
         <div className={`fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/50 backdrop-blur-sm ${wrapperClassName}`}>
           {dismissible && (

@@ -1,4 +1,4 @@
-import { createContext, useCallback, useContext, useState, ReactNode } from 'react';
+import { createContext, useCallback, useContext, useRef, useState, ReactNode } from 'react';
 import { AlertTriangle } from 'lucide-react';
 import { Modal } from './Modal';
 import { useT, useTf } from './i18n';
@@ -11,6 +11,8 @@ export interface ConfirmOptions {
   variant?: 'danger' | 'warning';
   /** When set, the user must type this word before the confirm button enables. */
   requireText?: string;
+  /** Optional extra controls rendered inside the dialog body (e.g. a picker). */
+  children?: ReactNode;
 }
 
 interface ConfirmState extends ConfirmOptions {
@@ -26,6 +28,9 @@ export const ConfirmProvider = ({ children }: { children: ReactNode }) => {
   const tf = useTf();
   const [state, setState] = useState<ConfirmState | null>(null);
   const [typed, setTyped] = useState('');
+  // The caller's promise resolves only after the modal's exit animation is
+  // done, so a follow-up success toast never appears while the modal is open.
+  const pendingResolve = useRef<(() => void) | null>(null);
 
   const confirm = useCallback((options: ConfirmOptions) => {
     return new Promise<boolean>((resolve) => {
@@ -35,8 +40,14 @@ export const ConfirmProvider = ({ children }: { children: ReactNode }) => {
   }, []);
 
   const close = (value: boolean) => {
-    state?.resolve(value);
+    if (!state) return;
+    pendingResolve.current = () => state.resolve(value);
     setState(null);
+  };
+
+  const handleExitComplete = () => {
+    pendingResolve.current?.();
+    pendingResolve.current = null;
   };
 
   const isDanger = state?.variant === 'danger';
@@ -49,6 +60,7 @@ export const ConfirmProvider = ({ children }: { children: ReactNode }) => {
       <Modal
         open={!!state}
         onClose={() => close(false)}
+        onExitComplete={handleExitComplete}
         maxWidth="md"
         ariaLabel={state?.title}
         footer={
@@ -88,6 +100,7 @@ export const ConfirmProvider = ({ children }: { children: ReactNode }) => {
           </div>
         )}
         <p className="text-xs sm:text-sm text-[#5D5449] leading-relaxed">{state?.message}</p>
+        {state?.children}
         {requireText && (
           <div className="mt-4 space-y-1.5">
             <label className="label-mono block text-xs font-bold">
@@ -109,3 +122,20 @@ export const ConfirmProvider = ({ children }: { children: ReactNode }) => {
 };
 
 export const useConfirm = () => useContext(ConfirmContext);
+
+// Shared "gate then act" confirmation for ordinary (non-destructive) actions:
+// the action's own label becomes the title and the body is a generic prompt.
+export function useActionConfirm() {
+  const confirm = useConfirm();
+  const t = useT();
+  return useCallback(
+    (actionLabel: string, options?: Partial<ConfirmOptions>) =>
+      confirm({
+        title: actionLabel,
+        message: t.confirmActionMsg,
+        variant: 'warning',
+        ...options,
+      }),
+    [confirm, t]
+  );
+}
