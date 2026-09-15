@@ -1203,7 +1203,6 @@ export interface Translations {
   PARTY_TOO_LARGE: string;
   RATE_LIMITED: string;
   GUEST_DECLINED: string;
-  DECLINED: string;
   NOT_IN_PARTY: string;
   ONLY_LEAD: string;
   ATTENDEE_NOT_FOUND: string;
@@ -2429,7 +2428,6 @@ export const translations: Record<Language, Translations> = {
     PARTY_TOO_LARGE: "Party size cannot exceed 20",
     RATE_LIMITED: "Too many requests. Try again later.",
     GUEST_DECLINED: "This guest declined the invitation.",
-    DECLINED: "This guest declined the invitation.",
     NOT_IN_PARTY: "Name is not part of this party.",
     ONLY_LEAD: "Only the party lead can do that",
     ATTENDEE_NOT_FOUND: "Attendee not found in this party.",
@@ -3653,7 +3651,6 @@ export const translations: Record<Language, Translations> = {
     PARTY_TOO_LARGE: "La taille du groupe ne peut pas dépasser 20",
     RATE_LIMITED: "Trop de requêtes. Réessayez plus tard.",
     GUEST_DECLINED: "Cet invité a refusé l'invitation.",
-    DECLINED: "Cet invité a refusé l'invitation.",
     NOT_IN_PARTY: "Ce nom ne fait pas partie de ce groupe.",
     ONLY_LEAD: "Seul le responsable du groupe peut le faire",
     ATTENDEE_NOT_FOUND: "Personne introuvable dans ce groupe.",

@@ -1,4 +1,10 @@
-import { HoverTooltip as HoverTooltipData } from './FloorPlanEditor';
+export interface HoverTooltipData {
+  title: string;
+  subtitle?: string;
+  details: string[];
+  x: number;
+  y: number;
+}
 
 export const HoverTooltip = ({ tooltip }: { tooltip: HoverTooltipData }) => (
   <div

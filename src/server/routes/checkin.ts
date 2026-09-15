@@ -1,8 +1,7 @@
 // Check-in: admin (by guest id) and public self-service (token or code+name).
 
 import type { RouteCtx } from '../http';
-import { parseJson, sendJson } from '../http';
-import { errorMessage, errorStatus } from '../../lib/errors';
+import { parseJson, sendError, sendJson } from '../http';
 import { checkInGuest, getCheckInStats, selfCheckIn, undoCheckIn } from '../../db/service';
 
 export async function handleCheckInRoutes(ctx: RouteCtx): Promise<boolean> {
@@ -13,7 +12,7 @@ export async function handleCheckInRoutes(ctx: RouteCtx): Promise<boolean> {
   if (pathname === '/api/check-in' && method === 'POST') {
     requireAdmin();
     const body = await parseJson(req);
-    if (!body.guestId) return sendJson(res, 400, { error: 'guestId is required' });
+    if (!body.guestId) return sendError(res, 'GUEST_ID_REQUIRED');
     // body.name: check in one party member; omitted = whole party
     // GUEST_DECLINED / NOT_IN_PARTY propagate as DomainError.
     const guest = await checkInGuest(body.guestId, body.name);
@@ -23,7 +22,7 @@ export async function handleCheckInRoutes(ctx: RouteCtx): Promise<boolean> {
   if (pathname === '/api/check-in/undo' && method === 'POST') {
     requireAdmin();
     const body = await parseJson(req);
-    if (!body.guestId) return sendJson(res, 400, { error: 'guestId is required' });
+    if (!body.guestId) return sendError(res, 'GUEST_ID_REQUIRED');
     const guest = await undoCheckIn(body.guestId, body.name);
     return sendJson(res, 200, { guest });
   }
@@ -48,7 +47,7 @@ export async function handleCheckInRoutes(ctx: RouteCtx): Promise<boolean> {
       undo: !!body.undo,
     });
     if (!result.ok) {
-      return sendJson(res, errorStatus(result.error), { error: result.error, message: errorMessage(result.error) });
+      return sendError(res, result.error);
     }
     return sendJson(res, 200, { guest: result.guest });
   }

@@ -1,7 +1,7 @@
 // Host agenda/planner: task CRUD, kanban reorder, test-reminder.
 
 import type { RouteCtx } from '../http';
-import { parseJson, sendJson } from '../http';
+import { parseJson, sendError, sendJson } from '../http';
 import { AgendaReorderSchema, AgendaTaskSchema } from '../../lib/validation';
 import { composeAgenda } from '../../lib/compose';
 import type { AgendaTask } from '../../types';
@@ -29,7 +29,7 @@ export async function handleAgendaRoutes(ctx: RouteCtx): Promise<boolean> {
       const body = await parseJson(req);
       const validation = AgendaTaskSchema.safeParse(body);
       if (!validation.success) {
-        return sendJson(res, 400, { error: validation.error.issues[0]?.message || 'Invalid task payload' });
+        return sendError(res, 'INVALID_PAYLOAD', validation.error.issues[0]?.message);
       }
       const task = await addAgendaTask(validation.data);
       return sendJson(res, 200, { success: true, task });
@@ -41,7 +41,7 @@ export async function handleAgendaRoutes(ctx: RouteCtx): Promise<boolean> {
     const body = await parseJson(req);
     const validation = AgendaReorderSchema.safeParse(body.items);
     if (!validation.success) {
-      return sendJson(res, 400, { error: 'Invalid reorder payload' });
+      return sendError(res, 'INVALID_PAYLOAD', 'Invalid reorder payload');
     }
     await reorderAgendaTasks(validation.data);
     return sendJson(res, 200, { success: true });
@@ -76,7 +76,7 @@ export async function handleAgendaRoutes(ctx: RouteCtx): Promise<boolean> {
       const body = await parseJson(req);
       const validation = AgendaTaskSchema.partial().safeParse(body);
       if (!validation.success) {
-        return sendJson(res, 400, { error: validation.error.issues[0]?.message || 'Invalid task payload' });
+        return sendError(res, 'INVALID_PAYLOAD', validation.error.issues[0]?.message);
       }
       const task = await updateAgendaTask(id, validation.data);
       return sendJson(res, 200, { success: true, task });

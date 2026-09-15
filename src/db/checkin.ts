@@ -86,7 +86,7 @@ export async function getCheckInStats(): Promise<{ total: number; checkedIn: num
 
 export type SelfCheckInResult =
   | { ok: true; guest: Guest }
-  | { ok: false; error: 'INVALID_TOKEN' | 'NOT_FOUND' | 'NOT_IN_PARTY' | 'ONLY_LEAD' | 'DECLINED' };
+  | { ok: false; error: 'INVALID_TOKEN' | 'NOT_FOUND' | 'NOT_IN_PARTY' | 'ONLY_LEAD' | 'GUEST_DECLINED' };
 
 // Check in / undo one party member (targetName) or the whole party (all).
 // With a magic token the caller is the party lead and may act for anyone;
@@ -118,7 +118,7 @@ export async function selfCheckIn(opts: {
   }
 
   const guest = fromRecord<Guest>(record);
-  if (guest.rsvp_status === 'Declined') return { ok: false, error: 'DECLINED' };
+  if (guest.rsvp_status === 'Declined') return { ok: false, error: 'GUEST_DECLINED' };
   const identified = name?.trim() || guest.name;
   const isLead = isPartyLead(guest, identified);
   const scrub = (g: Guest) => (token ? scrubForGuestLookup(g) : scrubForRoster(g));

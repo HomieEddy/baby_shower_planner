@@ -1,10 +1,10 @@
 // RSVP submission, self-service contact updates and guest-to-guest invites.
 
-import type { Guest, GuestInvite, GuestInviteView, SubmitRsvpPayload, EventSettings, Language } from '../types';
+import type { Guest, GuestInvite, GuestInviteView, SubmitRsvpPayload, Language } from '../types';
 import {
   escFilter, fromRecord, pb, removeGuestFromFloorMaps,
 } from './client';
-import { getSettings } from './settings';
+import { getSettings, getSettingsOrDefaults } from './settings';
 import { isRehearsalActive } from './rehearsal';
 import { getGuestById, getGuestByToken, isApproved } from './guests';
 import { DomainError } from '../lib/errors';
@@ -118,8 +118,7 @@ export type GuestInviteResult =
 
 async function inviteView(record: Record<string, unknown>, language: Language): Promise<GuestInviteView> {
   const invite = fromRecord<GuestInvite>(record);
-  let settings: Partial<EventSettings> = {};
-  try { settings = await getSettings(); } catch { /* settings optional */ }
+  const settings = await getSettingsOrDefaults();
   const registered_guest = invite.registered_guest_id
     ? await getGuestById(invite.registered_guest_id).catch(() => undefined)
     : undefined;

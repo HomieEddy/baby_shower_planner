@@ -2,7 +2,7 @@ import http from 'node:http';
 import path from 'node:path';
 import fs from 'node:fs';
 import { createServer as createViteServer } from 'vite';
-import { getGuestContentLock, handleAlertRoutes, handleGiftRoutes, handleGuestbookRoutes, handlePhotoRoutes, initPocketBase, runAgendaReminderSweep } from './src/db/service';
+import { getGuestContentLock, initPocketBase, runAgendaReminderSweep } from './src/db/service';
 import {
   applySecurityHeaders,
   BLOCK_BOTS,
@@ -16,6 +16,7 @@ import {
   originMatchesHost,
   rateLimit,
   sendJson,
+  sendError,
   serveStaticFile,
   timingSafeEqualStr,
   validateSecrets,
@@ -27,6 +28,10 @@ import { handleGuestRoutes } from './src/server/routes/guests';
 import { handleRegisterRoutes } from './src/server/routes/register';
 import { handleRsvpRoutes } from './src/server/routes/rsvp';
 import { handleSettingsRoutes } from './src/server/routes/settings';
+import { handleGuestbookRoutes } from './src/server/routes/guestbook';
+import { handlePhotoRoutes } from './src/server/routes/photos';
+import { handleAlertRoutes } from './src/server/routes/alerts';
+import { handleGiftRoutes } from './src/server/routes/gifts';
 import { handleFloorPlanRoutes } from './src/server/routes/floorplan';
 import { handleAgendaRoutes } from './src/server/routes/agenda';
 import { handleCheckInRoutes } from './src/server/routes/checkin';
@@ -83,31 +88,31 @@ async function requestHandler(req: http.IncomingMessage, res: http.ServerRespons
 
   // Crawler / AI-scraper user agents get nothing from the API.
   if (BLOCK_BOTS && pathname.startsWith('/api/') && BOT_UA_RE.test(req.headers['user-agent'] || '')) {
-    return sendJson(res, 403, { error: 'Forbidden' });
+    return sendError(res, 'FORBIDDEN');
   }
 
   if (pathname.startsWith('/api/')) {
     // Per-IP global budget (health checks exempt so Coolify probes keep working).
     if (pathname !== '/api/health') {
       const global = rateLimit(`g:${ip}`, GLOBAL_LIMIT, 60_000);
-      if (!global.allowed) return sendJson(res, 429, { error: 'Too many requests' });
+      if (!global.allowed) return sendError(res, 'RATE_LIMITED');
     }
 
     // Cross-site requests can't forge a matching Origin (CSRF defense-in-depth).
     if (method !== 'GET' && !originMatchesHost(req)) {
-      return sendJson(res, 403, { error: 'Forbidden' });
+      return sendError(res, 'FORBIDDEN');
     }
 
     // Reject oversized bodies up front (and again while streaming).
     const contentLength = Number(req.headers['content-length']);
-    if (contentLength > MAX_BODY_BYTES) return sendJson(res, 413, { error: 'Payload too large' });
+    if (contentLength > MAX_BODY_BYTES) return sendError(res, 'PAYLOAD_TOO_LARGE');
 
     const ctx: RouteCtx = { req, res, url, ip, adminOnly, requireAdmin, guestLock };
     try {
       for (const handler of API_HANDLERS) {
         if (await handler(ctx)) return;
       }
-      return sendJson(res, 404, { error: 'Endpoint not found' });
+      return sendError(res, 'ENDPOINT_NOT_FOUND');
     } catch (err: any) {
       if (err instanceof HttpError) {
         console.warn(`[API] ${err.status} ${method} ${pathname}: ${err.message}`);
@@ -119,7 +124,7 @@ async function requestHandler(req: http.IncomingMessage, res: http.ServerRespons
       }
       // Unknown errors never leak internals to the client; logged server-side.
       console.error(`[API] 500 ${method} ${pathname}:`, err);
-      return sendJson(res, 500, { error: 'SERVER_ERROR', message: 'Something went wrong' });
+      return sendError(res, 'SERVER_ERROR');
     }
   }
 

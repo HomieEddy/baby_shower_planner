@@ -8,7 +8,7 @@ import { Guest, FloorMapData } from '../../types';
 import { useT, useTf } from '../shared/i18n';
 import { useDialogA11y } from '../shared/useDialogA11y';
 import { ViewModeToggle, ViewMode } from '../shared/ViewModeToggle';
-import { getGuestPartySize, getTableOccupiedSeats, getAttendeeSeatLocation } from '../../lib/tableAssignment';
+import { getGuestPartySize, getTableOccupiedSeats, getTableSeats, getAttendeeSeatLocation } from '../../lib/tableAssignment';
 import { getSeatLocalPosition } from './floorPlanHelpers';
 import { getPartyMembers } from '../../lib/guestAttendees';
 import { FinderSelection } from './GuestFinderPage';
@@ -269,6 +269,7 @@ export const VenueModal = ({ open, selected, floorMap, roster, onClose }: VenueM
                             {floorMap.tables.map((tbl) => {
                               const isTarget = tbl.id === guestAssignedTable.id;
                               const occupied = getTableOccupiedSeats(tbl, roster);
+                              const seatLayout = getTableSeats(tbl, roster);
                               return (
                                 <Group key={`gtbl-${tbl.id}`} x={tbl.x} y={tbl.y}>
                                   {/* Outer seat dots around the table (editor geometry) */}
@@ -282,7 +283,7 @@ export const VenueModal = ({ open, selected, floorMap, roster, onClose }: VenueM
                                           x={pos.x}
                                           y={pos.y}
                                           radius={8}
-                                          fill={isMine ? '#2E9E5B' : i < occupied ? '#8B735B' : '#FFFDF9'}
+                                          fill={isMine ? '#2E9E5B' : seatLayout[i] ? '#8B735B' : '#FFFDF9'}
                                           stroke={isMine ? '#1B7A43' : '#CBAE94'}
                                           strokeWidth={2}
                                         />

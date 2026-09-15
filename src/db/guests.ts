@@ -1,11 +1,11 @@
 // Guest admin CRUD + batch import. RSVP/submission logic lives in `rsvp.ts`.
 
-import type { Guest, AddGuestPayload, RegisterGuestPayload, EventSettings, Language } from '../types';
+import type { Guest, AddGuestPayload, RegisterGuestPayload, Language } from '../types';
 import { buildInviteMessage, buildUniversalInviteMessage, composeInvitation } from '../lib/compose';
-import { getPartyMembers } from '../lib/guestAttendees';
+import { getPartyMembers, dedupePartyNames } from '../lib/guestAttendees';
 import { DomainError } from '../lib/errors';
 import { escFilter, fromRecord, newMagicToken, newReservationCode, pb, removeAttendeeFromFloorMaps, removeGuestFromFloorMaps } from './client';
-import { getSettings } from './settings';
+import { getSettingsOrDefaults } from './settings';
 import { notifyGuest } from './notify';
 
 // Missing/empty approval_status = approved: legacy host-added guests and
@@ -41,11 +41,7 @@ export async function getGuestById(id: string): Promise<Guest> {
 // Pre-built copy/paste invitation message (bilingual, follows the guest's
 // language preference). Fetches settings lazily; empty settings → minimal message.
 export async function inviteMessageFor(guest: Guest): Promise<string> {
-  let settings: Partial<EventSettings> = {};
-  try {
-    settings = await getSettings();
-  } catch { /* settings not seeded yet — message falls back to essentials */ }
-  return buildInviteMessage(guest, settings, guest.language_pref);
+  return buildInviteMessage(guest, await getSettingsOrDefaults(), guest.language_pref);
 }
 
 export async function addGuest(payload: AddGuestPayload): Promise<{ guest: Guest; magic_token: string; invite_message: string }> {
@@ -56,16 +52,7 @@ export async function addGuest(payload: AddGuestPayload): Promise<{ guest: Guest
   // Party members: the primary guest first, then the host-entered names, capped
   // at the allowed party size and deduped.
   const primary = payload.name;
-  const names: string[] = [primary];
-  const seen = new Set<string>([primary.toLowerCase()]);
-  for (const raw of payload.attendee_names || []) {
-    if (names.length >= partySize) break;
-    const n = typeof raw === 'string' ? raw.trim() : '';
-    const key = n.toLowerCase();
-    if (!n || seen.has(key)) continue;
-    seen.add(key);
-    names.push(n);
-  }
+  const names = dedupePartyNames(primary, payload.attendee_names || [], partySize);
   const attendee_details = names.map((n) => ({
     name: n,
     contact: n.toLowerCase() === primary.toLowerCase() ? (payload.email || payload.phone || '') : '',
@@ -172,8 +159,7 @@ export async function setApproval(id: string, decision: 'approved' | 'rejected')
   const updated = await pb.collection('guests').update(id, { approval_status: decision });
   const guest = fromRecord<Guest>(updated);
   if (decision === 'approved' && guest.delivery_channel && guest.delivery_channel !== 'none') {
-    let settings: Partial<EventSettings> = {};
-    try { settings = await getSettings(); } catch { /* settings missing — skip send */ }
+    const settings = await getSettingsOrDefaults();
     await notifyGuest(guest, composeInvitation(guest, settings, guest.language_pref));
   }
   return guest;
@@ -181,9 +167,7 @@ export async function setApproval(id: string, decision: 'approved' | 'rejected')
 
 // Host-facing universal share message (no ref — plain /register link).
 export async function getUniversalInviteMessage(language: Language = 'FR'): Promise<string> {
-  let settings: Partial<EventSettings> = {};
-  try { settings = await getSettings(); } catch { /* settings not seeded yet */ }
-  return buildUniversalInviteMessage(settings, language);
+  return buildUniversalInviteMessage(await getSettingsOrDefaults(), language);
 }
 
 export async function updateGuest(id: string, updates: Partial<Guest>): Promise<Guest> {
@@ -201,15 +185,7 @@ export async function updateGuest(id: string, updates: Partial<Guest>): Promise<
   const max = Math.max(1, Number(updates.max_party_size ?? guest.max_party_size) || 1);
   const primary = ((updates.name ?? guest.name) || '').trim() || guest.name;
 
-  const names: string[] = [primary];
-  const seen = new Set([primary.toLowerCase()]);
-  for (const raw of updates.attendee_names) {
-    if (names.length >= max) break;
-    const n = typeof raw === 'string' ? raw.trim() : '';
-    if (!n || seen.has(n.toLowerCase())) continue;
-    seen.add(n.toLowerCase());
-    names.push(n);
-  }
+  const names = dedupePartyNames(primary, updates.attendee_names, max);
 
   // Declining clears the party entirely; otherwise the attended count is the
   // number of named members (not the allowed size).

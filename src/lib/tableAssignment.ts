@@ -66,6 +66,10 @@ export const getTableOccupiedSeats = (table: TableElement, guestsList: Guest[]):
   return getTableSeats(table, guestsList).filter((s) => s !== null).length;
 };
 
+// Free chairs at a table. The one number every seating surface highlights on.
+export const getAvailableSeats = (table: TableElement, guestsList: Guest[]): number =>
+  Math.max(0, Math.max(1, table.capacity || 8) - getTableOccupiedSeats(table, guestsList));
+
 export const getTableSeatedPersonNames = (table: TableElement, guestsList: Guest[]): string[] => {
   const names: string[] = [];
   for (const seat of getTableSeats(table, guestsList)) {
@@ -110,6 +114,28 @@ export const getGuestSeatedCount = (
   floorMap: FloorMapData | null,
   guestsList: Guest[]
 ): number => getAttendeeLocations(guestId, floorMap, guestsList).length;
+
+// Members of a party still without a chair (split-aware): the count a highlight
+// is actually gated on, not the full party size.
+export const getUnseatedPartySize = (
+  guestId: string,
+  floorMap: FloorMapData | null,
+  guestsList: Guest[]
+): number => {
+  const guest = guestsList.find((g) => g.id === guestId);
+  if (!guest) return 0;
+  return Math.max(0, getGuestPartySize(guest) - getGuestSeatedCount(guestId, floorMap, guestsList));
+};
+
+// Shared seating eligibility: at least one unseated member can take a free chair
+// here. Matches what seatParty does (partial fill = the split) on every surface.
+export const canSeatParty = (
+  table: TableElement,
+  floorMap: FloorMapData | null,
+  guestsList: Guest[],
+  guestId: string
+): boolean =>
+  getAvailableSeats(table, guestsList) > 0 && getUnseatedPartySize(guestId, floorMap, guestsList) > 0;
 
 // Exact chair for one attendee (attendeeIndex into getPartyMembers), across tables.
 export const getAttendeeSeatLocation = (

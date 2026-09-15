@@ -100,15 +100,22 @@ export const DEFAULT_INVITATION_TEMPLATE: Record<'FR' | 'EN', string> = {
   ].join('\n'),
 };
 
-// Event settings → token values for one language. `link` is context-resolved:
-// the /register link for the self-serve message, or a guest's personal RSVP
-// link for a host-added guest. Per-guest tokens stay blank otherwise.
-export function invitationTemplateValues(
-  settings: Partial<EventSettings>,
-  language: 'FR' | 'EN',
-  link: string,
-  extra: { guestName?: string; code?: string } = {}
-): Record<string, string> {
+// Event settings → the display fields every message derives from: the joined
+// venue string and the FR-lowercased deadline. One derivation shared by the
+// invitation template, the email rows, and SMS.
+export interface EventContext {
+  date: string;
+  time: string;
+  venueName: string;
+  venueAddress: string;
+  venue: string;
+  rsvpDeadline: string;
+  registryUrl: string;
+  parentsNames: string;
+  babyName: string;
+}
+
+export function eventContext(settings: Partial<EventSettings>, language: 'FR' | 'EN'): EventContext {
   const venueName = settings.venueName || '';
   const venueAddress = settings.venueAddress || '';
   // FR formats the weekday capitalized ("Jeudi 1 octobre"); the default message
@@ -120,13 +127,36 @@ export function invitationTemplateValues(
   return {
     date: settings.date || '',
     time: settings.time || '',
-    venue: venueName ? `${venueName}${venueAddress ? `, ${venueAddress}` : ''}` : venueAddress,
     venueName,
     venueAddress,
-    registryUrl: settings.registryUrl || '',
+    venue: venueName ? `${venueName}${venueAddress ? `, ${venueAddress}` : ''}` : venueAddress,
     rsvpDeadline,
+    registryUrl: settings.registryUrl || '',
     parentsNames: settings.parentsNames || settings.babyName || '',
     babyName: settings.babyName || '',
+  };
+}
+
+// Event settings → token values for one language. `link` is context-resolved:
+// the /register link for the self-serve message, or a guest's personal RSVP
+// link for a host-added guest. Per-guest tokens stay blank otherwise.
+export function invitationTemplateValues(
+  settings: Partial<EventSettings>,
+  language: 'FR' | 'EN',
+  link: string,
+  extra: { guestName?: string; code?: string } = {}
+): Record<string, string> {
+  const ctx = eventContext(settings, language);
+  return {
+    date: ctx.date,
+    time: ctx.time,
+    venue: ctx.venue,
+    venueName: ctx.venueName,
+    venueAddress: ctx.venueAddress,
+    registryUrl: ctx.registryUrl,
+    rsvpDeadline: ctx.rsvpDeadline,
+    parentsNames: ctx.parentsNames,
+    babyName: ctx.babyName,
     registerLink: link,
     // Alias: a template may use either link token; both resolve to `link`.
     rsvpLink: link,

@@ -2,9 +2,8 @@
 // self-service contact updates and guest-to-guest invites.
 
 import type { RouteCtx } from '../http';
-import { parseJson, sendJson } from '../http';
+import { parseJson, sendError, sendJson } from '../http';
 import { GuestRsvpSchema, isValidEmail } from '../../lib/validation';
-import { errorMessage, errorStatus } from '../../lib/errors';
 import {
   createInvite,
   getGuestByToken,
@@ -32,7 +31,7 @@ export async function handleRsvpRoutes(ctx: RouteCtx): Promise<boolean> {
 
   if (isInviteDelete && method === 'DELETE') {
     const removed = await removeInvite(token, parts[2]);
-    if (!removed) return sendJson(res, 404, { error: 'NOT_FOUND', message: 'Invite not found' });
+    if (!removed) return sendError(res, 'NOT_FOUND', 'Invite not found');
     return sendJson(res, 200, { success: true });
   }
 
@@ -47,7 +46,7 @@ export async function handleRsvpRoutes(ctx: RouteCtx): Promise<boolean> {
       name: body.name, contact: body.contact, note: body.note,
     });
     if (!result.ok) {
-      return sendJson(res, errorStatus(result.error), { error: result.error, message: errorMessage(result.error) });
+      return sendError(res, result.error);
     }
     return sendJson(res, 200, result);
   }
@@ -56,10 +55,10 @@ export async function handleRsvpRoutes(ctx: RouteCtx): Promise<boolean> {
     const body = await parseJson(req);
     const { email, phone, delivery_channel } = body;
     if (!['none', 'email', 'text', 'both'].includes(delivery_channel)) {
-      return sendJson(res, 400, { error: 'Invalid delivery channel' });
+      return sendError(res, 'INVALID_CHANNEL');
     }
     if (email && !isValidEmail(email)) {
-      return sendJson(res, 400, { error: 'Invalid email address' });
+      return sendError(res, 'INVALID_EMAIL');
     }
     // INVALID_TOKEN / EMAIL_REQUIRED / PHONE_REQUIRED propagate as DomainError.
     const guest = await updateGuestContact(token, { email, phone, delivery_channel });
@@ -73,7 +72,7 @@ export async function handleRsvpRoutes(ctx: RouteCtx): Promise<boolean> {
 
   if (method === 'GET') {
     const guest = await getGuestByToken(token);
-    if (!guest) return sendJson(res, 404, { error: 'INVALID_TOKEN', message: 'Invitation token not found' });
+    if (!guest) return sendError(res, 'INVALID_TOKEN');
     return sendJson(res, 200, { guest });
   }
 
@@ -81,7 +80,7 @@ export async function handleRsvpRoutes(ctx: RouteCtx): Promise<boolean> {
     const body = await parseJson(req);
     const parsed = GuestRsvpSchema.safeParse(body);
     if (!parsed.success) {
-      return sendJson(res, 400, { error: 'Invalid RSVP', message: parsed.error.issues[0]?.message || 'Invalid RSVP payload' });
+      return sendError(res, 'INVALID_PAYLOAD', parsed.error.issues[0]?.message);
     }
     const { rsvp_status, attending_party_size, dietary_restrictions, attendee_details, attendee_names } = parsed.data;
     const updated = await submitRsvp(token, {

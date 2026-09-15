@@ -6,6 +6,8 @@ import fs from 'node:fs';
 import crypto from 'node:crypto';
 import { UPLOADS_DIR } from './uploadFiles';
 import { errorMessage, errorStatus } from '../lib/errors';
+import type { ErrorCode } from '../lib/errors';
+import type { GuestContentLock } from '../lib/guestLock';
 
 export const IS_PROD = process.env.NODE_ENV === 'production';
 // Coolify proxies traffic and appends X-Forwarded-For; trust it for rate
@@ -166,6 +168,12 @@ export function sendJson(res: http.ServerResponse, statusCode: number, data: any
   return true;
 }
 
+// The one error body: a registry code + message (overridable). Every route
+// guard that isn't a thrown DomainError uses this instead of ad-hoc prose.
+export function sendError(res: http.ServerResponse, code: ErrorCode, message?: string): true {
+  return sendJson(res, errorStatus(code), { error: code, message: message ?? errorMessage(code) });
+}
+
 // The one 403 body for the guest content window (guestbook + photos).
 export function sendGuestLocked(
   res: http.ServerResponse,
@@ -228,5 +236,5 @@ export interface RouteCtx {
   ip: string;
   adminOnly: () => boolean;
   requireAdmin: () => void;
-  guestLock: () => Promise<{ locked: boolean; opensAt?: string; closesAt?: string } | null>;
+  guestLock: () => Promise<GuestContentLock | null>;
 }

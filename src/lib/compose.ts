@@ -4,9 +4,10 @@
 // are adapters over this — they never re-derive event fields.
 
 import { Guest, EventSettings, AgendaTask, Language } from '../types';
-import { formatDateLong, formatTaskDue } from './dateUtils';
+import { formatTaskDue } from './dateUtils';
 import { findMyTableUrl, registerUrl, rsvpUrl } from './links';
 import {
+  eventContext,
   invitationTemplateValues,
   renderInvitationTemplate,
   resolveInvitationTemplate,
@@ -56,18 +57,17 @@ function blocks(parts: (string | undefined)[]): string {
 }
 
 function heading(settings: Partial<EventSettings>, language: Language): string {
-  const host = settings.parentsNames || settings.babyName || '';
+  const host = eventContext(settings, language).parentsNames;
   if (isEN(language)) return host ? `🌸 ${host}'s Baby Shower 🌸` : '🌸 Baby Shower 🌸';
   return host ? `🌸 Baby Shower de ${host} 🌸` : '🌸 Baby Shower 🌸';
 }
 
 function eventRows(settings: Partial<EventSettings>, language: Language): MessageRow[] {
+  const ctx = eventContext(settings, language);
   const rows: MessageRow[] = [];
-  const venue = settings.venueName || '';
-  const address = settings.venueAddress || '';
-  if (settings.date) rows.push({ label: isEN(language) ? 'Date' : 'Date', value: settings.date });
-  if (settings.time) rows.push({ label: isEN(language) ? 'Time' : 'Heure', value: settings.time });
-  if (venue) rows.push({ label: isEN(language) ? 'Venue' : 'Lieu', value: `${venue}${address ? `, ${address}` : ''}` });
+  if (ctx.date) rows.push({ label: isEN(language) ? 'Date' : 'Date', value: ctx.date });
+  if (ctx.time) rows.push({ label: isEN(language) ? 'Time' : 'Heure', value: ctx.time });
+  if (ctx.venueName) rows.push({ label: isEN(language) ? 'Venue' : 'Lieu', value: ctx.venue });
   return rows;
 }
 
@@ -77,10 +77,7 @@ function rowsText(rows: MessageRow[], language: Language): string {
 }
 
 function deadlineText(settings: Partial<EventSettings>, language: Language): string {
-  if (!settings.rsvpDeadline) return '';
-  const formatted = formatDateLong(settings.rsvpDeadline, language);
-  // FR uses the date mid-sentence ("le jeudi 1 octobre"), so lowercase the weekday.
-  return !isEN(language) && formatted ? formatted.charAt(0).toLowerCase() + formatted.slice(1) : formatted;
+  return eventContext(settings, language).rsvpDeadline;
 }
 
 // "please confirm by {deadline}" lead-in, or the plain prompt when unset.
@@ -108,7 +105,7 @@ function giftBlock(settings: Partial<EventSettings>, language: Language): string
 }
 
 function closingBlock(settings: Partial<EventSettings>, language: Language): string {
-  const parents = settings.parentsNames || settings.babyName || '';
+  const parents = eventContext(settings, language).parentsNames;
   if (!parents) return '';
   return isEN(language)
     ? `We can't wait to celebrate with you,\n${parents}`
@@ -116,7 +113,7 @@ function closingBlock(settings: Partial<EventSettings>, language: Language): str
 }
 
 function invitationSubject(settings: Partial<EventSettings>, language: Language): string {
-  const host = settings.parentsNames || settings.babyName || '';
+  const host = eventContext(settings, language).parentsNames;
   if (isEN(language)) return `You're invited to ${host ? `${host}'s Baby Shower` : 'the Baby Shower'}!`;
   return `Vous êtes invité${host ? ` au baby shower de ${host}` : ' au baby shower'} !`;
 }
@@ -127,15 +124,26 @@ function guestCodeLine(code: string, language: Language): string {
     : `Votre code de réservation : ${code}\nIl vous permettra de retrouver votre table lors de l'événement.`;
 }
 
-// One invitation message for both flows: the host-editable template (or the
-// shipped default) with the recipient's link + per-guest tokens filled in.
-function renderGuestInvitation(guest: Guest, settings: Partial<EventSettings>, language: Language): string {
+// Resolve the host-editable template (or the shipped default) and substitute
+// the recipient's link + per-guest tokens. One resolve→render hop for both
+// flows (per-guest and self-serve).
+function buildInvitationText(
+  settings: Partial<EventSettings>,
+  language: Language,
+  link: string,
+  extra?: { guestName?: string; code?: string }
+): { text: string; template: string } {
   const stored = language === 'EN' ? settings.invitationTemplateEn : settings.invitationTemplateFr;
   const template = resolveInvitationTemplate(stored, language);
-  const text = renderInvitationTemplate(
+  return {
+    text: renderInvitationTemplate(template, invitationTemplateValues(settings, language, link, extra)),
     template,
-    invitationTemplateValues(settings, language, rsvpUrl(guest.magic_token), { guestName: guest.name, code: guest.code })
-  );
+  };
+}
+
+// Personal invitation text for a host-added guest: straight to their RSVP link.
+export function buildInviteMessage(guest: Guest, settings: Partial<EventSettings>, language: Language = 'FR'): string {
+  const { text, template } = buildInvitationText(settings, language, rsvpUrl(guest.magic_token), { guestName: guest.name, code: guest.code });
   // Keep the reservation code unless the template already places it.
   const hasCodeToken = /\{\{\s*code\s*\}\}/.test(template);
   return !hasCodeToken && guest.code ? `${text}\n\n${guestCodeLine(guest.code, language)}` : text;
@@ -162,7 +170,7 @@ export function composeInvitation(guest: Guest, settings: Partial<EventSettings>
     confirmBlock: confirmBlock(settings, lang, link, 'rsvp'),
     code: guest.code,
     codeLine: guestCodeLine(guest.code, lang),
-    body: renderGuestInvitation(guest, settings, lang),
+    body: buildInviteMessage(guest, settings, lang),
     gift: giftBlock(settings, lang),
     paragraphs: [],
     closing: closingBlock(settings, lang),
@@ -329,16 +337,9 @@ export function renderEmailHtml(content: MessageContent): string {
     </div>`;
 }
 
-// Back-compat text builders (clipboard / universal host message).
-export const buildInviteMessage = (guest: Guest, settings: Partial<EventSettings>, language: Language = 'FR'): string =>
-  renderGuestInvitation(guest, settings, language);
-
 // The self-serve invitation is host-editable: a stored template (per language)
 // wins, otherwise the shipped default. Both are plain text with {{token}}s.
-export const buildUniversalInviteMessage = (settings: Partial<EventSettings>, language: Language = 'FR', refId?: string): string => {
-  const stored = language === 'EN' ? settings.invitationTemplateEn : settings.invitationTemplateFr;
-  const template = resolveInvitationTemplate(stored, language);
-  return renderInvitationTemplate(template, invitationTemplateValues(settings, language, registerUrl(refId)));
-};
+export const buildUniversalInviteMessage = (settings: Partial<EventSettings>, language: Language = 'FR', refId?: string): string =>
+  buildInvitationText(settings, language, registerUrl(refId)).text;
 
 export { registerUrl as universalRegisterUrl };

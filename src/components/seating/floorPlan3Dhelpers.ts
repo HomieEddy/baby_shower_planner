@@ -54,5 +54,3 @@ export const seatLocalWorld = (
   // Yaw so the chair's front (-z) points back toward the table center.
   return { x: cx, z: cz, yaw: Math.atan2(cx / len, cz / len) };
 };
-
-export const SEAT_DISTANCE_PX = 18;

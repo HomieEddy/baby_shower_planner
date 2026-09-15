@@ -1,8 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { useForm } from 'react-hook-form';
-import { zodResolver } from '@hookform/resolvers/zod';
-import { z } from 'zod';
-import { useSearchParams } from 'react-router-dom';
+import React, { useRef } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import { adminContainerVariants, adminCardVariants } from '../shared/motionPresets';
 import { GuestRowCard } from './GuestRowCard';
@@ -25,21 +21,15 @@ import {
   Lightbulb,
   Link2,
 } from 'lucide-react';
-import { Guest, Language, DeliveryChannel, FloorMapData } from '../../types';
+import { Guest, Language } from '../../types';
 import { Translations } from '../../translations';
-import { adminFetch } from '../../lib/api';
-import { GuestImportSchema, EditGuestFormSchema } from '../../lib/validation';
-import { useCapabilities, availableChannels, channelLabel } from '../../lib/capabilities';
-import { getGuestPartySize as getPartySize, getAttendeeLocations } from '../../lib/tableAssignment';
-import { getPartyMembers } from '../../lib/guestAttendees';
-import { useConfirm } from '../shared/ConfirmDialog';
-import { useCopyFeedback } from '../shared/hooks';
+import { channelLabel } from '../../lib/capabilities';
+import { getGuestPartySize as getPartySize } from '../../lib/tableAssignment';
 import { Modal } from '../shared/Modal';
-import { useToast } from '../shared/ToastContext';
-import { useTf, useApiErrorMessage } from '../shared/i18n';
-import { decodeApiError } from '../../lib/errors';
+import { useTf } from '../shared/i18n';
 import { EmptyState } from '../shared/EmptyState';
 import { TextInput, Select } from '../shared/ui';
+import { useGuestAdminController } from './useGuestAdminController';
 
 interface AdminGuestsTabProps {
   language: Language;
@@ -48,569 +38,36 @@ interface AdminGuestsTabProps {
   onRefresh: () => Promise<void>;
 }
 
-type AddGuestFormValues = z.input<typeof GuestImportSchema>;
-type EditGuestFormValues = z.input<typeof EditGuestFormSchema>;
-
-// CSV-aware line split: quoted fields may contain commas.
-function parseCsvLine(line: string): string[] {
-  const out: string[] = [];
-  let cur = '';
-  let inQuotes = false;
-  for (let i = 0; i < line.length; i++) {
-    const ch = line[i];
-    if (inQuotes) {
-      if (ch === '"') {
-        if (line[i + 1] === '"') { cur += '"'; i++; } else { inQuotes = false; }
-      } else {
-        cur += ch;
-      }
-    } else if (ch === '"') {
-      inQuotes = true;
-    } else if (ch === ',') {
-      out.push(cur.trim());
-      cur = '';
-    } else {
-      cur += ch;
-    }
-  }
-  out.push(cur.trim());
-  return out;
-}
-
 export const AdminGuestsTab: React.FC<AdminGuestsTabProps> = ({ language, t, guests, onRefresh }) => {
-  const [searchParams, setSearchParams] = useSearchParams();
-  const { toast } = useToast();
-  const tf = useTf();
-  const apiError = useApiErrorMessage();
-  const confirm = useConfirm();
+  const {
+    searchTerm, setSearchTerm,
+    statusFilter, setStatusFilter,
+    sourceFilter, setSourceFilter,
+    metricMode, switchMetricMode,
+    listView, switchListView,
+    selectedIds, setSelectedIds, toggleSelect, toggleSelectAll,
+    filteredGuests, clearFilters,
+    attendingGuests, pendingGuests, declinedGuests, pendingApprovals,
+    totalPartySize, totalAttendingPartySize, pendingPartySize, declinedPartySize,
+    register, handleSubmit, setValue, setFocus, deliveryChannel, errors, markGoing, setMarkGoing,
+    channelOptions, submittingGuest, handleAddGuest,
+    attendeeModal, setAttendeeModal, extraNames, setExtraNames, handleConfirmAttendees,
+    registerEdit, handleSubmitEdit, editErrors, savingEdit, editExtraNames, setEditExtraNames,
+    editMaxParty, editStatus, editPrimaryName, handleOpenEditGuest, handleSaveEditGuest,
+    viewingGuest, editingGuest, closeGuestModal, closeEditModal, handleOpenViewGuest,
+    viewingMessage, loadingMessage,
+    showCsvImportModal, setShowCsvImportModal, rawCsvText, setRawCsvText, importingCsv, handleProcessCsvImport,
+    handleDeleteGuest, handleRemoveAttendee, handleApproval,
+    copiedToken, handleCopyMagicLink, handleCopyInviteMessage,
+    handleExportCsv, handleBulkExport, handleBulkResend, handleBulkDelete, handleSendReminders,
+  } = useGuestAdminController({ language, t, guests, onRefresh });
 
-  const [submittingGuest, setSubmittingGuest] = useState(false);
-  // Host self-registration: create the guest already "going", no invitation.
-  const [markGoing, setMarkGoing] = useState(false);
-  // Party-member entry: when the group size is > 1 the host names the members.
-  const [attendeeModal, setAttendeeModal] = useState<{ values: AddGuestFormValues; going: boolean } | null>(null);
-  const [extraNames, setExtraNames] = useState<string[]>([]);
-
-  const { register, handleSubmit, setValue, watch, setFocus, formState: { errors } } = useForm<AddGuestFormValues>({
-    resolver: zodResolver(GuestImportSchema),
-    defaultValues: {
-      name: '',
-      email: '',
-      phone: '',
-      delivery_channel: 'email',
-      max_party_size: 2,
-      language_pref: language,
-    },
-  });
-
-  const { register: registerEdit, handleSubmit: handleSubmitEdit, reset: resetEditForm, watch: watchEdit, formState: { errors: editErrors } } = useForm<EditGuestFormValues>({
-    resolver: zodResolver(EditGuestFormSchema),
-    defaultValues: {
-      name: '',
-      email: '',
-      phone: '',
-      delivery_channel: 'none',
-      max_party_size: 2,
-      rsvp_status: 'Pending',
-    },
-  });
-
-  const [searchTerm, setSearchTerm] = useState('');
-  const [statusFilter, setStatusFilter] = useState<'All' | 'Attending' | 'Pending' | 'Declined'>('All');
-
-  const [showCsvImportModal, setShowCsvImportModal] = useState(false);
-  const [rawCsvText, setRawCsvText] = useState('');
-  const [importingCsv, setImportingCsv] = useState(false);
-
-  const { copiedKey: copiedToken, copy: copyMagicLink } = useCopyFeedback();
-  const [selectedIds, setSelectedIds] = useState<string[]>([]);
-  const [metricMode, setMetricMode] = useState<'invites' | 'party'>(() =>
-    localStorage.getItem('guestMetricMode') === 'party' ? 'party' : 'invites'
-  );
-  const switchMetricMode = (m: 'invites' | 'party') => {
-    setMetricMode(m);
-    localStorage.setItem('guestMetricMode', m);
-  };
-
-  // List rendering mode: roomy cards or a dense table for long guest lists.
-  const [listView, setListView] = useState<'cards' | 'table'>(() =>
-    localStorage.getItem('guestListView') === 'table' ? 'table' : 'cards'
-  );
-  const switchListView = (m: 'cards' | 'table') => {
-    setListView(m);
-    localStorage.setItem('guestListView', m);
-  };
-
-  // Guest details/edit are URL-routed: ?guest=<id> opens details, &edit=1 opens
-  // the edit modal on top. Closing edit returns to details; browser Back works.
-  const guestParam = searchParams.get('guest');
-  const viewingGuest = guestParam ? guests.find((g) => g.id === guestParam) ?? null : null;
-  const editingGuest = searchParams.get('edit') && viewingGuest ? viewingGuest : null;
-  const closeGuestModal = () =>
-    setSearchParams((prev) => { const p = new URLSearchParams(prev); p.delete('guest'); p.delete('edit'); return p; });
-  const closeEditModal = () =>
-    setSearchParams((prev) => { const p = new URLSearchParams(prev); p.delete('edit'); return p; });
-  const [savingEdit, setSavingEdit] = useState(false);
-  // Additional members (primary guest excluded) while editing a party.
-  const [editExtraNames, setEditExtraNames] = useState<string[]>([]);
-
-  const [viewingMessage, setViewingMessage] = useState('');  const [loadingMessage, setLoadingMessage] = useState(false);
-
-  // Metric cards drive the list filters: Attending/Pending/Declined/Total set
-  // the status filter and scroll to the list; Awaiting scrolls to the queue.
   const listRef = useRef<HTMLDivElement>(null);
   const approvalRef = useRef<HTMLDivElement>(null);
   const scrollToList = () => listRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-
-  const [sourceFilter, setSourceFilter] = useState<'All' | 'Host' | 'Guest-invited'>('All');
-
-  const { data: caps } = useCapabilities();
-  const channelOptions: DeliveryChannel[] = availableChannels(caps);
-  const deliveryChannel = watch('delivery_channel');
-  // If the current channel can't actually send (e.g. SMS unconfigured), fall
-  // back to a link-only invite rather than leaving a dead option selected.
-  useEffect(() => {
-    if (caps && deliveryChannel && deliveryChannel !== 'none' && !channelOptions.includes(deliveryChannel)) {
-      setValue('delivery_channel', 'none');
-    }
-  }, [caps, deliveryChannel, channelOptions, setValue]);
-
   const getGuestPartySize = getPartySize;
+  const tf = useTf();
 
-  // Edit-modal party editor: the allowed size caps how many members can be named.
-  const editMaxParty = Math.max(1, Number(watchEdit('max_party_size')) || 1);
-  const editStatus = watchEdit('rsvp_status');
-  const editPrimaryName = (watchEdit('name') || editingGuest?.name || '').trim();
-
-  const primaryGuests = guests.filter((g) => !g.is_read_only);
-  // Self-registrations only count once approved.
-  const approvedGuests = primaryGuests.filter((g) => (g.approval_status || 'approved') === 'approved');
-  const pendingApprovals = primaryGuests.filter((g) => g.approval_status === 'pending');
-  const attendingGuests = approvedGuests.filter((g) => g.rsvp_status === 'Attending');
-  const pendingGuests = approvedGuests.filter((g) => g.rsvp_status === 'Pending');
-  const declinedGuests = approvedGuests.filter((g) => g.rsvp_status === 'Declined');
-  const totalAttendingPartySize = attendingGuests.reduce((acc, g) => acc + getGuestPartySize(g), 0);
-  const pendingPartySize = pendingGuests.reduce((acc, g) => acc + getGuestPartySize(g), 0);
-  const declinedPartySize = declinedGuests.reduce((acc, g) => acc + getGuestPartySize(g), 0);
-  const totalPartySize = guests.reduce((acc, g) => acc + getGuestPartySize(g), 0);
-
-  const filteredGuests = guests.filter((g) => {
-    const matchesSearch =
-      g.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      g.email.toLowerCase().includes(searchTerm.toLowerCase());
-    const matchesStatus = statusFilter === 'All' || g.rsvp_status === statusFilter;
-    const matchesSource =
-      sourceFilter === 'All' ||
-      (sourceFilter === 'Guest-invited' ? !!g.invited_by_guest_id : !g.invited_by_guest_id);
-    return matchesSearch && matchesStatus && matchesSource;
-  });
-
-  const handleOpenEditGuest = (g: Guest) => {
-    setEditExtraNames(getPartyMembers(g).slice(1));
-    setSearchParams((prev) => { const p = new URLSearchParams(prev); p.set('guest', g.id); p.set('edit', '1'); return p; });
-    resetEditForm({
-      name: g.name,
-      email: g.email || '',
-      phone: g.phone || '',
-      delivery_channel: channelOptions.includes((g.delivery_channel || 'none') as DeliveryChannel)
-        ? ((g.delivery_channel || 'none') as DeliveryChannel)
-        : 'none',
-      max_party_size: Number(g.max_party_size || getGuestPartySize(g) || 2),
-      rsvp_status: g.rsvp_status,
-    });
-  };
-
-  // Load the invite message whenever the detail modal's guest changes — covers
-  // both clicking a row and deep-linking straight to ?guest=<id>.
-  useEffect(() => {
-    if (!viewingGuest) return;
-    let cancelled = false;
-    setViewingMessage('');
-    setLoadingMessage(true);
-    adminFetch(`/api/guests/${viewingGuest.id}/invite-message`)
-      .then((res) => res.json())
-      .then((data) => { if (!cancelled && data.message) setViewingMessage(data.message); })
-      .catch(() => { /* non-fatal */ })
-      .finally(() => { if (!cancelled) setLoadingMessage(false); });
-    return () => { cancelled = true; };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [viewingGuest?.id]);
-
-  const handleOpenViewGuest = (g: Guest) =>
-    setSearchParams((prev) => { const p = new URLSearchParams(prev); p.set('guest', g.id); p.delete('edit'); return p; });
-
-  const handleSaveEditGuest = async (values: EditGuestFormValues) => {
-    if (!editingGuest) return;
-    if ((values.delivery_channel === 'email' || values.delivery_channel === 'both') && !(values.email || '').trim()) {
-      toast.error(t.emailRequiredToast);
-      return;
-    }
-    if ((values.delivery_channel === 'text' || values.delivery_channel === 'both') && !(values.phone || '').trim()) {
-      toast.error(t.phoneRequiredToast);
-      return;
-    }
-    try {
-      setSavingEdit(true);
-      const maxParty = Math.max(1, Number(values.max_party_size) || 1);
-      const res = await adminFetch(`/api/guests/${editingGuest.id}`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          name: values.name.trim(),
-          email: (values.email || '').trim(),
-          phone: (values.phone || '').trim(),
-          delivery_channel: values.delivery_channel,
-          max_party_size: maxParty,
-          rsvp_status: values.rsvp_status,
-          // Additional members; the backend derives the attended count and seats.
-          attendee_names: values.rsvp_status === 'Declined' ? [] : editExtraNames.slice(0, Math.max(0, maxParty - 1)),
-        }),
-      });
-      const data = await res.json();
-      if (data.guest) {
-        closeEditModal();
-        toast.love(tf('guestUpdatedToast', { name: data.guest.name }));
-        await onRefresh();
-      } else {
-        const { code, message } = decodeApiError(data, res.status);
-        toast.error(apiError(code, message || t.invitesErrorToast));
-      }
-    } catch (err) {
-      console.error('Failed to update guest:', err);
-      toast.error(t.invitesErrorToast);
-    } finally {
-      setSavingEdit(false);
-    }
-  };
-
-  const handleDeleteGuest = async (id: string, guestName: string) => {
-    const ok = await confirm({
-      title: t.deleteAllConfirmTitle,
-      message: tf('deleteAllConfirmMsg', { name: guestName }),
-      confirmText: t.deleteGuestTitle,
-    });
-    if (!ok) return;
-    try {
-      const res = await adminFetch(`/api/guests/${id}`, { method: 'DELETE' });
-      if (res.ok) {
-        closeGuestModal();
-        toast.info(tf('guestDeletedToast', { name: guestName }));
-        await onRefresh();
-      }
-    } catch (err) {
-      console.error('Failed to delete guest:', err);
-    }
-  };
-
-  const handleRemoveAttendee = async (guestId: string, attendeeIndex: number, removedName: string, promoteName?: string) => {
-    try {
-      const res = await adminFetch(`/api/guests/${guestId}/remove-attendee`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ index: attendeeIndex, promote_name: promoteName }),
-      });
-      const data = await res.json();
-      if (res.ok) {
-        closeGuestModal();
-        toast.info(tf(data.deleted ? 'guestDeletedToast' : 'attendeeRemovedToast', { name: removedName }));
-        await onRefresh();
-      } else {
-        const { code, message } = decodeApiError(data, res.status);
-        toast.error(apiError(code, message || t.invitesErrorToast));
-      }
-    } catch (err) {
-      console.error('Failed to remove attendee:', err);
-      toast.error(t.invitesErrorToast);
-    }
-  };
-
-  const handleApproval = async (guest: Guest, decision: 'approve' | 'reject') => {
-    try {
-      const res = await adminFetch(`/api/guests/${guest.id}/${decision}`, { method: 'POST' });
-      if (res.ok) {
-        toast.love(tf(decision === 'approve' ? 'guestApprovedToast' : 'guestRejectedToast', { name: guest.name }));
-        await onRefresh();
-      }
-    } catch (err) {
-      console.error('Approval failed:', err);
-      toast.error(t.invitesErrorToast);
-    }
-  };
-
-  const handleExportCsv = () => {
-    if (guests.length === 0) {
-      toast.info(t.noExportToast);
-      return;
-    }
-    void exportGuestsCsv(guests);
-  };
-
-  // One row per individual person, with their party's reservation code and their
-  // own table/seat resolved from the floor map (split parties included).
-  const exportGuestsCsv = async (list: Guest[]) => {
-    let floorMap: FloorMapData | null = null;
-    try {
-      const res = await fetch('/api/floorplan');
-      const data = await res.json();
-      floorMap = data.floorMap ?? null;
-    } catch {
-      /* fall back to the party's legacy table_id below */
-    }
-
-    // First five columns stay import-compatible (name, email, phone, max party, channel).
-    const headers = [
-      'Guest Name', 'Email', 'Phone', 'Max Party Size', 'Delivery Channel',
-      'Reservation Code', 'Group / Party', 'Table', 'Seat', 'RSVP Status',
-      'Attending Party Size', 'Dietary Restrictions', 'Magic RSVP Token', 'Magic RSVP URL', 'Invited By',
-    ];
-    const esc = (v: unknown) => `"${String(v ?? '').replace(/"/g, '""')}"`;
-    const rows: string[][] = [];
-
-    for (const g of list) {
-      const names = getPartyMembers(g);
-      const locations = getAttendeeLocations(g.id, floorMap, list);
-      const url = `${window.location.origin}/rsvp/${g.magic_token}`;
-      names.forEach((name, i) => {
-        const loc = locations.find((l) => l.attendeeIndex === i) ?? null;
-        rows.push([
-          esc(name),
-          esc(g.email),
-          esc(g.phone),
-          String(g.max_party_size ?? ''),
-          esc(g.delivery_channel || 'none'),
-          esc(g.code),
-          esc(g.name),
-          esc(loc?.tableName ?? ''),
-          loc ? String(loc.seatIndex + 1) : '',
-          esc(g.rsvp_status),
-          String(g.attending_party_size ?? ''),
-          esc(g.dietary_restrictions || ''),
-          esc(g.magic_token),
-          esc(url),
-          esc(g.invited_by_guest_name || 'Host'),
-        ]);
-      });
-    }
-
-    const csvContent = 'data:text/csv;charset=utf-8,' + [headers.join(','), ...rows.map((r) => r.join(','))].join('\n');
-    const encodedUri = encodeURI(csvContent);
-    const link = document.createElement('a');
-    link.setAttribute('href', encodedUri);
-    link.setAttribute('download', `baby_shower_guests_${new Date().toISOString().split('T')[0]}.csv`);
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
-    toast.love(t.exportedToast);
-  };
-
-  const handleProcessCsvImport = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!rawCsvText.trim()) {
-      toast.error(t.csvEmptyToast);
-      return;
-    }
-    try {
-      setImportingCsv(true);
-      const lines = rawCsvText.trim().split('\n');
-      const parsedGuests: any[] = [];
-      for (let i = 0; i < lines.length; i++) {
-        const line = lines[i].trim();
-        if (!line) continue;
-        if (i === 0 && (line.toLowerCase().includes('name') || line.toLowerCase().includes('email'))) continue;
-        const parts = parseCsvLine(line);
-        if (parts[0]) {
-          parsedGuests.push({
-            name: parts[0],
-            email: parts[1] || '',
-            phone: parts[2] || '',
-            max_party_size: Number(parts[3]) || 2,
-            delivery_channel: parts[4] && ['email', 'text', 'both', 'none'].includes(parts[4].toLowerCase()) ? parts[4].toLowerCase() : 'email',
-            language_pref: language,
-          });
-        }
-      }
-      if (parsedGuests.length === 0) {
-        toast.error(t.csvInvalidToast);
-        return;
-      }
-      const res = await adminFetch('/api/guests/batch-import', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ guests: parsedGuests }),
-      });
-      if (res.ok) {
-        const data = await res.json();
-        toast.love(tf('csvImportedToast', { count: data.count }));
-        setShowCsvImportModal(false);
-        setRawCsvText('');
-        onRefresh();
-      } else {
-        toast.error(t.csvImportFailedToast);
-      }
-    } catch (err) {
-      console.error('CSV import error:', err);
-      toast.error(t.csvImportErrorToast);
-    } finally {
-      setImportingCsv(false);
-    }
-  };
-
-  const handleAddGuest = (values: AddGuestFormValues) => {
-    if (!values.name.trim()) return;
-    if (!markGoing) {
-      if ((values.delivery_channel === 'email' || values.delivery_channel === 'both') && !(values.email || '').trim()) {
-        toast.error(t.emailRequiredToast);
-        return;
-      }
-      if ((values.delivery_channel === 'text' || values.delivery_channel === 'both') && !(values.phone || '').trim()) {
-        toast.error(t.phoneRequiredToast);
-        return;
-      }
-    }
-    // A group ask the host to name the extra members before creating anything.
-    const partySize = Math.max(1, Number(values.max_party_size) || 1);
-    if (partySize > 1) {
-      setExtraNames(Array(partySize - 1).fill(''));
-      setAttendeeModal({ values, going: markGoing });
-      return;
-    }
-    void submitGuest(values, [], markGoing);
-  };
-
-  const handleConfirmAttendees = () => {
-    if (!attendeeModal) return;
-    const extras = extraNames.map((n) => n.trim()).filter(Boolean);
-    const { values, going } = attendeeModal;
-    setAttendeeModal(null);
-    void submitGuest(values, extras, going);
-  };
-
-  const submitGuest = async (values: AddGuestFormValues, extras: string[], going: boolean) => {
-    try {
-      setSubmittingGuest(true);
-      const res = await adminFetch('/api/guests', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          name: values.name.trim(),
-          email: (values.email || '').trim(),
-          phone: (values.phone || '').trim(),
-          delivery_channel: values.delivery_channel,
-          max_party_size: values.max_party_size,
-          language_pref: values.language_pref,
-          going,
-          attendee_names: extras,
-        }),
-      });
-      const data = await res.json();
-      if (going) {
-        if (data.guest) {
-          toast.love(tf('guestAddedGoingToast', { name: data.guest.name }));
-          setValue('name', '');
-          setValue('email', '');
-          setValue('phone', '');
-          await onRefresh();
-        } else if (data.error) {
-          toast.error(apiError(data.error, t.invitesErrorToast));
-        }
-      } else if (data.guest && data.magic_token) {
-        setValue('name', '');
-        setValue('email', '');
-        setValue('phone', '');
-        // Open the guest's details modal: copy link, copy message, and the
-        // RSVP preview live there — no separate "invite sent" modal.
-        setSearchParams((prev) => { const p = new URLSearchParams(prev); p.set('guest', data.guest.id); p.delete('edit'); return p; });
-        toast.love(tf('invitesSentMsg', { count: 1 }));
-        await onRefresh();
-      } else if (data.error) {
-        toast.error(apiError(data.error, t.invitesErrorToast));
-      }
-    } catch (err) {
-      console.error('Error adding guest:', err);
-    } finally {
-      setSubmittingGuest(false);
-    }
-  };
-
-  const handleCopyMagicLink = (token: string) => {
-    const fullUrl = `${window.location.origin}/rsvp/${token}`;
-    copyMagicLink(fullUrl, token);
-  };
-
-  const handleCopyInviteMessage = async (guestId: string) => {
-    try {
-      const res = await adminFetch(`/api/guests/${guestId}/invite-message`);
-      const data = await res.json();
-      if (!data.message) throw new Error('No message');
-      await navigator.clipboard.writeText(data.message);
-      toast.love(t.messageCopiedToast);
-    } catch {
-      toast.error(t.invitesErrorToast);
-    }
-  };
-
-  const toggleSelect = (id: string) =>
-    setSelectedIds((prev) => (prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id]));
-
-  const toggleSelectAll = () =>
-    setSelectedIds((prev) =>
-      prev.length === filteredGuests.length && filteredGuests.length > 0
-        ? []
-        : filteredGuests.map((g) => g.id)
-    );
-
-  const handleBulkResend = async () => {
-    if (selectedIds.length === 0) return;
-    try {
-      const res = await adminFetch('/api/send-invitations', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ guestIds: selectedIds }),
-      });
-      const data = await res.json();
-      if (data.sent > 0) toast.love(tf('invitesSentMsg', { count: data.sent }) + (data.failed > 0 ? tf('invitesFailedSuffix', { count: String(data.failed) }) : ''));
-      else toast.info(t.invitesNoneToast);
-      setSelectedIds([]);
-    } catch { toast.error(t.invitesErrorToast); }
-  };
-
-  const handleSendReminders = async () => {
-    try {
-      const res = await adminFetch('/api/send-reminders', { method: 'POST' });
-      const data = await res.json();
-      if (data.sent > 0) {
-        toast.love(tf('remindersSentMsg', { count: data.sent }) + (data.failed > 0 ? tf('invitesFailedSuffix', { count: String(data.failed) }) : ''));
-      } else {
-        toast.info(t.remindersNoneToast);
-      }
-    } catch {
-      toast.error(t.remindersErrorToast);
-    }
-  };
-
-  const handleBulkExport = () => {
-    if (selectedIds.length === 0) return;
-    void exportGuestsCsv(guests.filter((g) => selectedIds.includes(g.id)));
-  };
-
-  const handleBulkDelete = async () => {
-    if (selectedIds.length === 0) return;
-    const ok = await confirm({
-      title: t.bulkDeleteConfirmTitle,
-      message: tf('bulkDeleteConfirmMsg', { count: selectedIds.length }),
-      confirmText: t.bulkDeleteBtn,
-    });
-    if (!ok) return;
-    try {
-      await Promise.all(selectedIds.map((id) => adminFetch(`/api/guests/${id}`, { method: 'DELETE' })));
-      toast.love(tf('guestDeletedToast', { name: String(selectedIds.length) }));
-      setSelectedIds([]);
-      await onRefresh();
-    } catch (err) {
-      console.error('Bulk delete failed:', err);
-      toast.error(t.invitesErrorToast);
-    }
-  };
 
   return (
     <motion.div
@@ -846,7 +303,7 @@ export const AdminGuestsTab: React.FC<AdminGuestsTabProps> = ({ language, t, gue
                 actionLabel={guests.length === 0 ? t.addFirstGuestBtn : t.clearFilterBtn}
                 onAction={guests.length === 0
                   ? () => setFocus('name')
-                  : () => { setSearchTerm(''); setStatusFilter('All'); setSourceFilter('All'); toast.info(t.filterResetToast); }
+                  : () => clearFilters()
                 }
               />
             </div>

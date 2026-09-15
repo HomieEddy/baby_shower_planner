@@ -1,71 +1,27 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 
-// Minimal in-memory PocketBase so the rehearsal seed/cleanup can be exercised
-// without a running server.
-const h = vi.hoisted(() => {
-  const stores: Record<string, any[]> = {};
-  let seq = 0;
-  const ensure = (name: string) => (stores[name] ??= []);
-  const match = (rec: any, filter: string) => {
-    const pairs = [...String(filter).matchAll(/(\w+)="([^"]*)"/g)];
-    return pairs.length > 0 && pairs.every(([, key, value]) => String(rec[key] ?? '') === value);
-  };
-  const collection = (name: string) => ({
-    getList: async (_p: number, _pp: number, opts: any = {}) => {
-      let items = [...ensure(name)];
-      if (opts.filter) items = items.filter((r) => match(r, opts.filter));
-      return { items, totalItems: items.length };
-    },
-    getFirstListItem: async (filter: string) => {
-      const found = ensure(name).find((r) => match(r, filter));
-      if (!found) throw new Error('not found');
-      return found;
-    },
-    getFullList: async () => [...ensure(name)],
-    getOne: async (id: string) => {
-      const found = ensure(name).find((r) => r.id === id);
-      if (!found) throw new Error('not found');
-      return found;
-    },
-    create: async (data: any) => {
-      const rec = { id: `${name}-${++seq}`, ...data };
-      ensure(name).push(rec);
-      return rec;
-    },
-    update: async (id: string, data: any) => {
-      const found = ensure(name).find((r) => r.id === id);
-      if (!found) throw new Error('not found');
-      Object.assign(found, data);
-      return found;
-    },
-    delete: async (id: string) => {
-      stores[name] = ensure(name).filter((r) => r.id !== id);
-    },
-  });
+// In-memory PocketBase from the shared test adapter (src/db/pbFake).
+const h = vi.hoisted(() => ({
+  fake: undefined as unknown as ReturnType<typeof import('./pbFake').createPbFake>,
+}));
+
+vi.mock('./client', async () => {
+  const { createPbFake } = await import('./pbFake');
+  h.fake = createPbFake();
   return {
-    stores,
-    ensure,
-    pb: { collection },
-    reset: () => {
-      for (const key of Object.keys(stores)) delete stores[key];
-      seq = 0;
-    },
+    pb: h.fake.pb,
+    fromRecord: (r: unknown) => ({ ...(r as object) }),
+    newMagicToken: () => `tok-${Math.random().toString(36).slice(2)}`,
+    newReservationCode: () => '1234',
   };
 });
-
-vi.mock('./client', () => ({
-  pb: h.pb,
-  fromRecord: (r: any) => ({ ...r }),
-  newMagicToken: () => `tok-${Math.random().toString(36).slice(2)}`,
-  newReservationCode: () => '1234',
-}));
 
 vi.mock('../server/uploadFiles', () => ({ removeUploadFiles: vi.fn() }));
 
 import { getRehearsalStatus, isRehearsalActive, startRehearsal, stopRehearsal } from './rehearsal';
 
 function seedRealGuest() {
-  h.ensure('guests').push({
+  h.fake.ensure('guests').push({
     id: 'real-1',
     name: 'Real Guest',
     email: 'real@example.com',
@@ -82,7 +38,7 @@ function seedRealGuest() {
 }
 
 function seedRealMap() {
-  h.ensure('floor_maps').push({
+  h.fake.ensure('floor_maps').push({
     id: 'real-map',
     canvasWidth: 400,
     canvasHeight: 300,
@@ -93,7 +49,7 @@ function seedRealMap() {
   });
 }
 
-beforeEach(() => h.reset());
+beforeEach(() => h.fake.reset());
 
 describe('rehearsal', () => {
   it('seeds demo data without touching pre-existing records', async () => {
@@ -108,9 +64,9 @@ describe('rehearsal', () => {
     expect(getRehearsalStatus().sample?.code).toBeTruthy();
 
     // 8 demo guests on top of the 1 real guest.
-    expect(h.ensure('guests').length).toBe(9);
+    expect(h.fake.ensure('guests').length).toBe(9);
     // Floor map replaced by the demo layout (3 tables).
-    expect(h.ensure('floor_maps')[0].tables.length).toBe(3);
+    expect((h.fake.ensure('floor_maps')[0].tables as unknown[]).length).toBe(3);
   });
 
   it('deletes only rehearsal-window rows and restores the floor map', async () => {
@@ -119,7 +75,7 @@ describe('rehearsal', () => {
     await startRehearsal();
 
     // Simulate host activity during the rehearsal (e.g. a self-registration).
-    h.ensure('guests').push({
+    h.fake.ensure('guests').push({
       id: 'during-1',
       name: 'During Guest',
       created_at: new Date().toISOString(),
@@ -127,7 +83,7 @@ describe('rehearsal', () => {
       rsvp_status: 'Pending',
       magic_token: 'during-tok',
     });
-    h.ensure('guestbook').push({
+    h.fake.ensure('guestbook').push({
       id: 'gb-1',
       guest_name: 'During Guest',
       message: 'hi',
@@ -138,10 +94,10 @@ describe('rehearsal', () => {
 
     expect(isRehearsalActive()).toBe(false);
     // The original guest survives; demo + during-rehearsal rows are gone.
-    expect(h.ensure('guests').map((g) => g.id)).toEqual(['real-1']);
-    expect(h.ensure('guestbook').length).toBe(0);
+    expect(h.fake.ensure('guests').map((g) => g.id)).toEqual(['real-1']);
+    expect(h.fake.ensure('guestbook').length).toBe(0);
     // The real floor map is restored.
-    expect(h.ensure('floor_maps')[0].id).toBe('real-map');
-    expect(h.ensure('floor_maps')[0].tables).toEqual([{ id: 'real-table', name: 'Real Table' }]);
+    expect(h.fake.ensure('floor_maps')[0].id).toBe('real-map');
+    expect(h.fake.ensure('floor_maps')[0].tables).toEqual([{ id: 'real-table', name: 'Real Table' }]);
   });
 });

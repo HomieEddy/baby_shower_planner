@@ -1,78 +1,32 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 
-// Minimal in-memory PocketBase so the registration/approval logic can be
-// exercised without a running server.
-const h = vi.hoisted(() => {
-  const stores: Record<string, any[]> = { guests: [], invites: [] };
-  let seq = 0;
-  const match = (rec: any, filter: string) => {
-    const pairs = [...filter.matchAll(/(\w+)="([^"]*)"/g)];
-    return pairs.length > 0 && pairs.every(([, key, value]) => String(rec[key] ?? '') === value);
-  };
-  const collection = (name: string) => ({
-    getList: async (_p: number, _pp: number, opts: any) => {
-      const items = stores[name].filter((r) => match(r, opts?.filter || ''));
-      return { items, totalItems: items.length };
-    },
-    getFirstListItem: async (filter: string) => {
-      const found = stores[name].find((r) => match(r, filter));
-      if (!found) throw new Error('not found');
-      return found;
-    },
-    getFullList: async (opts: any = {}) => {
-      let items = [...stores[name]];
-      if (opts.filter) items = items.filter((r) => match(r, opts.filter));
-      if (opts.sort) {
-        const desc = opts.sort.startsWith('-');
-        const key = opts.sort.replace(/^-/, '');
-        items.sort((a, b) => String(a[key]).localeCompare(String(b[key])) * (desc ? -1 : 1));
-      }
-      return items;
-    },
-    getOne: async (id: string) => {
-      const found = stores[name].find((r) => r.id === id);
-      if (!found) throw new Error('not found');
-      return found;
-    },
-    create: async (data: any) => {
-      const rec = { id: `${name}-${++seq}`, ...data };
-      stores[name].push(rec);
-      return rec;
-    },
-    update: async (id: string, data: any) => {
-      const found = stores[name].find((r) => r.id === id);
-      if (!found) throw new Error('not found');
-      Object.assign(found, data);
-      return found;
-    },
-    delete: async (id: string) => {
-      stores[name] = stores[name].filter((r) => r.id !== id);
-    },
-  });
+// In-memory PocketBase from the shared test adapter (src/db/pbFake); only the
+// client module is mocked, so every db module runs against the same fake.
+const h = vi.hoisted(() => ({
+  fake: undefined as unknown as ReturnType<typeof import('./pbFake').createPbFake>,
+}));
+
+vi.mock('./client', async () => {
+  const { createPbFake } = await import('./pbFake');
+  h.fake = createPbFake({ guests: [], invites: [] });
   return {
-    stores,
-    pb: { collection },
-    reset: () => { stores.guests = []; stores.invites = []; seq = 0; },
+    pb: h.fake.pb,
+    escFilter: (s: string) => s,
+    fromRecord: (r: unknown) => r,
+    newMagicToken: () => 'token-test',
+    newReservationCode: () => '9999',
+    removeGuestFromFloorMaps: async () => {},
+    removeAttendeeFromFloorMaps: async () => {},
   };
 });
 
-vi.mock('./client', () => ({
-  pb: h.pb,
-  escFilter: (s: string) => s,
-  fromRecord: (r: any) => r,
-  newMagicToken: () => 'token-test',
-  newReservationCode: () => '9999',
-  removeGuestFromFloorMaps: async () => {},
-  removeAttendeeFromFloorMaps: async () => {},
-}));
-
-vi.mock('./settings', () => ({ getSettings: async () => ({ date: '', language: 'EN' }) }));
+vi.mock('./settings', () => ({ getSettings: async () => ({ date: '', language: 'EN' }), getSettingsOrDefaults: async () => ({ date: '', language: 'EN' }) }));
 
 import { registerGuest, isApproved, getUniversalInviteMessage, getGuestByToken, addGuest, removeGuestAttendee, updateGuest } from './guests';
 import { createInvite, submitRsvp } from './rsvp';
 import { buildUniversalInviteMessage } from '../lib/compose';
 
-beforeEach(() => h.reset());
+beforeEach(() => h.fake.reset());
 
 describe('isApproved', () => {
   it('treats missing and approved as approved, pending/rejected as not', () => {
@@ -106,7 +60,7 @@ describe('addGuest host self-registration', () => {
     expect(again.guest.id).toBe(first.guest.id);
     expect(again.guest.rsvp_status).toBe('Attending');
     expect(again.guest.token_used).toBe(true);
-    expect(h.stores.guests.length).toBe(1);
+    expect(h.fake.stores.guests.length).toBe(1);
   });
 });
 
@@ -178,16 +132,16 @@ describe('registerGuest', () => {
     const again = await registerGuest({ name: 'Alice', email: 'a@x.com', language_pref: 'EN', attendee_names: ['Alice'] });
     expect(again.already_registered).toBe(true);
     expect(again.guest.id).toBe(first.guest.id);
-    expect(h.stores.guests.length).toBe(1);
+    expect(h.fake.stores.guests.length).toBe(1);
   });
 
   it('stamps inviter provenance from the share ref', async () => {
-    h.stores.invites.push({ id: 'inv1', inviter_guest_id: 'g0', inviter_guest_name: 'Host', invitee_name: 'Bob', note: 'hi' });
+    h.fake.stores.invites.push({ id: 'inv1', inviter_guest_id: 'g0', inviter_guest_name: 'Host', invitee_name: 'Bob', note: 'hi' });
     const result = await registerGuest({ name: 'Bob', email: 'b@x.com', language_pref: 'EN', attendee_names: ['Bob'] }, 'inv1');
     expect(result.guest.invited_by_guest_id).toBe('g0');
     expect(result.guest.invited_by_guest_name).toBe('Host');
     expect(result.guest.guest_note).toBe('hi');
-    expect(h.stores.invites.find((i) => i.id === 'inv1').registered_guest_id).toBe(result.guest.id);
+    expect(h.fake.stores.invites.find((i) => i.id === 'inv1')?.registered_guest_id).toBe(result.guest.id);
   });
 });
 
@@ -197,14 +151,14 @@ describe('submitRsvp approval gate', () => {
     await expect(submitRsvp(guest.magic_token, { rsvp_status: 'Attending', dietary_restrictions: '' }))
       .rejects.toMatchObject({ code: 'PENDING_APPROVAL' });
 
-    await h.pb.collection('guests').update(guest.id, { approval_status: 'rejected' });
+    await h.fake.pb.collection('guests').update(guest.id, { approval_status: 'rejected' });
     await expect(submitRsvp(guest.magic_token, { rsvp_status: 'Attending', dietary_restrictions: '' }))
       .rejects.toMatchObject({ code: 'REGISTRATION_REJECTED' });
   });
 
   it('allows submission once approved and unlocked', async () => {
     const { guest } = await registerGuest({ name: 'Alice', email: 'a@x.com', language_pref: 'EN', attendee_names: ['Alice'] });
-    await h.pb.collection('guests').update(guest.id, { approval_status: 'approved', token_used: false });
+    await h.fake.pb.collection('guests').update(guest.id, { approval_status: 'approved', token_used: false });
     const updated = await submitRsvp(guest.magic_token, { rsvp_status: 'Attending', attendee_names: ['Alice'], dietary_restrictions: 'x' });
     expect(updated.rsvp_status).toBe('Attending');
     expect(updated.dietary_restrictions).toBe('x');
@@ -213,7 +167,7 @@ describe('submitRsvp approval gate', () => {
 
 describe('removeGuestAttendee', () => {
   const seed = () => {
-    h.stores.guests.push({
+    h.fake.stores.guests.push({
       id: 'g1', name: 'Alice', attendee_names: ['Alice', 'Bob', 'Cara'],
       attendee_details: [{ name: 'Alice', contact: '' }, { name: 'Bob', contact: '' }, { name: 'Cara', contact: '' }],
       attending_party_size: 3, max_party_size: 5, rsvp_status: 'Attending',
@@ -240,16 +194,16 @@ describe('removeGuestAttendee', () => {
   });
 
   it('deletes the whole record when the last member is removed', async () => {
-    h.stores.guests.push({ id: 'g2', name: 'Solo', attendee_names: ['Solo'], attending_party_size: 1, max_party_size: 1, rsvp_status: 'Attending' });
+    h.fake.stores.guests.push({ id: 'g2', name: 'Solo', attendee_names: ['Solo'], attending_party_size: 1, max_party_size: 1, rsvp_status: 'Attending' });
     const res = await removeGuestAttendee('g2', 0);
     expect(res.deleted).toBe(true);
-    expect(h.stores.guests.find((g) => g.id === 'g2')).toBeUndefined();
+    expect(h.fake.stores.guests.find((g) => g.id === 'g2')).toBeUndefined();
   });
 });
 
 describe('updateGuest party sync', () => {
   const seed = () => {
-    h.stores.guests.push({
+    h.fake.stores.guests.push({
       id: 'g1', name: 'Alice', attendee_names: ['Alice', 'Bob', 'Cara'],
       attendee_details: [{ name: 'Alice', contact: '' }, { name: 'Bob', contact: '' }, { name: 'Cara', contact: '' }],
       attending_party_size: 3, max_party_size: 5, rsvp_status: 'Attending',
@@ -283,7 +237,7 @@ describe('updateGuest party sync', () => {
 
 describe('createInvite', () => {
   beforeEach(() => {
-    h.stores.guests.push({ id: 'g0', magic_token: 'tok-a', name: 'Host', language_pref: 'EN' });
+    h.fake.stores.guests.push({ id: 'g0', magic_token: 'tok-a', name: 'Host', language_pref: 'EN' });
   });
 
   it('creates a share link with ref and dedupes by contact', async () => {
@@ -296,6 +250,6 @@ describe('createInvite', () => {
 
     const dup = await createInvite('tok-a', { name: 'Carol Two', contact: 'c@x.com' });
     expect(dup.ok && dup.already_invited).toBe(true);
-    expect(h.stores.invites.length).toBe(1);
+    expect(h.fake.stores.invites.length).toBe(1);
   });
 });

@@ -1,8 +1,13 @@
 // Event settings read/write + the guest content window (guestbook + photos).
 
 import type { EventSettings } from '../types';
+import type { GuestContentLock } from '../lib/guestLock';
 import { fromRecord, pb } from './client';
 import { isRehearsalActive } from './rehearsal';
+import { findDuplicateScheduleTimes, normalizeScheduleItems } from '../lib/schedule';
+import { DomainError } from '../lib/errors';
+
+export type { GuestContentLock } from '../lib/guestLock';
 
 export async function getSettings(): Promise<EventSettings> {
   const records = await pb.collection('settings').getFullList();
@@ -10,11 +15,10 @@ export async function getSettings(): Promise<EventSettings> {
   return fromRecord<EventSettings>(records[0]);
 }
 
-export interface GuestContentLock {
-  locked: boolean;
-  opensAt?: string;
-  closesAt?: string;
-}
+// Settings for read paths that tolerate an unseeded event: an empty object
+// stands in for the missing row, so callers stop hand-rolling try/catch.
+export const getSettingsOrDefaults = async (): Promise<Partial<EventSettings>> =>
+  getSettings().catch(() => ({}));
 
 // Guestbook and photo uploads are locked until the event starts
 // (contentOpenAt) and lock again after contentCloseAt.
@@ -36,12 +40,21 @@ export async function getGuestContentLock(now: Date = new Date()): Promise<Guest
 }
 
 export async function updateSettings(payload: Partial<EventSettings>): Promise<EventSettings> {
+  const next: Partial<EventSettings> = { ...payload };
+  // One canonical schedule at the write seam: 24h times, chronological, and no
+  // two items sharing a start time. The host form pre-checks; this is the guard.
+  if (Array.isArray(next.schedule)) {
+    const normalized = normalizeScheduleItems(next.schedule);
+    const duplicates = findDuplicateScheduleTimes(normalized);
+    if (duplicates.length > 0) throw new DomainError('SCHEDULE_DUPLICATE_TIME', { time: duplicates[0] });
+    next.schedule = normalized;
+  }
   const records = await pb.collection('settings').getFullList();
   const id = records[0]?.id;
   if (id) {
-    const r = await pb.collection('settings').update(id, payload);
+    const r = await pb.collection('settings').update(id, next);
     return fromRecord<EventSettings>(r);
   }
-  const r = await pb.collection('settings').create(payload);
+  const r = await pb.collection('settings').create(next);
   return fromRecord<EventSettings>(r);
 }

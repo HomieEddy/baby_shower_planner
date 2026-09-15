@@ -20,15 +20,22 @@ vi.mock('../../db/service', () => ({
   updateGuest: vi.fn(),
 }));
 
-vi.mock('../http', () => ({
-  parseJson: async (req: { body: unknown }) => req.body,
-  rateLimit: () => ({ allowed: true }),
-  sendJson: (res: { statusCode?: number; body?: unknown }, statusCode: number, data: unknown) => {
+vi.mock('../http', async () => {
+  const { errorMessage, errorStatus } = await import('../../lib/errors');
+  const write = (res: { statusCode?: number; body?: unknown }, statusCode: number, data: unknown) => {
     res.statusCode = statusCode;
     res.body = data;
     return true;
-  },
-}));
+  };
+  return {
+    parseJson: async (req: { body: unknown }) => req.body,
+    rateLimit: () => ({ allowed: true }),
+    sendJson: (res: { statusCode?: number; body?: unknown }, statusCode: number, data: unknown) =>
+      write(res, statusCode, data),
+    sendError: (res: { statusCode?: number; body?: unknown }, code: string, message?: string) =>
+      write(res, errorStatus(code as never), { error: code, message: message ?? errorMessage(code as never) }),
+  };
+});
 
 import { handleGuestRoutes } from './guests';
 
@@ -60,7 +67,8 @@ describe('POST /api/guests', () => {
   it('still requires email for a normal email invitation', async () => {
     const res = await post({ name: 'Guest', email: '', delivery_channel: 'email' });
     expect(res.statusCode).toBe(400);
-    expect(res.body.error).toBe('Email address is required');
+    expect(res.body.error).toBe('EMAIL_REQUIRED');
+    expect(res.body.message).toBe('Email address is required');
     expect(h.addGuest).not.toHaveBeenCalled();
   });
 });

@@ -6,6 +6,9 @@ import {
   getTableOccupiedSeats,
   getAttendeeSeatIndex,
   getAttendeeSeatLocation,
+  getAvailableSeats,
+  getUnseatedPartySize,
+  canSeatParty,
   validateTables,
   seatAttendee,
   seatParty,
@@ -272,5 +275,50 @@ describe('removePartyAttendee', () => {
     });
     expect(removePartyAttendee([t1], 'g1', 0)[0].seats?.[1]).toEqual({ guestId: 'g2', attendeeIndex: 0 });
     expect(removePartyAttendee([table({ assignedGuestIds: ['g1', 'g2'] })], 'g1', 0)[0].assignedGuestIds).toEqual(['g2']);
+  });
+});
+
+describe('seat availability predicate', () => {
+  it('getAvailableSeats is capacity minus occupancy and never negative', () => {
+    expect(getAvailableSeats(table({ capacity: 4, assignedGuestIds: ['g1'] }), [guest()])).toBe(1);
+    const full = table({
+      capacity: 1,
+      seats: [{ guestId: 'g1', attendeeIndex: 0 }],
+    });
+    expect(getAvailableSeats(full, [guest()])).toBe(0);
+  });
+
+  it('getUnseatedPartySize subtracts members already split onto other tables', () => {
+    const g = guest(); // party of 3
+    const t1 = table({ seats: [{ guestId: 'g1', attendeeIndex: 0 }, null, null, null] });
+    const fm = map({ tables: [t1] });
+    expect(getUnseatedPartySize('g1', fm, [g])).toBe(2);
+    expect(getUnseatedPartySize('ghost', fm, [g])).toBe(0);
+  });
+
+  it('canSeatParty is true only with a free chair and a member still to seat', () => {
+    const g = guest(); // party of 3
+    const fm = map({ tables: [] });
+    // empty table, whole party unseated
+    expect(canSeatParty(table({ capacity: 1 }), fm, [g], 'g1')).toBe(true);
+    // table full
+    const full = table({ capacity: 1, seats: [{ guestId: 'g2', attendeeIndex: 0 }] });
+    expect(canSeatParty(full, map({ tables: [full] }), [g, guest({ id: 'g2', name: 'Eve' })], 'g1')).toBe(false);
+    // guest fully seated elsewhere -> nothing left to seat
+    const seated = [
+      table({ id: 'a', seats: [{ guestId: 'g1', attendeeIndex: 0 }, null, null, null] }),
+      table({ id: 'b', seats: [{ guestId: 'g1', attendeeIndex: 1 }, null, null, null] }),
+      table({ id: 'c', seats: [{ guestId: 'g1', attendeeIndex: 2 }, null, null, null] }),
+    ];
+    expect(canSeatParty(table({ id: 'd' }), map({ tables: seated }), [g], 'g1')).toBe(false);
+  });
+
+  it('canSeatParty allows a partial split (one free chair, two members left)', () => {
+    const g = guest();
+    const t1 = table({ seats: [{ guestId: 'g1', attendeeIndex: 0 }, null, null, null] });
+    const target = table({ id: 't2', capacity: 1 });
+    const fm = map({ tables: [t1, target] });
+    expect(getUnseatedPartySize('g1', fm, [g])).toBe(2);
+    expect(canSeatParty(target, fm, [g], 'g1')).toBe(true);
   });
 });

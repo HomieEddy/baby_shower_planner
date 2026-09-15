@@ -41,8 +41,12 @@ import {
   getTableSeats,
   getAttendeeLocations,
   getGuestSeatedCount,
+  getAvailableSeats,
+  getUnseatedPartySize,
+  canSeatParty,
 } from '../../lib/tableAssignment';
-import { findNearestSeat } from './floorPlanHelpers';
+import { findNearestSeat, clampToRoundRoom } from './floorPlanHelpers';
+import type { HoverTooltipData as HoverTooltip } from './HoverTooltip';
 import { getPartyMembers } from '../../lib/guestAttendees';
 import { SeatRing, renderRoomBoundary, renderLandmark } from './venueShapes';
 import { useFloorPlanEditor } from './floorplanHooks';
@@ -64,14 +68,6 @@ interface PaletteItem extends AttendeeKey {
 }
 
 const FloorPlan3D = lazy(() => import('./FloorPlan3D').then((m) => ({ default: m.FloorPlan3D })));
-
-export interface HoverTooltip {
-  title: string;
-  subtitle?: string;
-  details: string[];
-  x: number;
-  y: number;
-}
 
 interface FloorPlanEditorProps {
   floorMap: FloorMapData;
@@ -131,7 +127,6 @@ export const FloorPlanEditor = ({
     handleUpdateDraftRoomSize,
     handleUpdateRoomShape,
     handleUpdateDiameter,
-    clampCirclePos,
     handleDraftAddTable,
     handleDraftAddLandmark,
     handleDraftTableDragEnd,
@@ -728,7 +723,7 @@ export const FloorPlanEditor = ({
                       rotation={landmark.rotation || 0}
                       draggable
                       dragBoundFunc={(pos: any) => {
-                        const p = clampCirclePos(pos.x, pos.y, landmark.width, landmark.height, draftFloorMap, true);
+                        const p = clampToRoundRoom(pos.x, pos.y, landmark.width, landmark.height, draftFloorMap, true);
                         return { x: p.x, y: p.y };
                       }}
                       onDragEnd={(e) => handleDraftLandmarkDragEnd(landmark.id, e)}
@@ -754,12 +749,14 @@ export const FloorPlanEditor = ({
                   const occupiedCount = getTableOccupiedSeats(table, draftGuests);
                   const isFull = occupiedCount >= table.capacity;
 
-                  // Guest-first seating highlights
-                  const selectedGuestPartySize = selectedGuestForSeating ? getGuestPartySize(selectedGuestForSeating) : 0;
-                  const isAssignedToThisGuest = selectedGuestForSeating ? table.assignedGuestIds.includes(selectedGuestForSeating.id) : false;
-                  const occupiedOther = isAssignedToThisGuest ? occupiedCount - selectedGuestPartySize : occupiedCount;
-                  const freeSeatsForGuest = table.capacity - occupiedOther;
-                  const canFitGuest = selectedGuestForSeating ? freeSeatsForGuest >= selectedGuestPartySize : false;
+                  // Guest-first seating highlight: any free chair, matching seatParty.
+                  const canFitGuest = selectedGuestForSeating
+                    ? canSeatParty(table, draftFloorMap, draftGuests, selectedGuestForSeating.id)
+                    : false;
+                  const freeSeatsForGuest = selectedGuestForSeating ? getAvailableSeats(table, draftGuests) : 0;
+                  const unseatedForGuest = selectedGuestForSeating
+                    ? getUnseatedPartySize(selectedGuestForSeating.id, draftFloorMap, draftGuests)
+                    : 0;
 
                   // Dynamic stroke styling
                   let strokeColor = isSelected ? '#4A3F35' : isFull ? '#10B981' : '#CBAE94';
@@ -788,7 +785,7 @@ export const FloorPlanEditor = ({
                       rotation={table.rotation || 0}
                       draggable
                       dragBoundFunc={(pos: any) => {
-                        const p = clampCirclePos(pos.x, pos.y, table.width, table.height, draftFloorMap);
+                        const p = clampToRoundRoom(pos.x, pos.y, table.width, table.height, draftFloorMap);
                         return { x: p.x, y: p.y };
                       }}
                       onDragEnd={(e) => handleDraftTableDragEnd(table.id, e)}
@@ -914,8 +911,8 @@ export const FloorPlanEditor = ({
                         text={
                           selectedGuestForSeating
                             ? canFitGuest
-                              ? `Fits (${selectedGuestPartySize} Seats)`
-                              : `Need ${selectedGuestPartySize} Seats`
+                              ? `Fits (${Math.min(freeSeatsForGuest, unseatedForGuest)} Seats)`
+                              : `Need ${unseatedForGuest} Seats`
                             : `${occupiedCount}/${table.capacity} Seats`
                         }
                         y={table.height / 2 - 4}

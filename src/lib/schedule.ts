@@ -33,6 +33,12 @@ export function findDuplicateScheduleTimes(items: ScheduleItem[]): string[] {
   return [...counts.entries()].filter(([, n]) => n > 1).map(([key]) => key);
 }
 
+// Canonical stored form: 24h times, chronological. The one pass every writer
+// (host form + server write seam) runs before persisting.
+export function normalizeScheduleItems(items: ScheduleItem[]): ScheduleItem[] {
+  return sortScheduleByTime(items.map((item) => ({ ...item, time: normalizeScheduleTime(item.time) })));
+}
+
 // Display label for a stored time, localized (EN 12h / FR 24h).
 export function formatScheduleTime(time: string, language: 'EN' | 'FR'): string {
   if (!time) return '';

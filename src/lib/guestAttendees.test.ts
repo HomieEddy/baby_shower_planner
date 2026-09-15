@@ -5,6 +5,7 @@ import {
   getPartyMembers,
   isMemberCheckedIn,
   isPartyLead,
+  dedupePartyNames,
 } from './guestAttendees';
 import { Guest } from '../types';
 
@@ -124,5 +125,15 @@ describe('isPartyLead', () => {
   it('matches the primary case-insensitively', () => {
     expect(isPartyLead(baseGuest(), 'primary name')).toBe(true);
     expect(isPartyLead(baseGuest(), 'Guest A')).toBe(false);
+  });
+});
+
+describe('dedupePartyNames', () => {
+  it('keeps the primary first, trims, drops blanks and case-insensitive dupes, caps at max', () => {
+    expect(dedupePartyNames('Alice', [' Bob ', 'bob', '', 'Cara', 'Dan'], 3)).toEqual(['Alice', 'Bob', 'Cara']);
+  });
+
+  it('is just the primary when there are no extras', () => {
+    expect(dedupePartyNames('Alice', [], 5)).toEqual(['Alice']);
   });
 });

@@ -1,6 +1,6 @@
 import { Search, UserX, CheckCircle2, Users, Utensils, X } from 'lucide-react';
 import { Guest, FloorMapData, TableElement } from '../../types';
-import { getGuestPartySize, getTableOccupiedSeats, getGuestSeatedCount } from '../../lib/tableAssignment';
+import { getGuestPartySize, getAvailableSeats, getUnseatedPartySize, canSeatParty } from '../../lib/tableAssignment';
 import { useT, useTf } from '../shared/i18n';
 
 interface UnassignedGuestsSidebarProps {
@@ -27,12 +27,10 @@ export const UnassignedGuestsSidebar = ({
   const t = useT();
   const tf = useTf();
   // Members of the selected party still without a chair (split-aware).
-  const pSize = selectedGuest
-    ? getGuestPartySize(selectedGuest) - getGuestSeatedCount(selectedGuest.id, floorMap, guests)
-    : 0;
+  const pSize = selectedGuest ? getUnseatedPartySize(selectedGuest.id, floorMap, guests) : 0;
 
-  const matchingTables: TableElement[] = selectedGuest
-    ? (floorMap?.tables.filter((tbl) => tbl.capacity - getTableOccupiedSeats(tbl, guests) > 0) ?? [])
+  const matchingTables: TableElement[] = selectedGuest && floorMap
+    ? floorMap.tables.filter((tbl) => canSeatParty(tbl, floorMap, guests, selectedGuest.id))
     : [];
 
   return (
@@ -104,8 +102,7 @@ export const UnassignedGuestsSidebar = ({
             </span>
             <div className="space-y-1 max-h-36 overflow-y-auto pr-1">
               {matchingTables.map((tbl) => {
-                const occ = getTableOccupiedSeats(tbl, guests);
-                const free = tbl.capacity - occ;
+                const free = getAvailableSeats(tbl, guests);
                 return (
                   <button
                     key={tbl.id}

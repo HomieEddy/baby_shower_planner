@@ -2,7 +2,7 @@
 // batch import.
 
 import type { RouteCtx } from '../http';
-import { parseJson, rateLimit, sendJson } from '../http';
+import { parseJson, rateLimit, sendError, sendJson } from '../http';
 import { EditGuestSchema, isValidCode } from '../../lib/validation';
 import {
   addGuest,
@@ -27,11 +27,11 @@ export async function handleGuestRoutes(ctx: RouteCtx): Promise<boolean> {
   // portal login). Tightly rate limited: the code space is only 10k.
   if (pathname === '/api/guest/resolve' && method === 'GET') {
     const code = (url.searchParams.get('code') || '').trim();
-    if (!isValidCode(code)) return sendJson(res, 400, { error: 'INVALID_CODE', message: 'Reservation code must be 4 digits' });
+    if (!isValidCode(code)) return sendError(res, 'INVALID_CODE', 'Reservation code must be 4 digits');
     const attempt = rateLimit(`code-resolve:${ip}`, 10, 60_000);
-    if (!attempt.allowed) return sendJson(res, 429, { error: 'Too many attempts. Try again later.' });
+    if (!attempt.allowed) return sendError(res, 'RATE_LIMITED');
     const guest = await getGuestByCode(code);
-    if (!guest) return sendJson(res, 404, { error: 'NOT_FOUND', message: 'Reservation code not found' });
+    if (!guest) return sendError(res, 'NOT_FOUND', 'Reservation code not found');
     return sendJson(res, 200, { magic_token: guest.magic_token });
   }
 
@@ -49,10 +49,10 @@ export async function handleGuestRoutes(ctx: RouteCtx): Promise<boolean> {
       // it carries no delivery channel (a stale "email" selection must not
       // trigger the email-required guard).
       const channel = isGoing ? 'none' : (delivery_channel || 'none');
-      if (!name || !name.trim()) return sendJson(res, 400, { error: 'Guest name is required' });
-      if ((channel === 'email' || channel === 'both') && (!email || !email.trim())) return sendJson(res, 400, { error: 'Email address is required' });
-      if ((channel === 'text' || channel === 'both') && (!phone || !phone.trim())) return sendJson(res, 400, { error: 'Phone number is required' });
-      if (!['email', 'text', 'both', 'none'].includes(channel)) return sendJson(res, 400, { error: 'Invalid delivery channel' });
+      if (!name || !name.trim()) return sendError(res, 'NAME_REQUIRED', 'Guest name is required');
+      if ((channel === 'email' || channel === 'both') && (!email || !email.trim())) return sendError(res, 'EMAIL_REQUIRED', 'Email address is required');
+      if ((channel === 'text' || channel === 'both') && (!phone || !phone.trim())) return sendError(res, 'PHONE_REQUIRED', 'Phone number is required');
+      if (!['email', 'text', 'both', 'none'].includes(channel)) return sendError(res, 'INVALID_CHANNEL');
       const extraNames = Array.isArray(attendee_names)
         ? attendee_names.filter((n: unknown): n is string => typeof n === 'string').slice(0, 20)
         : undefined;
@@ -90,7 +90,7 @@ export async function handleGuestRoutes(ctx: RouteCtx): Promise<boolean> {
     const body = await parseJson(req);
     const index = Number(body.index);
     if (!Number.isInteger(index) || index < 0) {
-      return sendJson(res, 400, { error: 'INVALID_INDEX', message: 'Attendee index must be a non-negative integer' });
+      return sendError(res, 'INVALID_INDEX');
     }
     const promoteName = typeof body.promote_name === 'string' ? body.promote_name.trim() : undefined;
     const result = await removeGuestAttendee(removeAttendee[1], index, promoteName);
@@ -110,7 +110,7 @@ export async function handleGuestRoutes(ctx: RouteCtx): Promise<boolean> {
       const body = await parseJson(req);
       const validation = EditGuestSchema.partial().safeParse(body);
       if (!validation.success) {
-        return sendJson(res, 400, { error: validation.error.issues[0]?.message || 'Invalid guest payload' });
+        return sendError(res, 'INVALID_PAYLOAD', validation.error.issues[0]?.message);
       }
       const guest = await updateGuest(id, validation.data);
       return sendJson(res, 200, { guest });
@@ -125,7 +125,7 @@ export async function handleGuestRoutes(ctx: RouteCtx): Promise<boolean> {
     requireAdmin();
     const body = await parseJson(req);
     if (!Array.isArray(body.guests) || body.guests.length === 0) {
-      return sendJson(res, 400, { error: 'Array of guest objects is required' });
+      return sendError(res, 'INVALID_PAYLOAD', 'Array of guest objects is required');
     }
     const result = await batchImportGuests(body.guests);
     return sendJson(res, 200, { success: true, count: result.count, imported: result.imported });

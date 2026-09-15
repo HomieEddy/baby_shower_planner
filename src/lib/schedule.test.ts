@@ -1,6 +1,6 @@
 import { describe, it, expect } from 'vitest';
 import type { ScheduleItem } from '../types';
-import { findDuplicateScheduleTimes, formatScheduleTime, normalizeScheduleTime, sortScheduleByTime } from './schedule';
+import { findDuplicateScheduleTimes, formatScheduleTime, normalizeScheduleItems, normalizeScheduleTime, sortScheduleByTime } from './schedule';
 
 const item = (id: string, time: string): ScheduleItem => ({ id, time, titleEn: id, titleFr: id });
 
@@ -39,6 +39,13 @@ describe('findDuplicateScheduleTimes', () => {
 
   it('is empty when every time is unique', () => {
     expect(findDuplicateScheduleTimes([item('a', '14:00'), item('b', '15:00')])).toEqual([]);
+  });
+});
+
+describe('normalizeScheduleItems', () => {
+  it('normalizes times and returns chronological order in one pass', () => {
+    const out = normalizeScheduleItems([item('b', '2:00 PM'), item('a', '9:30'), item('u', '')]);
+    expect(out.map((i) => `${i.id}:${i.time}`)).toEqual(['a:09:30', 'b:14:00', 'u:']);
   });
 });
 
