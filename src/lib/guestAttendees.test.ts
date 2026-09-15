@@ -3,6 +3,9 @@ import {
   stripPrimaryAttendees,
   buildAttendeePayload,
   getPartyMembers,
+  getAttendeeDietary,
+  getPartyDietarySummary,
+  hasDietaryRestriction,
   isMemberCheckedIn,
   isPartyLead,
   dedupePartyNames,
@@ -28,25 +31,61 @@ const baseGuest = (over: Partial<Guest> = {}): Guest => ({
 describe('stripPrimaryAttendees', () => {
   it('strips the primary (index 0) from attendee_details', () => {
     const out = stripPrimaryAttendees(
-      [{ name: 'Primary', contact: '' }, { name: 'Guest A', contact: 'a@x.com' }],
+      [{ name: 'Primary', contact: '' }, { name: 'Guest A', contact: 'a@x.com', dietary: 'Vegan' }],
       []
     );
-    expect(out).toEqual([{ name: 'Guest A', contact: 'a@x.com' }]);
+    expect(out).toEqual([{ name: 'Guest A', contact: 'a@x.com', dietary: 'Vegan' }]);
   });
 
   it('strips the primary from attendee_names', () => {
     expect(stripPrimaryAttendees(undefined, ['Primary', 'Guest A', 'Guest B'])).toEqual([
-      { name: 'Guest A', contact: '' },
-      { name: 'Guest B', contact: '' },
+      { name: 'Guest A', contact: '', dietary: '' },
+      { name: 'Guest B', contact: '', dietary: '' },
     ]);
   });
 
   it('returns one empty row when nothing is stored', () => {
-    expect(stripPrimaryAttendees([], [])).toEqual([{ name: '', contact: '' }]);
+    expect(stripPrimaryAttendees([], [])).toEqual([{ name: '', contact: '', dietary: '' }]);
   });
 
   it('returns empty list when only the primary exists', () => {
     expect(stripPrimaryAttendees(undefined, ['Primary'])).toEqual([]);
+  });
+});
+
+describe('getAttendeeDietary', () => {
+  it('reads the member own restriction first', () => {
+    const g = baseGuest({
+      dietary_restrictions: 'Legacy lead note',
+      attendee_details: [
+        { name: 'Primary Name', dietary: 'Vegan' },
+        { name: 'Guest A', dietary: 'Gluten-Free' },
+      ],
+    });
+    expect(getAttendeeDietary(g, 0)).toBe('Vegan');
+    expect(getAttendeeDietary(g, 1)).toBe('Gluten-Free');
+  });
+
+  it('falls back to the legacy party string for the lead only', () => {
+    const g = baseGuest({ dietary_restrictions: 'Nut allergy' });
+    expect(getAttendeeDietary(g, 0)).toBe('Nut allergy');
+    expect(getAttendeeDietary(g, 1)).toBe('');
+  });
+
+  it('treats "none" as no restriction', () => {
+    expect(hasDietaryRestriction(' none ')).toBe(false);
+    expect(hasDietaryRestriction('Vegan')).toBe(true);
+  });
+
+  it('summarises only members with a restriction', () => {
+    const g = baseGuest({
+      attendee_details: [
+        { name: 'Primary Name', dietary: 'Vegan' },
+        { name: 'Guest A', dietary: '' },
+        { name: 'Guest B', dietary: 'Gluten-Free' },
+      ],
+    });
+    expect(getPartyDietarySummary(g)).toBe('Primary Name: Vegan · Guest B: Gluten-Free');
   });
 });
 
@@ -66,6 +105,19 @@ describe('buildAttendeePayload', () => {
   it('handles no additional guests', () => {
     const p = buildAttendeePayload('Primary Name', [], 'Attending');
     expect(p.attendee_names).toEqual(['Primary Name']);
+  });
+
+  it('carries per-member dietary including the lead', () => {
+    const p = buildAttendeePayload(
+      'Primary Name',
+      [{ name: 'Guest A', contact: '', dietary: ' Vegan ' }],
+      'Attending',
+      ' Gluten-Free '
+    );
+    expect(p.attendee_details).toEqual([
+      { name: 'Primary Name', contact: '', dietary: 'Gluten-Free' },
+      { name: 'Guest A', contact: '', dietary: 'Vegan' },
+    ]);
   });
 });
 
