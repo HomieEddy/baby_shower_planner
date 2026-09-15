@@ -13,7 +13,7 @@ import { ActionsMenu } from '../shared/ActionsMenu';
 import { AdminToolbar } from './AdminToolbar';
 import { adminContainerVariants } from '../shared/motionPresets';
 import { getAttendeeLocations } from '../../lib/tableAssignment';
-import { getPartyMembers } from '../../lib/guestAttendees';
+import { getPartyMembers, getAttendeeDietary, hasDietaryRestriction } from '../../lib/guestAttendees';
 import { csvCell, toCsv, downloadCsv } from '../../lib/csv';
 import {
   useReactTable,
@@ -33,15 +33,11 @@ interface CateringSummaryViewProps {
 
 const partySize = (g: Guest) => g.attending_party_size || 1;
 
-const hasDietaryRestriction = (g: Guest) => {
-  const r = (g.dietary_restrictions || '').trim().toLowerCase();
-  return r.length > 0 && r !== 'none';
-};
-
 interface CateringRow {
   id: string;
   guest: Guest;
   name: string;
+  dietary: string;
   tableName: string | null;
   seatNumber: number | null;
 }
@@ -94,6 +90,7 @@ export const CateringSummaryView: React.FC<CateringSummaryViewProps> = ({ guests
             id: `${g.id}:${i}`,
             guest: g,
             name,
+            dietary: getAttendeeDietary(g, i),
             tableName: loc?.tableName ?? null,
             seatNumber: loc ? loc.seatIndex + 1 : null,
           };
@@ -102,10 +99,10 @@ export const CateringSummaryView: React.FC<CateringSummaryViewProps> = ({ guests
     [attendingGuests, floorMap, guests]
   );
 
-  // Analyze Dietary Restrictions
-  const guestsWithDietary = useMemo(
-    () => attendingGuests.filter(hasDietaryRestriction),
-    [attendingGuests]
+  // Analyze Dietary Restrictions — one entry per individual with a restriction.
+  const individualsWithDietary = useMemo(
+    () => individuals.filter((r) => hasDietaryRestriction(r.dietary)),
+    [individuals]
   );
 
   // Group dietary restrictions into categories
@@ -118,37 +115,37 @@ export const CateringSummaryView: React.FC<CateringSummaryViewProps> = ({ guests
     'Other / Custom Notes': { count: 0, guests: [] },
   };
 
-  const addToCategory = (category: string, g: Guest) => {
-    dietaryCategories[category].count += partySize(g);
-    dietaryCategories[category].guests.push(`${g.name} (${g.dietary_restrictions})`);
+  const addToCategory = (category: string, row: CateringRow) => {
+    dietaryCategories[category].count += 1;
+    dietaryCategories[category].guests.push(`${row.name} (${row.dietary})`);
   };
 
-  guestsWithDietary.forEach((g) => {
-    const text = g.dietary_restrictions.toLowerCase();
+  individualsWithDietary.forEach((row) => {
+    const text = row.dietary.toLowerCase();
     let categorized = false;
 
     if (text.includes('veg') || text.includes('vegan')) {
-      addToCategory('Vegetarian / Vegan', g);
+      addToCategory('Vegetarian / Vegan', row);
       categorized = true;
     }
     if (text.includes('gluten') || text.includes('gf') || text.includes('celiac')) {
-      addToCategory('Gluten-Free', g);
+      addToCategory('Gluten-Free', row);
       categorized = true;
     }
     if (text.includes('nut') || text.includes('peanut')) {
-      addToCategory('Nut / Peanut Allergy', g);
+      addToCategory('Nut / Peanut Allergy', row);
       categorized = true;
     }
     if (text.includes('dairy') || text.includes('lactose')) {
-      addToCategory('Dairy-Free / Lactose', g);
+      addToCategory('Dairy-Free / Lactose', row);
       categorized = true;
     }
     if (text.includes('halal') || text.includes('kosher')) {
-      addToCategory('Halal / Kosher', g);
+      addToCategory('Halal / Kosher', row);
       categorized = true;
     }
     if (!categorized) {
-      addToCategory('Other / Custom Notes', g);
+      addToCategory('Other / Custom Notes', row);
     }
   });
 
@@ -179,9 +176,9 @@ export const CateringSummaryView: React.FC<CateringSummaryViewProps> = ({ guests
           r.name.toLowerCase().includes(q) ||
           g.name.toLowerCase().includes(q) ||
           (g.code || '').toLowerCase().includes(q) ||
-          (g.dietary_restrictions || '').toLowerCase().includes(q) ||
+          r.dietary.toLowerCase().includes(q) ||
           (r.tableName || '').toLowerCase().includes(q);
-        const matchesDietary = !filterDietaryOnly || hasDietaryRestriction(g);
+        const matchesDietary = !filterDietaryOnly || hasDietaryRestriction(r.dietary);
         return matchesSearch && matchesDietary;
       }),
     [individuals, searchTerm, filterDietaryOnly]
@@ -209,16 +206,15 @@ export const CateringSummaryView: React.FC<CateringSummaryViewProps> = ({ guests
         header: () => <span>{t.partySizeCol}</span>,
         cell: (info) => <span className="font-mono text-[#4A3F35]">{info.getValue()} {t.guestSingular}</span>,
       }),
-      columnHelper.accessor((r) => (r.guest.dietary_restrictions || '').trim(), {
+      columnHelper.accessor((r) => r.dietary.trim(), {
         id: 'dietary',
         header: () => <span>{t.dietaryCol}</span>,
         cell: (info) => {
-          const g = info.row.original.guest;
-          const hasRestriction = hasDietaryRestriction(g);
-          return hasRestriction ? (
+          const dietary = info.row.original.dietary;
+          return hasDietaryRestriction(dietary) ? (
             <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-amber-100 text-amber-900 font-bold border border-amber-300">
               <AlertTriangle className="w-3 h-3 shrink-0" />
-              <span>{g.dietary_restrictions}</span>
+              <span>{dietary}</span>
             </span>
           ) : (
             <span className="text-[#8B735B] italic">{t.noDietaryNote}</span>
@@ -268,7 +264,7 @@ export const CateringSummaryView: React.FC<CateringSummaryViewProps> = ({ guests
       esc(r.guest.name),
       esc(r.guest.code),
       partySize(r.guest),
-      esc(r.guest.dietary_restrictions || 'None'),
+      esc(hasDietaryRestriction(r.dietary) ? r.dietary : 'None'),
       esc(r.tableName || t.unassignedWord),
       r.seatNumber ?? '',
       esc(r.guest.email),
@@ -282,7 +278,7 @@ export const CateringSummaryView: React.FC<CateringSummaryViewProps> = ({ guests
 
   const printManifest = usePrint();
 
-  const standardMeals = totalHeadcount - guestsWithDietary.reduce((acc, g) => acc + partySize(g), 0);
+  const standardMeals = totalHeadcount - individualsWithDietary.length;
 
   return (
     <motion.div variants={adminContainerVariants} initial="hidden" animate="show" className="space-y-6">
@@ -313,7 +309,7 @@ export const CateringSummaryView: React.FC<CateringSummaryViewProps> = ({ guests
         />
         <MetricCard
           label={t.specialDietaryLabel}
-          value={guestsWithDietary.length}
+          value={individualsWithDietary.length}
           icon={<AlertTriangle className="w-5 h-5" />}
           iconClass="text-rose-600"
           footer={t.guestsWord2}
