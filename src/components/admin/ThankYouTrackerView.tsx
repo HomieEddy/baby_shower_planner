@@ -6,7 +6,7 @@ import { motion } from 'motion/react';
 import { GiftLog, EventSettings, Guest } from '../../types';
 import { Gift, Mail, CheckCircle2, Clock, Copy, Sparkles, Trash2, Send, Loader2 } from 'lucide-react';
 import { useToast } from '../shared/ToastContext';
-import { useConfirm } from '../shared/ConfirmDialog';
+import { useConfirm, useActionConfirm } from '../shared/ConfirmDialog';
 import { Modal } from '../shared/Modal';
 import { EmptyState } from '../shared/EmptyState';
 import { Field, TextInput, Select, SearchInput, TextArea } from '../shared/ui';
@@ -38,6 +38,7 @@ export const ThankYouTrackerView: React.FC<ThankYouTrackerViewProps> = ({
     const tf = useTf();
   const { toast } = useToast();
   const confirm = useConfirm();
+  const confirmAction = useActionConfirm();
   const [filterStatus, setFilterStatus] = useState<'ALL' | 'PENDING' | 'SENT'>('ALL');
   const [searchTerm, setSearchTerm] = useState('');
 
@@ -73,6 +74,7 @@ export const ThankYouTrackerView: React.FC<ThankYouTrackerViewProps> = ({
   const babyName = settings?.babyName || '';
 
   const handleLogGift = async (values: z.input<typeof GiftLogSchema>) => {
+    if (!(await confirmAction(t.logGiftSubmitBtn))) return;
     try {
       setSubmitting(true);
       const res = await adminFetch('/api/gifts', {
@@ -97,6 +99,7 @@ export const ThankYouTrackerView: React.FC<ThankYouTrackerViewProps> = ({
   };
 
   const handleToggleThankYou = async (giftId: string) => {
+    if (!(await confirmAction(t.markSentBtn))) return;
     try {
       const res = await adminFetch(`/api/gifts/${giftId}/thankyou`, { method: 'POST' });
       if (res.ok) {
@@ -127,6 +130,7 @@ export const ThankYouTrackerView: React.FC<ThankYouTrackerViewProps> = ({
   };
 
   const generateDraft = async (gift: GiftLog) => {
+    if (!(await confirmAction(t.autoDraftBtn))) return;
     setDraftGeneratingId(gift.id);
     try {
       const res = await adminFetch(`/api/gifts/${gift.id}/draft`, { method: 'POST' });
@@ -148,6 +152,7 @@ export const ThankYouTrackerView: React.FC<ThankYouTrackerViewProps> = ({
 
   const handleSendThankYou = async () => {
     if (!activeDraft) return;
+    if (!(await confirmAction(t.thankYouSendBtn))) return;
     setSendingThankYou(true);
     try {
       const res = await adminFetch(`/api/gifts/${activeDraft.id}/send-thankyou`, {
@@ -180,7 +185,8 @@ export const ThankYouTrackerView: React.FC<ThankYouTrackerViewProps> = ({
     }
   };
 
-  const handleCopyDraft = (text: string) => {
+  const handleCopyDraft = async (text: string) => {
+    if (!(await confirmAction(t.copyLabel))) return;
     navigator.clipboard.writeText(text);
     toast.love(t.noteCopiedToast);
   };
