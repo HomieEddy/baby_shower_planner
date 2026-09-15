@@ -9,6 +9,7 @@ import {
   isMemberCheckedIn,
   isPartyLead,
   dedupePartyNames,
+  isAttending,
 } from './guestAttendees';
 import { Guest } from '../types';
 
@@ -177,6 +178,16 @@ describe('isPartyLead', () => {
   it('matches the primary case-insensitively', () => {
     expect(isPartyLead(baseGuest(), 'primary name')).toBe(true);
     expect(isPartyLead(baseGuest(), 'Guest A')).toBe(false);
+  });
+});
+
+describe('isAttending', () => {
+  it('is true only for Attending, and tolerates a missing guest', () => {
+    expect(isAttending(baseGuest({ rsvp_status: 'Attending' }))).toBe(true);
+    expect(isAttending(baseGuest({ rsvp_status: 'Declined' }))).toBe(false);
+    expect(isAttending(baseGuest({ rsvp_status: 'Pending' }))).toBe(false);
+    expect(isAttending(null)).toBe(false);
+    expect(isAttending(undefined)).toBe(false);
   });
 });
 

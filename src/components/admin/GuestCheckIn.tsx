@@ -3,6 +3,7 @@ import { motion } from 'motion/react';
 import { Guest } from '../../types';
 import { adminFetch } from '../../lib/api';
 import { getPartyMembers, isMemberCheckedIn } from '../../lib/guestAttendees';
+import { getGuestPartySize } from '../../lib/tableAssignment';
 import { useToast } from '../shared/ToastContext';
 import { useActionConfirm } from '../shared/ConfirmDialog';
 import { CheckCircle2, RotateCcw, Users, UserCheck, UserX, ChevronDown, ChevronRight } from 'lucide-react';
@@ -169,7 +170,7 @@ export const GuestCheckIn = () => {
                         )}
                       </div>
                       <div className="text-xs text-[#A09080] font-mono">
-                        {guest.email || guest.phone || t.noContactLabel} · {tf('partyOfLabel', { count: String(guest.attending_party_size || guest.max_party_size) })}
+                        {guest.email || guest.phone || t.noContactLabel} · {tf('partyOfLabel', { count: String(getGuestPartySize(guest)) })}
                         {guest.checked_in_at && ` · ${new Date(guest.checked_in_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`}
                       </div>
                     </div>

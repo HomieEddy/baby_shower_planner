@@ -3,6 +3,12 @@ import { AttendeeInfo, Guest } from '../types';
 // Primary-guest handling for the RSVP form: the primary guest is implicit
 // (stored at index 0), the form only edits additional party members.
 
+// The one attendance predicate: seating, catering, invites and stats all ask
+// this question, so they must all ask it in the same place.
+export function isAttending(guest: { rsvp_status?: string } | null | undefined): boolean {
+  return guest?.rsvp_status === 'Attending';
+}
+
 // All party member names (primary guest first), deduped and trimmed.
 // Prefers the detailed attendee list, falls back to the names array, then to
 // the primary guest alone when the party was never broken out into names.

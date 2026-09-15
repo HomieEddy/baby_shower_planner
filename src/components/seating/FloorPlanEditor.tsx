@@ -47,7 +47,7 @@ import {
 } from '../../lib/tableAssignment';
 import { findNearestSeat, clampToRoundRoom } from './floorPlanHelpers';
 import type { HoverTooltipData as HoverTooltip } from './HoverTooltip';
-import { getPartyMembers } from '../../lib/guestAttendees';
+import { getPartyMembers, isAttending } from '../../lib/guestAttendees';
 import { SeatRing, renderRoomBoundary, renderLandmark } from './venueShapes';
 import { useFloorPlanEditor } from './floorplanHooks';
 import { ViewModeToggle, ViewMode } from '../shared/ViewModeToggle';
@@ -146,7 +146,7 @@ export const FloorPlanEditor = ({
   // Every attending person, in party order, with their current chair (if any).
   const palette = useMemo<PaletteItem[]>(() => {
     const items: PaletteItem[] = [];
-    for (const g of draftGuests.filter((x) => x.rsvp_status === 'Attending')) {
+    for (const g of draftGuests.filter(isAttending)) {
       const names = getPartyMembers(g);
       const locations = getAttendeeLocations(g.id, draftFloorMap, draftGuests);
       names.forEach((name, attendeeIndex) => {
@@ -1218,7 +1218,7 @@ export const FloorPlanEditor = ({
                         {t.chooseGuestOption}
                       </option>
                       {draftGuests
-                        .filter((g) => g.rsvp_status === 'Attending')
+                        .filter(isAttending)
                         .map((g) => {
                           const pSize = getGuestPartySize(g);
                           const remaining = pSize - getGuestSeatedCount(g.id, draftFloorMap, draftGuests);

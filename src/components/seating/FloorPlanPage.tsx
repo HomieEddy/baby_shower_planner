@@ -54,6 +54,7 @@ import {
   canSeatParty,
   seatParty,
 } from '../../lib/tableAssignment';
+import { isAttending } from '../../lib/guestAttendees';
 import { getSeatOccupantInfo } from './floorPlanHelpers';
 import { suggestSeating, unseatedParties } from '../../lib/seatingSuggestions';
 import type { SmartSuggestion } from '../../lib/seatingSuggestions';
@@ -572,7 +573,7 @@ export const FloorPlanPage = () => {
   // Host-view statistics, recomputed only when guests/map/filter change.
   const hostStats = useMemo(() => {
     const totalConfirmedGuests = guests
-      .filter((g) => g.rsvp_status === 'Attending')
+      .filter(isAttending)
       .reduce((sum, g) => sum + getGuestPartySize(g), 0);
 
     const totalSeatedGuests = floorMap
@@ -596,7 +597,7 @@ export const FloorPlanPage = () => {
       : 0;
 
     const unassignedGuestsList = guests.filter((g) => {
-      if (g.rsvp_status !== 'Attending') return false;
+      if (!isAttending(g)) return false;
       const fullySeated = floorMap ? getGuestSeatedCount(g.id, floorMap, guests) >= getGuestPartySize(g) : false;
       if (fullySeated) return false;
 

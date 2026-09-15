@@ -3,6 +3,7 @@
 
 import type { Guest } from '../../types';
 import { getGuestPartySize } from '../../lib/tableAssignment';
+import { isAttending } from '../../lib/guestAttendees';
 
 export type StatusFilter = 'All' | 'Attending' | 'Pending' | 'Declined';
 export type SourceFilter = 'All' | 'Host' | 'Guest-invited';
@@ -44,7 +45,7 @@ export function computeGuestMetrics(guests: Guest[]): GuestMetrics {
   const primary = guests.filter((g) => !g.is_read_only);
   // Self-registrations only count once approved.
   const approved = primary.filter((g) => (g.approval_status || 'approved') === 'approved');
-  const attendingGuests = approved.filter((g) => g.rsvp_status === 'Attending');
+  const attendingGuests = approved.filter(isAttending);
   const pendingGuests = approved.filter((g) => g.rsvp_status === 'Pending');
   const declinedGuests = approved.filter((g) => g.rsvp_status === 'Declined');
   return {

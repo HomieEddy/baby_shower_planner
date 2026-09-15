@@ -1,7 +1,7 @@
 import { motion } from 'motion/react';
 import { CheckCircle2, Sparkles, Edit3, XCircle } from 'lucide-react';
 import { Guest } from '../../types';
-import { getPartyDietary, hasDietaryRestriction } from '../../lib/guestAttendees';
+import { getPartyDietary, hasDietaryRestriction, isAttending } from '../../lib/guestAttendees';
 import { cardStagger, popIn, fadeUp } from '../shared/motionPresets';
 import { useT, useTf } from '../shared/i18n';
 
@@ -46,7 +46,7 @@ export const ConfirmationView = ({
           <span>{t.rsvpConfirmedTitle}</span>
         </span>
         <h3 className="font-newsreader text-2xl sm:text-3xl font-bold text-[#4A3F35]">
-          {guest.rsvp_status === 'Attending'
+          {isAttending(guest)
             ? t.rsvpConfirmedMsgAttending
             : t.rsvpConfirmedMsgDeclined}
         </h3>
@@ -102,11 +102,11 @@ export const ConfirmationView = ({
         </p>
         <p className="text-[#4A3F35]">
           <strong>{t.statusLabel}</strong>{' '}
-          <span className={guest.rsvp_status === 'Attending' ? 'text-emerald-700 font-bold' : 'text-rose-600 font-bold'}>
+          <span className={isAttending(guest) ? 'text-emerald-700 font-bold' : 'text-rose-600 font-bold'}>
             {guest.rsvp_status}
           </span>
         </p>
-        {guest.rsvp_status === 'Attending' && (
+        {isAttending(guest) && (
           <>
             <p className="text-[#4A3F35]">
               <strong>Attending Guests ({guest.attending_party_size || 1}):</strong>{' '}
@@ -146,7 +146,7 @@ export const ConfirmationView = ({
       <div className="pt-6 border-t border-dashed border-[#4A3F35]/20">
         <div className="label-mono mb-2">{t.currentStatusLabel}</div>
         <div className="bg-[#E9E0D2] px-5 py-2.5 rounded-full border border-[#4A3F35]/20 inline-flex items-center gap-2 text-xs font-bold text-[#4A3F35]">
-          {guest.rsvp_status === 'Attending' ? (
+          {isAttending(guest) ? (
             <>
               <CheckCircle2 className="w-4 h-4 text-emerald-700" />
               <span>{t.rsvpConfirmedLabel} <strong>{t.statusAttendingWord} ({guest.attending_party_size || 1})</strong></span>

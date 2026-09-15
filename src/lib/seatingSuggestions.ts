@@ -4,6 +4,7 @@
 
 import type { FloorMapData, Guest, TableElement } from '../types';
 import { getAvailableSeats, getGuestPartySize, getGuestSeatedCount } from './tableAssignment';
+import { isAttending } from './guestAttendees';
 
 export type SuggestionFit = 'exact' | 'optimal' | 'grouping';
 
@@ -21,7 +22,7 @@ export interface SmartSuggestion {
 export const unseatedParties = (floorMap: FloorMapData, guests: Guest[]): Guest[] =>
   guests.filter(
     (g) =>
-      g.rsvp_status === 'Attending' &&
+      isAttending(g) &&
       getGuestSeatedCount(g.id, floorMap, guests) < getGuestPartySize(g)
   );
 

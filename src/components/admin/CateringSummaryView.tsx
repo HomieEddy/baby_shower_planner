@@ -13,7 +13,7 @@ import { ActionsMenu } from '../shared/ActionsMenu';
 import { AdminToolbar } from './AdminToolbar';
 import { adminContainerVariants } from '../shared/motionPresets';
 import { getAttendeeLocations } from '../../lib/tableAssignment';
-import { getPartyMembers, getAttendeeDietary, hasDietaryRestriction } from '../../lib/guestAttendees';
+import { getPartyMembers, getAttendeeDietary, hasDietaryRestriction, isAttending } from '../../lib/guestAttendees';
 import { csvCell, toCsv, downloadCsv } from '../../lib/csv';
 import {
   useReactTable,
@@ -70,7 +70,7 @@ export const CateringSummaryView: React.FC<CateringSummaryViewProps> = ({ guests
 
   // Filter attending guests only for catering
   const attendingGuests = useMemo(
-    () => guests.filter((g) => g.rsvp_status === 'Attending'),
+    () => guests.filter(isAttending),
     [guests]
   );
   const totalHeadcount = useMemo(

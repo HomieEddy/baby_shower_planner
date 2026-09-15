@@ -5,7 +5,7 @@
 // (chair positions, wall clamping) stays in components/seating/floorPlanHelpers.
 
 import { FloorMapData, Guest, SeatOccupant, TableElement } from '../types';
-import { getPartyMembers } from './guestAttendees';
+import { getPartyMembers, isAttending } from './guestAttendees';
 import { DomainError } from './errors';
 
 export const getGuestPartySize = (guest: Guest): number => {
@@ -15,7 +15,7 @@ export const getGuestPartySize = (guest: Guest): number => {
   const attendingCount = guest.attending_party_size || 0;
   const maxCount = guest.max_party_size || 1;
 
-  if (guest.rsvp_status === 'Attending') {
+  if (isAttending(guest)) {
     return Math.max(namesCount, detailsCount, attendingCount, 1);
   }
   return Math.max(namesCount, detailsCount, attendingCount, maxCount, 1);
@@ -37,7 +37,7 @@ export const getTableSeats = (
   const out: (SeatOccupant | null)[] = new Array(capacity).fill(null);
   let cursor = 0;
   for (const gId of table.assignedGuestIds || []) {
-    const guest = guestsList.find((g) => g.id === gId && g.rsvp_status === 'Attending');
+    const guest = guestsList.find((g) => g.id === gId && isAttending(g));
     if (!guest) continue;
     const size = getGuestPartySize(guest);
     for (let i = 0; i < size && cursor < capacity; i++) {
@@ -188,7 +188,7 @@ export const validateTables = (tables: TableElement[], guestsList: Guest[]): voi
       if (!seat) continue;
       const guest = guestsList.find((g) => g.id === seat.guestId);
       if (!guest) throw new DomainError('SEAT_UNKNOWN_GUEST');
-      if (guest.rsvp_status !== 'Attending') throw new DomainError('SEAT_GUEST_NOT_ATTENDING');
+      if (!isAttending(guest)) throw new DomainError('SEAT_GUEST_NOT_ATTENDING');
       const size = getGuestPartySize(guest);
       if (!Number.isInteger(seat.attendeeIndex) || seat.attendeeIndex < 0 || seat.attendeeIndex >= size) {
         throw new DomainError('SEAT_INDEX_OUT_OF_RANGE');

@@ -2,7 +2,7 @@
 
 import type { Guest, AddGuestPayload, RegisterGuestPayload, Language } from '../types';
 import { buildInviteMessage, buildUniversalInviteMessage, composeInvitation } from '../lib/compose';
-import { getPartyMembers, dedupePartyNames } from '../lib/guestAttendees';
+import { getPartyMembers, dedupePartyNames, isAttending } from '../lib/guestAttendees';
 import { DomainError } from '../lib/errors';
 import { escFilter, fromRecord, newMagicToken, newReservationCode, pb, removeAttendeeFromFloorMaps, removeGuestFromFloorMaps } from './client';
 import { getSettingsOrDefaults } from './settings';
@@ -73,7 +73,7 @@ export async function addGuest(payload: AddGuestPayload): Promise<{ guest: Guest
   if (existing.items.length > 0) {
     const g = fromRecord<Guest>(existing.items[0]);
     // Re-registering an existing contact as "going" promotes the record.
-    if (going && g.rsvp_status !== 'Attending') {
+    if (going && !isAttending(g)) {
       const promoted = fromRecord<Guest>(await pb.collection('guests').update(g.id, {
         rsvp_status: 'Attending', attending_party_size: names.length,
         attendee_names: names, attendee_details, dietary_restrictions: primaryDietary, token_used: true,

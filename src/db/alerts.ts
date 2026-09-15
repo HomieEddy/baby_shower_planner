@@ -5,6 +5,7 @@ import { fromRecord, pb } from './client';
 import { getAllGuests } from './guests';
 import { getSettingsOrDefaults } from './settings';
 import { composeAlert } from '../lib/compose';
+import { isAttending } from '../lib/guestAttendees';
 import { notifyGuest } from './notify';
 import { requireProvider } from './providers';
 
@@ -27,7 +28,7 @@ export async function createAlert(payload: { type: AlertType; title: string; mes
     if (payload.type === 'CANCELLATION') return true;
     if (g.rsvp_status === 'Declined') return false;
     if (target === 'PENDING') return g.rsvp_status === 'Pending';
-    if (target === 'ATTENDING') return g.rsvp_status === 'Attending';
+    if (target === 'ATTENDING') return isAttending(g);
     return true;
   });
   const settings = await getSettingsOrDefaults();

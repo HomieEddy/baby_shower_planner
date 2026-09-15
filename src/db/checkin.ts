@@ -1,7 +1,8 @@
 // Check-in (admin by id, public self-service by token/code).
 
 import type { Guest } from '../types';
-import { getPartyMembers, isMemberCheckedIn, isPartyLead } from '../lib/guestAttendees';
+import { getPartyMembers, isAttending, isMemberCheckedIn, isPartyLead } from '../lib/guestAttendees';
+import { getGuestPartySize } from '../lib/tableAssignment';
 import { DomainError } from '../lib/errors';
 import { fromRecord, pb } from './client';
 import { scrubForGuestLookup, scrubForRoster } from './roster';
@@ -69,13 +70,13 @@ export async function getCheckInStats(): Promise<{ total: number; checkedIn: num
   let expected = 0;
   for (const r of all) {
     const g = fromRecord<Guest>(r);
-    if (g.rsvp_status !== 'Attending') continue;
+    if (!isAttending(g)) continue;
     const members = getPartyMembers(g);
     if (members.length > 0) {
       expected += members.length;
       checkedIn += members.filter((m) => isMemberCheckedIn(g, m)).length;
     } else {
-      expected += g.attending_party_size || 1;
+      expected += getGuestPartySize(g);
       checkedIn += g.checked_in ? 1 : 0;
     }
   }

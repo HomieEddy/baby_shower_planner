@@ -18,6 +18,7 @@ import { ActionsMenu } from '../shared/ActionsMenu';
 import { Segmented } from '../shared/Segmented';
 import { AdminToolbar } from './AdminToolbar';
 import { getGuestPartySize } from '../../lib/tableAssignment';
+import { isAttending } from '../../lib/guestAttendees';
 import { useCapabilities, noProviders } from '../../lib/capabilities';
 
 export const GuestToolbar = ({
@@ -122,7 +123,7 @@ export const GuestTableView = ({
 }) => {
   const t = useT();
   const statusWord = (g: Guest) =>
-    g.rsvp_status === 'Attending' ? t.statusAttendingWord
+    isAttending(g) ? t.statusAttendingWord
       : g.rsvp_status === 'Pending' ? t.statusPendingWord
       : t.statusDeclinedWord;
 
