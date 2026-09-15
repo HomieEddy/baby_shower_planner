@@ -1,6 +1,7 @@
 import { motion } from 'motion/react';
 import { CheckCircle2, Sparkles, Edit3, XCircle } from 'lucide-react';
 import { Guest } from '../../types';
+import { getPartyDietary, hasDietaryRestriction } from '../../lib/guestAttendees';
 import { cardStagger, popIn, fadeUp } from '../shared/motionPresets';
 import { useT, useTf } from '../shared/i18n';
 
@@ -113,11 +114,11 @@ export const ConfirmationView = ({
                 ? guest.attendee_names.join(', ')
                 : guest.name}
             </p>
-            {guest.dietary_restrictions && (
-              <p className="text-[#4A3F35]">
-                <strong>{t.dietaryRestrictionsLabel}</strong> {guest.dietary_restrictions}
+            {getPartyDietary(guest).filter((m) => hasDietaryRestriction(m.dietary)).map((m, i) => (
+              <p key={i} className="text-[#4A3F35]">
+                <strong>{m.name}:</strong> {m.dietary}
               </p>
-            )}
+            ))}
           </>
         )}
       </motion.div>

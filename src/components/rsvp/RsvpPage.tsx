@@ -35,7 +35,7 @@ import {
 
 const RsvpFormSchema = z.object({
   rsvpStatus: z.enum(['Attending', 'Declined']),
-  attendees: z.array(z.object({ name: z.string(), contact: z.string() })),
+  attendees: z.array(z.object({ name: z.string(), contact: z.string(), dietary: z.string() })),
   dietary: z.string(),
 });
 type RsvpFormValues = z.infer<typeof RsvpFormSchema>;
@@ -70,7 +70,7 @@ export const RsvpPage = () => {
     resolver: zodResolver(RsvpFormSchema),
     defaultValues: {
       rsvpStatus: 'Attending',
-      attendees: [{ name: '', contact: '' }],
+      attendees: [{ name: '', contact: '', dietary: '' }],
       dietary: '',
     },
   });
@@ -115,7 +115,7 @@ export const RsvpPage = () => {
           rsvpStatus: data.guest.rsvp_status === 'Declined' ? 'Declined' : 'Attending',
           // Additional party members only — the primary guest is implicit (stored at index 0)
           attendees: stripPrimaryAttendees(data.guest.attendee_details, data.guest.attendee_names),
-          dietary: data.guest.dietary_restrictions || '',
+          dietary: data.guest.attendee_details?.[0]?.dietary || data.guest.dietary_restrictions || '',
         });
         if (data.guest.token_used || data.guest.is_read_only) {
           setSubmitted(true);
@@ -279,10 +279,10 @@ export const RsvpPage = () => {
     try {
       setSubmitting(true);
       const additional = data.rsvpStatus === 'Attending'
-        ? data.attendees.filter(a => a.name.trim() !== '').map(a => ({ name: a.name.trim(), contact: a.contact ? a.contact.trim() : '' }))
+        ? data.attendees.filter(a => a.name.trim() !== '').map(a => ({ name: a.name.trim(), contact: a.contact ? a.contact.trim() : '', dietary: a.dietary ? a.dietary.trim() : '' }))
         : [];
       // The primary guest is implicit — always stored first in the attendee list
-      const payload = buildAttendeePayload(guest.name.trim(), additional, data.rsvpStatus);
+      const payload = buildAttendeePayload(guest.name.trim(), additional, data.rsvpStatus, data.dietary);
 
       const res = await fetch(`/api/rsvp/${token}`, {
         method: 'POST',
@@ -632,6 +632,21 @@ export const RsvpPage = () => {
                         </p>
                       </div>
 
+                      <div className="p-3.5 bg-white/90 rounded-xl border border-[#4A3F35]/20 space-y-2.5">
+                        <span className="text-xs font-mono font-bold text-[#8B735B] uppercase tracking-wider">
+                          {t.finderPartyLead}
+                        </span>
+                        <div className="grid grid-cols-1 gap-2">
+                          <input
+                            type="text"
+                            {...register('dietary')}
+                            aria-label={tf('dietaryForMember', { name: guest.name })}
+                            placeholder={t.dietaryPlaceholder}
+                            className="w-full px-3 py-2 rounded-lg border border-[#4A3F35]/20 bg-white font-medium text-xs text-[#4A3F35] focus:outline-none focus:ring-2 focus:ring-[#4A3F35]"
+                          />
+                        </div>
+                      </div>
+
                       <div className="space-y-3">
                         {fields.map((att, index) => (
                           <div key={att.id} className="p-3.5 bg-white/90 rounded-xl border border-[#4A3F35]/20 space-y-2.5">
@@ -670,6 +685,15 @@ export const RsvpPage = () => {
                                   className="w-full px-3 py-2 rounded-lg border border-[#4A3F35]/20 bg-white font-medium text-xs text-[#4A3F35] focus:outline-none focus:ring-2 focus:ring-[#4A3F35]"
                                 />
                               </div>
+                              <div className="sm:col-span-2">
+                                <input
+                                  type="text"
+                                  {...register(`attendees.${index}.dietary`)}
+                                  aria-label={t.colDietary}
+                                  placeholder={t.dietaryPlaceholder}
+                                  className="w-full px-3 py-2 rounded-lg border border-[#4A3F35]/20 bg-white font-medium text-xs text-[#4A3F35] focus:outline-none focus:ring-2 focus:ring-[#4A3F35]"
+                                />
+                              </div>
                             </div>
                           </div>
                         ))}
@@ -677,28 +701,12 @@ export const RsvpPage = () => {
 
                       <button
                         type="button"
-                        onClick={() => append({ name: '', contact: '' })}
+                        onClick={() => append({ name: '', contact: '', dietary: '' })}
                         className="mt-2 w-full py-2.5 rounded-xl border border-dashed border-[#4A3F35]/30 bg-white/80 hover:bg-white text-xs font-bold text-[#4A3F35] transition-colors flex items-center justify-center gap-1.5"
                       >
                         <Users className="w-4 h-4 text-[#8B735B]" />
                         <span>{t.addAnotherGuestBtn}</span>
                       </button>
-                    </div>
-                  )}
-
-                  {/* Dietary Restrictions (Only when Attending) */}
-                  {rsvpStatus === 'Attending' && (
-                    <div className="space-y-2">
-                      <label htmlFor="rsvp-dietary" className="label-mono block">
-                        {t.dietaryLabel}
-                      </label>
-                      <textarea
-                        id="rsvp-dietary"
-                        rows={2}
-                        {...register('dietary')}
-                        placeholder={t.dietaryPlaceholder}
-                        className="w-full px-4 py-3 rounded-xl border border-[#4A3F35]/20 focus:outline-none focus:ring-2 focus:ring-[#4A3F35] text-sm bg-white text-[#4A3F35]"
-                      />
                     </div>
                   )}
 

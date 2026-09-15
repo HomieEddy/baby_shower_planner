@@ -257,6 +257,7 @@ export interface Translations {
   descFrLabel: string;
   deselectAllBtn: string;
   dietaryCol: string;
+  dietaryForMember: string;
   dietaryLabel: string;
   dietaryPlaceholder: string;
   dietaryRestrictionsLabel: string;
@@ -1494,6 +1495,7 @@ export const translations: Record<Language, Translations> = {
     descFrLabel: "Desc (Français)",
     deselectAllBtn: "Deselect All",
     dietaryCol: "Dietary Restrictions & Allergies",
+    dietaryForMember: "Dietary restrictions for {{name}}",
     dietaryLabel: "Dietary Restrictions or Food Allergies",
     dietaryPlaceholder: "e.g., Vegetarian, Gluten-Free, Nut Allergy, Lactose Intolerant...",
     dietaryRestrictionsLabel: "Dietary Restrictions:",
@@ -2728,6 +2730,7 @@ export const translations: Record<Language, Translations> = {
     descFrLabel: "Description (français)",
     deselectAllBtn: "Tout désélectionner",
     dietaryCol: "Restrictions alimentaires & allergies",
+    dietaryForMember: "Restrictions alimentaires de {{name}}",
     dietaryLabel: "Restrictions alimentaires ou allergies",
     dietaryPlaceholder: "ex : Végétarien, Sans gluten, Allergie aux fruits à coque, Intolérant au lactose...",
     dietaryRestrictionsLabel: "Restrictions alimentaires :",
