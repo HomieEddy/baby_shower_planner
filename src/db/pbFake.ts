@@ -35,6 +35,15 @@ function sortRecords(items: PbRecord[], sort: string): PbRecord[] {
   return [...items].sort((a, b) => String(a[key] ?? '').localeCompare(String(b[key] ?? '')) * (desc ? -1 : 1));
 }
 
+// The real SDK throws a ClientResponseError carrying `status: 404` for a
+// missing record; the fake mirrors that so the caller's "absent vs broken"
+// branch is the one under test.
+export function notFoundError(): Error & { status: number } {
+  const err = new Error('The requested resource was not found.') as Error & { status: number };
+  err.status = 404;
+  return err;
+}
+
 export function createPbFake(initial: Record<string, PbRecord[]> = {}) {
   const stores: Record<string, PbRecord[]> = {};
   for (const [name, rows] of Object.entries(initial)) stores[name] = [...rows];
@@ -50,7 +59,7 @@ export function createPbFake(initial: Record<string, PbRecord[]> = {}) {
     },
     getFirstListItem: async (filter: string) => {
       const found = ensure(name).find((r) => pbFilterMatches(r, filter));
-      if (!found) throw new Error('not found');
+      if (!found) throw notFoundError();
       return found;
     },
     getFullList: async (opts: ListOpts = {}) => {
@@ -61,7 +70,7 @@ export function createPbFake(initial: Record<string, PbRecord[]> = {}) {
     },
     getOne: async (id: string) => {
       const found = ensure(name).find((r) => r.id === id);
-      if (!found) throw new Error('not found');
+      if (!found) throw notFoundError();
       return found;
     },
     create: async (data: Record<string, unknown>) => {

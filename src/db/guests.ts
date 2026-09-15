@@ -4,7 +4,7 @@ import type { Guest, AddGuestPayload, RegisterGuestPayload, Language } from '../
 import { buildInviteMessage, buildUniversalInviteMessage, composeInvitation } from '../lib/compose';
 import { getPartyMembers, dedupePartyNames, isAttending, mergeParty, partyNames, MAX_REGISTERED_PARTY } from '../lib/guestAttendees';
 import { DomainError } from '../lib/errors';
-import { escFilter, fromRecord, newMagicToken, newReservationCode, pb, removeAttendeeFromFloorMaps, removeGuestFromFloorMaps } from './client';
+import { escFilter, findFirstOrUndefined, fromRecord, newMagicToken, newReservationCode, pb, removeAttendeeFromFloorMaps, removeGuestFromFloorMaps } from './client';
 import { getSettingsOrDefaults } from './settings';
 import { notifyGuest } from './notify';
 
@@ -19,18 +19,14 @@ export async function getAllGuests(): Promise<Guest[]> {
   return records.map(r => fromRecord<Guest>(r));
 }
 
+// Both lookups return undefined only when the record is genuinely absent: a
+// PocketBase outage propagates instead of looking like an unknown invite.
 export async function getGuestByToken(token: string): Promise<Guest | undefined> {
-  try {
-    const r = await pb.collection('guests').getFirstListItem(`magic_token="${escFilter(token)}"`);
-    return fromRecord<Guest>(r);
-  } catch { return undefined; }
+  return findFirstOrUndefined<Guest>('guests', `magic_token="${escFilter(token)}"`);
 }
 
 export async function getGuestByCode(code: string): Promise<Guest | undefined> {
-  try {
-    const r = await pb.collection('guests').getFirstListItem(`code="${escFilter(code)}"`);
-    return fromRecord<Guest>(r);
-  } catch { return undefined; }
+  return findFirstOrUndefined<Guest>('guests', `code="${escFilter(code)}"`);
 }
 
 export async function getGuestById(id: string): Promise<Guest> {

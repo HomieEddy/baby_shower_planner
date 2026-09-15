@@ -143,7 +143,9 @@ export async function selfCheckIn(opts: {
       : await checkInGuest(record.id, target);
     return { ok: true, guest: scrub(updated) };
   } catch (err) {
-    if (err instanceof Error && err.message === 'NOT_IN_PARTY') return { ok: false, error: 'NOT_IN_PARTY' };
+    // Branch on the code: a DomainError's `message` is the registry prose, not
+    // the code, so matching on it never fired.
+    if (err instanceof DomainError && err.code === 'NOT_IN_PARTY') return { ok: false, error: 'NOT_IN_PARTY' };
     throw err;
   }
 }

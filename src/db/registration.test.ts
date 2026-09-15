@@ -17,6 +17,16 @@ vi.mock('./client', async () => {
     newReservationCode: () => '9999',
     removeGuestFromFloorMaps: async () => {},
     removeAttendeeFromFloorMaps: async () => {},
+    // Same contract as the real client helper, wired to the fake.
+    isNotFound: (err: unknown) => (err as { status?: number } | null)?.status === 404,
+    findFirstOrUndefined: async (collection: string, filter: string) => {
+      try {
+        return await h.fake.pb.collection(collection).getFirstListItem(filter);
+      } catch (err) {
+        if ((err as { status?: number } | null)?.status === 404) return undefined;
+        throw err;
+      }
+    },
   };
 });
 
