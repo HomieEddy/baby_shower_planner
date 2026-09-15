@@ -45,7 +45,7 @@ import {
   getUnseatedPartySize,
   canSeatParty,
 } from '../../lib/tableAssignment';
-import { findNearestSeat, clampToRoundRoom } from './floorPlanHelpers';
+import { findNearestSeat, clampElementToRoom, clampPointToRoom } from './floorPlanHelpers';
 import type { HoverTooltipData as HoverTooltip } from './HoverTooltip';
 import { getPartyMembers } from '../../lib/guestAttendees';
 import { SeatRing, renderRoomBoundary, renderLandmark } from './venueShapes';
@@ -81,6 +81,73 @@ interface FloorPlanEditorProps {
   handleSeatHover: (table: TableElement, seatIndex: number, guestsList: Guest[], clientX: number, clientY: number) => void;
   handleLandmarkHover: (landmark: LandmarkElement, clientX: number, clientY: number) => void;
 }
+
+// Numeric field that keeps its own text while focused and commits the value on
+// blur/Enter. A plain controlled number input fights the user mid-type (typing
+// "-" or clearing the box would jump the element, and clamping resets the caret).
+const NumberField = ({ value, onCommit }: { value: number; onCommit: (v: number) => void }) => {
+  const [text, setText] = useState(String(value));
+  const [synced, setSynced] = useState(value);
+  // Re-sync when the element moves (drag / another field) ÔÇö during render, not
+  // in an effect, so the reset lands in the same commit.
+  if (value !== synced) {
+    setSynced(value);
+    setText(String(value));
+  }
+  return (
+    <TextInput
+      variant="soft"
+      type="number"
+      value={text}
+      onChange={(e) => setText(e.target.value)}
+      onBlur={() => {
+        const v = Number(text);
+        if (text.trim() !== '' && Number.isFinite(v)) onCommit(v);
+        else setText(String(value));
+      }}
+      onKeyDown={(e) => {
+        if (e.key === 'Enter') e.currentTarget.blur();
+      }}
+    />
+  );
+};
+
+// X / Y of the element center + rotation (degrees), shared by the table and
+// landmark inspectors.
+const TransformFields = ({
+  cx,
+  cy,
+  rotation,
+  onChangeCenter,
+  onChangeRotation,
+}: {
+  cx: number;
+  cy: number;
+  rotation: number;
+  onChangeCenter: (cx: number, cy: number) => void;
+  onChangeRotation: (deg: number) => void;
+}) => {
+  const t = useT();
+  return (
+    <div className="space-y-2">
+      <label className="label-mono block">{t.positionRotationLabel}</label>
+      <div className="grid grid-cols-3 gap-2">
+        <div>
+          <label className="label-mono block mb-1">{t.centerXLabel}</label>
+          <NumberField value={Math.round(cx)} onCommit={(v) => onChangeCenter(v, cy)} />
+        </div>
+        <div>
+          <label className="label-mono block mb-1">{t.centerYLabel}</label>
+          <NumberField value={Math.round(cy)} onCommit={(v) => onChangeCenter(cx, v)} />
+        </div>
+        <div>
+          <label className="label-mono block mb-1">{t.rotationDegreesLabel}</label>
+          <NumberField value={Math.round(rotation)} onCommit={onChangeRotation} />
+        </div>
+      </div>
+    </div>
+  );
+};
 
 export const FloorPlanEditor = ({
   floorMap,
@@ -137,6 +204,53 @@ export const FloorPlanEditor = ({
     handleSaveChanges,
     handleCancelEditor,
   } = useFloorPlanEditor({ floorMap, guests, notify, onSave, onCancel });
+
+  // Move the selected element by its CENTER (clamped inside the room) / set its
+  // rotation. Shared by the X, Y and rotation inputs in both inspectors.
+  const setSelectedCenter = (cx: number, cy: number) => {
+    if (selectedType === 'table' && draftSelectedTable) {
+      const el = draftSelectedTable;
+      const p = clampElementToRoom(cx - el.width / 2, cy - el.height / 2, el.width, el.height, draftFloorMap);
+      setDraftFloorMap({
+        ...draftFloorMap,
+        tables: draftFloorMap.tables.map((x) =>
+          x.id === el.id ? { ...x, x: Math.round(p.x), y: Math.round(p.y) } : x
+        ),
+      });
+      setIsDirty(true);
+    } else if (selectedType === 'landmark' && draftSelectedLandmark) {
+      const el = draftSelectedLandmark;
+      const p = clampElementToRoom(cx - el.width / 2, cy - el.height / 2, el.width, el.height, draftFloorMap);
+      setDraftFloorMap({
+        ...draftFloorMap,
+        landmarks: draftFloorMap.landmarks.map((x) =>
+          x.id === el.id ? { ...x, x: Math.round(p.x), y: Math.round(p.y) } : x
+        ),
+      });
+      setIsDirty(true);
+    }
+  };
+
+  const setSelectedRotation = (deg: number) => {
+    const rotation = ((Math.round(deg) % 360) + 360) % 360;
+    if (selectedType === 'table' && draftSelectedTable) {
+      setDraftFloorMap({
+        ...draftFloorMap,
+        tables: draftFloorMap.tables.map((x) =>
+          x.id === draftSelectedTable.id ? { ...x, rotation } : x
+        ),
+      });
+      setIsDirty(true);
+    } else if (selectedType === 'landmark' && draftSelectedLandmark) {
+      setDraftFloorMap({
+        ...draftFloorMap,
+        landmarks: draftFloorMap.landmarks.map((x) =>
+          x.id === draftSelectedLandmark.id ? { ...x, rotation } : x
+        ),
+      });
+      setIsDirty(true);
+    }
+  };
 
   // Per-seat drag/tap state (DOM palette -> Konva canvas).
   const [draggingAttendee, setDraggingAttendee] = useState<AttendeeKey | null>(null);
@@ -713,16 +827,15 @@ export const FloorPlanEditor = ({
                     <Group
                       key={landmark.id}
                       id={landmark.id}
-                      x={landmark.x}
-                      y={landmark.y}
+                      x={landmark.x + landmark.width / 2}
+                      y={landmark.y + landmark.height / 2}
+                      offsetX={landmark.width / 2}
+                      offsetY={landmark.height / 2}
                       width={landmark.width}
                       height={landmark.height}
                       rotation={landmark.rotation || 0}
                       draggable
-                      dragBoundFunc={(pos: any) => {
-                        const p = clampToRoundRoom(pos.x, pos.y, landmark.width, landmark.height, draftFloorMap, true);
-                        return { x: p.x, y: p.y };
-                      }}
+                      dragBoundFunc={(pos: any) => clampPointToRoom(pos.x, pos.y, draftFloorMap)}
                       onDragEnd={(e) => handleDraftLandmarkDragEnd(landmark.id, e)}
                       onClick={() => {
                         setSelectedId(landmark.id);
@@ -775,16 +888,15 @@ export const FloorPlanEditor = ({
                     <Group
                       key={table.id}
                       id={table.id}
-                      x={table.x}
-                      y={table.y}
+                      x={table.x + table.width / 2}
+                      y={table.y + table.height / 2}
+                      offsetX={table.width / 2}
+                      offsetY={table.height / 2}
                       width={table.width}
                       height={table.height}
                       rotation={table.rotation || 0}
                       draggable
-                      dragBoundFunc={(pos: any) => {
-                        const p = clampToRoundRoom(pos.x, pos.y, table.width, table.height, draftFloorMap);
-                        return { x: p.x, y: p.y };
-                      }}
+                      dragBoundFunc={(pos: any) => clampPointToRoom(pos.x, pos.y, draftFloorMap)}
                       onDragEnd={(e) => handleDraftTableDragEnd(table.id, e)}
                       onClick={() => {
                         if (selectedAttendee) {
@@ -1011,6 +1123,14 @@ export const FloorPlanEditor = ({
                     <option value="custom">{t.customFeatureBtn}</option>
                   </Select>
                 </div>
+
+                <TransformFields
+                  cx={draftSelectedLandmark.x + draftSelectedLandmark.width / 2}
+                  cy={draftSelectedLandmark.y + draftSelectedLandmark.height / 2}
+                  rotation={draftSelectedLandmark.rotation || 0}
+                  onChangeCenter={setSelectedCenter}
+                  onChangeRotation={setSelectedRotation}
+                />
               </div>
             </div>
           )}
@@ -1127,6 +1247,14 @@ export const FloorPlanEditor = ({
                         </Select>
                       </div>
                     </div>
+
+                    <TransformFields
+                      cx={draftSelectedTable.x + draftSelectedTable.width / 2}
+                      cy={draftSelectedTable.y + draftSelectedTable.height / 2}
+                      rotation={draftSelectedTable.rotation || 0}
+                      onChangeCenter={setSelectedCenter}
+                      onChangeRotation={setSelectedRotation}
+                    />
                   </div>
 
                   {/* Capacity usage bar */}

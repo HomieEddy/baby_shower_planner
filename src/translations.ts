@@ -959,6 +959,10 @@ export interface Translations {
   fullScreenCanvasLabel: string;
   liveDraftStageLabel: string;
   draftTableInspectorLabel: string;
+  positionRotationLabel: string;
+  centerXLabel: string;
+  centerYLabel: string;
+  rotationDegreesLabel: string;
   noTableSelectedTitle: string;
   noTableSelectedMsg: string;
   switchByGuestModeBtn: string;
@@ -2221,6 +2225,10 @@ export const translations: Record<Language, Translations> = {
     fullScreenCanvasLabel: "Full-Screen Interactive Canvas",
     liveDraftStageLabel: "Live Draft Stage",
     draftTableInspectorLabel: "Draft Table Inspector",
+    positionRotationLabel: "Position & Rotation",
+    centerXLabel: "Center X (px)",
+    centerYLabel: "Center Y (px)",
+    rotationDegreesLabel: "Rotation (°)",
     noTableSelectedTitle: "No Table Selected",
     noTableSelectedMsg: "Click on any table on the interactive canvas to edit its capacity, view seated guests, or assign new parties.",
     switchByGuestModeBtn: "Switch to By Guest & Party Mode",
@@ -3473,6 +3481,10 @@ export const translations: Record<Language, Translations> = {
     fullScreenCanvasLabel: "Toile interactive plein écran",
     liveDraftStageLabel: "Aperçu du brouillon en direct",
     draftTableInspectorLabel: "Inspecteur de table (brouillon)",
+    positionRotationLabel: "Position et rotation",
+    centerXLabel: "Centre X (px)",
+    centerYLabel: "Centre Y (px)",
+    rotationDegreesLabel: "Rotation (°)",
     noTableSelectedTitle: "Aucune table sélectionnée",
     noTableSelectedMsg: "Cliquez sur une table de la toile pour modifier sa capacité, voir les invités placés ou assigner de nouveaux groupes.",
     switchByGuestModeBtn: "Passer au mode Par invité & groupe",
