@@ -15,6 +15,7 @@ import { ViewModeToggle, ViewMode } from '../shared/ViewModeToggle';
 import { Segmented } from '../shared/Segmented';
 import { motion, AnimatePresence } from 'motion/react';
 import { Modal } from '../shared/Modal';
+import { useActionConfirm } from '../shared/ConfirmDialog';
 import { useSettings } from '../../lib/settingsQuery';
 import {
   Stage,
@@ -66,6 +67,7 @@ export const FloorPlanPage = () => {
   const settings = useSettings();
   const t = useT();
   const tf = useTf();
+  const confirmAction = useActionConfirm();
 
   // Floor Map Data State
   const [floorMap, setFloorMap] = useState<FloorMapData | null>(null);
@@ -127,6 +129,7 @@ export const FloorPlanPage = () => {
     const targetIndex = historyIndex - 1;
     const snapshot = seatingHistory[targetIndex];
     if (!snapshot) return;
+    if (!(await confirmAction(t.undoBtn))) return;
 
     const mapClone = JSON.parse(JSON.stringify(snapshot.floorMap));
     const guestsClone = JSON.parse(JSON.stringify(snapshot.guests));
@@ -151,6 +154,7 @@ export const FloorPlanPage = () => {
     const targetIndex = historyIndex + 1;
     const snapshot = seatingHistory[targetIndex];
     if (!snapshot) return;
+    if (!(await confirmAction(t.redoBtn))) return;
 
     const mapClone = JSON.parse(JSON.stringify(snapshot.floorMap));
     const guestsClone = JSON.parse(JSON.stringify(snapshot.guests));
@@ -237,6 +241,7 @@ export const FloorPlanPage = () => {
       setTimeout(() => setNotification(null), 2500);
       return;
     }
+    if (!(await confirmAction(tf('applySeatingBtn', { count: toApply.length })))) return;
 
     let updatedMap = floorMap;
     let updatedGuests = guests;
@@ -274,6 +279,7 @@ export const FloorPlanPage = () => {
 
     const targetTable = tableId ? floorMap.tables.find((t) => t.id === tableId) : undefined;
     if (tableId && !targetTable) return false;
+    if (!(await confirmAction(tableId ? t.seatPartyHereBtn : t.unassignParty))) return false;
 
     const outcome = seatParty(floorMap, guests, guestId, tableId);
     const updatedMap = outcome.map;
@@ -485,6 +491,7 @@ export const FloorPlanPage = () => {
 
   // Save Full Screen Editor Draft Changes
   const handleSaveEditorChanges = async (map: FloorMapData, editedGuests: Guest[]) => {
+    if (!(await confirmAction(t.btnSaveChanges))) return;
     await saveFloorMap(map);
     setGuests(editedGuests);
     setIsEditorModalOpen(false);
@@ -504,6 +511,7 @@ export const FloorPlanPage = () => {
   // Handle Share Seating Plan Email
   const handleShareEmailSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!(await confirmAction(t.sendSeatingEmailsBtn))) return;
     try {
       setSendingEmail(true);
       const res = await adminFetch('/api/floorplan/share-email', {
@@ -527,7 +535,8 @@ export const FloorPlanPage = () => {
   };
 
   // Export Floor Map Image
-  const handleExportImage = () => {
+  const handleExportImage = async () => {
+    if (!(await confirmAction(t.btnExportImage))) return;
     if (!stageRef.current) return;
     const dataUrl = stageRef.current.toDataURL({ pixelRatio: 2 });
     const link = document.createElement('a');

@@ -15,6 +15,7 @@ import {
 import { Guest, FloorMapData } from '../../types';
 import { useT, useTf, useApiErrorMessage } from '../shared/i18n';
 import { useToast } from '../shared/ToastContext';
+import { useActionConfirm } from '../shared/ConfirmDialog';
 import { getPartyMembers, isMemberCheckedIn, isPartyLead } from '../../lib/guestAttendees';
 import { getGuestPartySize } from '../../lib/tableAssignment';
 import { decodeApiError } from '../../lib/errors';
@@ -70,6 +71,7 @@ export const GuestFinderPage: React.FC = () => {
   const tf = useTf();
   const apiError = useApiErrorMessage();
   const { toast } = useToast();
+  const confirmAction = useActionConfirm();
   const queryClient = useQueryClient();
   const [searchParams] = useSearchParams();
   const initialToken = searchParams.get('guest') || undefined;
@@ -165,8 +167,9 @@ export const GuestFinderPage: React.FC = () => {
     : 0;
   const allChecked = selected && members.length > 0 && checkedCount === members.length;
 
-  const act = async (targetName?: string, all = false, undo = false) => {
+  const act = async (targetName?: string, all = false, undo = false, confirmLabel = t.checkInBtn) => {
     if (!selected) return;
+    if (!(await confirmAction(confirmLabel))) return;
     const key = targetName ?? 'all';
     setBusy(key);
     try {
@@ -462,7 +465,7 @@ export const GuestFinderPage: React.FC = () => {
 
                         {checked ? (
                           <button
-                            onClick={() => void act(member, false, true)}
+                            onClick={() => void act(member, false, true, t.undoCheckinBtn)}
                             disabled={isBusy || !canAct}
                             className="flex items-center gap-1 text-xs font-bold text-green-700 hover:text-green-900 disabled:opacity-40 transition-colors"
                             title={t.undoCheckinBtn}
@@ -472,7 +475,7 @@ export const GuestFinderPage: React.FC = () => {
                           </button>
                         ) : canAct ? (
                           <button
-                            onClick={() => void act(member)}
+                            onClick={() => void act(member, false, false, isSelf ? t.checkinMeBtn : t.checkInBtn)}
                             disabled={isBusy}
                             className="px-4 py-2 rounded-full text-xs font-bold bg-[#8B735B] text-white hover:bg-[#4A3F35] transition-colors flex items-center gap-1.5 disabled:opacity-50 active:scale-95"
                           >
@@ -494,7 +497,7 @@ export const GuestFinderPage: React.FC = () => {
                     initial={{ opacity: 0, y: 10 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: 0.15 }}
-                    onClick={() => void act(undefined, true)}
+                    onClick={() => void act(undefined, true, false, t.checkinAllBtn)}
                     disabled={busy === 'all'}
                     className="w-full py-3.5 rounded-2xl text-sm font-bold bg-[#C9A227] text-white hover:bg-[#A8861C] transition-colors flex items-center justify-center gap-2 disabled:opacity-50 active:scale-[0.99] shadow-md"
                   >
