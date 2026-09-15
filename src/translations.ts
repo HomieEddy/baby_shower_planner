@@ -506,7 +506,6 @@ export interface Translations {
   importCsvBtn: string;
   importCsvTitle: string;
   importingBtn: string;
-  includeQrLabel: string;
   insufficientSeats: string;
   invalidTokenMsg: string;
   invalidTokenTitle: string;
@@ -1027,7 +1026,6 @@ export interface Translations {
   paperLayoutLabel: string;
   noAttendingGuestsMsg: string;
   seatedAtLabel: string;
-  helloMyNameIsLabel: string;
   pauseBtn: string;
   playBtn: string;
   memoryMomentTitle: string;
@@ -1199,7 +1197,6 @@ export interface Translations {
   escortPaperLayout: string;
   escortHeaderWithBaby: string;
   escortHeaderDefault: string;
-  qrCodeAlt: string;
   mockBadge: string;
   providerNotConfigured: string;
   breadcrumbLabel: string;
@@ -1778,7 +1775,6 @@ export const translations: Record<Language, Translations> = {
     importCsvBtn: "Import CSV",
     importCsvTitle: "Batch import guests from CSV",
     importingBtn: "Importing...",
-    includeQrLabel: "Include RSVP / Table QR Code",
     insufficientSeats: "Insufficient Seats",
     invalidTokenMsg: "This magic invitation link is invalid or expired. Please contact the shower co-hosts.",
     invalidTokenTitle: "Invalid or Expired Invitation",
@@ -2305,7 +2301,6 @@ export const translations: Record<Language, Translations> = {
     paperLayoutLabel: "Paper layout",
     noAttendingGuestsMsg: "No attending guests yet - cards will appear here once guests confirm.",
     seatedAtLabel: "Seated At",
-    helloMyNameIsLabel: "Hello, My Name Is",
     pauseBtn: "Pause",
     playBtn: "Play",
     memoryMomentTitle: "Bebe Memory Moment",
@@ -2470,7 +2465,6 @@ export const translations: Record<Language, Translations> = {
     escortPaperLayout: "2-Column Grid (Standard A4 / Letter)",
     escortHeaderWithBaby: "Celebrating Baby {{name}}",
     escortHeaderDefault: "Welcome to Our Baby Shower",
-    qrCodeAlt: "QR code",
     mockBadge: "MOCK",
     providerNotConfigured: "No email or SMS provider is configured",
     breadcrumbLabel: "Breadcrumb",
@@ -3046,7 +3040,6 @@ export const translations: Record<Language, Translations> = {
     importCsvBtn: "Importer CSV",
     importCsvTitle: "Importer des invités depuis un CSV",
     importingBtn: "Importation...",
-    includeQrLabel: "Inclure le QR code RSVP / table",
     insufficientSeats: "Nombre de places insuffisant",
     invalidTokenMsg: "Ce lien magique est invalide ou a expiré. Veuillez contacter les hôtes de la baby shower.",
     invalidTokenTitle: "Lien d'invitation invalide",
@@ -3573,7 +3566,6 @@ export const translations: Record<Language, Translations> = {
     paperLayoutLabel: "Disposition papier",
     noAttendingGuestsMsg: "Aucun invité confirmé pour l'instant — les cartes apparaîtront ici une fois les invités confirmés.",
     seatedAtLabel: "Placé à",
-    helloMyNameIsLabel: "Bonjour, je m'appelle",
     pauseBtn: "Pause",
     playBtn: "Lecture",
     memoryMomentTitle: "Moment souvenir Bébé",
@@ -3738,7 +3730,6 @@ export const translations: Record<Language, Translations> = {
     escortPaperLayout: "Grille 2 colonnes (A4 / Letter standard)",
     escortHeaderWithBaby: "Célébration de bébé {{name}}",
     escortHeaderDefault: "Bienvenue à notre baby shower",
-    qrCodeAlt: "Code QR",
     mockBadge: "SIMULÉ",
     providerNotConfigured: "Aucun fournisseur e-mail ou SMS n'est configuré",
     breadcrumbLabel: "Fil d'Ariane",
