@@ -19,6 +19,11 @@ export const useCapabilities = () => {
   });
 };
 
+// True when neither provider is configured: no send can succeed, so send
+// actions should be disabled. Fails closed while capabilities load.
+export const noProviders = (caps: Capabilities | undefined): boolean =>
+  !caps?.email && !caps?.sms;
+
 // Channel options (None / Email / SMS / Both) filtered by what can send.
 export function availableChannels(caps: Capabilities | undefined): ('none' | 'email' | 'text' | 'both')[] {
   const channels: ('none' | 'email' | 'text' | 'both')[] = ['none'];

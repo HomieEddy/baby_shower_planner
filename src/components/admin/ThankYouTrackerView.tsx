@@ -20,6 +20,7 @@ import { adminContainerVariants } from '../shared/motionPresets';
 import { GiftLogSchema } from '../../lib/validation';
 import { decodeApiError } from '../../lib/errors';
 import { adminFetch } from '../../lib/api';
+import { useCapabilities, noProviders } from '../../lib/capabilities';
 import { useT, useTf } from '../shared/i18n';
 import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer } from 'recharts';
 
@@ -68,6 +69,18 @@ export const ThankYouTrackerView: React.FC<ThankYouTrackerViewProps> = ({
   const [draftGeneratingId, setDraftGeneratingId] = useState<string | null>(null);
   const [sendingThankYou, setSendingThankYou] = useState(false);
   const [draftChannel, setDraftChannel] = useState<'email' | 'text' | 'both'>('email');
+  const { data: caps } = useCapabilities();
+  const sendsBlocked = noProviders(caps);
+  const channelOptions: { value: 'email' | 'text' | 'both'; label: string }[] = [
+    ...(caps?.email ? [{ value: 'email' as const, label: t.channelEmail }] : []),
+    ...(caps?.sms ? [{ value: 'text' as const, label: t.channelText }] : []),
+    ...(caps?.email && caps?.sms ? [{ value: 'both' as const, label: t.channelBoth }] : []),
+  ];
+  // The stored choice may not be sendable (provider removed); fall back to the
+  // first available channel without a state-syncing effect.
+  const effectiveChannel = channelOptions.some((o) => o.value === draftChannel)
+    ? draftChannel
+    : channelOptions[0]?.value ?? draftChannel;
 
   // Selected Draft Modal / Copied Message
   const [activeDraft, setActiveDraft] = useState<{ id: string; guest: string; text: string } | null>(null);
@@ -160,7 +173,7 @@ export const ThankYouTrackerView: React.FC<ThankYouTrackerViewProps> = ({
       const res = await adminFetch(`/api/gifts/${activeDraft.id}/send-thankyou`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ channel: draftChannel, text: activeDraft.text }),
+        body: JSON.stringify({ channel: effectiveChannel, text: activeDraft.text }),
       });
       const data = await res.json();
       if (res.ok) {
@@ -523,8 +536,9 @@ export const ThankYouTrackerView: React.FC<ThankYouTrackerViewProps> = ({
               <button
                 type="button"
                 onClick={handleSendThankYou}
-                disabled={sendingThankYou || !activeDraft?.text.trim()}
-                className="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold flex items-center gap-1.5 shadow-md disabled:opacity-50 cursor-pointer"
+                disabled={sendingThankYou || !activeDraft?.text.trim() || sendsBlocked || channelOptions.length === 0}
+                title={sendsBlocked ? t.providerNotConfigured : undefined}
+                className="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold flex items-center gap-1.5 shadow-md disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
               >
                 {sendingThankYou ? (
                   <Loader2 className="w-3.5 h-3.5 animate-spin" />
@@ -546,16 +560,16 @@ export const ThankYouTrackerView: React.FC<ThankYouTrackerViewProps> = ({
 
         <div className="pt-3 border-t border-[#CBAE94]/30">
           <span className="label-mono block text-xs font-bold mb-2">{t.deliveryMethodLabel}</span>
-          <Segmented
-            ariaLabel={t.deliveryMethodLabel}
-            value={draftChannel}
-            onChange={setDraftChannel}
-            options={[
-              { value: 'email', label: t.channelEmail },
-              { value: 'text', label: t.channelText },
-              { value: 'both', label: t.channelBoth },
-            ]}
-          />
+          {channelOptions.length > 0 ? (
+            <Segmented
+              ariaLabel={t.deliveryMethodLabel}
+              value={effectiveChannel}
+              onChange={setDraftChannel}
+              options={channelOptions}
+            />
+          ) : (
+            <p className="text-xs text-amber-800 bg-amber-50 border border-amber-200 rounded-2xl px-4 py-3 font-mono">{t.providerNotConfigured}</p>
+          )}
         </div>
       </Modal>
     </motion.div>

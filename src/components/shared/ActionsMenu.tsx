@@ -6,6 +6,8 @@ export interface ActionsMenuItem {
   icon?: ReactNode;
   onClick: () => void;
   danger?: boolean;
+  disabled?: boolean;
+  title?: string;
 }
 
 interface ActionsMenuProps {
@@ -62,8 +64,10 @@ export const ActionsMenu = ({ items, label, className = '' }: ActionsMenuProps) 
               key={item.label}
               type="button"
               role="menuitem"
-              className={itemClass(item.danger)}
-              onClick={() => { setOpen(false); item.onClick(); }}
+              disabled={item.disabled}
+              title={item.title}
+              className={`${itemClass(item.danger)} disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-transparent`}
+              onClick={() => { if (item.disabled) return; setOpen(false); item.onClick(); }}
             >
               {item.icon}
               {item.label}

@@ -20,6 +20,7 @@ import { formatDateLong } from '../../lib/dateUtils';
 import { useToast } from '../shared/ToastContext';
 import { useActionConfirm } from '../shared/ConfirmDialog';
 import { useTf } from '../shared/i18n';
+import { useCapabilities, noProviders } from '../../lib/capabilities';
 
 interface AdminAlertsTabProps {
   language: Language;
@@ -35,6 +36,8 @@ export const AdminAlertsTab: React.FC<AdminAlertsTabProps> = ({ language, t, gue
   const { toast } = useToast();
   const confirmAction = useActionConfirm();
   const tf = useTf();
+  const { data: caps } = useCapabilities();
+  const sendsBlocked = noProviders(caps);
 
   const [alertType, setAlertType] = useState<AlertType>('REMINDER');
   const [targetAudience, setTargetAudience] = useState<'ALL' | 'PENDING' | 'ATTENDING'>('PENDING');
@@ -190,8 +193,9 @@ export const AdminAlertsTab: React.FC<AdminAlertsTabProps> = ({ language, t, gue
               <Mail className="w-3.5 h-3.5 text-[#8B735B]" />
               <span>{t.willNotifyLabel} <strong>{recipients.filter((g) => !!g.email).length}</strong> {t.willNotifyOfLabel} <strong>{recipients.length}</strong> {t.guestEmailsLabel}</span>
             </span>
-            <button type="submit" disabled={dispatchingAlert}
-              className="btn-accent px-6 py-3 text-xs flex items-center space-x-2 bg-amber-800 hover:bg-amber-900">
+            <button type="submit" disabled={dispatchingAlert || sendsBlocked}
+              title={sendsBlocked ? t.providerNotConfigured : undefined}
+              className="btn-accent px-6 py-3 text-xs flex items-center space-x-2 bg-amber-800 hover:bg-amber-900 disabled:opacity-40 disabled:cursor-not-allowed">
               <Send className="w-4 h-4" /><span>{dispatchingAlert ? t.dispatchingAlertBtn : t.dispatchAlertBtn}</span>
             </button>
           </div>
