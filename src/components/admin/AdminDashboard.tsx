@@ -539,6 +539,32 @@ export const AdminDashboard = () => {
         />
       )}
 
+      {/* Danger Zone — part of the Host Event Settings surface, kept apart from
+          everyday controls. */}
+      {adminSubTab === 'settings' && (
+        <motion.div
+          variants={adminCardVariants}
+          className="rounded-2xl border-2 border-rose-300 bg-rose-50/60 p-5 sm:p-6 space-y-3"
+        >
+          <div className="flex items-center gap-2">
+            <AlertTriangle className="w-5 h-5 text-rose-600" />
+            <h2 className="font-sans text-lg font-bold text-rose-900">{t.dangerZoneTitle}</h2>
+          </div>
+          <p className="text-sm text-rose-900/80 max-w-2xl">{t.dangerZoneDesc}</p>
+          <div className="flex flex-col sm:flex-row sm:items-center gap-3">
+            <button
+              type="button"
+              onClick={handleWipeData}
+              className="inline-flex items-center justify-center gap-2 px-5 min-h-[44px] rounded-xl border-2 border-rose-400 bg-white text-rose-700 text-sm font-bold hover:bg-rose-100 transition-colors cursor-pointer"
+            >
+              <Trash2 className="w-4 h-4" />
+              <span>{t.wipeDbBtn}</span>
+            </button>
+            <span className="text-xs text-rose-900/70">{t.deleteAllDataTitle}</span>
+          </div>
+        </motion.div>
+      )}
+
       {adminSubTab === 'alerts' && (
         <AdminAlertsTab
           language={language}
@@ -592,31 +618,6 @@ export const AdminDashboard = () => {
 
         </div>
       </div>
-
-      {/* Danger Zone — Host Event Settings only, kept apart from everyday controls */}
-      {adminSubTab === 'settings' && (
-      <motion.div
-        variants={adminCardVariants}
-        className="rounded-2xl border-2 border-rose-300 bg-rose-50/60 p-5 sm:p-6 space-y-3"
-      >
-        <div className="flex items-center gap-2">
-          <AlertTriangle className="w-5 h-5 text-rose-600" />
-          <h2 className="font-sans text-lg font-bold text-rose-900">{t.dangerZoneTitle}</h2>
-        </div>
-        <p className="text-sm text-rose-900/80 max-w-2xl">{t.dangerZoneDesc}</p>
-        <div className="flex flex-col sm:flex-row sm:items-center gap-3">
-          <button
-            type="button"
-            onClick={handleWipeData}
-            className="inline-flex items-center justify-center gap-2 px-5 min-h-[44px] rounded-xl border-2 border-rose-400 bg-white text-rose-700 text-sm font-bold hover:bg-rose-100 transition-colors cursor-pointer"
-          >
-            <Trash2 className="w-4 h-4" />
-            <span>{t.wipeDbBtn}</span>
-          </button>
-          <span className="text-xs text-rose-900/70">{t.deleteAllDataTitle}</span>
-        </div>
-      </motion.div>
-      )}
     </motion.div>
   );
 };
