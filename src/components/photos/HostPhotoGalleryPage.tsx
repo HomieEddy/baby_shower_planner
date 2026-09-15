@@ -30,6 +30,8 @@ import { useFloorMapTables } from '../shared/hooks';
 import { AdminToolbar } from '../admin/AdminToolbar';
 import { Segmented } from '../shared/Segmented';
 import { SearchInput } from '../shared/ui';
+import { Pagination } from '../shared/Pagination';
+import { usePagination } from '../shared/hooks';
 
 export const HostPhotoGalleryPage: React.FC = () => {
   const t = useT();
@@ -286,6 +288,9 @@ export const HostPhotoGalleryPage: React.FC = () => {
     return matchesSearch && matchesTable;
   });
 
+  const photosPager = usePagination(filteredPhotos);
+  const pageOffset = photosPager.rangeStart - 1;
+
   const selectedPhoto = selectedPhotoIndex !== null ? filteredPhotos[selectedPhotoIndex] : null;
 
   return (
@@ -531,7 +536,7 @@ export const HostPhotoGalleryPage: React.FC = () => {
                 : 'grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4'
             }
           >
-            {filteredPhotos.map((photo, index) => (
+            {photosPager.pageItems.map((photo, i) => (
               <PhotoCard
                 key={photo.id}
                 photo={photo}
@@ -540,11 +545,20 @@ export const HostPhotoGalleryPage: React.FC = () => {
                 onSelect={(id) => handleToggleSelectPhoto(id)}
                 onDelete={handleDeletePhoto}
                 onToggleHidden={handleTogglePhotoHidden}
-                onClick={() => setSelectedPhotoIndex(index)}
+                onClick={() => setSelectedPhotoIndex(pageOffset + i)}
               />
             ))}
           </div>
         )}
+
+        <Pagination
+          page={photosPager.page}
+          totalPages={photosPager.totalPages}
+          rangeStart={photosPager.rangeStart}
+          rangeEnd={photosPager.rangeEnd}
+          total={photosPager.total}
+          onPageChange={photosPager.setPage}
+        />
 
         {/* Lightbox Single Photo Modal */}
         {selectedPhoto && (

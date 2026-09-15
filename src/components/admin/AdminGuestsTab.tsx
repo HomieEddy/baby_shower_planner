@@ -29,6 +29,8 @@ import { Modal } from '../shared/Modal';
 import { useTf } from '../shared/i18n';
 import { EmptyState } from '../shared/EmptyState';
 import { TextInput, Select } from '../shared/ui';
+import { Pagination } from '../shared/Pagination';
+import { usePagination } from '../shared/hooks';
 import { useGuestAdminController } from './useGuestAdminController';
 
 interface AdminGuestsTabProps {
@@ -67,6 +69,9 @@ export const AdminGuestsTab: React.FC<AdminGuestsTabProps> = ({ language, t, gue
   const scrollToList = () => listRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
   const getGuestPartySize = getPartySize;
   const tf = useTf();
+
+  const guestsPager = usePagination(filteredGuests);
+  const approvalsPager = usePagination(pendingApprovals);
 
 
   return (
@@ -204,7 +209,7 @@ export const AdminGuestsTab: React.FC<AdminGuestsTabProps> = ({ language, t, gue
             </div>
           </div>
           <div className="grid grid-cols-1 gap-3">
-            {pendingApprovals.map((g) => (
+            {approvalsPager.pageItems.map((g) => (
               <div key={g.id} className="flex flex-wrap items-center justify-between gap-3 p-4 bg-white border border-[#CBAE94]/50 rounded-2xl">
                 <div className="min-w-0">
                   <p className="text-sm font-bold text-[#5D5449] truncate">{g.name}</p>
@@ -238,6 +243,14 @@ export const AdminGuestsTab: React.FC<AdminGuestsTabProps> = ({ language, t, gue
               </div>
             ))}
           </div>
+          <Pagination
+            page={approvalsPager.page}
+            totalPages={approvalsPager.totalPages}
+            rangeStart={approvalsPager.rangeStart}
+            rangeEnd={approvalsPager.rangeEnd}
+            total={approvalsPager.total}
+            onPageChange={approvalsPager.setPage}
+          />
         </motion.div>
       )}
 
@@ -277,13 +290,13 @@ export const AdminGuestsTab: React.FC<AdminGuestsTabProps> = ({ language, t, gue
         )}
 
         {listView === 'table' && filteredGuests.length > 0 && (
-          <GuestTableView guests={filteredGuests} onView={handleOpenViewGuest} />
+          <GuestTableView guests={guestsPager.pageItems} onView={handleOpenViewGuest} />
         )}
 
         {listView === 'cards' && (
         <div className="grid grid-cols-1 gap-3">
           <AnimatePresence>
-            {filteredGuests.map((guest) => (
+            {guestsPager.pageItems.map((guest) => (
               <GuestRowCard
                 key={guest.id}
                 guest={guest}
@@ -310,6 +323,15 @@ export const AdminGuestsTab: React.FC<AdminGuestsTabProps> = ({ language, t, gue
           )}
         </div>
         )}
+
+        <Pagination
+          page={guestsPager.page}
+          totalPages={guestsPager.totalPages}
+          rangeStart={guestsPager.rangeStart}
+          rangeEnd={guestsPager.rangeEnd}
+          total={guestsPager.total}
+          onPageChange={guestsPager.setPage}
+        />
       </motion.div>
 
       {/* Modal: Batch CSV Guest Import */}

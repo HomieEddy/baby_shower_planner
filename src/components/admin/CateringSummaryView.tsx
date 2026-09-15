@@ -19,10 +19,12 @@ import {
   useReactTable,
   getCoreRowModel,
   getSortedRowModel,
+  getPaginationRowModel,
   createColumnHelper,
   flexRender,
   SortingState,
 } from '@tanstack/react-table';
+import { Pagination } from '../shared/Pagination';
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts';
 
 interface CateringSummaryViewProps {
@@ -54,6 +56,7 @@ export const CateringSummaryView: React.FC<CateringSummaryViewProps> = ({ guests
   const [searchTerm, setSearchTerm] = useState('');
   const [filterDietaryOnly, setFilterDietaryOnly] = useState(false);
   const [sorting, setSorting] = useState<SortingState>([]);
+  const [pagination, setPagination] = useState({ pageIndex: 0, pageSize: 25 });
   const [floorMap, setFloorMap] = useState<FloorMapData | null>(null);
 
   useEffect(() => {
@@ -243,10 +246,12 @@ export const CateringSummaryView: React.FC<CateringSummaryViewProps> = ({ guests
   const table = useReactTable({
     data: filteredList,
     columns,
-    state: { sorting },
+    state: { sorting, pagination },
     onSortingChange: setSorting,
+    onPaginationChange: setPagination,
     getCoreRowModel: getCoreRowModel(),
     getSortedRowModel: getSortedRowModel(),
+    getPaginationRowModel: getPaginationRowModel(),
   });
 
   const handleExportCsv = async () => {
@@ -483,6 +488,15 @@ export const CateringSummaryView: React.FC<CateringSummaryViewProps> = ({ guests
             </tbody>
           </table>
         </div>
+
+        <Pagination
+          page={pagination.pageIndex + 1}
+          totalPages={table.getPageCount()}
+          rangeStart={filteredList.length === 0 ? 0 : pagination.pageIndex * pagination.pageSize + 1}
+          rangeEnd={Math.min((pagination.pageIndex + 1) * pagination.pageSize, filteredList.length)}
+          total={filteredList.length}
+          onPageChange={(p) => table.setPageIndex(p - 1)}
+        />
       </div>
     </motion.div>
   );
