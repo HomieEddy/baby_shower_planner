@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { QrCode, Printer } from 'lucide-react';
 import { TableElement } from '../../types';
 import { Modal } from '../shared/Modal';
+import { useActionConfirm } from '../shared/ConfirmDialog';
 import { useT, useTf } from '../shared/i18n';
 
 const qrUrl = (tableId: string) =>
@@ -48,8 +49,14 @@ const QrStandeeCard = ({ table, last }: { table: TableElement; last?: boolean })
 export const TableQrModal = ({ open, onClose, tables }: { open: boolean; onClose: () => void; tables: TableElement[] }) => {
   const t = useT();
   const tf = useTf();
+  const confirmAction = useActionConfirm();
   const [printScope, setPrintScope] = useState<'single' | 'all'>('single');
   const [selectedPrintTable, setSelectedPrintTable] = useState<TableElement | null>(null);
+
+  const handlePrint = async () => {
+    if (!(await confirmAction(t.printLabel))) return;
+    window.print();
+  };
 
   return (
     <Modal open={open} onClose={onClose} maxWidth="2xl"
@@ -157,7 +164,7 @@ export const TableQrModal = ({ open, onClose, tables }: { open: boolean; onClose
 
         <button
           type="button"
-          onClick={() => window.print()}
+          onClick={handlePrint}
           className="px-5 py-2.5 rounded-xl bg-[#8B735B] text-white text-xs font-bold flex items-center gap-2 hover:bg-[#705C47]"
         >
           <Printer className="w-4 h-4" />

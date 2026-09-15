@@ -19,6 +19,7 @@ import { decodeApiError } from '../../lib/errors';
 import { readGuestLock } from '../../lib/guestLock';
 import { compressImage, formatFileSize } from '../../lib/imageCompressor';
 import { useToast } from '../shared/ToastContext';
+import { useActionConfirm } from '../shared/ConfirmDialog';
 import { BackButton } from '../shared/BackButton';
 import { LockedNotice } from '../shared/LockedNotice';
 import { uploadPhotoBase64 } from '../../lib/fileUtils';
@@ -46,6 +47,7 @@ export const GuestPhotoUploadPage = () => {
   const [searchParams] = useSearchParams();
   const initialTableId = searchParams.get('tableId') || undefined;
   const { toast } = useToast();
+  const confirmAction = useActionConfirm();
   const { data: tables = [] } = useFloorMapTables();
   const [selectedTableId, setSelectedTableId] = useState<string>(initialTableId || '');
   const [uploaderName, setUploaderName] = useState('');
@@ -206,6 +208,7 @@ export const GuestPhotoUploadPage = () => {
       setFileError(t.uploadCodeRequiredToast);
       return;
     }
+    if (!(await confirmAction(t.uploadPhotosBtn))) return;
 
     setIsUploading(true);
 
