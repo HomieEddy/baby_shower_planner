@@ -5,6 +5,24 @@ import { Guest, FloorMapData, TableElement } from '../../types';
 import { getGuestPartySize, getTableSeats } from '../../lib/tableAssignment';
 import { getPartyMembers } from '../../lib/guestAttendees';
 
+// Whole-map wall clamp: in a round room every table and landmark is pulled
+// back inside the wall. Returns the same object when nothing moved, so React
+// state updates stay no-ops. The per-element math is clampToRoundRoom below.
+export const applyRoomClamp = (map: FloorMapData): FloorMapData => {
+  if ((map.roomShape ?? 'rectangle') !== 'circle' && map.roomShape !== 'ellipse') return map;
+  return {
+    ...map,
+    tables: map.tables.map((t) => {
+      const p = clampToRoundRoom(t.x, t.y, t.width, t.height, map);
+      return p.x === t.x && p.y === t.y ? t : { ...t, x: Math.round(p.x), y: Math.round(p.y) };
+    }),
+    landmarks: map.landmarks.map((l) => {
+      const p = clampToRoundRoom(l.x, l.y, l.width, l.height, map, true);
+      return p.x === l.x && p.y === l.y ? l : { ...l, x: Math.round(p.x), y: Math.round(p.y) };
+    }),
+  };
+};
+
 // Nearest empty-or-any chair to a canvas point, for drag-and-drop hit-testing.
 export const findNearestSeat = (
   floorMap: FloorMapData,

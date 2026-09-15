@@ -16,6 +16,7 @@ import {
   unassignParty,
   trimPartySeats,
   removePartyAttendee,
+  getSeatingStats,
 } from './tableAssignment';
 
 const expectCode = (fn: () => void, code: string) => {
@@ -320,5 +321,58 @@ describe('seat availability predicate', () => {
     const fm = map({ tables: [t1, target] });
     expect(getUnseatedPartySize('g1', fm, [g])).toBe(2);
     expect(canSeatParty(target, fm, [g], 'g1')).toBe(true);
+  });
+});
+
+describe('getSeatingStats', () => {
+  const fm = (tables: TableElement[]) => map({ tables });
+
+  it('sums the confirmed party, the seated chairs and the table mix', () => {
+    const guests = [
+      guest({ id: 'g1', attending_party_size: 3, attendee_names: ['Alice', 'Bob', 'Cara'] }),
+      guest({ id: 'g2', name: 'Dana', attending_party_size: 1, attendee_names: ['Dana'] }),
+      guest({ id: 'g3', name: 'Eve', rsvp_status: 'Declined', attending_party_size: 0, attendee_names: [] }),
+    ];
+    const seating = fm([
+      table({
+        id: 'full', capacity: 2,
+        seats: [{ guestId: 'g1', attendeeIndex: 0 }, { guestId: 'g1', attendeeIndex: 1 }],
+      }),
+      table({ id: 'empty', capacity: 4 }),
+    ]);
+
+    const stats = getSeatingStats(guests, seating);
+    expect(stats.totalConfirmedGuests).toBe(4);
+    expect(stats.totalSeatedGuests).toBe(2);
+    expect(stats.seatingProgressPercent).toBe(50);
+    expect(stats.fullTablesCount).toBe(1);
+    expect(stats.emptyTablesCount).toBe(1);
+    expect(stats.partialTablesCount).toBe(0);
+    expect(stats.unassignedGuestsList.map((g) => g.id)).toEqual(['g1', 'g2']);
+  });
+
+  it('treats a missing floor map as nothing seated, at 0%', () => {
+    const stats = getSeatingStats([guest()], null);
+    expect(stats.totalSeatedGuests).toBe(0);
+    expect(stats.seatingProgressPercent).toBe(0);
+    expect(stats.fullTablesCount).toBe(0);
+    expect(stats.unassignedGuestsList.map((g) => g.id)).toEqual(['g1']);
+  });
+
+  it('filters the unassigned list by name, email, code or a party member', () => {
+    const guests = [
+      guest({ id: 'g1', name: 'Alice', email: 'alice@x.com', code: '1234' }),
+      guest({ id: 'g2', name: 'Dana', email: 'dana@x.com', code: '5678', attendee_names: ['Dana', 'Zoe'] }),
+    ];
+    expect(getSeatingStats(guests, null, 'dana').unassignedGuestsList.map((g) => g.id)).toEqual(['g2']);
+    expect(getSeatingStats(guests, null, '5678').unassignedGuestsList.map((g) => g.id)).toEqual(['g2']);
+    expect(getSeatingStats(guests, null, 'zoe').unassignedGuestsList.map((g) => g.id)).toEqual(['g2']);
+    expect(getSeatingStats(guests, null, 'nobody').unassignedGuestsList).toEqual([]);
+  });
+
+  it('drops fully seated parties from the unassigned list', () => {
+    const guests = [guest({ id: 'g1', attending_party_size: 1, attendee_names: ['Alice'] })];
+    const seated = fm([table({ capacity: 2, seats: [{ guestId: 'g1', attendeeIndex: 0 }, null] })]);
+    expect(getSeatingStats(guests, seated).unassignedGuestsList).toEqual([]);
   });
 });

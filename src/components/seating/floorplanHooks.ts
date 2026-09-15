@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Guest, FloorMapData, LandmarkElement, TableElement } from '../../types';
-import { clampToRoundRoom } from './floorPlanHelpers';
+import { applyRoomClamp, clampToRoundRoom } from './floorPlanHelpers';
 import { getGuestPartySize, seatAttendee, seatParty, unseatAttendee, unassignParty } from '../../lib/tableAssignment';
 import { useTf } from '../shared/i18n';
 
@@ -89,30 +89,13 @@ export function useFloorPlanEditor({ floorMap, guests, notify, onSave, onCancel 
     setIsDirty(true);
   };
 
-  // ponytail: wall-clamp — keeps whole element inside round(circle/ellipse) wall.
-  // Math lives in clampToRoundRoom (floorPlanHelpers) so it stays unit-testable.
-  const clampAllToCircle = (map: FloorMapData): FloorMapData => {
-    if ((map.roomShape ?? 'rectangle') !== 'circle' && map.roomShape !== 'ellipse') return map;
-    return {
-      ...map,
-      tables: map.tables.map((t) => {
-        const p = clampToRoundRoom(t.x, t.y, t.width, t.height, map);
-        return p.x === t.x && p.y === t.y ? t : { ...t, x: Math.round(p.x), y: Math.round(p.y) };
-      }),
-      landmarks: map.landmarks.map((l) => {
-        const p = clampToRoundRoom(l.x, l.y, l.width, l.height, map, true);
-        return p.x === l.x && p.y === l.y ? l : { ...l, x: Math.round(p.x), y: Math.round(p.y) };
-      }),
-    };
-  };
-
   const handleUpdateRoomShape = (shape: 'rectangle' | 'circle' | 'ellipse') => {
     if (shape === 'circle') {
       const d = Math.min(draftFloorMap.canvasWidth, draftFloorMap.canvasHeight);
       const next: FloorMapData = { ...draftFloorMap, roomShape: 'circle', canvasWidth: d, canvasHeight: d };
-      setDraftFloorMap(clampAllToCircle(next));
+      setDraftFloorMap(applyRoomClamp(next));
     } else if (shape === 'ellipse') {
-      setDraftFloorMap(clampAllToCircle({ ...draftFloorMap, roomShape: 'ellipse' }));
+      setDraftFloorMap(applyRoomClamp({ ...draftFloorMap, roomShape: 'ellipse' }));
     } else {
       setDraftFloorMap({ ...draftFloorMap, roomShape: 'rectangle' });
     }
@@ -122,7 +105,7 @@ export function useFloorPlanEditor({ floorMap, guests, notify, onSave, onCancel 
   const handleUpdateDiameter = (diameter: number) => {
     const d = Math.max(500, Math.min(3000, diameter));
     const next: FloorMapData = { ...draftFloorMap, roomShape: 'circle', canvasWidth: d, canvasHeight: d };
-    setDraftFloorMap(clampAllToCircle(next));
+    setDraftFloorMap(applyRoomClamp(next));
     setIsDirty(true);
   };
 
@@ -145,6 +128,9 @@ export function useFloorPlanEditor({ floorMap, guests, notify, onSave, onCancel 
       width: w,
       height: h,
       capacity: 8,
+      // Explicit empty seats: new tables carry the same shape as saved ones
+      // instead of the legacy assignedGuestIds-only form.
+      seats: new Array(8).fill(null),
       assignedGuestIds: [],
       color: '#8B735B',
     };
@@ -423,6 +409,5 @@ export function useFloorPlanEditor({ floorMap, guests, notify, onSave, onCancel 
     handleUnassignParty,
     handleSaveChanges,
     handleCancelEditor,
-    clampAllToCircle,
   };
 }

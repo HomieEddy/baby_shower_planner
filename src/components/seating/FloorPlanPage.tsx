@@ -48,13 +48,12 @@ import {
   getTableSeats,
   getTableSeatedPersonNames,
   getTableStatus,
-  getGuestSeatedCount,
   getAvailableSeats,
   getUnseatedPartySize,
   canSeatParty,
   seatParty,
+  getSeatingStats,
 } from '../../lib/tableAssignment';
-import { isAttending } from '../../lib/guestAttendees';
 import { getSeatOccupantInfo } from './floorPlanHelpers';
 import { suggestSeating, unseatedParties } from '../../lib/seatingSuggestions';
 import type { SmartSuggestion } from '../../lib/seatingSuggestions';
@@ -571,57 +570,10 @@ export const FloorPlanPage = () => {
 
 
   // Host-view statistics, recomputed only when guests/map/filter change.
-  const hostStats = useMemo(() => {
-    const totalConfirmedGuests = guests
-      .filter(isAttending)
-      .reduce((sum, g) => sum + getGuestPartySize(g), 0);
-
-    const totalSeatedGuests = floorMap
-      ? floorMap.tables.reduce((sum, tbl) => sum + getTableOccupiedSeats(tbl, guests), 0)
-      : 0;
-
-    const seatingProgressPercent = totalConfirmedGuests > 0
-      ? Math.min(100, Math.round((totalSeatedGuests / totalConfirmedGuests) * 100))
-      : 0;
-
-    const emptyTablesCount = floorMap
-      ? floorMap.tables.filter((t) => getTableStatus(t, guests) === 'empty').length
-      : 0;
-
-    const partialTablesCount = floorMap
-      ? floorMap.tables.filter((t) => getTableStatus(t, guests) === 'partial').length
-      : 0;
-
-    const fullTablesCount = floorMap
-      ? floorMap.tables.filter((t) => getTableStatus(t, guests) === 'full').length
-      : 0;
-
-    const unassignedGuestsList = guests.filter((g) => {
-      if (!isAttending(g)) return false;
-      const fullySeated = floorMap ? getGuestSeatedCount(g.id, floorMap, guests) >= getGuestPartySize(g) : false;
-      if (fullySeated) return false;
-
-      if (unassignedFilterQuery.trim()) {
-        const q = unassignedFilterQuery.toLowerCase();
-        const matchName = g.name.toLowerCase().includes(q);
-        const matchEmail = g.email.toLowerCase().includes(q);
-        const matchCode = g.code ? g.code.toLowerCase().includes(q) : false;
-        const matchAttendees = g.attendee_names?.some((a) => a.toLowerCase().includes(q));
-        return matchName || matchEmail || matchCode || matchAttendees;
-      }
-      return true;
-    });
-
-    return {
-      totalConfirmedGuests,
-      totalSeatedGuests,
-      seatingProgressPercent,
-      emptyTablesCount,
-      partialTablesCount,
-      fullTablesCount,
-      unassignedGuestsList,
-    };
-  }, [guests, floorMap, unassignedFilterQuery]);
+  const hostStats = useMemo(
+    () => getSeatingStats(guests, floorMap, unassignedFilterQuery),
+    [guests, floorMap, unassignedFilterQuery]
+  );
 
   return (
     <div className="space-y-6 pb-12">
