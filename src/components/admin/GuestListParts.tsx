@@ -23,12 +23,12 @@ import { useCapabilities, noProviders } from '../../lib/capabilities';
 
 export const GuestToolbar = ({
   className = '',
-  searchTerm,
-  onSearchChange,
-  statusFilter,
-  onStatusFilter,
-  sourceFilter,
-  onSourceFilter,
+  search,
+  onSearch,
+  status,
+  onStatus,
+  source,
+  onSource,
   viewMode,
   onViewMode,
   onExportCsv,
@@ -36,12 +36,12 @@ export const GuestToolbar = ({
   onSendReminders,
 }: {
   className?: string;
-  searchTerm: string;
-  onSearchChange: (v: string) => void;
-  statusFilter: 'All' | 'Attending' | 'Pending' | 'Declined';
-  onStatusFilter: (v: 'All' | 'Attending' | 'Pending' | 'Declined') => void;
-  sourceFilter: 'All' | 'Host' | 'Guest-invited';
-  onSourceFilter: (v: 'All' | 'Host' | 'Guest-invited') => void;
+  search: string;
+  onSearch: (v: string) => void;
+  status: 'All' | 'Attending' | 'Pending' | 'Declined';
+  onStatus: (v: 'All' | 'Attending' | 'Pending' | 'Declined') => void;
+  source: 'All' | 'Host' | 'Guest-invited';
+  onSource: (v: 'All' | 'Host' | 'Guest-invited') => void;
   viewMode: 'cards' | 'table';
   onViewMode: (m: 'cards' | 'table') => void;
   onExportCsv: () => void;
@@ -58,8 +58,8 @@ export const GuestToolbar = ({
         <>
           <div className="min-w-0 flex-1">
             <SearchInput
-              value={searchTerm}
-              onChange={(e) => onSearchChange(e.target.value)}
+              value={search}
+              onChange={(e) => onSearch(e.target.value)}
               placeholder={t.searchGuestsPh}
               aria-label={t.searchGuestsPh}
               className="w-full"
@@ -88,8 +88,8 @@ export const GuestToolbar = ({
         <>
           <Segmented
             ariaLabel={t.rsvpStatusLabel}
-            value={statusFilter}
-            onChange={onStatusFilter}
+            value={status}
+            onChange={onStatus}
             options={[
               { value: 'All', label: t.filterStatusAll },
               { value: 'Attending', label: t.statusAttendingWord },
@@ -99,8 +99,8 @@ export const GuestToolbar = ({
           />
           <Segmented
             ariaLabel={t.sourceFilterTitle}
-            value={sourceFilter}
-            onChange={onSourceFilter}
+            value={source}
+            onChange={onSource}
             options={[
               { value: 'All', label: t.filterAllOption },
               { value: 'Host', label: t.sourceHostOption },

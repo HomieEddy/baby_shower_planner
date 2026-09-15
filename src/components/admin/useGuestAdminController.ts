@@ -551,31 +551,124 @@ export function useGuestAdminController({ language, t, guests, onRefresh }: Gues
     }
   };
 
+  // ── Member editing intents ──────────────────────────────────────
+  // The party editors change one member at a time; the view never touches the
+  // arrays (or their setters) itself.
+  const setExtraMember = (index: number, patch: Partial<AdditionalAttendee>) =>
+    setExtraMembers((prev) => prev.map((m, i) => (i === index ? { ...m, ...patch } : m)));
+  const setEditMember = (index: number, patch: Partial<AdditionalAttendee>) =>
+    setEditMembers((prev) => prev.map((m, i) => (i === index ? { ...m, ...patch } : m)));
+  const removeEditMember = (index: number) =>
+    setEditMembers((prev) => prev.filter((_, i) => i !== index));
+  const addEditMember = () =>
+    setEditMembers((prev) => [...prev, { name: '', contact: '', dietary: '' }]);
+  const trimEditMembers = (maxParty: number) =>
+    setEditMembers((prev) => prev.slice(0, Math.max(0, maxParty - 1)));
+
+  const loadSampleCsv = () =>
+    setRawCsvText(
+      'Grandma Ellen, ellen@example.com, 555-0101, 2, email\n' +
+      'Uncle Mark, mark@example.com, 555-0102, 1, text\n' +
+      'Sophia Martinez, sophia@example.com, 555-0103, 2, email'
+    );
+
+  // The interface is the test surface, so it stays small: one object per
+  // concern, and every mutator named as the intent the view means by it.
   return {
-    // list
-    searchTerm, setSearchTerm,
-    statusFilter, setStatusFilter,
-    sourceFilter, setSourceFilter,
-    metricMode, switchMetricMode,
-    listView, switchListView,
-    selectedIds, setSelectedIds, toggleSelect, toggleSelectAll,
-    filteredGuests, clearFilters,
-    ...metrics,
-    // add form
-    register, handleSubmit, setValue, setFocus, deliveryChannel, errors, markGoing, setMarkGoing,
-    channelOptions, submittingGuest, handleAddGuest,
-    attendeeModal, setAttendeeModal, extraMembers, setExtraMembers, handleConfirmAttendees,
-    // edit form
-    registerEdit, handleSubmitEdit, editErrors, savingEdit, editMembers, setEditMembers,
-    editMaxParty, editStatus, editPrimaryName, handleOpenEditGuest, handleSaveEditGuest,
-    // modals + message
-    viewingGuest, editingGuest, closeGuestModal, closeEditModal, handleOpenViewGuest,
-    viewingMessage, loadingMessage,
-    showCsvImportModal, setShowCsvImportModal, rawCsvText, setRawCsvText, importingCsv, handleProcessCsvImport,
-    // actions
-    handleDeleteGuest, handleRemoveAttendee, handleApproval,
-    copiedToken, handleCopyMagicLink, handleCopyInviteMessage,
-    // bulk + CSV
-    handleExportCsv, handleBulkExport, handleBulkResend, handleBulkDelete, handleSendReminders,
+    list: {
+      guests: filteredGuests,
+      metrics,
+    },
+
+    filters: {
+      search: searchTerm,
+      status: statusFilter,
+      source: sourceFilter,
+      onSearch: setSearchTerm,
+      onStatus: setStatusFilter,
+      onSource: setSourceFilter,
+      clear: clearFilters,
+    },
+
+    metricMode,
+    onMetricMode: switchMetricMode,
+    listView,
+    onListView: switchListView,
+
+    selection: {
+      ids: selectedIds,
+      toggle: toggleSelect,
+      toggleAll: toggleSelectAll,
+      clear: () => setSelectedIds([]),
+    },
+
+    addForm: {
+      register,
+      onSubmit: handleSubmit(handleAddGuest),
+      errors,
+      submitting: submittingGuest,
+      channels: channelOptions,
+      channel: deliveryChannel,
+      setChannel: (channel: DeliveryChannel) => setValue('delivery_channel', channel),
+      going: markGoing,
+      onGoing: setMarkGoing,
+      focus: setFocus,
+      members: extraMembers,
+      setMember: setExtraMember,
+      partyModal: attendeeModal,
+      closePartyModal: () => setAttendeeModal(null),
+      confirmParty: handleConfirmAttendees,
+    },
+
+    editForm: {
+      register: registerEdit,
+      onSubmit: handleSubmitEdit(handleSaveEditGuest),
+      errors: editErrors,
+      saving: savingEdit,
+      members: editMembers,
+      setMember: setEditMember,
+      addMember: addEditMember,
+      removeMember: removeEditMember,
+      trimMembers: trimEditMembers,
+      maxParty: editMaxParty,
+      status: editStatus,
+      primaryName: editPrimaryName,
+    },
+
+    details: {
+      guest: viewingGuest,
+      editing: editingGuest,
+      message: viewingMessage,
+      loadingMessage,
+      copiedToken,
+      open: handleOpenViewGuest,
+      close: closeGuestModal,
+      closeEdit: closeEditModal,
+      edit: handleOpenEditGuest,
+    },
+
+    csvImport: {
+      open: showCsvImportModal,
+      openModal: () => setShowCsvImportModal(true),
+      closeModal: () => setShowCsvImportModal(false),
+      text: rawCsvText,
+      setText: setRawCsvText,
+      importing: importingCsv,
+      submit: handleProcessCsvImport,
+      loadSample: loadSampleCsv,
+    },
+
+    actions: {
+      deleteGuest: handleDeleteGuest,
+      removeAttendee: handleRemoveAttendee,
+      setApproval: handleApproval,
+      copyLink: handleCopyMagicLink,
+      copyMessage: handleCopyInviteMessage,
+      exportCsv: handleExportCsv,
+      exportSelected: handleBulkExport,
+      resend: handleBulkResend,
+      deleteSelected: handleBulkDelete,
+      sendReminders: handleSendReminders,
+    },
   };
 }
