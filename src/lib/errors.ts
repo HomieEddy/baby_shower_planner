@@ -48,6 +48,7 @@ export const ERROR_REGISTRY = {
   GUEST_CONTENT_LOCKED: { status: 403, message: 'Guest content is locked' },
   PHOTO_LIMIT_REACHED: { status: 400, message: 'Photo limit reached' },
   PHOTO_SIZE_LIMIT_REACHED: { status: 400, message: 'Photo size limit reached' },
+  GUESTBOOK_TABLE_FULL: { status: 400, message: 'This table has reached its wish limit' },
 
   // Generic request failures (route-level guards without a domain code)
   INVALID_PAYLOAD: { status: 400, message: 'Invalid request payload' },

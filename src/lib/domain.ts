@@ -143,6 +143,10 @@ export const GuestbookSchema = z.object({
   guest_name: z.string(),
   message: z.string(),
   photo_url: z.string().optional(),
+  // Guest ownership + table grouping (set when written from a table QR).
+  reservation_code: z.string().optional(),
+  table_name: z.string().optional(),
+  table_id: z.string().optional(),
   visible: z.boolean().optional(),
   created_at: z.string(),
 });
@@ -273,4 +277,7 @@ export interface AddGuestbookPayload {
   guest_name: string;
   message: string;
   photo_url?: string;
+  reservation_code?: string;
+  table_name?: string;
+  table_id?: string;
 }
