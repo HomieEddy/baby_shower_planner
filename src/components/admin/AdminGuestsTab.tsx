@@ -40,6 +40,7 @@ import { useTf, useApiErrorMessage } from '../shared/i18n';
 import { decodeApiError } from '../../lib/errors';
 import { EmptyState } from '../shared/EmptyState';
 import { TextInput, Select } from '../shared/ui';
+import { parseCsvLine, csvCell, toCsv, downloadCsv } from '../../lib/csv';
 
 interface AdminGuestsTabProps {
   language: Language;
@@ -50,32 +51,6 @@ interface AdminGuestsTabProps {
 
 type AddGuestFormValues = z.input<typeof GuestImportSchema>;
 type EditGuestFormValues = z.input<typeof EditGuestFormSchema>;
-
-// CSV-aware line split: quoted fields may contain commas.
-function parseCsvLine(line: string): string[] {
-  const out: string[] = [];
-  let cur = '';
-  let inQuotes = false;
-  for (let i = 0; i < line.length; i++) {
-    const ch = line[i];
-    if (inQuotes) {
-      if (ch === '"') {
-        if (line[i + 1] === '"') { cur += '"'; i++; } else { inQuotes = false; }
-      } else {
-        cur += ch;
-      }
-    } else if (ch === '"') {
-      inQuotes = true;
-    } else if (ch === ',') {
-      out.push(cur.trim());
-      cur = '';
-    } else {
-      cur += ch;
-    }
-  }
-  out.push(cur.trim());
-  return out;
-}
 
 export const AdminGuestsTab: React.FC<AdminGuestsTabProps> = ({ language, t, guests, onRefresh }) => {
   const [searchParams, setSearchParams] = useSearchParams();
@@ -363,7 +338,7 @@ export const AdminGuestsTab: React.FC<AdminGuestsTabProps> = ({ language, t, gue
       'Reservation Code', 'Group / Party', 'Table', 'Seat', 'RSVP Status',
       'Attending Party Size', 'Dietary Restrictions', 'Magic RSVP Token', 'Magic RSVP URL', 'Invited By',
     ];
-    const esc = (v: unknown) => `"${String(v ?? '').replace(/"/g, '""')}"`;
+    const esc = csvCell;
     const rows: string[][] = [];
 
     for (const g of list) {
@@ -392,14 +367,7 @@ export const AdminGuestsTab: React.FC<AdminGuestsTabProps> = ({ language, t, gue
       });
     }
 
-    const csvContent = 'data:text/csv;charset=utf-8,' + [headers.join(','), ...rows.map((r) => r.join(','))].join('\n');
-    const encodedUri = encodeURI(csvContent);
-    const link = document.createElement('a');
-    link.setAttribute('href', encodedUri);
-    link.setAttribute('download', `baby_shower_guests_${new Date().toISOString().split('T')[0]}.csv`);
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
+    downloadCsv(`baby_shower_guests_${new Date().toISOString().split('T')[0]}.csv`, toCsv(headers, rows));
     toast.love(t.exportedToast);
   };
 

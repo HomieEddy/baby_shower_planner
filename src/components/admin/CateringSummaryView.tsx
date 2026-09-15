@@ -13,6 +13,7 @@ import { AdminToolbar } from './AdminToolbar';
 import { adminContainerVariants } from '../shared/motionPresets';
 import { getAttendeeLocations } from '../../lib/tableAssignment';
 import { getPartyMembers } from '../../lib/guestAttendees';
+import { csvCell, toCsv, downloadCsv } from '../../lib/csv';
 import {
   useReactTable,
   getCoreRowModel,
@@ -253,7 +254,7 @@ export const CateringSummaryView: React.FC<CateringSummaryViewProps> = ({ guests
     }
 
     const headers = ['Individual Guest', 'Group / Party', 'Reservation Code', 'Attending Party Size', 'Dietary Restrictions & Allergies', 'Table', 'Seat', 'Contact Email', 'Contact Phone'];
-    const esc = (v: unknown) => `"${String(v ?? '').replace(/"/g, '""')}"`;
+    const esc = csvCell;
     const rows = individuals.map((r) => [
       esc(r.name),
       esc(r.guest.name),
@@ -266,14 +267,7 @@ export const CateringSummaryView: React.FC<CateringSummaryViewProps> = ({ guests
       esc(r.guest.phone),
     ]);
 
-    const csvContent = 'data:text/csv;charset=utf-8,' + [headers.join(','), ...rows.map((r) => r.join(','))].join('\n');
-    const encodedUri = encodeURI(csvContent);
-    const link = document.createElement('a');
-    link.setAttribute('href', encodedUri);
-    link.setAttribute('download', `catering_dietary_summary_${new Date().toISOString().split('T')[0]}.csv`);
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
+    downloadCsv(`catering_dietary_summary_${new Date().toISOString().split('T')[0]}.csv`, toCsv(headers, rows));
 
     toast.success(t.cateringExportedToast);
   };

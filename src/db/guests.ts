@@ -2,7 +2,7 @@
 
 import type { Guest, AddGuestPayload, RegisterGuestPayload, Language } from '../types';
 import { buildInviteMessage, buildUniversalInviteMessage, composeInvitation } from '../lib/compose';
-import { getPartyMembers } from '../lib/guestAttendees';
+import { getPartyMembers, dedupePartyNames } from '../lib/guestAttendees';
 import { DomainError } from '../lib/errors';
 import { escFilter, fromRecord, newMagicToken, newReservationCode, pb, removeAttendeeFromFloorMaps, removeGuestFromFloorMaps } from './client';
 import { getSettingsOrDefaults } from './settings';
@@ -52,16 +52,7 @@ export async function addGuest(payload: AddGuestPayload): Promise<{ guest: Guest
   // Party members: the primary guest first, then the host-entered names, capped
   // at the allowed party size and deduped.
   const primary = payload.name;
-  const names: string[] = [primary];
-  const seen = new Set<string>([primary.toLowerCase()]);
-  for (const raw of payload.attendee_names || []) {
-    if (names.length >= partySize) break;
-    const n = typeof raw === 'string' ? raw.trim() : '';
-    const key = n.toLowerCase();
-    if (!n || seen.has(key)) continue;
-    seen.add(key);
-    names.push(n);
-  }
+  const names = dedupePartyNames(primary, payload.attendee_names || [], partySize);
   const attendee_details = names.map((n) => ({
     name: n,
     contact: n.toLowerCase() === primary.toLowerCase() ? (payload.email || payload.phone || '') : '',
@@ -194,15 +185,7 @@ export async function updateGuest(id: string, updates: Partial<Guest>): Promise<
   const max = Math.max(1, Number(updates.max_party_size ?? guest.max_party_size) || 1);
   const primary = ((updates.name ?? guest.name) || '').trim() || guest.name;
 
-  const names: string[] = [primary];
-  const seen = new Set([primary.toLowerCase()]);
-  for (const raw of updates.attendee_names) {
-    if (names.length >= max) break;
-    const n = typeof raw === 'string' ? raw.trim() : '';
-    if (!n || seen.has(n.toLowerCase())) continue;
-    seen.add(n.toLowerCase());
-    names.push(n);
-  }
+  const names = dedupePartyNames(primary, updates.attendee_names, max);
 
   // Declining clears the party entirely; otherwise the attended count is the
   // number of named members (not the allowed size).

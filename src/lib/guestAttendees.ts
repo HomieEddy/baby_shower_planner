@@ -26,6 +26,26 @@ export function getPartyMembers(guest: Guest): string[] {
   return out;
 }
 
+// A party's names: [primary, ...extras], trimmed, case-insensitively deduped,
+// capped at `max` (the primary is always included). One implementation for
+// host-add and party-edit.
+export function dedupePartyNames(
+  primary: string,
+  extras: Iterable<string | undefined | null>,
+  max: number
+): string[] {
+  const names = [primary];
+  const seen = new Set([primary.toLowerCase()]);
+  for (const raw of extras) {
+    if (names.length >= max) break;
+    const n = typeof raw === 'string' ? raw.trim() : '';
+    if (!n || seen.has(n.toLowerCase())) continue;
+    seen.add(n.toLowerCase());
+    names.push(n);
+  }
+  return names;
+}
+
 // Primary guest check-in is tracked by `checked_in`; other party members by
 // `checked_in_names`. Matching is case-insensitive.
 export function isMemberCheckedIn(guest: Guest, name: string): boolean {
