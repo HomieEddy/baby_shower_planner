@@ -1,4 +1,4 @@
-import { lazy, Suspense, useState, useMemo, type DragEvent, type MouseEvent } from 'react';
+import { lazy, Suspense, useState, useMemo, type DragEvent, type MouseEvent, type ReactNode } from 'react';
 import {
   Stage,
   Layer,
@@ -25,6 +25,7 @@ import {
   UtensilsCrossed,
   Info,
   Layers,
+  Ruler,
   Layout,
   Users,
   Trash2,
@@ -68,6 +69,93 @@ interface PaletteItem extends AttendeeKey {
 
 const FloorPlan3D = lazy(() => import('./FloorPlan3D').then((m) => ({ default: m.FloorPlan3D })));
 
+// Axis ruler thickness (px) drawn above / left of the interactive canvas.
+const AXIS = 18;
+
+// "Nice" tick values (1/2/5 × 10^n) across an axis, aiming for ~8 labels.
+const axisTicks = (size: number): number[] => {
+  if (size <= 0) return [0];
+  const raw = size / 8;
+  const pow = 10 ** Math.floor(Math.log10(raw));
+  const step = [1, 2, 5, 10].map((m) => m * pow).find((s) => s >= raw) ?? pow * 10;
+  const ticks: number[] = [];
+  for (let v = 0; v <= size; v += step) ticks.push(v);
+  return ticks;
+};
+
+// X / Y rulers around the interactive canvas so the increasing direction (and the
+// px scale) is obvious. Purely decorative — never intercepts pointer events.
+const CanvasAxes = ({
+  mapWidth,
+  mapHeight,
+  scale,
+  show,
+  children,
+}: {
+  mapWidth: number;
+  mapHeight: number;
+  scale: number;
+  show: boolean;
+  children: ReactNode;
+}) => {
+  const width = mapWidth * scale;
+  const height = mapHeight * scale;
+  const pad = show ? AXIS : 0;
+  const xTicks = axisTicks(mapWidth);
+  const yTicks = axisTicks(mapHeight);
+  const lastX = xTicks[xTicks.length - 1];
+  const lastY = yTicks[yTicks.length - 1];
+  return (
+    <div className="relative shrink-0 m-auto" style={{ width: width + pad, height: height + pad }}>
+      {show && (
+        <>
+          {/* X axis — values increase to the right */}
+          <div className="absolute select-none pointer-events-none" aria-hidden="true" style={{ left: AXIS, top: 0, width, height: AXIS }}>
+            <div className="absolute inset-x-0 bottom-0 h-px bg-[#CBAE94]" />
+            {xTicks.map((v) => (
+              <div key={`x-${v}`} className="absolute bottom-0" style={{ left: v * scale }}>
+                <div className="absolute bottom-0 w-px h-1 bg-[#8B735B]" />
+                <span
+                  className="absolute bottom-1.5 text-[9px] leading-none font-mono font-bold text-[#8B735B] whitespace-nowrap"
+                  style={{ transform: v === 0 ? 'translateX(0)' : v === lastX ? 'translateX(-100%)' : 'translateX(-50%)' }}
+                >
+                  {v}
+                </span>
+              </div>
+            ))}
+          </div>
+
+          {/* Y axis — values increase downward */}
+          <div className="absolute select-none pointer-events-none" aria-hidden="true" style={{ left: 0, top: AXIS, width: AXIS, height }}>
+            <div className="absolute inset-y-0 right-0 w-px bg-[#CBAE94]" />
+            {yTicks.map((v) => (
+              <div key={`y-${v}`} className="absolute right-0" style={{ top: v * scale }}>
+                <div className="absolute right-0 h-px w-1 bg-[#8B735B]" />
+                <span
+                  className="absolute right-1.5 text-[9px] leading-none font-mono font-bold text-[#8B735B] whitespace-nowrap"
+                  style={{ transform: v === 0 ? 'translateY(0)' : v === lastY ? 'translateY(-100%)' : 'translateY(-50%)' }}
+                >
+                  {v}
+                </span>
+              </div>
+            ))}
+          </div>
+
+          {/* Axis names at the origin */}
+          <div className="absolute select-none pointer-events-none" aria-hidden="true" style={{ left: 0, top: 0, width: AXIS, height: AXIS }}>
+            <span className="absolute right-0.5 top-0 text-[9px] leading-none font-mono font-bold text-[#8B735B]">X</span>
+            <span className="absolute left-0 bottom-0 text-[9px] leading-none font-mono font-bold text-[#8B735B]">Y</span>
+          </div>
+        </>
+      )}
+
+      <div className="absolute" style={{ left: pad, top: pad }}>
+        {children}
+      </div>
+    </div>
+  );
+};
+
 interface FloorPlanEditorProps {
   floorMap: FloorMapData;
   guests: Guest[];
@@ -88,7 +176,7 @@ interface FloorPlanEditorProps {
 const NumberField = ({ value, onCommit }: { value: number; onCommit: (v: number) => void }) => {
   const [text, setText] = useState(String(value));
   const [synced, setSynced] = useState(value);
-  // Re-sync when the element moves (drag / another field) ÔÇö during render, not
+  // Re-sync when the element moves (drag / another field) — during render, not
   // in an effect, so the reset lands in the same commit.
   if (value !== synced) {
     setSynced(value);
@@ -166,6 +254,7 @@ export const FloorPlanEditor = ({
   const tf = useTf();
   const confirmDiscard = useConfirm();
   const [viewMode, setViewMode] = useState<ViewMode>('2d');
+  const [showAxes, setShowAxes] = useState(true);
   const {
     draftFloorMap,
     setDraftFloorMap,
@@ -330,6 +419,9 @@ export const FloorPlanEditor = ({
       prev && prev.guestId === key.guestId && prev.attendeeIndex === key.attendeeIndex ? null : key
     );
   };
+
+  const stageW = draftFloorMap.canvasWidth * modalCanvasScale;
+  const stageH = draftFloorMap.canvasHeight * modalCanvasScale;
 
   return (
     <div className="fixed inset-0 z-50 bg-[#FAF6F0] flex flex-col w-screen h-screen overflow-hidden animate-fadeIn">
@@ -753,6 +845,21 @@ export const FloorPlanEditor = ({
                   <span className="hidden sm:inline">{selectedType === 'landmark' ? t.deleteLandmarkBtn : t.deleteTableBtn}</span>
                 </button>
               )}
+              {viewMode === '2d' && (
+                <button
+                  type="button"
+                  onClick={() => setShowAxes((v) => !v)}
+                  aria-pressed={showAxes}
+                  title={t.axesToggleLabel}
+                  className={`p-1.5 rounded-lg border transition-colors ${
+                    showAxes
+                      ? 'bg-[#8B735B] text-white border-[#8B735B]'
+                      : 'bg-white text-[#8B735B] border-[#CBAE94] hover:bg-[#EFE6DC]'
+                  }`}
+                >
+                  <Ruler className="w-3.5 h-3.5" />
+                </button>
+              )}
               <ViewModeToggle value={viewMode} onChange={setViewMode} />
               <span className="hidden md:inline text-xs font-mono text-[#5D5449]">
                 {t.liveDraftStageLabel}
@@ -794,17 +901,18 @@ export const FloorPlanEditor = ({
             </Suspense>
           ) : (
           <div
-            className={`flex-1 w-full overflow-auto flex justify-center items-center bg-[#FAF6F0] p-3 rounded-2xl border-2 transition-colors ${
+            className={`flex-1 w-full overflow-auto flex bg-[#FAF6F0] p-3 rounded-2xl border-2 transition-colors ${
               draggingAttendee ? 'border-emerald-500 bg-emerald-50/40' : 'border-[#CBAE94]/40'
             }`}
             onDragOver={handleCanvasDragOver}
             onDragLeave={() => setDropTarget(null)}
             onDrop={handleCanvasDrop}
           >
+            <CanvasAxes mapWidth={draftFloorMap.canvasWidth} mapHeight={draftFloorMap.canvasHeight} scale={modalCanvasScale} show={showAxes}>
             <Stage
               ref={modalStageRef}
-              width={draftFloorMap.canvasWidth * modalCanvasScale}
-              height={draftFloorMap.canvasHeight * modalCanvasScale}
+              width={stageW}
+              height={stageH}
               scaleX={modalCanvasScale}
               scaleY={modalCanvasScale}
               onMouseDown={(e) => {
@@ -1049,6 +1157,7 @@ export const FloorPlanEditor = ({
                 />
               </Layer>
             </Stage>
+            </CanvasAxes>
           </div>
           )}
         </div>

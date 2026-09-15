@@ -957,6 +957,7 @@ export interface Translations {
   quickGuideLabel: string;
   quickGuideText: string;
   fullScreenCanvasLabel: string;
+  axesToggleLabel: string;
   liveDraftStageLabel: string;
   draftTableInspectorLabel: string;
   positionRotationLabel: string;
@@ -2223,6 +2224,7 @@ export const translations: Record<Language, Translations> = {
     quickGuideLabel: "Quick Guide",
     quickGuideText: "• Click elements on the canvas stage to select them. • Drag elements to position them around the venue floor. • Click {{save}} at top right when done!",
     fullScreenCanvasLabel: "Full-Screen Interactive Canvas",
+    axesToggleLabel: "Show X/Y axes",
     liveDraftStageLabel: "Live Draft Stage",
     draftTableInspectorLabel: "Draft Table Inspector",
     positionRotationLabel: "Position & Rotation",
@@ -3479,6 +3481,7 @@ export const translations: Record<Language, Translations> = {
     quickGuideLabel: "Guide rapide",
     quickGuideText: "• Cliquez sur les éléments de la toile pour les sélectionner. • Glissez-les pour les positionner dans la salle. • Cliquez sur {{save}} en haut à droite quand c'est prêt !",
     fullScreenCanvasLabel: "Toile interactive plein écran",
+    axesToggleLabel: "Afficher les axes X/Y",
     liveDraftStageLabel: "Aperçu du brouillon en direct",
     draftTableInspectorLabel: "Inspecteur de table (brouillon)",
     positionRotationLabel: "Position et rotation",
