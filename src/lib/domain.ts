@@ -24,6 +24,8 @@ const AttendeeInfoSchema = z.object({
   magic_token: z.string().optional(),
 });
 export type AttendeeInfo = z.infer<typeof AttendeeInfoSchema>;
+// Reusable nested shape for payload schemas (validation.ts).
+export { AttendeeInfoSchema };
 
 const ScheduleItemSchema = z.object({
   id: z.string(),

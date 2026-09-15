@@ -10,6 +10,9 @@ import {
   isPartyLead,
   dedupePartyNames,
   isAttending,
+  mergeParty,
+  partyNames,
+  MAX_REGISTERED_PARTY,
 } from './guestAttendees';
 import { Guest } from '../types';
 
@@ -198,5 +201,49 @@ describe('dedupePartyNames', () => {
 
   it('is just the primary when there are no extras', () => {
     expect(dedupePartyNames('Alice', [], 5)).toEqual(['Alice']);
+  });
+});
+
+describe('mergeParty', () => {
+  it('makes the primary a member and fills contact/dietary from the details', () => {
+    expect(mergeParty('Alice', ['Bob'], [[{ name: 'bob', contact: 'b@x.com', dietary: 'Vegan' }]], 5)).toEqual([
+      { name: 'Alice', contact: '', dietary: '' },
+      { name: 'Bob', contact: 'b@x.com', dietary: 'Vegan' },
+    ]);
+  });
+
+  it('keeps a member contact/dietary across a case-only rename', () => {
+    const prior = [{ name: 'Alice', contact: 'a@x.com', dietary: 'Gluten-Free' }];
+    expect(mergeParty('Alice', undefined, [prior], 3)).toEqual([
+      { name: 'Alice', contact: 'a@x.com', dietary: 'Gluten-Free' },
+    ]);
+    expect(mergeParty('alice', undefined, [prior], 3)).toEqual([
+      { name: 'alice', contact: 'a@x.com', dietary: 'Gluten-Free' },
+    ]);
+  });
+
+  it('lets the first source win per member and caps the party', () => {
+    const incoming = [{ name: 'Bob', dietary: 'Nut-free' }];
+    const prior = [{ name: 'Bob', contact: 'b@x.com', dietary: 'Vegan' }];
+    expect(mergeParty('Alice', ['Bob', 'Cara'], [incoming, prior], 2)).toEqual([
+      { name: 'Alice', contact: '', dietary: '' },
+      { name: 'Bob', contact: '', dietary: 'Nut-free' },
+    ]);
+  });
+
+  it('treats an empty declared list as the primary alone', () => {
+    expect(mergeParty('Alice', [], [null, undefined], 4)).toEqual([{ name: 'Alice', contact: '', dietary: '' }]);
+    expect(mergeParty('Alice', undefined, [], 4)).toEqual([{ name: 'Alice', contact: '', dietary: '' }]);
+  });
+});
+
+describe('partyNames', () => {
+  it('lists the stored names in order, dropping blanks', () => {
+    expect(partyNames([{ name: ' Alice ' }, { name: '' }, { name: 'Cara' }])).toEqual(['Alice', 'Cara']);
+    expect(partyNames(undefined)).toEqual([]);
+  });
+
+  it('caps a registered party at MAX_REGISTERED_PARTY', () => {
+    expect(MAX_REGISTERED_PARTY).toBe(20);
   });
 });

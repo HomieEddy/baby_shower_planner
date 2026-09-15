@@ -174,8 +174,8 @@ describe('submitRsvp approval gate', () => {
       dietary_restrictions: '',
     });
     expect(updated.attendee_details).toEqual([
-      { name: 'Alice', dietary: 'Vegan' },
-      { name: 'Bob', dietary: 'Nut-free' },
+      { name: 'Alice', contact: '', dietary: 'Vegan' },
+      { name: 'Bob', contact: '', dietary: 'Nut-free' },
     ]);
     expect(updated.dietary_restrictions).toBe('Vegan');
   });

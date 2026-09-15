@@ -1,11 +1,13 @@
 import { z } from 'zod';
 import {
   AgendaTaskSchema as Agenda,
+  AttendeeInfoSchema,
   GiftSchema as Gift,
   GuestSchema as Guest,
   GuestbookSchema as Guestbook,
   SettingsSchema as Settings,
 } from './domain';
+import { MAX_REGISTERED_PARTY } from './guestAttendees';
 
 // Form and payload schemas, derived from the domain schemas in lib/domain.ts so
 // a field added there flows to every form without a second declaration. These
@@ -37,6 +39,8 @@ export const GuestImportSchema = Guest.pick({
   max_party_size: true,
   language_pref: true,
   dietary_restrictions: true,
+  attendee_names: true,
+  attendee_details: true,
 }).extend({
   name: z.string().min(1, 'Name is required'),
   email: z.string().email().optional().or(z.literal('')),
@@ -44,6 +48,14 @@ export const GuestImportSchema = Guest.pick({
   delivery_channel: z.enum(['email', 'text', 'both', 'none']).default('email'),
   language_pref: z.enum(['EN', 'FR']).default('FR'),
   dietary_restrictions: z.string().default(''),
+});
+
+// The party lists on a guest write. Same cap as the public register route so
+// the host add form and self-registration agree on the limit, and the nested
+// member shape stays the domain's own.
+export const PartyInputSchema = Guest.pick({ attendee_details: true }).extend({
+  attendee_names: z.array(z.string().min(1, 'Member names cannot be empty')).max(MAX_REGISTERED_PARTY).optional(),
+  attendee_details: z.array(AttendeeInfoSchema).max(MAX_REGISTERED_PARTY).optional(),
 });
 
 // Covers the whole domain (so no guest field is silently stripped on update)

@@ -3,7 +3,7 @@
 
 import type { RouteCtx } from '../http';
 import { parseJson, rateLimit, sendError, sendJson } from '../http';
-import { EditGuestSchema, isValidCode } from '../../lib/validation';
+import { EditGuestSchema, isValidCode, PartyInputSchema } from '../../lib/validation';
 import {
   addGuest,
   batchImportGuests,
@@ -43,7 +43,7 @@ export async function handleGuestRoutes(ctx: RouteCtx): Promise<boolean> {
     }
     if (method === 'POST') {
       const body = await parseJson(req);
-      const { name, email, phone, delivery_channel, max_party_size, language_pref, going, attendee_names } = body;
+      const { name, email, phone, delivery_channel, max_party_size, language_pref, going } = body;
       const isGoing = going === true;
       // A going guest is registered directly and never sent an invitation, so
       // it carries no delivery channel (a stale "email" selection must not
@@ -53,10 +53,14 @@ export async function handleGuestRoutes(ctx: RouteCtx): Promise<boolean> {
       if ((channel === 'email' || channel === 'both') && (!email || !email.trim())) return sendError(res, 'EMAIL_REQUIRED', 'Email address is required');
       if ((channel === 'text' || channel === 'both') && (!phone || !phone.trim())) return sendError(res, 'PHONE_REQUIRED', 'Phone number is required');
       if (!['email', 'text', 'both', 'none'].includes(channel)) return sendError(res, 'INVALID_CHANNEL');
-      const extraNames = Array.isArray(attendee_names)
-        ? attendee_names.filter((n: unknown): n is string => typeof n === 'string').slice(0, 20)
-        : undefined;
-      const attendeeDetails = Array.isArray(body.attendee_details) ? body.attendee_details.slice(0, 20) : undefined;
+      // Party members are part of the domain shape, so they are validated as
+      // such instead of being sliced by hand.
+      const party = PartyInputSchema.safeParse({
+        attendee_names: body.attendee_names,
+        attendee_details: body.attendee_details,
+      });
+      if (!party.success) return sendError(res, 'INVALID_PAYLOAD', party.error.issues[0]?.message);
+      const { attendee_names: extraNames, attendee_details: attendeeDetails } = party.data;
 
       const result = await addGuest({
         name: name.trim(), email: email?.trim() || '', phone: phone?.trim() || '',
