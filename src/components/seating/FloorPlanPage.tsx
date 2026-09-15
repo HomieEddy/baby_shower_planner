@@ -47,6 +47,9 @@ import {
   getTableSeatedPersonNames,
   getTableStatus,
   getGuestSeatedCount,
+  getAvailableSeats,
+  getUnseatedPartySize,
+  canSeatParty,
   seatParty,
 } from '../../lib/tableAssignment';
 import { getSeatOccupantInfo } from './floorPlanHelpers';
@@ -235,7 +238,7 @@ export const FloorPlanPage = () => {
     // Track capacity per table
     const tableCapacities: Record<string, number> = {};
     floorMap.tables.forEach((t) => {
-      tableCapacities[t.id] = t.capacity - getTableOccupiedSeats(t, guests);
+      tableCapacities[t.id] = getAvailableSeats(t, guests);
     });
 
     const generated: SmartSuggestion[] = [];
@@ -968,9 +971,9 @@ export const FloorPlanPage = () => {
                         onLandmarkHover={(lm, x, y) => handleLandmarkHover(lm, x, y)}
                         onTableClick={(table) => {
                           if (!selectedUnassignedGuest) return;
-                          const partyNeeded = getGuestPartySize(selectedUnassignedGuest) - getGuestSeatedCount(selectedUnassignedGuest.id, floorMap, guests);
-                          const freeSeats = table.capacity - getTableOccupiedSeats(table, guests);
-                          if (freeSeats > 0) {
+                          const partyNeeded = getUnseatedPartySize(selectedUnassignedGuest.id, floorMap, guests);
+                          const freeSeats = getAvailableSeats(table, guests);
+                          if (canSeatParty(table, floorMap, guests, selectedUnassignedGuest.id)) {
                             void handleMainAssignGuest(selectedUnassignedGuest.id, table.id).then(
                               (ok) => {
                                 if (ok) setSelectedUnassignedGuest(null);
@@ -1035,12 +1038,11 @@ export const FloorPlanPage = () => {
 
                         // Unassigned guest seating highlighting (any free chair is usable — partial split allowed)
                         const partyNeeded = selectedUnassignedGuest
-                          ? getGuestPartySize(selectedUnassignedGuest) -
-                            getGuestSeatedCount(selectedUnassignedGuest.id, floorMap, guests)
+                          ? getUnseatedPartySize(selectedUnassignedGuest.id, floorMap, guests)
                           : 0;
-                        const freeSeats = table.capacity - occupiedSeats;
+                        const freeSeats = getAvailableSeats(table, guests);
                         const isUnassignedActive = selectedUnassignedGuest !== null;
-                        const canFitSelected = isUnassignedActive && freeSeats > 0;
+                        const canFitSelected = isUnassignedActive && canSeatParty(table, floorMap, guests, selectedUnassignedGuest.id);
 
                         let tableStroke = color;
                         let tableStrokeWidth = 2.5;

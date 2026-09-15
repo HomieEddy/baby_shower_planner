@@ -41,6 +41,9 @@ import {
   getTableSeats,
   getAttendeeLocations,
   getGuestSeatedCount,
+  getAvailableSeats,
+  getUnseatedPartySize,
+  canSeatParty,
 } from '../../lib/tableAssignment';
 import { findNearestSeat } from './floorPlanHelpers';
 import { getPartyMembers } from '../../lib/guestAttendees';
@@ -754,12 +757,14 @@ export const FloorPlanEditor = ({
                   const occupiedCount = getTableOccupiedSeats(table, draftGuests);
                   const isFull = occupiedCount >= table.capacity;
 
-                  // Guest-first seating highlights
-                  const selectedGuestPartySize = selectedGuestForSeating ? getGuestPartySize(selectedGuestForSeating) : 0;
-                  const isAssignedToThisGuest = selectedGuestForSeating ? table.assignedGuestIds.includes(selectedGuestForSeating.id) : false;
-                  const occupiedOther = isAssignedToThisGuest ? occupiedCount - selectedGuestPartySize : occupiedCount;
-                  const freeSeatsForGuest = table.capacity - occupiedOther;
-                  const canFitGuest = selectedGuestForSeating ? freeSeatsForGuest >= selectedGuestPartySize : false;
+                  // Guest-first seating highlight: any free chair, matching seatParty.
+                  const canFitGuest = selectedGuestForSeating
+                    ? canSeatParty(table, draftFloorMap, draftGuests, selectedGuestForSeating.id)
+                    : false;
+                  const freeSeatsForGuest = selectedGuestForSeating ? getAvailableSeats(table, draftGuests) : 0;
+                  const unseatedForGuest = selectedGuestForSeating
+                    ? getUnseatedPartySize(selectedGuestForSeating.id, draftFloorMap, draftGuests)
+                    : 0;
 
                   // Dynamic stroke styling
                   let strokeColor = isSelected ? '#4A3F35' : isFull ? '#10B981' : '#CBAE94';
@@ -914,8 +919,8 @@ export const FloorPlanEditor = ({
                         text={
                           selectedGuestForSeating
                             ? canFitGuest
-                              ? `Fits (${selectedGuestPartySize} Seats)`
-                              : `Need ${selectedGuestPartySize} Seats`
+                              ? `Fits (${Math.min(freeSeatsForGuest, unseatedForGuest)} Seats)`
+                              : `Need ${unseatedForGuest} Seats`
                             : `${occupiedCount}/${table.capacity} Seats`
                         }
                         y={table.height / 2 - 4}
