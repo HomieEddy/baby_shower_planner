@@ -104,7 +104,7 @@ export function useGuestAdminController({ language, t, guests, onRefresh }: Gues
       name: '',
       email: '',
       phone: '',
-      delivery_channel: 'email',
+      delivery_channel: 'none',
       max_party_size: 2,
       language_pref: language,
     },
