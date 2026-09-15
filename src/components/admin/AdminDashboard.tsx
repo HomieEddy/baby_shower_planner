@@ -593,7 +593,8 @@ export const AdminDashboard = () => {
         </div>
       </div>
 
-      {/* Danger Zone — destructive actions kept apart from everyday controls */}
+      {/* Danger Zone — Host Event Settings only, kept apart from everyday controls */}
+      {adminSubTab === 'settings' && (
       <motion.div
         variants={adminCardVariants}
         className="rounded-2xl border-2 border-rose-300 bg-rose-50/60 p-5 sm:p-6 space-y-3"
@@ -615,6 +616,7 @@ export const AdminDashboard = () => {
           <span className="text-xs text-rose-900/70">{t.deleteAllDataTitle}</span>
         </div>
       </motion.div>
+      )}
     </motion.div>
   );
 };
