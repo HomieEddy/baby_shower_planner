@@ -5,6 +5,7 @@ import { translations } from '../../translations';
 import { QrCode, Printer, Download, MapPin, Sparkles, Globe } from 'lucide-react';
 import { fadeUp, floatPulse } from '../shared/motionPresets';
 import { Modal } from '../shared/Modal';
+import { useActionConfirm } from '../shared/ConfirmDialog';
 
 interface DayOfQrModalProps {
   isOpen: boolean;
@@ -21,6 +22,7 @@ export const DayOfQrModal: React.FC<DayOfQrModalProps> = ({
 }) => {
   const printRef = useRef<HTMLDivElement>(null);
   const [posterLang, setPosterLang] = useState<Language>(language);
+  const confirmAction = useActionConfirm();
 
   if (!isOpen) return null;
 
@@ -41,8 +43,20 @@ export const DayOfQrModal: React.FC<DayOfQrModalProps> = ({
     targetUrl
   )}&color=4A3F35&bgcolor=FFFDF9`;
 
-  const handlePrint = () => {
+  const handlePrint = async () => {
+    if (!(await confirmAction(t.printLabel))) return;
     window.print();
+  };
+
+  const handleDownloadQr = async (e: React.MouseEvent<HTMLAnchorElement>) => {
+    e.preventDefault();
+    if (!(await confirmAction(t.downloadQr))) return;
+    const a = document.createElement('a');
+    a.href = qrImageUrl;
+    a.download = `bebe-${babyName || 'shower'}-dayof-qr-${activeLang.toLowerCase()}.png`;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
   };
 
   return (
@@ -151,7 +165,7 @@ export const DayOfQrModal: React.FC<DayOfQrModalProps> = ({
             <div className="px-6 py-4 bg-[#EFE6DC]/80 border-t border-[#CBAE94]/40 flex flex-wrap items-center justify-between gap-3 print:hidden">
               <a
                 href={qrImageUrl}
-                download={`bebe-${babyName || 'shower'}-dayof-qr-${activeLang.toLowerCase()}.png`}
+                onClick={handleDownloadQr}
                 target="_blank"
                 rel="noreferrer"
                 className="inline-flex items-center gap-1.5 px-4 py-2 rounded-xl border-2 border-[#CBAE94] text-xs font-bold text-[#5D5449] bg-white hover:bg-[#EFE6DC] transition-colors cursor-pointer"

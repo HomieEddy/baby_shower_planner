@@ -10,6 +10,7 @@ import {
   Printer,
 } from 'lucide-react';
 import { useToast } from '../shared/ToastContext';
+import { useActionConfirm } from '../shared/ConfirmDialog';
 import { useVirtualizer } from '@tanstack/react-virtual';
 import { EmptyState } from '../shared/EmptyState';
 import { BackButton } from '../shared/BackButton';
@@ -29,6 +30,7 @@ export const GuestbookPage = () => {
   const t = useT();
   const tf = useTf();
   const { toast } = useToast();
+  const confirmAction = useActionConfirm();
 
   const [locked, setLocked] = useState(false);
   const [lockInfo, setLockInfo] = useState<{ opensAt?: string; closesAt?: string } | null>(null);
@@ -124,6 +126,7 @@ export const GuestbookPage = () => {
 
   // Form Submit
   const onValid = async (values: z.infer<typeof GuestbookEntrySchema>) => {
+    if (!(await confirmAction(t.gbSubmitBtn))) return;
     try {
       setSubmitting(true);
 

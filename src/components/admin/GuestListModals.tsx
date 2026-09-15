@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useRef } from 'react';
 import {
   Mail,
   Smartphone,
@@ -13,6 +13,7 @@ import {
   X,
 } from 'lucide-react';
 import { Modal } from '../shared/Modal';
+import { useConfirm } from '../shared/ConfirmDialog';
 import { useT, useTf } from '../shared/i18n';
 import { Guest } from '../../types';
 import { getGuestPartySize } from '../../lib/tableAssignment';
@@ -52,8 +53,10 @@ export const GuestDetailsModal = ({
 }: GuestDetailsModalProps) => {
   const t = useT();
   const tf = useTf();
-  const [pendingRemove, setPendingRemove] = useState<{ index: number; name: string } | null>(null);
-  const [promoteName, setPromoteName] = useState('');
+  const confirm = useConfirm();
+  // The promote picker is uncontrolled inside the confirm dialog; the choice
+  // lands here so the removal can promote the chosen remaining member.
+  const promoteRef = useRef('');
   if (!guest) return null;
 
   const initials = guest.name.split(' ').map((w) => w[0]).filter(Boolean).slice(0, 2).join('').toUpperCase();
@@ -65,16 +68,30 @@ export const GuestDetailsModal = ({
   const members = getPartyMembers(guest);
   const invitedGuests = allGuests.filter((g) => g.invited_by_guest_id === guest.id);
 
-  const requestRemove = (index: number, name: string) => {
-    setPromoteName(index === 0 && members.length > 1 ? members[1] || '' : '');
-    setPendingRemove({ index, name });
-  };
-
-  const confirmRemove = () => {
-    if (!pendingRemove) return;
-    const promote = pendingRemove.index === 0 && members.length > 1 ? promoteName : undefined;
-    onRemoveAttendee(guest.id, pendingRemove.index, pendingRemove.name, promote);
-    setPendingRemove(null);
+  const requestRemove = async (index: number, name: string) => {
+    const needsPromote = index === 0 && members.length > 1;
+    promoteRef.current = needsPromote ? members[1] || '' : '';
+    const ok = await confirm({
+      title: t.removeAttendeeConfirmTitle,
+      message: members.length <= 1
+        ? tf('removeLastAttendeeConfirmMsg', { name })
+        : tf('removeAttendeeConfirmMsg', { name, group: guest.name }),
+      confirmText: t.removeAttendeeBtn,
+      children: needsPromote ? (
+        <div className="mt-4">
+          <label className="label-mono block mb-1 text-xs font-bold text-[#8B735B]">{t.promoteLeadLabel}</label>
+          <select defaultValue={promoteRef.current}
+            onChange={(e) => { promoteRef.current = e.target.value; }}
+            className="w-full px-3 py-2 rounded-xl border border-[#CBAE94] bg-white text-xs font-mono text-[#4A3F35]">
+            {members.filter((_, i) => i !== 0).map((n) => (
+              <option key={n} value={n}>{n}</option>
+            ))}
+          </select>
+        </div>
+      ) : undefined,
+    });
+    if (!ok) return;
+    onRemoveAttendee(guest.id, index, name, needsPromote ? promoteRef.current : undefined);
   };
 
   const statusBadge =
@@ -209,40 +226,6 @@ export const GuestDetailsModal = ({
           </button>
         </div>
       </div>
-
-      {/* Inline confirm — kept inside the details modal instead of a nested modal,
-          so Escape/tap-outside and the focus trap stay unambiguous. */}
-      {pendingRemove && (
-        <div className="rounded-2xl border-2 border-rose-300 bg-rose-50 p-4 space-y-3">
-          <h3 className="font-sans text-base font-bold text-[#4A3F35]">{t.removeAttendeeConfirmTitle}</h3>
-          <p className="text-xs sm:text-sm text-[#5D5449] leading-relaxed">
-            {members.length <= 1
-              ? tf('removeLastAttendeeConfirmMsg', { name: pendingRemove.name || '' })
-              : tf('removeAttendeeConfirmMsg', { name: pendingRemove.name || '', group: guest.name })}
-          </p>
-          {pendingRemove.index === 0 && members.length > 1 && (
-            <div>
-              <label className="label-mono block mb-1 text-xs font-bold text-[#8B735B]">{t.promoteLeadLabel}</label>
-              <select value={promoteName} onChange={(e) => setPromoteName(e.target.value)}
-                className="w-full px-3 py-2 rounded-xl border border-[#CBAE94] bg-white text-xs font-mono text-[#4A3F35]">
-                {members.filter((_, i) => i !== 0).map((n) => (
-                  <option key={n} value={n}>{n}</option>
-                ))}
-              </select>
-            </div>
-          )}
-          <div className="flex items-center justify-end gap-3">
-            <button type="button" onClick={() => setPendingRemove(null)}
-              className="px-5 min-h-[44px] rounded-xl border border-[#CBAE94] text-sm font-bold text-[#5D5449] hover:bg-[#EFE6DC] transition-colors">
-              {t.cancelBtn}
-            </button>
-            <button type="button" onClick={confirmRemove}
-              className="px-5 min-h-[44px] rounded-xl bg-rose-600 hover:bg-rose-700 text-white text-sm font-bold shadow-md transition-all">
-              {t.removeAttendeeBtn}
-            </button>
-          </div>
-        </div>
-      )}
     </Modal>
   );
 };

@@ -14,7 +14,7 @@ import { AgendaStatus, AgendaTask, EventSettings, Language } from '../../types';
 import { Translations } from '../../translations';
 import { adminFetch } from '../../lib/api';
 import { useToast } from '../shared/ToastContext';
-import { useConfirm } from '../shared/ConfirmDialog';
+import { useConfirm, useActionConfirm } from '../shared/ConfirmDialog';
 import { adminContainerVariants, adminCardVariants } from '../shared/motionPresets';
 import { useApiErrorMessage } from '../shared/i18n';
 import { Segmented } from '../shared/Segmented';
@@ -47,6 +47,7 @@ const advanceLabel = (t: Translations, advance: string): string => {
 export const AdminAgendaTab: React.FC<AdminAgendaTabProps> = ({ language, t, settings, onSaveSettings }) => {
   const { toast } = useToast();
   const confirm = useConfirm();
+  const confirmAction = useActionConfirm();
   const queryClient = useQueryClient();
   const apiError = useApiErrorMessage();
 
@@ -100,6 +101,7 @@ export const AdminAgendaTab: React.FC<AdminAgendaTabProps> = ({ language, t, set
   const channelConfigured = (emailOn && hostEmail.trim()) || (smsOn && hostPhone.trim());
 
   const handleSaveReminders = async () => {
+    if (!(await confirmAction(t.agendaReminderSaveBtn))) return;
     try {
       setSavingReminders(true);
       await onSaveSettings({
@@ -118,6 +120,7 @@ export const AdminAgendaTab: React.FC<AdminAgendaTabProps> = ({ language, t, set
   };
 
   const handleTestReminder = async () => {
+    if (!(await confirmAction(t.agendaReminderTestBtn))) return;
     try {
       setTestingReminder(true);
       const res = await adminFetch('/api/agenda/test-reminder', { method: 'POST' });
@@ -140,6 +143,7 @@ export const AdminAgendaTab: React.FC<AdminAgendaTabProps> = ({ language, t, set
     status: AgendaStatus;
   }) => {
     const isEdit = modal?.mode === 'edit';
+    if (!(await confirmAction(isEdit ? t.agendaEditTaskTitle : t.agendaNewTaskTitle))) return;
     const url = isEdit ? `/api/agenda/${modal!.task.id}` : '/api/agenda';
     const res = await adminFetch(url, {
       method: isEdit ? 'PATCH' : 'POST',
@@ -170,6 +174,7 @@ export const AdminAgendaTab: React.FC<AdminAgendaTabProps> = ({ language, t, set
 
   // Optimistic kanban reorder: apply locally, persist, refetch on failure.
   const handleReorder = async (items: Array<{ id: string; status: AgendaStatus; position: number }>) => {
+    if (!(await confirmAction(t.dragTaskLabel))) return;
     queryClient.setQueryData<AgendaTask[]>(['agenda-tasks'], (prev) =>
       (prev ?? []).map((task) => {
         const change = items.find((i) => i.id === task.id);

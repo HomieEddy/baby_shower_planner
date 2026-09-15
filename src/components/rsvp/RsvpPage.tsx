@@ -10,7 +10,7 @@ import { decodeApiError } from '../../lib/errors';
 import { useCapabilities, availableChannels, channelLabel } from '../../lib/capabilities';
 import { motion, AnimatePresence } from 'motion/react';
 import { useToast } from '../shared/ToastContext';
-import { useConfirm } from '../shared/ConfirmDialog';
+import { useConfirm, useActionConfirm } from '../shared/ConfirmDialog';
 import { useT, useTf, useApiErrorMessage } from '../shared/i18n';
 import { useCopyFeedback } from '../shared/hooks';
 import { Modal } from '../shared/Modal';
@@ -153,6 +153,7 @@ export const RsvpPage = () => {
   const [myInvites, setMyInvites] = useState<GuestInviteView[]>([]);
   const { copiedKey, copy: copyText } = useCopyFeedback();
   const confirm = useConfirm();
+  const confirmAction = useActionConfirm();
 
   useEffect(() => {
     if (guest) {
@@ -187,6 +188,7 @@ export const RsvpPage = () => {
       toast.error(tf('contactForChannelError', { channel: t.channelText }));
       return;
     }
+    if (!(await confirmAction(t.contactSaveBtn))) return;
     try {
       setSavingContact(true);
       const res = await fetch(`/api/rsvp/${token}/contact`, {
@@ -216,6 +218,7 @@ export const RsvpPage = () => {
       toast.error(t.inviteNameRequiredToast);
       return;
     }
+    if (!(await confirmAction(t.createInviteBtn))) return;
     try {
       setInviting(true);
       const res = await fetch(`/api/rsvp/${token}/invite`, {
@@ -271,6 +274,7 @@ export const RsvpPage = () => {
   // Handle Submit
   const onSubmit = async (data: RsvpFormValues) => {
     if (!token || !guest || guest.is_read_only) return;
+    if (!(await confirmAction(t.submitRsvpBtn))) return;
 
     try {
       setSubmitting(true);
@@ -317,6 +321,7 @@ export const RsvpPage = () => {
   // Handle Edit RSVP
   const handleEditRsvp = async () => {
     if (!token) return;
+    if (!(await confirmAction(t.editRsvpBtn))) return;
     try {
       const res = await fetch(`/api/rsvp/${token}/reset`, { method: 'POST' });
       if (!res.ok) {

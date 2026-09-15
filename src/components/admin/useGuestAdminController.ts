@@ -18,7 +18,7 @@ import { GuestImportSchema, EditGuestFormSchema } from '../../lib/validation';
 import { useCapabilities, availableChannels } from '../../lib/capabilities';
 import { decodeApiError } from '../../lib/errors';
 import { useToast } from '../shared/ToastContext';
-import { useConfirm } from '../shared/ConfirmDialog';
+import { useConfirm, useActionConfirm } from '../shared/ConfirmDialog';
 import { useTf, useApiErrorMessage } from '../shared/i18n';
 import { useCopyFeedback } from '../shared/hooks';
 import {
@@ -45,6 +45,7 @@ export function useGuestAdminController({ language, t, guests, onRefresh }: Gues
   const tf = useTf();
   const apiError = useApiErrorMessage();
   const confirm = useConfirm();
+  const confirmAction = useActionConfirm();
 
   // ── List state ──────────────────────────────────────────────────
   const [searchTerm, setSearchTerm] = useState('');
@@ -207,6 +208,7 @@ export function useGuestAdminController({ language, t, guests, onRefresh }: Gues
       toast.error(t.phoneRequiredToast);
       return;
     }
+    if (!(await confirmAction(t.saveChangesBtn))) return;
     try {
       setSavingEdit(true);
       const maxParty = Math.max(1, Number(values.max_party_size) || 1);
@@ -353,7 +355,7 @@ export function useGuestAdminController({ language, t, guests, onRefresh }: Gues
     }
   };
 
-  const handleAddGuest = (values: AddGuestFormValues) => {
+  const handleAddGuest = async (values: AddGuestFormValues) => {
     if (!values.name.trim()) return;
     if (!markGoing) {
       if ((values.delivery_channel === 'email' || values.delivery_channel === 'both') && !(values.email || '').trim()) {
@@ -375,13 +377,15 @@ export function useGuestAdminController({ language, t, guests, onRefresh }: Gues
       setAttendeeModal({ values, going: markGoing });
       return;
     }
+    if (!(await confirmAction(markGoing || linkOnly ? t.createInviteBtn : t.sendInviteBtn))) return;
     void submitGuest(values, [], markGoing);
   };
 
-  const handleConfirmAttendees = () => {
+  const handleConfirmAttendees = async () => {
     if (!attendeeModal) return;
     const extras = extraNames.map((n) => n.trim()).filter(Boolean);
     const { values, going } = attendeeModal;
+    if (!(await confirmAction(going ? t.createInviteBtn : t.sendInviteBtn))) return;
     setAttendeeModal(null);
     void submitGuest(values, extras, going);
   };
@@ -416,6 +420,7 @@ export function useGuestAdminController({ language, t, guests, onRefresh }: Gues
         toast.error(t.csvInvalidToast);
         return;
       }
+      if (!(await confirmAction(t.processImportBtn))) return;
       const res = await adminFetch('/api/guests/batch-import', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -444,6 +449,7 @@ export function useGuestAdminController({ language, t, guests, onRefresh }: Gues
   };
 
   const handleCopyInviteMessage = async (guestId: string) => {
+    if (!(await confirmAction(t.copyLabel))) return;
     try {
       const res = await adminFetch(`/api/guests/${guestId}/invite-message`);
       const data = await res.json();
@@ -459,6 +465,7 @@ export function useGuestAdminController({ language, t, guests, onRefresh }: Gues
   // One row per individual person, with their party's reservation code and their
   // own table/seat resolved from the floor map (split parties included).
   const exportGuestsCsv = async (list: Guest[]) => {
+    if (!(await confirmAction(t.exportCsvBtn))) return;
     let floorMap: FloorMapData | null = null;
     try {
       const res = await fetch('/api/floorplan');
@@ -522,6 +529,7 @@ export function useGuestAdminController({ language, t, guests, onRefresh }: Gues
 
   const handleBulkResend = async () => {
     if (selectedIds.length === 0) return;
+    if (!(await confirmAction(t.bulkResendBtn))) return;
     try {
       const res = await adminFetch('/api/send-invitations', {
         method: 'POST',
@@ -536,6 +544,7 @@ export function useGuestAdminController({ language, t, guests, onRefresh }: Gues
   };
 
   const handleSendReminders = async () => {
+    if (!(await confirmAction(t.remindBtn))) return;
     try {
       const res = await adminFetch('/api/send-reminders', { method: 'POST' });
       const data = await res.json();

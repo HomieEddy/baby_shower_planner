@@ -4,6 +4,7 @@ import { Guest } from '../../types';
 import { adminFetch } from '../../lib/api';
 import { getPartyMembers, isMemberCheckedIn } from '../../lib/guestAttendees';
 import { useToast } from '../shared/ToastContext';
+import { useActionConfirm } from '../shared/ConfirmDialog';
 import { CheckCircle2, RotateCcw, Users, UserCheck, UserX, ChevronDown, ChevronRight } from 'lucide-react';
 import { useT, useTf, useApiErrorMessage } from '../shared/i18n';
 import { decodeApiError } from '../../lib/errors';
@@ -16,6 +17,7 @@ export const GuestCheckIn = () => {
   const tf = useTf();
   const apiError = useApiErrorMessage();
   const { toast } = useToast();
+  const confirmAction = useActionConfirm();
   const [guests, setGuests] = useState<Guest[]>([]);
   const [search, setSearch] = useState('');
   const [expandedId, setExpandedId] = useState<string | null>(null);
@@ -50,8 +52,10 @@ export const GuestCheckIn = () => {
     guestId: string,
     body: Record<string, unknown>,
     successMsg: string,
+    confirmLabel: string,
     undo = false
   ) => {
+    if (!(await confirmAction(confirmLabel))) return;
     setBusy(guestId);
     try {
       const res = await adminFetch(undo ? '/api/check-in/undo' : '/api/check-in', {
@@ -72,12 +76,12 @@ export const GuestCheckIn = () => {
     }
   };
 
-  const handleCheckIn = (id: string) => runAction(id, {}, `${t.checkInBtn} ✓`);
-  const handleUndo = (id: string) => runAction(id, {}, `${t.undoCheckinBtn} ✓`, true);
+  const handleCheckIn = (id: string) => runAction(id, {}, `${t.checkInBtn} ✓`, t.checkInBtn);
+  const handleUndo = (id: string) => runAction(id, {}, `${t.undoCheckinBtn} ✓`, t.undoCheckinBtn, true);
   const handleMemberCheckIn = (id: string, name: string) =>
-    runAction(id, { name }, `${name} ✓`);
+    runAction(id, { name }, `${name} ✓`, t.checkInBtn);
   const handleMemberUndo = (id: string, name: string) =>
-    runAction(id, { name }, `${name} — ${t.undoCheckinBtn} ✓`, true);
+    runAction(id, { name }, `${name} — ${t.undoCheckinBtn} ✓`, t.undoCheckinBtn, true);
 
   const filtered = guests.filter(g =>
     g.name.toLowerCase().includes(search.toLowerCase()) ||

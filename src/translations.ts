@@ -145,6 +145,9 @@ export interface Translations {
   byTable: string;
   cancelBtn: string;
   confirmBtn: string;
+  confirmActionMsg: string;
+  copyLabel: string;
+  printLabel: string;
   cancellationTemplate: string;
   cancellationTemplateDesc: string;
   capacityLabel: string;
@@ -1374,6 +1377,9 @@ export const translations: Record<Language, Translations> = {
     byTable: "By Table",
     cancelBtn: "Cancel",
     confirmBtn: "Confirm",
+    confirmActionMsg: "Please confirm to continue.",
+    copyLabel: "Copy",
+    printLabel: "Print",
     cancellationTemplate: "Event Cancelled",
     cancellationTemplateDesc: "Cancellation notice",
     capacityLabel: "Capacity",
@@ -2600,6 +2606,9 @@ export const translations: Record<Language, Translations> = {
     byTable: "Par Table",
     cancelBtn: "Annuler",
     confirmBtn: "Confirmer",
+    confirmActionMsg: "Veuillez confirmer pour continuer.",
+    copyLabel: "Copier",
+    printLabel: "Imprimer",
     cancellationTemplate: "Événement annulé",
     cancellationTemplateDesc: "Avis d'annulation",
     capacityLabel: "Capacité",

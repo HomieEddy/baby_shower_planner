@@ -5,7 +5,7 @@ import { GuestbookEntry } from '../../types';
 import { adminCardVariants, adminContainerVariants } from '../shared/motionPresets';
 import { useT, useTf } from '../shared/i18n';
 import { useToast } from '../shared/ToastContext';
-import { useConfirm } from '../shared/ConfirmDialog';
+import { useConfirm, useActionConfirm } from '../shared/ConfirmDialog';
 import { SearchInput } from '../shared/ui';
 import { Segmented } from '../shared/Segmented';
 import { IconButton } from '../shared/IconButton';
@@ -17,6 +17,7 @@ export const AdminGuestbookFeed = ({ entries, onRefresh }: { entries: GuestbookE
   const tf = useTf();
   const { toast } = useToast();
   const confirm = useConfirm();
+  const confirmAction = useActionConfirm();
   const [searchTerm, setSearchTerm] = useState('');
   const [visibilityFilter, setVisibilityFilter] = useState<'all' | 'visible' | 'hidden'>('all');
 
@@ -34,6 +35,8 @@ export const AdminGuestbookFeed = ({ entries, onRefresh }: { entries: GuestbookE
   }, [entries, searchTerm, visibilityFilter]);
 
   const handleToggleVisibility = async (entry: GuestbookEntry) => {
+    const label = entry.visible === false ? t.moderationShowBtn : t.moderationHideBtn;
+    if (!(await confirmAction(label))) return;
     try {
       const res = await adminFetch(`/api/guestbook/${entry.id}`, {
         method: 'PATCH',

@@ -15,7 +15,7 @@ import {
   DownloadCloud,
 } from 'lucide-react';
 import { useToast } from '../shared/ToastContext';
-import { useConfirm } from '../shared/ConfirmDialog';
+import { useConfirm, useActionConfirm } from '../shared/ConfirmDialog';
 import { Modal } from '../shared/Modal';
 import { adminFetch } from '../../lib/api';
 import { useSettings } from '../../lib/settingsQuery';
@@ -36,6 +36,7 @@ export const HostPhotoGalleryPage: React.FC = () => {
   const tf = useTf();
   const { toast } = useToast();
   const confirm = useConfirm();
+  const confirmAction = useActionConfirm();
   const settings = useSettings();
   const [photos, setPhotos] = useState<EventPhoto[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -104,6 +105,7 @@ export const HostPhotoGalleryPage: React.FC = () => {
 
   // ZIP Download Generator
   const handleDownloadZip = async (photosToZip: EventPhoto[], filenamePrefix = 'baby_shower_photos') => {
+    if (!(await confirmAction(t.downloadZipBtn))) return;
     if (photosToZip.length === 0) return;
     setIsZipping(true);
     setZipProgress(0);
@@ -252,6 +254,7 @@ export const HostPhotoGalleryPage: React.FC = () => {
     const photo = photos.find((p) => p.id === photoId);
     if (!photo) return;
     const nextVisible = photo.visible === false;
+    if (!(await confirmAction(nextVisible ? t.moderationShowBtn : t.moderationHideBtn))) return;
     try {
       const res = await adminFetch(`/api/photos/${photoId}`, {
         method: 'PATCH',
