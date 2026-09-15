@@ -1,35 +1,39 @@
 // Event alerts: list, create (with fan-out), delete.
 
+import { sendError, sendJson } from '../http';
 import type { RouteCtx } from '../http';
-import { parseJson, sendError, sendJson } from '../http';
+import { handleRoutes, type Route } from '../route';
 import { createAlert, deleteAlert, getAlerts } from '../../db/service';
 
-export async function handleAlertRoutes(ctx: RouteCtx): Promise<boolean> {
-  const { req, res, url } = ctx;
-  const method = req.method || 'GET';
-  const pathname = url.pathname;
+const ROUTES: Route[] = [
+  {
+    method: 'GET',
+    path: '/api/alerts',
+    handler: async (_req, { res }) => sendJson(res, 200, { alerts: await getAlerts() }),
+  },
 
-  if (pathname === '/api/alerts') {
-    if (method === 'GET') {
-      const alerts = await getAlerts();
-      return sendJson(res, 200, { alerts });
-    }
-    if (method === 'POST') {
-      ctx.requireAdmin();
-      const body = await parseJson(req);
+  {
+    method: 'POST',
+    path: '/api/alerts',
+    admin: true,
+    body: true,
+    handler: async ({ body }, { res }) => {
       const { type, title, message, target_audience } = body;
       if (!title || !message) return sendError(res, 'INVALID_PAYLOAD', 'Title and message are required');
       const result = await createAlert({ type: type || 'CUSTOM', title, message, target_audience });
       return sendJson(res, 200, { success: true, alert: result.alert, notified_count: result.notified_count });
-    }
-  }
+    },
+  },
 
-  if (pathname.startsWith('/api/alerts/') && method === 'DELETE') {
-    ctx.requireAdmin();
-    const id = pathname.replace('/api/alerts/', '');
-    const remaining = await deleteAlert(id);
-    return sendJson(res, 200, { success: true, alerts: remaining });
-  }
+  {
+    method: 'DELETE',
+    path: /^\/api\/alerts\/([^/]+)$/,
+    admin: true,
+    handler: async ({ params }, { res }) => {
+      const remaining = await deleteAlert(params[0]);
+      return sendJson(res, 200, { success: true, alerts: remaining });
+    },
+  },
+];
 
-  return false;
-}
+export const handleAlertRoutes = (ctx: RouteCtx): Promise<boolean> => handleRoutes(ROUTES, ctx);

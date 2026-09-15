@@ -1,7 +1,8 @@
 // Floor plan admin editing/assignment plus the public day-of seating roster.
 
+import { sendJson } from '../http';
 import type { RouteCtx } from '../http';
-import { parseJson, sendJson } from '../http';
+import { handleRoutes, type Route } from '../route';
 import {
   getFloorMap,
   getSeatingRoster,
@@ -9,38 +10,45 @@ import {
   updateFloorMap,
 } from '../../db/service';
 
-export async function handleFloorPlanRoutes(ctx: RouteCtx): Promise<boolean> {
-  const { req, res, url } = ctx;
-  const method = req.method || 'GET';
-  const pathname = url.pathname;
+const ROUTES: Route[] = [
+  {
+    method: 'GET',
+    path: '/api/floorplan',
+    handler: async (_req, { res }) => sendJson(res, 200, { floorMap: await getFloorMap() }),
+  },
 
-  if (pathname === '/api/floorplan') {
-    if (method === 'GET') {
-      const floorMap = await getFloorMap();
-      return sendJson(res, 200, { floorMap });
-    }
-    if (method === 'POST') {
-      ctx.requireAdmin();
-      const body = await parseJson(req);
+  {
+    method: 'POST',
+    path: '/api/floorplan',
+    admin: true,
+    body: true,
+    handler: async ({ body }, { res }) => {
       // Seat-validation failures surface as DomainError (400) via server.ts.
       const floorMap = await updateFloorMap(body);
       return sendJson(res, 200, { success: true, floorMap });
-    }
-  }
+    },
+  },
 
-  if (pathname === '/api/floorplan/roster' && method === 'GET') {
-    const guestToken = url.searchParams.get('guest') || undefined;
-    const code = url.searchParams.get('code') || undefined;
-    const result = await getSeatingRoster(guestToken, code);
-    return sendJson(res, 200, result);
-  }
+  {
+    method: 'GET',
+    path: '/api/floorplan/roster',
+    handler: async ({ query }, { res }) => {
+      const guestToken = query.get('guest') || undefined;
+      const code = query.get('code') || undefined;
+      return sendJson(res, 200, await getSeatingRoster(guestToken, code));
+    },
+  },
 
-  if (pathname === '/api/floorplan/share-email' && method === 'POST') {
-    ctx.requireAdmin();
-    const body = await parseJson(req);
-    const result = await shareFloorPlanEmail(body.guestIds, body.customMessage);
-    return sendJson(res, 200, { success: true, count: result.count });
-  }
+  {
+    method: 'POST',
+    path: '/api/floorplan/share-email',
+    admin: true,
+    body: true,
+    handler: async ({ body }, { res }) => {
+      const result = await shareFloorPlanEmail(body.guestIds, body.customMessage);
+      return sendJson(res, 200, { success: true, count: result.count });
+    },
+  },
+];
 
-  return false;
-}
+export const handleFloorPlanRoutes = (ctx: RouteCtx): Promise<boolean> => handleRoutes(ROUTES, ctx);

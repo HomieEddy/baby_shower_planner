@@ -1,30 +1,34 @@
 // Event settings read (public get / admin update).
 
+import { sendError, sendJson } from '../http';
 import type { RouteCtx } from '../http';
-import { parseJson, sendError, sendJson } from '../http';
+import { handleRoutes, type Route } from '../route';
 import { ReminderSettingsSchema } from '../../lib/validation';
 import { SettingsSchema } from '../../lib/domain';
 import type { EventSettings } from '../../types';
 import { getSettings, updateSettings } from '../../db/service';
 
-export async function handleSettingsRoutes(ctx: RouteCtx): Promise<boolean> {
-  const { req, res, url } = ctx;
-  const method = req.method || 'GET';
-  const pathname = url.pathname;
-
-  if (pathname === '/api/settings') {
-    if (method === 'GET') {
+const ROUTES: Route[] = [
+  {
+    method: 'GET',
+    path: '/api/settings',
+    handler: async (_req, { res, adminOnly }) => {
       const settings = await getSettings();
       // Host contact details are admin-only; guests need event info + footer names.
-      if (!ctx.adminOnly()) {
+      if (!adminOnly()) {
         delete (settings as Partial<EventSettings>).hostEmail;
         delete (settings as Partial<EventSettings>).hostPhone;
       }
       return sendJson(res, 200, { settings });
-    }
-    if (method === 'POST') {
-      ctx.requireAdmin();
-      const body = await parseJson(req);
+    },
+  },
+
+  {
+    method: 'POST',
+    path: '/api/settings',
+    admin: true,
+    body: true,
+    handler: async ({ body }, { res }) => {
       // Only the domain's own keys may reach PocketBase: the raw body used to
       // be spread straight into the update.
       const settingsKeys = new Set(Object.keys(SettingsSchema.shape));
@@ -38,8 +42,8 @@ export async function handleSettingsRoutes(ctx: RouteCtx): Promise<boolean> {
       }
       const settings = await updateSettings({ ...body, ...reminder.data });
       return sendJson(res, 200, { success: true, settings });
-    }
-  }
+    },
+  },
+];
 
-  return false;
-}
+export const handleSettingsRoutes = (ctx: RouteCtx): Promise<boolean> => handleRoutes(ROUTES, ctx);

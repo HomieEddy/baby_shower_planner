@@ -1,8 +1,9 @@
 // Guest-facing RSVP flow: view/submit via magic token, reset token usage,
 // self-service contact updates and guest-to-guest invites.
 
+import { sendError, sendJson } from '../http';
 import type { RouteCtx } from '../http';
-import { parseJson, sendError, sendJson } from '../http';
+import { handleRoutes, parseOrFail, type Route } from '../route';
 import { GuestRsvpSchema, isValidEmail } from '../../lib/validation';
 import {
   createInvite,
@@ -14,84 +15,91 @@ import {
   updateGuestContact,
 } from '../../db/service';
 
-export async function handleRsvpRoutes(ctx: RouteCtx): Promise<boolean> {
-  const { req, res, url } = ctx;
-  const method = req.method || 'GET';
-  const pathname = url.pathname;
+const ROUTES: Route[] = [
+  {
+    method: 'DELETE',
+    path: /^\/api\/rsvp\/([^/]+)\/invites\/([^/]+)$/,
+    handler: async ({ params }, { res }) => {
+      const [token, inviteId] = params;
+      const removed = await removeInvite(token, inviteId);
+      if (!removed) return sendError(res, 'NOT_FOUND', 'Invite not found');
+      return sendJson(res, 200, { success: true });
+    },
+  },
 
-  if (!pathname.startsWith('/api/rsvp/')) return false;
+  {
+    method: 'GET',
+    path: /^\/api\/rsvp\/([^/]+)\/invites$/,
+    handler: async ({ params }, { res }) => sendJson(res, 200, { invites: await getInvitesByGuest(params[0]) }),
+  },
 
-  const parts = pathname.replace('/api/rsvp/', '').split('/');
-  const token = parts[0];
-  const isReset = parts[1] === 'reset';
-  const isContact = parts[1] === 'contact';
-  const isInvite = parts[1] === 'invite' && parts.length === 2;
-  const isInvitesList = parts[1] === 'invites' && parts.length === 2;
-  const isInviteDelete = parts[1] === 'invites' && parts.length === 3;
+  {
+    method: 'POST',
+    path: /^\/api\/rsvp\/([^/]+)\/invite$/,
+    body: true,
+    handler: async ({ body, params }, { res }) => {
+      const result = await createInvite(params[0], {
+        name: body.name, contact: body.contact, note: body.note,
+      });
+      if (!result.ok) return sendError(res, result.error);
+      return sendJson(res, 200, result);
+    },
+  },
 
-  if (isInviteDelete && method === 'DELETE') {
-    const removed = await removeInvite(token, parts[2]);
-    if (!removed) return sendError(res, 'NOT_FOUND', 'Invite not found');
-    return sendJson(res, 200, { success: true });
-  }
+  {
+    method: 'POST',
+    path: /^\/api\/rsvp\/([^/]+)\/contact$/,
+    body: true,
+    handler: async ({ body, params }, { res }) => {
+      const { email, phone, delivery_channel } = body;
+      if (!['none', 'email', 'text', 'both'].includes(delivery_channel)) {
+        return sendError(res, 'INVALID_CHANNEL');
+      }
+      if (email && !isValidEmail(email)) {
+        return sendError(res, 'INVALID_EMAIL');
+      }
+      // INVALID_TOKEN / EMAIL_REQUIRED / PHONE_REQUIRED propagate as DomainError.
+      const guest = await updateGuestContact(params[0], { email, phone, delivery_channel });
+      return sendJson(res, 200, { success: true, guest });
+    },
+  },
 
-  if (isInvitesList && method === 'GET') {
-    const invites = await getInvitesByGuest(token);
-    return sendJson(res, 200, { invites });
-  }
+  {
+    method: 'POST',
+    path: /^\/api\/rsvp\/([^/]+)\/reset$/,
+    handler: async ({ params }, { res }) => {
+      const guest = await resetTokenUsage(params[0]);
+      return sendJson(res, 200, { success: true, guest });
+    },
+  },
 
-  if (isInvite && method === 'POST') {
-    const body = await parseJson(req);
-    const result = await createInvite(token, {
-      name: body.name, contact: body.contact, note: body.note,
-    });
-    if (!result.ok) {
-      return sendError(res, result.error);
-    }
-    return sendJson(res, 200, result);
-  }
+  {
+    method: 'GET',
+    path: /^\/api\/rsvp\/([^/]+)$/,
+    handler: async ({ params }, { res }) => {
+      const guest = await getGuestByToken(params[0]);
+      if (!guest) return sendError(res, 'INVALID_TOKEN');
+      return sendJson(res, 200, { guest });
+    },
+  },
 
-  if (isContact && method === 'POST') {
-    const body = await parseJson(req);
-    const { email, phone, delivery_channel } = body;
-    if (!['none', 'email', 'text', 'both'].includes(delivery_channel)) {
-      return sendError(res, 'INVALID_CHANNEL');
-    }
-    if (email && !isValidEmail(email)) {
-      return sendError(res, 'INVALID_EMAIL');
-    }
-    // INVALID_TOKEN / EMAIL_REQUIRED / PHONE_REQUIRED propagate as DomainError.
-    const guest = await updateGuestContact(token, { email, phone, delivery_channel });
-    return sendJson(res, 200, { success: true, guest });
-  }
+  {
+    method: 'POST',
+    path: /^\/api\/rsvp\/([^/]+)$/,
+    body: true,
+    handler: async ({ body, params }, { res }) => {
+      const data = parseOrFail(GuestRsvpSchema, body, res);
+      if (!data) return true;
+      const updated = await submitRsvp(params[0], {
+        rsvp_status: data.rsvp_status,
+        attending_party_size: data.attending_party_size ?? 1,
+        dietary_restrictions: data.dietary_restrictions || '',
+        attendee_details: data.attendee_details,
+        attendee_names: data.attendee_names,
+      });
+      return sendJson(res, 200, { success: true, guest: updated });
+    },
+  },
+];
 
-  if (isReset && method === 'POST') {
-    const guest = await resetTokenUsage(token);
-    return sendJson(res, 200, { success: true, guest });
-  }
-
-  if (method === 'GET') {
-    const guest = await getGuestByToken(token);
-    if (!guest) return sendError(res, 'INVALID_TOKEN');
-    return sendJson(res, 200, { guest });
-  }
-
-  if (method === 'POST') {
-    const body = await parseJson(req);
-    const parsed = GuestRsvpSchema.safeParse(body);
-    if (!parsed.success) {
-      return sendError(res, 'INVALID_PAYLOAD', parsed.error.issues[0]?.message);
-    }
-    const { rsvp_status, attending_party_size, dietary_restrictions, attendee_details, attendee_names } = parsed.data;
-    const updated = await submitRsvp(token, {
-      rsvp_status,
-      attending_party_size: attending_party_size ?? 1,
-      dietary_restrictions: dietary_restrictions || '',
-      attendee_details,
-      attendee_names,
-    });
-    return sendJson(res, 200, { success: true, guest: updated });
-  }
-
-  return false;
-}
+export const handleRsvpRoutes = (ctx: RouteCtx): Promise<boolean> => handleRoutes(ROUTES, ctx);
