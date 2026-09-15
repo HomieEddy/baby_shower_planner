@@ -53,7 +53,7 @@
 src/
   components/
     admin/      host dashboard + tools (AdminDashboard with vertical sidebar nav, AdminGuestsTab, AdminSettingsTab, AdminAlertsTab, GuestCheckIn, EscortCardsGenerator, CateringSummaryView, ThankYouTrackerView, AdminLogin)
-    seating/    floor map feature (FloorPlanPage host editor, GuestFinderPage public day-of table lookup, DayOfQrModal, floorPlanHelpers, venueShapes, renderCustomLandmarkShape, useSeatingHistory)
+    seating/    floor map feature (FloorPlanPage host editor, FloorPlanEditor canvas, floorplanHooks draft state, GuestFinderPage public day-of table lookup, DayOfQrModal, floorPlanHelpers, venueShapes, renderCustomLandmarkShape)
     rsvp/       reservation flow (RsvpPage, EventDetailsCard)
     guestbook/  GuestbookPage
     photos/     photo upload + host gallery (GuestPhotoUploadPage, HostPhotoGalleryPage, PhotoCard, PhotoLightbox, PhotoSlideshow)

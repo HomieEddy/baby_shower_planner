@@ -393,9 +393,19 @@ export interface Translations {
   fpSuggestReasonExact: string;
   fpSuggestReasonOptimal: string;
   fpSuggestReasonGrouping: string;
+  fpTooltipAssignedGuest: string;
   fpTooltipCapacity: string;
   fpTooltipDimensions: string;
+  fpTooltipGuestNumber: string;
+  fpTooltipGuestParty: string;
   fpTooltipNoGuests: string;
+  fpTooltipParty: string;
+  fpTooltipPrimaryHost: string;
+  fpTooltipReservationCode: string;
+  fpTooltipSeatAt: string;
+  fpTooltipSeatAvailable: string;
+  fpTooltipSeatFree: string;
+  fpTooltipSeatLabel: string;
   fpTooltipSeated: string;
   fpTooltipType: string;
   fpTooltipVenueFeature: string;
@@ -757,6 +767,7 @@ export interface Translations {
   shapeLabel: string;
   shareEmailModalDesc: string;
   shareEmailModalTitle: string;
+  sharePlanMessagePh: string;
   showScheduleTimesLabel: string;
   signatureTypographyLabel: string;
   simulatedDispatchLabel: string;
@@ -1654,9 +1665,19 @@ export const translations: Record<Language, Translations> = {
     fpSuggestReasonExact: "Perfect match! Fills all {{count}} open seats with zero wasted space",
     fpSuggestReasonOptimal: "Great fit for party of {{count}} leaving only {{free}} free seat(s)",
     fpSuggestReasonGrouping: "Keeps entire party of {{count}} together comfortably",
+    fpTooltipAssignedGuest: "Assigned Guest",
     fpTooltipCapacity: "Capacity: {{capacity}} seats ({{available}} available)",
     fpTooltipDimensions: "Dimensions: {{width}} × {{height}} px",
+    fpTooltipGuestNumber: "{{name}} (Guest #{{index}})",
+    fpTooltipGuestParty: "Guest Party",
     fpTooltipNoGuests: "No guests assigned yet",
+    fpTooltipParty: "Party: {{name}}",
+    fpTooltipPrimaryHost: "Primary Host: {{name}}",
+    fpTooltipReservationCode: "Reservation Code: {{code}}",
+    fpTooltipSeatAt: "Table & Seat: Seat #{{seat}} at {{table}}",
+    fpTooltipSeatAvailable: "Available Seat",
+    fpTooltipSeatFree: "Status: Unassigned / Available Chair",
+    fpTooltipSeatLabel: "Seat #{{seat}} ({{table}})",
     fpTooltipSeated: "Seated ({{count}}): {{names}}",
     fpTooltipType: "Type: {{type}}",
     fpTooltipVenueFeature: "Venue Feature / Landmark",
@@ -2024,6 +2045,7 @@ export const translations: Record<Language, Translations> = {
     shapeLabel: "Shape",
     shareEmailModalDesc: "This will dispatch an email notification to all guests with their personal table assignment and a link to view the interactive floor map!",
     shareEmailModalTitle: "Share Seating Plan via Email",
+    sharePlanMessagePh: "e.g. Dear friends, our baby shower floor plan and table seating is ready! Check where you are seated...",
     showScheduleTimesLabel: "Show schedule times on guest invitations",
     signatureTypographyLabel: "Signature Typography",
     simulatedDispatchLabel: "Simulated Broadcast Dispatched",
@@ -2911,9 +2933,19 @@ export const translations: Record<Language, Translations> = {
     fpSuggestReasonExact: "Correspondance parfaite ! Remplit les {{count}} places libres sans gaspillage",
     fpSuggestReasonOptimal: "Excellent ajustement pour un groupe de {{count}}, ne laissant que {{free}} place(s) libre(s)",
     fpSuggestReasonGrouping: "Garde tout le groupe de {{count}} confortablement réuni",
+    fpTooltipAssignedGuest: "Invité",
     fpTooltipCapacity: "Capacité : {{capacity}} places ({{available}} libres)",
     fpTooltipDimensions: "Dimensions : {{width}} × {{height}} px",
+    fpTooltipGuestNumber: "{{name}} (Invité n°{{index}})",
+    fpTooltipGuestParty: "Groupe invité",
     fpTooltipNoGuests: "Aucun invité assigné pour l'instant",
+    fpTooltipParty: "Groupe : {{name}}",
+    fpTooltipPrimaryHost: "Hôte principal : {{name}}",
+    fpTooltipReservationCode: "Code de réservation : {{code}}",
+    fpTooltipSeatAt: "Table & Siège : Siège n°{{seat}} ({{table}})",
+    fpTooltipSeatAvailable: "Siège disponible",
+    fpTooltipSeatFree: "Statut : Libre / Non assigné",
+    fpTooltipSeatLabel: "Siège n°{{seat}} ({{table}})",
     fpTooltipSeated: "Placés ({{count}}) : {{names}}",
     fpTooltipType: "Type : {{type}}",
     fpTooltipVenueFeature: "Élément du lieu / Repère",
@@ -3281,6 +3313,7 @@ export const translations: Record<Language, Translations> = {
     shapeLabel: "Forme",
     shareEmailModalDesc: "Envoyez une notification par e-mail à tous les invités avec leur attribution de table et un lien vers le plan de salle interactif !",
     shareEmailModalTitle: "Partager le plan de salle par courriel",
+    sharePlanMessagePh: "ex : Chers amis, le plan de salle est prêt ! Découvrez votre table...",
     showScheduleTimesLabel: "Afficher les heures sur les invitations",
     signatureTypographyLabel: "Typographie signature",
     simulatedDispatchLabel: "Diffusion simulée effectuée",

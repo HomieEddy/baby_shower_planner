@@ -17,6 +17,16 @@ vi.mock('./client', async () => {
     newReservationCode: () => '9999',
     removeGuestFromFloorMaps: async () => {},
     removeAttendeeFromFloorMaps: async () => {},
+    // Same contract as the real client helper, wired to the fake.
+    isNotFound: (err: unknown) => (err as { status?: number } | null)?.status === 404,
+    findFirstOrUndefined: async (collection: string, filter: string) => {
+      try {
+        return await h.fake.pb.collection(collection).getFirstListItem(filter);
+      } catch (err) {
+        if ((err as { status?: number } | null)?.status === 404) return undefined;
+        throw err;
+      }
+    },
   };
 });
 
@@ -174,8 +184,8 @@ describe('submitRsvp approval gate', () => {
       dietary_restrictions: '',
     });
     expect(updated.attendee_details).toEqual([
-      { name: 'Alice', dietary: 'Vegan' },
-      { name: 'Bob', dietary: 'Nut-free' },
+      { name: 'Alice', contact: '', dietary: 'Vegan' },
+      { name: 'Bob', contact: '', dietary: 'Nut-free' },
     ]);
     expect(updated.dietary_restrictions).toBe('Vegan');
   });

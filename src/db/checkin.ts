@@ -1,7 +1,8 @@
 // Check-in (admin by id, public self-service by token/code).
 
 import type { Guest } from '../types';
-import { getPartyMembers, isMemberCheckedIn, isPartyLead } from '../lib/guestAttendees';
+import { getPartyMembers, isAttending, isMemberCheckedIn, isPartyLead } from '../lib/guestAttendees';
+import { getGuestPartySize } from '../lib/tableAssignment';
 import { DomainError } from '../lib/errors';
 import { fromRecord, pb } from './client';
 import { scrubForGuestLookup, scrubForRoster } from './roster';
@@ -69,13 +70,13 @@ export async function getCheckInStats(): Promise<{ total: number; checkedIn: num
   let expected = 0;
   for (const r of all) {
     const g = fromRecord<Guest>(r);
-    if (g.rsvp_status !== 'Attending') continue;
+    if (!isAttending(g)) continue;
     const members = getPartyMembers(g);
     if (members.length > 0) {
       expected += members.length;
       checkedIn += members.filter((m) => isMemberCheckedIn(g, m)).length;
     } else {
-      expected += g.attending_party_size || 1;
+      expected += getGuestPartySize(g);
       checkedIn += g.checked_in ? 1 : 0;
     }
   }
@@ -142,7 +143,9 @@ export async function selfCheckIn(opts: {
       : await checkInGuest(record.id, target);
     return { ok: true, guest: scrub(updated) };
   } catch (err) {
-    if (err instanceof Error && err.message === 'NOT_IN_PARTY') return { ok: false, error: 'NOT_IN_PARTY' };
+    // Branch on the code: a DomainError's `message` is the registry prose, not
+    // the code, so matching on it never fired.
+    if (err instanceof DomainError && err.code === 'NOT_IN_PARTY') return { ok: false, error: 'NOT_IN_PARTY' };
     throw err;
   }
 }

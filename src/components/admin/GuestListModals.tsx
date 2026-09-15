@@ -17,7 +17,7 @@ import { useConfirm } from '../shared/ConfirmDialog';
 import { useT, useTf } from '../shared/i18n';
 import { Guest } from '../../types';
 import { getGuestPartySize } from '../../lib/tableAssignment';
-import { getPartyMembers, getAttendeeDietary, getPartyDietarySummary, hasDietaryRestriction } from '../../lib/guestAttendees';
+import { getPartyMembers, getAttendeeDietary, getPartyDietarySummary, hasDietaryRestriction, isAttending } from '../../lib/guestAttendees';
 import { channelLabel } from '../../lib/capabilities';
 
 interface GuestDetailsModalProps {
@@ -95,7 +95,7 @@ export const GuestDetailsModal = ({
   };
 
   const statusBadge =
-    guest.rsvp_status === 'Attending' ? (
+    isAttending(guest) ? (
       <span className="inline-flex items-center space-x-1 px-3 py-1 rounded-full bg-[#EFE6DC] text-emerald-800 text-xs font-bold border border-emerald-300 whitespace-nowrap shrink-0">
         <CheckCircle2 className="w-3 h-3 text-emerald-600 shrink-0" /><span>{t.statusAttendingWord}</span>
       </span>

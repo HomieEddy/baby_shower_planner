@@ -9,6 +9,7 @@ import { isRehearsalActive } from './rehearsal';
 import { getGuestById, getGuestByToken, isApproved } from './guests';
 import { DomainError } from '../lib/errors';
 import { buildUniversalInviteMessage, universalRegisterUrl } from '../lib/compose';
+import { mergeParty, partyNames } from '../lib/guestAttendees';
 
 // RSVPs close the day after the event: on the day itself guests can still
 // respond (people check invites on their phones while arriving).
@@ -50,24 +51,18 @@ export async function submitRsvp(token: string, payload: SubmitRsvpPayload): Pro
     const details = Array.isArray(payload.attendee_details)
       ? payload.attendee_details.filter(d => d && typeof d.name === 'string' && d.name.trim())
       : [];
-    let names: string[];
-    if (details.length > 0) {
-      names = details.map(d => d.name.trim());
-    } else {
-      const raw = Array.isArray(payload.attendee_names)
-        ? payload.attendee_names.filter(n => typeof n === 'string' && n.trim())
-        : [];
-      names = raw.length > 0 ? raw.map(n => n.trim()) : [guest.name];
-    }
+    const declared = Array.isArray(payload.attendee_names)
+      ? payload.attendee_names.filter(n => typeof n === 'string' && n.trim())
+      : [];
+    const names = details.length > 0 ? partyNames(details) : declared.length > 0 ? declared : [guest.name];
     // Never exceed the party size the host granted.
-    names = names.slice(0, Math.max(1, Number(guest.max_party_size) || 1));
-    const finalDetails = details.slice(0, names.length);
-    updates.attendee_details = finalDetails;
-    updates.attendee_names = names;
-    updates.attending_party_size = names.length;
+    const attendee_details = mergeParty(guest.name, names, [details], Math.max(1, Number(guest.max_party_size) || 1));
+    updates.attendee_names = attendee_details.map(d => d.name);
+    updates.attendee_details = attendee_details;
+    updates.attending_party_size = attendee_details.length;
     // Keep the legacy party-level field mirroring the lead's restriction.
-    updates.dietary_restrictions = (finalDetails[0]?.dietary || payload.dietary_restrictions || '').trim();
-    keepAttendees = names.length;
+    updates.dietary_restrictions = (attendee_details[0]?.dietary || payload.dietary_restrictions || '').trim();
+    keepAttendees = attendee_details.length;
   } else {
     updates.attendee_names = [];
     updates.attendee_details = [];

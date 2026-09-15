@@ -5,7 +5,7 @@ import { useT, useTf } from '../shared/i18n';
 import { usePrint } from '../shared/hooks';
 import { Select, TextInput } from '../shared/ui';
 import { getAttendeeLocations } from '../../lib/tableAssignment';
-import { getPartyMembers } from '../../lib/guestAttendees';
+import { getPartyMembers, isAttending } from '../../lib/guestAttendees';
 
 interface EscortCardsGeneratorProps {
   guests: Guest[];
@@ -50,7 +50,7 @@ export const EscortCardsGenerator: React.FC<EscortCardsGeneratorProps> = ({ gues
 
   // One card per attending person, resolved to their own table + chair.
   const rows: CardRow[] = guests
-    .filter((g) => g.rsvp_status === 'Attending')
+    .filter(isAttending)
     .flatMap((g) => {
       const names = getPartyMembers(g);
       const locations = getAttendeeLocations(g.id, floorMap, guests);

@@ -11,6 +11,7 @@ import {
 import { Language, Guest, EventAlert, AlertType, EventSettings } from '../../types';
 import { Translations } from '../../translations';
 import { adminFetch } from '../../lib/api';
+import { isAttending } from '../../lib/guestAttendees';
 import { TextInput, TextArea } from '../shared/ui';
 import { Segmented } from '../shared/Segmented';
 import { IconButton } from '../shared/IconButton';
@@ -50,7 +51,7 @@ export const AdminAlertsTab: React.FC<AdminAlertsTabProps> = ({ language, t, gue
   const recipients = guests.filter((g) => {
     if (g.rsvp_status === 'Declined') return false;
     if (targetAudience === 'PENDING') return g.rsvp_status === 'Pending';
-    if (targetAudience === 'ATTENDING') return g.rsvp_status === 'Attending';
+    if (targetAudience === 'ATTENDING') return isAttending(g);
     return true;
   });
 
@@ -170,7 +171,7 @@ export const AdminAlertsTab: React.FC<AdminAlertsTabProps> = ({ language, t, gue
             options={[
               { value: 'ALL', label: t.allNonDeclinedLabel, count: guests.filter((g) => g.rsvp_status !== 'Declined').length },
               { value: 'PENDING', label: t.pendingOnlyLabel, count: guests.filter((g) => g.rsvp_status === 'Pending').length },
-              { value: 'ATTENDING', label: t.attendingOnlyLabel, count: guests.filter((g) => g.rsvp_status === 'Attending').length },
+              { value: 'ATTENDING', label: t.attendingOnlyLabel, count: guests.filter(isAttending).length },
             ]}
           />
           <p className="text-xs text-[#8B735B] font-mono">{t.declinedNote}</p>

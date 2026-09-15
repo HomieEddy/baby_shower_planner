@@ -3,6 +3,12 @@ import { AttendeeInfo, Guest } from '../types';
 // Primary-guest handling for the RSVP form: the primary guest is implicit
 // (stored at index 0), the form only edits additional party members.
 
+// The one attendance predicate: seating, catering, invites and stats all ask
+// this question, so they must all ask it in the same place.
+export function isAttending(guest: { rsvp_status?: string } | null | undefined): boolean {
+  return guest?.rsvp_status === 'Attending';
+}
+
 // All party member names (primary guest first), deduped and trimmed.
 // Prefers the detailed attendee list, falls back to the names array, then to
 // the primary guest alone when the party was never broken out into names.
@@ -124,4 +130,58 @@ export function buildAttendeePayload(
     attendee_details: details,
     attendee_names: details.map((a) => a.name),
   };
+}
+
+// ─── Party writes ──────────────────────────────────────────────────────────
+// Reads are above; these are the only writers of a stored party list. Trim,
+// drop blanks, case-insensitively dedupe, cap at `max`, and carry each member's
+// contact/dietary across edits by name — add, register, edit, remove and RSVP
+// all go through them, so the cap and the merge can't disagree between paths.
+
+// Hard limit on a self-registered party (the RSVP form has its own host cap).
+export const MAX_REGISTERED_PARTY = 20;
+
+export interface PartyMemberInput {
+  name?: string;
+  contact?: string;
+  dietary?: string;
+}
+
+// Index a detail list by trimmed, lowercased name (first entry wins).
+function indexByName(details?: PartyMemberInput[] | null): Map<string, PartyMemberInput> {
+  const out = new Map<string, PartyMemberInput>();
+  for (const d of details || []) {
+    const name = (d?.name || '').trim();
+    if (!name) continue;
+    const key = name.toLowerCase();
+    if (!out.has(key)) out.set(key, d);
+  }
+  return out;
+}
+
+// Names carried by a detail list, in stored order.
+export function partyNames(details?: PartyMemberInput[] | null): string[] {
+  return (details || []).map((d) => (d?.name || '').trim()).filter(Boolean);
+}
+
+// The party for `primary`: `declared` names alone decide who is a member (the
+// primary is always one, and an empty list means the primary alone); the
+// `sources` detail lists, searched in order, only fill in each member's
+// contact and dietary. Callers layer incoming over prior by ordering `sources`.
+export function mergeParty(
+  primary: string,
+  declared: Iterable<string | undefined | null> | undefined,
+  sources: (PartyMemberInput[] | null | undefined)[],
+  max: number
+): AttendeeInfo[] {
+  const indexed = sources.map(indexByName);
+  return dedupePartyNames(primary, declared || [], max).map((name) => {
+    const key = name.toLowerCase();
+    const src = indexed.reduce<PartyMemberInput | undefined>((found, map) => found ?? map.get(key), undefined);
+    return {
+      name,
+      contact: (src?.contact || '').trim(),
+      dietary: (src?.dietary || '').trim(),
+    };
+  });
 }

@@ -46,15 +46,14 @@ import {
   getGuestPartySize,
   getTableOccupiedSeats,
   getTableSeats,
-  getTableSeatedPersonNames,
   getTableStatus,
-  getGuestSeatedCount,
   getAvailableSeats,
   getUnseatedPartySize,
   canSeatParty,
   seatParty,
+  getSeatingStats,
 } from '../../lib/tableAssignment';
-import { getSeatOccupantInfo } from './floorPlanHelpers';
+import { seatTooltipContent, tableTooltipContent } from './floorPlanHelpers';
 import { suggestSeating, unseatedParties } from '../../lib/seatingSuggestions';
 import type { SmartSuggestion } from '../../lib/seatingSuggestions';
 import { renderTableBody, renderLandmark, SeatRing, TableLabel, renderRoomBoundary } from './venueShapes';
@@ -340,86 +339,11 @@ export const FloorPlanPage = () => {
   } | null>(null);
 
   const handleTableHover = (table: TableElement, guestsList: Guest[], clientX: number, clientY: number) => {
-    const occupiedSeats = getTableOccupiedSeats(table, guestsList);
-    const seatedPersonNames = getTableSeatedPersonNames(table, guestsList);
-    const shapeLabel = table.shape === 'circle' ? t.roundTableBtn : t.rectTableBtn;
-    const names =
-      seatedPersonNames.length > 0 ? seatedPersonNames.join(', ') : t.fpTooltipNoGuests;
-
-    setHoverTooltip({
-      title: table.name,
-      subtitle: `${shapeLabel} • ${occupiedSeats}/${table.capacity} ${t.seatsLabel}`,
-      details: [
-        tf('fpTooltipSeated', { count: seatedPersonNames.length, names }),
-        tf('fpTooltipCapacity', {
-          capacity: table.capacity,
-          available: Math.max(0, table.capacity - occupiedSeats),
-        }),
-      ],
-      x: clientX,
-      y: clientY,
-    });
+    setHoverTooltip({ ...tableTooltipContent(table, guestsList, t, tf), x: clientX, y: clientY });
   };
 
   const handleSeatHover = (table: TableElement, seatIndex: number, guestsList: Guest[], clientX: number, clientY: number) => {
-    const info = getSeatOccupantInfo(table, seatIndex, guestsList);
-
-    if (info.isOccupied) {
-      const details: string[] = [
-        language === 'FR'
-          ? `Table & Siège : Siège n°${seatIndex + 1} (${table.name})`
-          : `Table & Seat: Seat #${seatIndex + 1} at ${table.name}`,
-      ];
-
-      if (info.mainGuestName && info.attendeeName !== info.mainGuestName) {
-        details.push(
-          language === 'FR'
-            ? `Hôte principal : ${info.mainGuestName}`
-            : `Primary Host: ${info.mainGuestName}`
-        );
-      }
-
-      if (info.guestCode) {
-        details.push(
-          language === 'FR'
-            ? `Code de réservation : ${info.guestCode}`
-            : `Reservation Code: ${info.guestCode}`
-        );
-      }
-
-      details.push(
-        language === 'FR'
-          ? `Taille du groupe : ${info.partySize} invité(s)`
-          : `Party Size: ${info.partySize} guest(s)`
-      );
-
-      setHoverTooltip({
-        title: info.attendeeName || (language === 'FR' ? 'Invité' : 'Assigned Guest'),
-        subtitle: language === 'FR'
-          ? `Groupe : ${info.partyName}`
-          : `Party: ${info.partyName}`,
-        details,
-        x: clientX,
-        y: clientY,
-      });
-    } else {
-      setHoverTooltip({
-        title: language === 'FR'
-          ? `Siège n°${seatIndex + 1} (${table.name})`
-          : `Seat #${seatIndex + 1} (${table.name})`,
-        subtitle: language === 'FR' ? 'Siège disponible' : 'Available Seat',
-        details: [
-          language === 'FR'
-            ? `Table : ${table.name} (${table.capacity} sièges au total)`
-            : `Table: ${table.name} (${table.capacity} Seats Total)`,
-          language === 'FR'
-            ? `Statut : Libre / Non assigné`
-            : `Status: Unassigned / Available Chair`,
-        ],
-        x: clientX,
-        y: clientY,
-      });
-    }
+    setHoverTooltip({ ...seatTooltipContent(table, seatIndex, guestsList, t, tf), x: clientX, y: clientY });
   };
 
   const handleLandmarkHover = (landmark: LandmarkElement, clientX: number, clientY: number) => {
@@ -570,57 +494,10 @@ export const FloorPlanPage = () => {
 
 
   // Host-view statistics, recomputed only when guests/map/filter change.
-  const hostStats = useMemo(() => {
-    const totalConfirmedGuests = guests
-      .filter((g) => g.rsvp_status === 'Attending')
-      .reduce((sum, g) => sum + getGuestPartySize(g), 0);
-
-    const totalSeatedGuests = floorMap
-      ? floorMap.tables.reduce((sum, tbl) => sum + getTableOccupiedSeats(tbl, guests), 0)
-      : 0;
-
-    const seatingProgressPercent = totalConfirmedGuests > 0
-      ? Math.min(100, Math.round((totalSeatedGuests / totalConfirmedGuests) * 100))
-      : 0;
-
-    const emptyTablesCount = floorMap
-      ? floorMap.tables.filter((t) => getTableStatus(t, guests) === 'empty').length
-      : 0;
-
-    const partialTablesCount = floorMap
-      ? floorMap.tables.filter((t) => getTableStatus(t, guests) === 'partial').length
-      : 0;
-
-    const fullTablesCount = floorMap
-      ? floorMap.tables.filter((t) => getTableStatus(t, guests) === 'full').length
-      : 0;
-
-    const unassignedGuestsList = guests.filter((g) => {
-      if (g.rsvp_status !== 'Attending') return false;
-      const fullySeated = floorMap ? getGuestSeatedCount(g.id, floorMap, guests) >= getGuestPartySize(g) : false;
-      if (fullySeated) return false;
-
-      if (unassignedFilterQuery.trim()) {
-        const q = unassignedFilterQuery.toLowerCase();
-        const matchName = g.name.toLowerCase().includes(q);
-        const matchEmail = g.email.toLowerCase().includes(q);
-        const matchCode = g.code ? g.code.toLowerCase().includes(q) : false;
-        const matchAttendees = g.attendee_names?.some((a) => a.toLowerCase().includes(q));
-        return matchName || matchEmail || matchCode || matchAttendees;
-      }
-      return true;
-    });
-
-    return {
-      totalConfirmedGuests,
-      totalSeatedGuests,
-      seatingProgressPercent,
-      emptyTablesCount,
-      partialTablesCount,
-      fullTablesCount,
-      unassignedGuestsList,
-    };
-  }, [guests, floorMap, unassignedFilterQuery]);
+  const hostStats = useMemo(
+    () => getSeatingStats(guests, floorMap, unassignedFilterQuery),
+    [guests, floorMap, unassignedFilterQuery]
+  );
 
   return (
     <div className="space-y-6 pb-12">
@@ -1204,7 +1081,7 @@ export const FloorPlanPage = () => {
               rows={3}
               value={shareCustomMsg}
               onChange={(e) => setShareCustomMsg(e.target.value)}
-              placeholder={language === 'FR' ? "ex : Chers amis, le plan de salle est prêt ! Découvrez votre table..." : "e.g. Dear friends, our baby shower floor plan and table seating is ready! Check where you are seated..."}
+              placeholder={t.sharePlanMessagePh}
               className="w-full p-3 rounded-2xl border-2 border-[#CBAE94] text-xs font-bold text-[#5D5449] bg-white focus:outline-none focus:ring-2 focus:ring-[#8B735B]"
             />
           </div>
@@ -1239,7 +1116,6 @@ export const FloorPlanPage = () => {
           notify={setNotification}
           onSave={handleSaveEditorChanges}
           onCancel={handleCancelEditor}
-          hoverTooltip={hoverTooltip}
           setHoverTooltip={setHoverTooltip}
           handleTableHover={handleTableHover}
           handleSeatHover={handleSeatHover}

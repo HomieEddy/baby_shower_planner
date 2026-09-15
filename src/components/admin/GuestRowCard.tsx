@@ -9,6 +9,7 @@ import {
 } from 'lucide-react';
 import { Guest } from '../../types';
 import { getGuestPartySize } from '../../lib/tableAssignment';
+import { isAttending } from '../../lib/guestAttendees';
 import { useT, useTf } from '../shared/i18n';
 
 interface GuestRowCardProps {
@@ -86,7 +87,7 @@ export const GuestRowCard = ({
             </div>
           </div>
         </div>
-        {guest.rsvp_status === 'Attending' && (
+        {isAttending(guest) && (
           <span className="inline-flex items-center space-x-1 px-3 py-1 rounded-full bg-[#EFE6DC] text-emerald-800 text-xs font-bold border border-emerald-300 whitespace-nowrap shrink-0">
             <CheckCircle2 className="w-3 h-3 text-emerald-600 shrink-0" /><span>{t.statusAttendingWord}</span>
           </span>

@@ -1,6 +1,6 @@
 // Gift log CRUD.
 import type { GiftLog } from '../types';
-import { fromRecord, pb } from './client';
+import { fromRecord, isNotFound, pb } from './client';
 
 export async function getGifts(): Promise<GiftLog[]> {
   const records = await pb.collection('gifts').getFullList({ sort: '-created_at' });
@@ -25,7 +25,11 @@ export async function toggleGiftThankYou(id: string): Promise<GiftLog | undefine
       thank_you_date: !r.thank_you_sent ? now : null,
     });
     return fromRecord<GiftLog>(updated);
-  } catch { return undefined; }
+  } catch (err) {
+    // A gift deleted under the host's feet is undefined; a broken db is not.
+    if (isNotFound(err)) return undefined;
+    throw err;
+  }
 }
 
 export async function deleteGift(id: string): Promise<void> {

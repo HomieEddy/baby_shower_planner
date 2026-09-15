@@ -5,7 +5,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
 import { Guest, GuestInviteView, EventAlert } from '../../types';
 import { EventDetailsCard } from './EventDetailsCard';
-import { stripPrimaryAttendees, buildAttendeePayload } from '../../lib/guestAttendees';
+import { stripPrimaryAttendees, buildAttendeePayload, isAttending } from '../../lib/guestAttendees';
 import { decodeApiError } from '../../lib/errors';
 import { useCapabilities, availableChannels, channelLabel } from '../../lib/capabilities';
 import { motion, AnimatePresence } from 'motion/react';
@@ -351,7 +351,7 @@ export const RsvpPage = () => {
       return !guest || guest.rsvp_status === 'Pending';
     }
     if (a.target_audience === 'ATTENDING') {
-      return !guest || guest.rsvp_status === 'Attending';
+      return !guest || isAttending(guest);
     }
     return true;
   });
@@ -411,7 +411,7 @@ export const RsvpPage = () => {
           invitation card, only for guests who arrived with a valid code/link. */}
       <EventDetailsCard
         hideGuestLogin
-        showProgram={guest?.rsvp_status === 'Attending'}
+        showProgram={isAttending(guest)}
         status={
           !loading && !errorMsg && guest
             ? {
@@ -419,7 +419,7 @@ export const RsvpPage = () => {
                   ? (guest.approval_status === 'rejected' ? t.approvalRejectedTitle : t.approvalPendingTitle)
                   : statusWord(guest.rsvp_status),
                 tone:
-                  !notApproved && guest.rsvp_status === 'Attending'
+                  !notApproved && isAttending(guest)
                     ? 'attending'
                     : !notApproved && guest.rsvp_status === 'Declined'
                     ? 'declined'

@@ -1,13 +1,4 @@
-import { lazy, Suspense, useState, useMemo, type DragEvent, type MouseEvent, type ReactNode } from 'react';
-import {
-  Stage,
-  Layer,
-  Rect,
-  Circle,
-  Text,
-  Group,
-  Transformer,
-} from 'react-konva';
+﻿import { lazy, Suspense, useState, useMemo, type DragEvent } from 'react';
 import {
   Maximize2,
   X,
@@ -34,7 +25,7 @@ import {
   Square,
   Circle as CircleIcon,
 } from 'lucide-react';
-import { Guest, FloorMapData, LandmarkElement, SeatOccupant, TableElement } from '../../types';
+import { Guest, FloorMapData, LandmarkElement, TableElement } from '../../types';
 import { TextInput, Select } from '../shared/ui';
 import {
   getGuestPartySize,
@@ -42,14 +33,11 @@ import {
   getTableSeats,
   getAttendeeLocations,
   getGuestSeatedCount,
-  getAvailableSeats,
-  getUnseatedPartySize,
-  canSeatParty,
 } from '../../lib/tableAssignment';
-import { findNearestSeat, clampElementToRoom, clampPointToRoom } from './floorPlanHelpers';
+import { clampElementToRoom } from './floorPlanHelpers';
 import type { HoverTooltipData as HoverTooltip } from './HoverTooltip';
-import { getPartyMembers } from '../../lib/guestAttendees';
-import { SeatRing, renderRoomBoundary, renderLandmark } from './venueShapes';
+import { getPartyMembers, isAttending } from '../../lib/guestAttendees';
+import { FloorPlanCanvas } from './FloorPlanCanvas';
 import { useFloorPlanEditor } from './floorplanHooks';
 import { ViewModeToggle, ViewMode } from '../shared/ViewModeToggle';
 import { useT, useTf } from '../shared/i18n';
@@ -69,93 +57,6 @@ interface PaletteItem extends AttendeeKey {
 
 const FloorPlan3D = lazy(() => import('./FloorPlan3D').then((m) => ({ default: m.FloorPlan3D })));
 
-// Axis ruler thickness (px) drawn above / left of the interactive canvas.
-const AXIS = 18;
-
-// "Nice" tick values (1/2/5 × 10^n) across an axis, aiming for ~8 labels.
-const axisTicks = (size: number): number[] => {
-  if (size <= 0) return [0];
-  const raw = size / 8;
-  const pow = 10 ** Math.floor(Math.log10(raw));
-  const step = [1, 2, 5, 10].map((m) => m * pow).find((s) => s >= raw) ?? pow * 10;
-  const ticks: number[] = [];
-  for (let v = 0; v <= size; v += step) ticks.push(v);
-  return ticks;
-};
-
-// X / Y rulers around the interactive canvas so the increasing direction (and the
-// px scale) is obvious. Purely decorative — never intercepts pointer events.
-const CanvasAxes = ({
-  mapWidth,
-  mapHeight,
-  scale,
-  show,
-  children,
-}: {
-  mapWidth: number;
-  mapHeight: number;
-  scale: number;
-  show: boolean;
-  children: ReactNode;
-}) => {
-  const width = mapWidth * scale;
-  const height = mapHeight * scale;
-  const pad = show ? AXIS : 0;
-  const xTicks = axisTicks(mapWidth);
-  const yTicks = axisTicks(mapHeight);
-  const lastX = xTicks[xTicks.length - 1];
-  const lastY = yTicks[yTicks.length - 1];
-  return (
-    <div className="relative shrink-0 m-auto" style={{ width: width + pad, height: height + pad }}>
-      {show && (
-        <>
-          {/* X axis — values increase to the right */}
-          <div className="absolute select-none pointer-events-none" aria-hidden="true" style={{ left: AXIS, top: 0, width, height: AXIS }}>
-            <div className="absolute inset-x-0 bottom-0 h-px bg-[#CBAE94]" />
-            {xTicks.map((v) => (
-              <div key={`x-${v}`} className="absolute bottom-0" style={{ left: v * scale }}>
-                <div className="absolute bottom-0 w-px h-1 bg-[#8B735B]" />
-                <span
-                  className="absolute bottom-1.5 text-[9px] leading-none font-mono font-bold text-[#8B735B] whitespace-nowrap"
-                  style={{ transform: v === 0 ? 'translateX(0)' : v === lastX ? 'translateX(-100%)' : 'translateX(-50%)' }}
-                >
-                  {v}
-                </span>
-              </div>
-            ))}
-          </div>
-
-          {/* Y axis — values increase downward */}
-          <div className="absolute select-none pointer-events-none" aria-hidden="true" style={{ left: 0, top: AXIS, width: AXIS, height }}>
-            <div className="absolute inset-y-0 right-0 w-px bg-[#CBAE94]" />
-            {yTicks.map((v) => (
-              <div key={`y-${v}`} className="absolute right-0" style={{ top: v * scale }}>
-                <div className="absolute right-0 h-px w-1 bg-[#8B735B]" />
-                <span
-                  className="absolute right-1.5 text-[9px] leading-none font-mono font-bold text-[#8B735B] whitespace-nowrap"
-                  style={{ transform: v === 0 ? 'translateY(0)' : v === lastY ? 'translateY(-100%)' : 'translateY(-50%)' }}
-                >
-                  {v}
-                </span>
-              </div>
-            ))}
-          </div>
-
-          {/* Axis names at the origin */}
-          <div className="absolute select-none pointer-events-none" aria-hidden="true" style={{ left: 0, top: 0, width: AXIS, height: AXIS }}>
-            <span className="absolute right-0.5 top-0 text-[9px] leading-none font-mono font-bold text-[#8B735B]">X</span>
-            <span className="absolute left-0 bottom-0 text-[9px] leading-none font-mono font-bold text-[#8B735B]">Y</span>
-          </div>
-        </>
-      )}
-
-      <div className="absolute" style={{ left: pad, top: pad }}>
-        {children}
-      </div>
-    </div>
-  );
-};
-
 interface FloorPlanEditorProps {
   floorMap: FloorMapData;
   guests: Guest[];
@@ -163,7 +64,6 @@ interface FloorPlanEditorProps {
   notify: (msg: string | null) => void;
   onSave: (map: FloorMapData, guests: Guest[]) => Promise<void>;
   onCancel: () => void;
-  hoverTooltip: HoverTooltip | null;
   setHoverTooltip: (t: HoverTooltip | null) => void;
   handleTableHover: (table: TableElement, guestsList: Guest[], clientX: number, clientY: number) => void;
   handleSeatHover: (table: TableElement, seatIndex: number, guestsList: Guest[], clientX: number, clientY: number) => void;
@@ -176,7 +76,7 @@ interface FloorPlanEditorProps {
 const NumberField = ({ value, onCommit }: { value: number; onCommit: (v: number) => void }) => {
   const [text, setText] = useState(String(value));
   const [synced, setSynced] = useState(value);
-  // Re-sync when the element moves (drag / another field) — during render, not
+  // Re-sync when the element moves (drag / another field) â€” during render, not
   // in an effect, so the reset lands in the same commit.
   if (value !== synced) {
     setSynced(value);
@@ -244,7 +144,6 @@ export const FloorPlanEditor = ({
   notify,
   onSave,
   onCancel,
-  hoverTooltip,
   setHoverTooltip,
   handleTableHover,
   handleSeatHover,
@@ -260,7 +159,6 @@ export const FloorPlanEditor = ({
     setDraftFloorMap,
     draftGuests,
     isDirty,
-    setIsDirty,
     selectedId,
     selectedType,
     setSelectedId,
@@ -306,7 +204,6 @@ export const FloorPlanEditor = ({
           x.id === el.id ? { ...x, x: Math.round(p.x), y: Math.round(p.y) } : x
         ),
       });
-      setIsDirty(true);
     } else if (selectedType === 'landmark' && draftSelectedLandmark) {
       const el = draftSelectedLandmark;
       const p = clampElementToRoom(cx - el.width / 2, cy - el.height / 2, el.width, el.height, draftFloorMap);
@@ -316,7 +213,6 @@ export const FloorPlanEditor = ({
           x.id === el.id ? { ...x, x: Math.round(p.x), y: Math.round(p.y) } : x
         ),
       });
-      setIsDirty(true);
     }
   };
 
@@ -329,7 +225,6 @@ export const FloorPlanEditor = ({
           x.id === draftSelectedTable.id ? { ...x, rotation } : x
         ),
       });
-      setIsDirty(true);
     } else if (selectedType === 'landmark' && draftSelectedLandmark) {
       setDraftFloorMap({
         ...draftFloorMap,
@@ -337,19 +232,17 @@ export const FloorPlanEditor = ({
           x.id === draftSelectedLandmark.id ? { ...x, rotation } : x
         ),
       });
-      setIsDirty(true);
     }
   };
 
-  // Per-seat drag/tap state (DOM palette -> Konva canvas).
+  // Palette â†’ canvas interaction state (the canvas owns the drop target).
   const [draggingAttendee, setDraggingAttendee] = useState<AttendeeKey | null>(null);
   const [selectedAttendee, setSelectedAttendee] = useState<AttendeeKey | null>(null);
-  const [dropTarget, setDropTarget] = useState<{ tableId: string; seatIndex: number } | null>(null);
 
   // Every attending person, in party order, with their current chair (if any).
   const palette = useMemo<PaletteItem[]>(() => {
     const items: PaletteItem[] = [];
-    for (const g of draftGuests.filter((x) => x.rsvp_status === 'Attending')) {
+    for (const g of draftGuests.filter(isAttending)) {
       const names = getPartyMembers(g);
       const locations = getAttendeeLocations(g.id, draftFloorMap, draftGuests);
       names.forEach((name, attendeeIndex) => {
@@ -383,45 +276,11 @@ export const FloorPlanEditor = ({
     e.dataTransfer.setData('text/plain', `${key.guestId}:${key.attendeeIndex}`);
   };
 
-  const eventToSeat = (e: DragEvent | MouseEvent) => {
-    const stage = modalStageRef.current;
-    if (!stage) return null;
-    const rect = stage.container().getBoundingClientRect();
-    const x = (e.clientX - rect.left) / modalCanvasScale;
-    const y = (e.clientY - rect.top) / modalCanvasScale;
-    return findNearestSeat(draftFloorMap, x, y);
-  };
-
-  const handleCanvasDragOver = (e: DragEvent) => {
-    if (!draggingAttendee && !e.dataTransfer.types.includes('text/plain')) return;
-    e.preventDefault();
-    e.dataTransfer.dropEffect = 'move';
-    setDropTarget(eventToSeat(e));
-  };
-
-  const handleCanvasDrop = (e: DragEvent) => {
-    e.preventDefault();
-    // Prefer state, fall back to the dataTransfer payload for very fast drags.
-    let key = draggingAttendee;
-    if (!key) {
-      const raw = e.dataTransfer.getData('text/plain');
-      const [guestId, idx] = raw.split(':');
-      if (guestId && idx !== undefined) key = { guestId, attendeeIndex: Number(idx) };
-    }
-    const seat = dropTarget ?? eventToSeat(e);
-    setDraggingAttendee(null);
-    setDropTarget(null);
-    if (key && seat) handleSeatAttendee(key.guestId, key.attendeeIndex, seat.tableId, seat.seatIndex);
-  };
-
   const handlePaletteItemClick = (key: AttendeeKey) => {
     setSelectedAttendee((prev) =>
       prev && prev.guestId === key.guestId && prev.attendeeIndex === key.attendeeIndex ? null : key
     );
   };
-
-  const stageW = draftFloorMap.canvasWidth * modalCanvasScale;
-  const stageH = draftFloorMap.canvasHeight * modalCanvasScale;
 
   return (
     <div className="fixed inset-0 z-50 bg-[#FAF6F0] flex flex-col w-screen h-screen overflow-hidden animate-fadeIn">
@@ -509,8 +368,8 @@ export const FloorPlanEditor = ({
               </h3>
               <span className="text-xs font-mono font-bold text-[#4A3F35] bg-[#EFE6DC] px-2 py-0.5 rounded-lg border border-[#CBAE94]/60">
                 {(draftFloorMap.roomShape ?? 'rectangle') === 'circle'
-                  ? `Ø ${Math.min(draftFloorMap.canvasWidth, draftFloorMap.canvasHeight)} px`
-                  : `${draftFloorMap.canvasWidth} × ${draftFloorMap.canvasHeight} px`}
+                  ? `ÃƒËœ ${Math.min(draftFloorMap.canvasWidth, draftFloorMap.canvasHeight)} px`
+                  : `${draftFloorMap.canvasWidth} Ãƒâ€” ${draftFloorMap.canvasHeight} px`}
               </span>
             </div>
 
@@ -559,16 +418,16 @@ export const FloorPlanEditor = ({
                 </label>
                 <div className="grid grid-cols-2 gap-1.5 text-xs font-bold">
                   <button type="button" onClick={() => handleUpdateDiameter(650)} className={`min-h-[44px] px-3 py-2 rounded-xl border transition-all text-left flex items-center gap-1 ${Math.min(draftFloorMap.canvasWidth, draftFloorMap.canvasHeight) === 650 ? 'bg-[#8B735B] text-white border-[#8B735B]' : 'bg-white text-[#5D5449] border-[#CBAE94]/60 hover:bg-[#EFE6DC]'}`}>
-                    <Home className="w-3 h-3" /> Small (Ø 650)
+                    <Home className="w-3 h-3" /> Small (ÃƒËœ 650)
                   </button>
                   <button type="button" onClick={() => handleUpdateDiameter(850)} className={`min-h-[44px] px-3 py-2 rounded-xl border transition-all text-left flex items-center gap-1 ${Math.min(draftFloorMap.canvasWidth, draftFloorMap.canvasHeight) === 850 ? 'bg-[#8B735B] text-white border-[#8B735B]' : 'bg-white text-[#5D5449] border-[#CBAE94]/60 hover:bg-[#EFE6DC]'}`}>
-                    <Landmark className="w-3 h-3" /> Standard (Ø 850)
+                    <Landmark className="w-3 h-3" /> Standard (ÃƒËœ 850)
                   </button>
                   <button type="button" onClick={() => handleUpdateDiameter(1100)} className={`min-h-[44px] px-3 py-2 rounded-xl border transition-all text-left flex items-center gap-1 ${Math.min(draftFloorMap.canvasWidth, draftFloorMap.canvasHeight) === 1100 ? 'bg-[#8B735B] text-white border-[#8B735B]' : 'bg-white text-[#5D5449] border-[#CBAE94]/60 hover:bg-[#EFE6DC]'}`}>
-                    <Castle className="w-3 h-3" /> Large (Ø 1100)
+                    <Castle className="w-3 h-3" /> Large (ÃƒËœ 1100)
                   </button>
                   <button type="button" onClick={() => handleUpdateDiameter(1400)} className={`min-h-[44px] px-3 py-2 rounded-xl border transition-all text-left flex items-center gap-1 ${Math.min(draftFloorMap.canvasWidth, draftFloorMap.canvasHeight) === 1400 ? 'bg-[#8B735B] text-white border-[#8B735B]' : 'bg-white text-[#5D5449] border-[#CBAE94]/60 hover:bg-[#EFE6DC]'}`}>
-                    <Tent className="w-3 h-3" /> Grand (Ø 1400)
+                    <Tent className="w-3 h-3" /> Grand (ÃƒËœ 1400)
                   </button>
                 </div>
               </div>
@@ -587,7 +446,7 @@ export const FloorPlanEditor = ({
                         : 'bg-white text-[#5D5449] border-[#CBAE94]/60 hover:bg-[#EFE6DC]'
                     }`}
                   >
-                    <Home className="w-3 h-3" /> Small (750×550)
+                    <Home className="w-3 h-3" /> Small (750Ãƒâ€”550)
                   </button>
                   <button
                     type="button"
@@ -598,7 +457,7 @@ export const FloorPlanEditor = ({
                         : 'bg-white text-[#5D5449] border-[#CBAE94]/60 hover:bg-[#EFE6DC]'
                     }`}
                   >
-                    <Landmark className="w-3 h-3" /> Standard (900×650)
+                    <Landmark className="w-3 h-3" /> Standard (900Ãƒâ€”650)
                   </button>
                   <button
                     type="button"
@@ -609,7 +468,7 @@ export const FloorPlanEditor = ({
                         : 'bg-white text-[#5D5449] border-[#CBAE94]/60 hover:bg-[#EFE6DC]'
                     }`}
                   >
-                    <Castle className="w-3 h-3" /> Large (1200×850)
+                    <Castle className="w-3 h-3" /> Large (1200Ãƒâ€”850)
                   </button>
                   <button
                     type="button"
@@ -620,7 +479,7 @@ export const FloorPlanEditor = ({
                         : 'bg-white text-[#5D5449] border-[#CBAE94]/60 hover:bg-[#EFE6DC]'
                     }`}
                   >
-                    <Tent className="w-3 h-3" /> Grand (1500×1000)
+                    <Tent className="w-3 h-3" /> Grand (1500Ãƒâ€”1000)
                   </button>
                 </div>
               </div>
@@ -860,6 +719,21 @@ export const FloorPlanEditor = ({
                   <Ruler className="w-3.5 h-3.5" />
                 </button>
               )}
+              {viewMode === '2d' && (
+                <button
+                  type="button"
+                  onClick={() => setShowAxes((v) => !v)}
+                  aria-pressed={showAxes}
+                  title={t.axesToggleLabel}
+                  className={`p-1.5 rounded-lg border transition-colors ${
+                    showAxes
+                      ? 'bg-[#8B735B] text-white border-[#8B735B]'
+                      : 'bg-white text-[#8B735B] border-[#CBAE94] hover:bg-[#EFE6DC]'
+                  }`}
+                >
+                  <Ruler className="w-3.5 h-3.5" />
+                </button>
+              )}
               <ViewModeToggle value={viewMode} onChange={setViewMode} />
               <span className="hidden md:inline text-xs font-mono text-[#5D5449]">
                 {t.liveDraftStageLabel}
@@ -900,265 +774,29 @@ export const FloorPlanEditor = ({
               </div>
             </Suspense>
           ) : (
-          <div
-            className={`flex-1 w-full overflow-auto flex bg-[#FAF6F0] p-3 rounded-2xl border-2 transition-colors ${
-              draggingAttendee ? 'border-emerald-500 bg-emerald-50/40' : 'border-[#CBAE94]/40'
-            }`}
-            onDragOver={handleCanvasDragOver}
-            onDragLeave={() => setDropTarget(null)}
-            onDrop={handleCanvasDrop}
-          >
-            <CanvasAxes mapWidth={draftFloorMap.canvasWidth} mapHeight={draftFloorMap.canvasHeight} scale={modalCanvasScale} show={showAxes}>
-            <Stage
-              ref={modalStageRef}
-              width={stageW}
-              height={stageH}
-              scaleX={modalCanvasScale}
-              scaleY={modalCanvasScale}
-              onMouseDown={(e) => {
-                if (e.target === e.target.getStage()) {
-                  setSelectedId(null);
-                  setSelectedType(null);
-                }
+            <FloorPlanCanvas
+              map={draftFloorMap}
+              guests={draftGuests}
+              scale={modalCanvasScale}
+              showAxes={showAxes}
+              stageRef={modalStageRef}
+              transformerRef={modalTransformerRef}
+              dragging={draggingAttendee}
+              selection={{ id: selectedId, attendee: selectedAttendee, party: selectedGuestForSeating }}
+              callbacks={{
+                onSelect: (id, type) => { setSelectedId(id); setSelectedType(type); },
+                onPickAttendee: setSelectedAttendee,
+                onSeatAttendee: handleSeatAttendee,
+                onAutoSeatParty: handleAutoSeatParty,
+                onTableDragEnd: handleDraftTableDragEnd,
+                onLandmarkDragEnd: handleDraftLandmarkDragEnd,
+                onTransformEnd: handleDraftTransformEnd,
+                onHoverTable: (table, x, y) => handleTableHover(table, draftGuests, x, y),
+                onHoverSeat: (table, idx, x, y) => handleSeatHover(table, idx, draftGuests, x, y),
+                onHoverLandmark: handleLandmarkHover,
+                onHoverEnd: () => setHoverTooltip(null),
               }}
-            >
-              {/* Layer 1: Grid + Room Boundary */}
-              <Layer>
-                {renderRoomBoundary(draftFloorMap)}
-              </Layer>
-
-              {/* Layer 2: Landmarks */}
-              <Layer>
-                {draftFloorMap.landmarks.map((landmark) => {
-                  const isSelected = selectedId === landmark.id;
-                  return (
-                    <Group
-                      key={landmark.id}
-                      id={landmark.id}
-                      x={landmark.x + landmark.width / 2}
-                      y={landmark.y + landmark.height / 2}
-                      offsetX={landmark.width / 2}
-                      offsetY={landmark.height / 2}
-                      width={landmark.width}
-                      height={landmark.height}
-                      rotation={landmark.rotation || 0}
-                      draggable
-                      dragBoundFunc={(pos: any) => clampPointToRoom(pos.x, pos.y, draftFloorMap)}
-                      onDragEnd={(e) => handleDraftLandmarkDragEnd(landmark.id, e)}
-                      onClick={() => {
-                        setSelectedId(landmark.id);
-                        setSelectedType('landmark');
-                      }}
-                      onMouseEnter={(e) => handleLandmarkHover(landmark, e.evt.clientX, e.evt.clientY)}
-                      onMouseMove={(e) => handleLandmarkHover(landmark, e.evt.clientX, e.evt.clientY)}
-                      onMouseLeave={() => setHoverTooltip(null)}
-                    >
-                      {renderLandmark(landmark, isSelected)}
-                    </Group>
-                  );
-                })}
-              </Layer>
-
-              {/* Layer 3: Tables */}
-              <Layer>
-                {draftFloorMap.tables.map((table) => {
-                  const isSelected = selectedId === table.id;
-                  const tableSeats = getTableSeats(table, draftGuests);
-                  const occupiedCount = getTableOccupiedSeats(table, draftGuests);
-                  const isFull = occupiedCount >= table.capacity;
-
-                  // Guest-first seating highlight: any free chair, matching seatParty.
-                  const canFitGuest = selectedGuestForSeating
-                    ? canSeatParty(table, draftFloorMap, draftGuests, selectedGuestForSeating.id)
-                    : false;
-                  const freeSeatsForGuest = selectedGuestForSeating ? getAvailableSeats(table, draftGuests) : 0;
-                  const unseatedForGuest = selectedGuestForSeating
-                    ? getUnseatedPartySize(selectedGuestForSeating.id, draftFloorMap, draftGuests)
-                    : 0;
-
-                  // Dynamic stroke styling
-                  let strokeColor = isSelected ? '#4A3F35' : isFull ? '#10B981' : '#CBAE94';
-                  let strokeWidth = isSelected ? 4 : 2;
-                  let dashPattern: number[] | undefined = undefined;
-
-                  if (selectedGuestForSeating) {
-                    if (canFitGuest) {
-                      strokeColor = '#10B981';
-                      strokeWidth = 5;
-                    } else {
-                      strokeColor = '#EF4444';
-                      strokeWidth = 2;
-                      dashPattern = [4, 4];
-                    }
-                  }
-
-                  return (
-                    <Group
-                      key={table.id}
-                      id={table.id}
-                      x={table.x + table.width / 2}
-                      y={table.y + table.height / 2}
-                      offsetX={table.width / 2}
-                      offsetY={table.height / 2}
-                      width={table.width}
-                      height={table.height}
-                      rotation={table.rotation || 0}
-                      draggable
-                      dragBoundFunc={(pos: any) => clampPointToRoom(pos.x, pos.y, draftFloorMap)}
-                      onDragEnd={(e) => handleDraftTableDragEnd(table.id, e)}
-                      onClick={() => {
-                        if (selectedAttendee) {
-                          handleSeatAttendee(selectedAttendee.guestId, selectedAttendee.attendeeIndex, table.id, null);
-                          setSelectedAttendee(null);
-                        } else if (selectedGuestForSeating) {
-                          handleAutoSeatParty(selectedGuestForSeating.id, table.id);
-                        } else {
-                          setSelectedId(table.id);
-                          setSelectedType('table');
-                        }
-                      }}
-                      onMouseEnter={(e) => handleTableHover(table, draftGuests, e.evt.clientX, e.evt.clientY)}
-                      onMouseMove={(e) => handleTableHover(table, draftGuests, e.evt.clientX, e.evt.clientY)}
-                      onMouseLeave={() => setHoverTooltip(null)}
-                    >
-                      {/* Seat Circles around Table */}
-                      <SeatRing
-                        table={table}
-                        renderSeat={(pos, idx) => {
-                          const occupant: SeatOccupant | null = tableSeats[idx] ?? null;
-                          const isDropTargetSeat = dropTarget?.tableId === table.id && dropTarget.seatIndex === idx;
-                          const isPickedSeat =
-                            !!occupant &&
-                            !!selectedAttendee &&
-                            occupant.guestId === selectedAttendee.guestId &&
-                            occupant.attendeeIndex === selectedAttendee.attendeeIndex;
-
-                          let seatFill = occupant ? '#8B735B' : '#FFFDF9';
-                          let seatStroke = '#CBAE94';
-                          let seatRadius = 8;
-                          if (isDropTargetSeat) {
-                            seatFill = '#A7F3D0';
-                            seatStroke = '#059669';
-                            seatRadius = 10;
-                          } else if (isPickedSeat) {
-                            seatFill = '#FDE68A';
-                            seatStroke = '#D97706';
-                          } else if (selectedAttendee && !occupant) {
-                            seatFill = '#D1FAE5';
-                            seatStroke = '#059669';
-                          }
-
-                          return (
-                            <Circle
-                              key={`dseat-${table.id}-${idx}`}
-                              x={pos.x}
-                              y={pos.y}
-                              radius={seatRadius}
-                              fill={seatFill}
-                              stroke={seatStroke}
-                              strokeWidth={2}
-                              onClick={(e) => {
-                                e.cancelBubble = true;
-                                if (selectedAttendee) {
-                                  handleSeatAttendee(selectedAttendee.guestId, selectedAttendee.attendeeIndex, table.id, idx);
-                                  setSelectedAttendee(null);
-                                } else if (occupant) {
-                                  setSelectedAttendee({ guestId: occupant.guestId, attendeeIndex: occupant.attendeeIndex });
-                                } else {
-                                  setSelectedAttendee(null);
-                                }
-                              }}
-                              onMouseEnter={(e) => {
-                                e.cancelBubble = true;
-                                handleSeatHover(table, idx, draftGuests, e.evt.clientX, e.evt.clientY);
-                              }}
-                              onMouseMove={(e) => {
-                                e.cancelBubble = true;
-                                handleSeatHover(table, idx, draftGuests, e.evt.clientX, e.evt.clientY);
-                              }}
-                              onMouseLeave={() => setHoverTooltip(null)}
-                            />
-                          );
-                        }}
-                      />
-                      {/* Table Base Shape */}
-                      {table.shape === 'circle' ? (
-                        <Circle
-                          x={table.width / 2}
-                          y={table.height / 2}
-                          radius={table.width / 2}
-                          fill={table.color || '#8B735B'}
-                          stroke={strokeColor}
-                          strokeWidth={strokeWidth}
-                          dash={dashPattern}
-                          shadowBlur={isSelected || (selectedGuestForSeating && canFitGuest) ? 12 : 4}
-                          shadowColor={selectedGuestForSeating && canFitGuest ? '#10B981' : '#8B735B'}
-                          shadowOpacity={0.4}
-                        />
-                      ) : (
-                        <Rect
-                          width={table.width}
-                          height={table.height}
-                          fill={table.color || '#8B735B'}
-                          stroke={strokeColor}
-                          strokeWidth={strokeWidth}
-                          dash={dashPattern}
-                          cornerRadius={14}
-                          shadowBlur={isSelected || (selectedGuestForSeating && canFitGuest) ? 12 : 4}
-                          shadowColor={selectedGuestForSeating && canFitGuest ? '#10B981' : '#8B735B'}
-                          shadowOpacity={0.4}
-                        />
-                      )}
-
-                      {/* Table Title */}
-                      <Text
-                        text={table.name}
-                        width={table.width}
-                        height={table.height / 2}
-                        align="center"
-                        verticalAlign="middle"
-                        fontSize={12}
-                        fontStyle="bold"
-                        fill="#FFFFFF"
-                        padding={4}
-                      />
-
-                      {/* Capacity Badge */}
-                      <Text
-                        text={
-                          selectedGuestForSeating
-                            ? canFitGuest
-                              ? tf('fpFitsSeats', { count: Math.min(freeSeatsForGuest, unseatedForGuest) })
-                              : tf('fpNeedSeats', { count: unseatedForGuest })
-                            : `${occupiedCount}/${table.capacity} ${t.seatsLabel}`
-                        }
-                        y={table.height / 2 - 4}
-                        width={table.width}
-                        height={table.height / 2}
-                        align="center"
-                        verticalAlign="middle"
-                        fontSize={10}
-                        fill={selectedGuestForSeating ? (canFitGuest ? '#A7F3D0' : '#FECACA') : '#FFE6D5'}
-                      />
-                    </Group>
-                  );
-                })}
-
-                {/* Transformer for selected item in modal */}
-                <Transformer
-                  ref={modalTransformerRef}
-                  boundBoxFunc={(oldBox, newBox) => {
-                    if (newBox.width < 40 || newBox.height < 30) {
-                      return oldBox;
-                    }
-                    return newBox;
-                  }}
-                  onTransformEnd={handleDraftTransformEnd}
-                />
-              </Layer>
-            </Stage>
-            </CanvasAxes>
-          </div>
+            />
           )}
         </div>
 
@@ -1201,7 +839,6 @@ export const FloorPlanEditor = ({
                           l.id === draftSelectedLandmark.id ? { ...l, name: newName } : l
                         ),
                       });
-                      setIsDirty(true);
                     }}
                   />
                 </div>
@@ -1219,7 +856,6 @@ export const FloorPlanEditor = ({
                           l.id === draftSelectedLandmark.id ? { ...l, type } : l
                         ),
                       });
-                      setIsDirty(true);
                     }}
                   >
                     <option value="entrance">{t.entranceBtn}</option>
@@ -1312,7 +948,6 @@ export const FloorPlanEditor = ({
                             tbl.id === draftSelectedTable.id ? { ...tbl, name: newName } : tbl
                           );
                           setDraftFloorMap({ ...draftFloorMap, tables: updatedTables });
-                          setIsDirty(true);
                         }}
                       />
                     </div>
@@ -1332,7 +967,6 @@ export const FloorPlanEditor = ({
                               tbl.id === draftSelectedTable.id ? { ...tbl, capacity: cap } : tbl
                             );
                             setDraftFloorMap({ ...draftFloorMap, tables: updatedTables });
-                            setIsDirty(true);
                           }}
                         />
                       </div>
@@ -1348,7 +982,6 @@ export const FloorPlanEditor = ({
                               tbl.id === draftSelectedTable.id ? { ...tbl, shape } : tbl
                             );
                             setDraftFloorMap({ ...draftFloorMap, tables: updatedTables });
-                            setIsDirty(true);
                           }}
                         >
                           <option value="circle">{t.roundShape}</option>
@@ -1455,7 +1088,7 @@ export const FloorPlanEditor = ({
                         {t.chooseGuestOption}
                       </option>
                       {draftGuests
-                        .filter((g) => g.rsvp_status === 'Attending')
+                        .filter(isAttending)
                         .map((g) => {
                           const pSize = getGuestPartySize(g);
                           const remaining = pSize - getGuestSeatedCount(g.id, draftFloorMap, draftGuests);
@@ -1562,10 +1195,7 @@ export const FloorPlanEditor = ({
                                 type="button"
                                 draggable
                                 onDragStart={(e) => handleDragStart(e, item)}
-                                onDragEnd={() => {
-                                  setDraggingAttendee(null);
-                                  setDropTarget(null);
-                                }}
+                                onDragEnd={() => setDraggingAttendee(null)}
                                 onClick={() => handlePaletteItemClick(item)}
                                 className={`px-2 py-1 rounded-lg border text-xs font-bold cursor-grab active:cursor-grabbing transition-all ${
                                   isPicked

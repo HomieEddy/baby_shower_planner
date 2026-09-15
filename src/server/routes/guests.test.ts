@@ -71,4 +71,36 @@ describe('POST /api/guests', () => {
     expect(res.body.message).toBe('Email address is required');
     expect(h.addGuest).not.toHaveBeenCalled();
   });
+
+  it('validates the party list against the domain shape at the seam', async () => {
+    const tooMany = await post({
+      name: 'Grandma', delivery_channel: 'none', going: true,
+      attendee_names: Array.from({ length: 21 }, (_, i) => `Guest ${i}`),
+    });
+    expect(tooMany.statusCode).toBe(400);
+    expect(tooMany.body.error).toBe('INVALID_PAYLOAD');
+    expect(h.addGuest).not.toHaveBeenCalled();
+
+    // Anything that is not a member object used to reach PocketBase untouched.
+    const malformed = await post({
+      name: 'Grandma', delivery_channel: 'none', going: true,
+      attendee_details: ['not-a-member'],
+    });
+    expect(malformed.statusCode).toBe(400);
+    expect(malformed.body.error).toBe('INVALID_PAYLOAD');
+    expect(h.addGuest).not.toHaveBeenCalled();
+  });
+
+  it('passes the validated party through to addGuest', async () => {
+    const res = await post({
+      name: 'Grandma', delivery_channel: 'none', going: true,
+      attendee_names: ['Grandpa'],
+      attendee_details: [{ name: 'Grandpa', dietary: 'Vegan' }],
+    });
+    expect(res.statusCode).toBe(200);
+    expect(h.addGuest).toHaveBeenCalledWith(expect.objectContaining({
+      attendee_names: ['Grandpa'],
+      attendee_details: [{ name: 'Grandpa', dietary: 'Vegan' }],
+    }));
+  });
 });

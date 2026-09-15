@@ -21,6 +21,23 @@ export function escFilter(s: string): string {
   return s.replace(/\\/g, '\\\\').replace(/"/g, '\\"');
 }
 
+// PocketBase reports "no match" as a 404 ClientResponseError. Everything else
+// (connection refused, auth, 5xx) is an outage, not an empty result.
+export function isNotFound(err: unknown): boolean {
+  return typeof err === 'object' && err !== null && (err as { status?: unknown }).status === 404;
+}
+
+// The first record matching `filter`, or undefined when there is none — so a
+// caller can tell "absent" from "broken" without swallowing the latter.
+export async function findFirstOrUndefined<T>(collection: string, filter: string): Promise<T | undefined> {
+  try {
+    return fromRecord<T>(await pb.collection(collection).getFirstListItem(filter));
+  } catch (err) {
+    if (isNotFound(err)) return undefined;
+    throw err;
+  }
+}
+
 // Cryptographically random invitation token + 4-digit reservation code
 // (Math.random would be predictable enough to guess a guest's RSVP link).
 export function newMagicToken(): string {

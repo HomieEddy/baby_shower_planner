@@ -5,7 +5,7 @@
 // (chair positions, wall clamping) stays in components/seating/floorPlanHelpers.
 
 import { FloorMapData, Guest, SeatOccupant, TableElement } from '../types';
-import { getPartyMembers } from './guestAttendees';
+import { getPartyMembers, isAttending } from './guestAttendees';
 import { DomainError } from './errors';
 
 export const getGuestPartySize = (guest: Guest): number => {
@@ -15,7 +15,7 @@ export const getGuestPartySize = (guest: Guest): number => {
   const attendingCount = guest.attending_party_size || 0;
   const maxCount = guest.max_party_size || 1;
 
-  if (guest.rsvp_status === 'Attending') {
+  if (isAttending(guest)) {
     return Math.max(namesCount, detailsCount, attendingCount, 1);
   }
   return Math.max(namesCount, detailsCount, attendingCount, maxCount, 1);
@@ -37,7 +37,7 @@ export const getTableSeats = (
   const out: (SeatOccupant | null)[] = new Array(capacity).fill(null);
   let cursor = 0;
   for (const gId of table.assignedGuestIds || []) {
-    const guest = guestsList.find((g) => g.id === gId && g.rsvp_status === 'Attending');
+    const guest = guestsList.find((g) => g.id === gId && isAttending(g));
     if (!guest) continue;
     const size = getGuestPartySize(guest);
     for (let i = 0; i < size && cursor < capacity; i++) {
@@ -188,7 +188,7 @@ export const validateTables = (tables: TableElement[], guestsList: Guest[]): voi
       if (!seat) continue;
       const guest = guestsList.find((g) => g.id === seat.guestId);
       if (!guest) throw new DomainError('SEAT_UNKNOWN_GUEST');
-      if (guest.rsvp_status !== 'Attending') throw new DomainError('SEAT_GUEST_NOT_ATTENDING');
+      if (!isAttending(guest)) throw new DomainError('SEAT_GUEST_NOT_ATTENDING');
       const size = getGuestPartySize(guest);
       if (!Number.isInteger(seat.attendeeIndex) || seat.attendeeIndex < 0 || seat.attendeeIndex >= size) {
         throw new DomainError('SEAT_INDEX_OUT_OF_RANGE');
@@ -230,6 +230,66 @@ export const getTableStatus = (table: TableElement, guestsList: Guest[]): 'full'
   if (occupied > 0) return 'partial';
   return 'empty';
 };
+
+// The host view's read model: how much of the confirmed party is seated, the
+// table mix, and the parties still missing chairs (optionally filtered by the
+// unassigned-list search). Pure, so the header numbers are testable on their
+// own instead of only through the page.
+export interface SeatingStats {
+  totalConfirmedGuests: number;
+  totalSeatedGuests: number;
+  seatingProgressPercent: number;
+  emptyTablesCount: number;
+  partialTablesCount: number;
+  fullTablesCount: number;
+  unassignedGuestsList: Guest[];
+}
+
+export function getSeatingStats(
+  guestsList: Guest[],
+  floorMap: FloorMapData | null,
+  unassignedQuery = ''
+): SeatingStats {
+  const totalConfirmedGuests = guestsList
+    .filter(isAttending)
+    .reduce((sum, g) => sum + getGuestPartySize(g), 0);
+
+  const totalSeatedGuests = floorMap
+    ? floorMap.tables.reduce((sum, tbl) => sum + getTableOccupiedSeats(tbl, guestsList), 0)
+    : 0;
+
+  const seatingProgressPercent = totalConfirmedGuests > 0
+    ? Math.min(100, Math.round((totalSeatedGuests / totalConfirmedGuests) * 100))
+    : 0;
+
+  const tablesWithStatus = (status: 'empty' | 'partial' | 'full') =>
+    floorMap ? floorMap.tables.filter((t) => getTableStatus(t, guestsList) === status).length : 0;
+
+  const unassignedGuestsList = guestsList.filter((g) => {
+    if (!isAttending(g)) return false;
+    const fullySeated = floorMap ? getGuestSeatedCount(g.id, floorMap, guestsList) >= getGuestPartySize(g) : false;
+    if (fullySeated) return false;
+
+    const q = unassignedQuery.trim().toLowerCase();
+    if (!q) return true;
+    return (
+      g.name.toLowerCase().includes(q) ||
+      g.email.toLowerCase().includes(q) ||
+      (g.code ? g.code.toLowerCase().includes(q) : false) ||
+      !!g.attendee_names?.some((a) => a.toLowerCase().includes(q))
+    );
+  });
+
+  return {
+    totalConfirmedGuests,
+    totalSeatedGuests,
+    seatingProgressPercent,
+    emptyTablesCount: tablesWithStatus('empty'),
+    partialTablesCount: tablesWithStatus('partial'),
+    fullTablesCount: tablesWithStatus('full'),
+    unassignedGuestsList,
+  };
+}
 
 // ---------------------------------------------------------------------------
 // Seat mutations.

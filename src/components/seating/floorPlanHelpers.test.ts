@@ -1,6 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import { FloorMapData, TableElement } from '../../types';
 import {
+  applyRoomClamp,
   clampElementToRoom,
   clampPointToRoom,
   findNearestSeat,
@@ -70,6 +71,33 @@ describe('clampElementToRoom', () => {
     const p = clampElementToRoom(-500, -500, 100, 100, map({ roomShape: 'rectangle' }));
     expect(p.x + 50).toBe(10);
     expect(p.y + 50).toBe(10);
+  });
+});
+
+describe('applyRoomClamp', () => {
+  it('returns the same map outside a round room', () => {
+    const fm = map({ roomShape: 'rectangle', tables: [table({ x: 900, y: 500 })] });
+    expect(applyRoomClamp(fm)).toBe(fm);
+  });
+
+  it('pulls tables and landmarks back inside a circle and leaves inside ones identical by reference', () => {
+    const inside = table({ id: 'in', x: 400, y: 400 });
+    const outside = table({ id: 'out', x: 950, y: 500, width: 100, height: 100 });
+    const fm = map({
+      roomShape: 'circle',
+      canvasWidth: 1000,
+      canvasHeight: 1000,
+      tables: [inside, outside],
+      landmarks: [{ id: 'l1', type: 'entrance', name: 'Entrance', x: 950, y: 500, width: 150, height: 60 }],
+    });
+
+    const clamped = applyRoomClamp(fm);
+    expect(clamped.tables[0]).toBe(inside);
+    expect(clamped.tables[1]).not.toBe(outside);
+    expect(clamped.tables[1].x).toBeLessThan(outside.x);
+    expect(clamped.tables[1].x).toBe(Math.round(clamped.tables[1].x));
+    expect(clamped.landmarks[0].x).toBeLessThan(950);
+    expect(clamped.roomShape).toBe('circle');
   });
 });
 

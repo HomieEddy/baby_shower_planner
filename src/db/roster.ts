@@ -3,6 +3,8 @@
 import type { Guest } from '../types';
 import { fromRecord, pb } from './client';
 import { isValidCode } from '../lib/validation';
+import { isAttending } from '../lib/guestAttendees';
+import { getGuestPartySize } from '../lib/tableAssignment';
 
 // Public endpoint data for the seating page: full Guest shape with
 // sensitive fields (email, phone, code, magic_token, dietary info) scrubbed.
@@ -43,12 +45,12 @@ export async function getSeatingRoster(guestToken?: string, code?: string): Prom
   // Anonymized seat math: the venue map needs each attending party's size and
   // table, but never another guest's name, code, or contact details.
   const seats = records
-    .filter((r: any) => r.rsvp_status === 'Attending')
+    .filter((r: any) => isAttending(fromRecord<Guest>(r)))
     .map((r: any) => {
       const g = fromRecord<Guest>(r);
-      const namesCount = Array.isArray(g.attendee_names) ? g.attendee_names.length : 0;
-      const detailsCount = Array.isArray(g.attendee_details) ? g.attendee_details.length : 0;
-      const partySize = Math.max(namesCount, detailsCount, g.attending_party_size || 0, 1);
+      // Canonical party size: the venue map needs the same number the seating
+      // model uses, not a second formula that can drift from it.
+      const partySize = getGuestPartySize(g);
       return {
         ...g,
         name: '',

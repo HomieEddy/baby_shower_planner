@@ -9,16 +9,23 @@ import { DomainError } from '../lib/errors';
 
 export type { GuestContentLock } from '../lib/guestLock';
 
-export async function getSettings(): Promise<EventSettings> {
+// The stored settings row, or undefined when the event has never been seeded.
+// A PocketBase failure propagates: an outage is not "no settings".
+export async function getSettingsOrUndefined(): Promise<EventSettings | undefined> {
   const records = await pb.collection('settings').getFullList();
-  if (records.length === 0) throw new Error('No settings found');
-  return fromRecord<EventSettings>(records[0]);
+  return records.length === 0 ? undefined : fromRecord<EventSettings>(records[0]);
+}
+
+export async function getSettings(): Promise<EventSettings> {
+  const settings = await getSettingsOrUndefined();
+  if (!settings) throw new Error('No settings found');
+  return settings;
 }
 
 // Settings for read paths that tolerate an unseeded event: an empty object
 // stands in for the missing row, so callers stop hand-rolling try/catch.
 export const getSettingsOrDefaults = async (): Promise<Partial<EventSettings>> =>
-  getSettings().catch(() => ({}));
+  (await getSettingsOrUndefined()) ?? {};
 
 // Guestbook and photo uploads are locked until the event starts
 // (contentOpenAt) and lock again after contentCloseAt.
@@ -26,7 +33,7 @@ export async function getGuestContentLock(now: Date = new Date()): Promise<Guest
   // A rehearsal unlocks guestbook + photo uploads regardless of the host's real
   // content window, so both flows can be smoke-tested any time of day.
   if (isRehearsalActive()) return { locked: false };
-  const settings = await getSettings().catch(() => null);
+  const settings = await getSettingsOrUndefined();
   if (!settings) return { locked: true };
   const ts = now.getTime();
   const openAt = settings.contentOpenAt ? new Date(settings.contentOpenAt).getTime() : NaN;

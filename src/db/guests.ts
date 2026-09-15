@@ -2,9 +2,9 @@
 
 import type { Guest, AddGuestPayload, RegisterGuestPayload, Language } from '../types';
 import { buildInviteMessage, buildUniversalInviteMessage, composeInvitation } from '../lib/compose';
-import { getPartyMembers, dedupePartyNames } from '../lib/guestAttendees';
+import { getPartyMembers, dedupePartyNames, isAttending, mergeParty, partyNames, MAX_REGISTERED_PARTY } from '../lib/guestAttendees';
 import { DomainError } from '../lib/errors';
-import { escFilter, fromRecord, newMagicToken, newReservationCode, pb, removeAttendeeFromFloorMaps, removeGuestFromFloorMaps } from './client';
+import { escFilter, findFirstOrUndefined, fromRecord, newMagicToken, newReservationCode, pb, removeAttendeeFromFloorMaps, removeGuestFromFloorMaps } from './client';
 import { getSettingsOrDefaults } from './settings';
 import { notifyGuest } from './notify';
 
@@ -19,18 +19,14 @@ export async function getAllGuests(): Promise<Guest[]> {
   return records.map(r => fromRecord<Guest>(r));
 }
 
+// Both lookups return undefined only when the record is genuinely absent: a
+// PocketBase outage propagates instead of looking like an unknown invite.
 export async function getGuestByToken(token: string): Promise<Guest | undefined> {
-  try {
-    const r = await pb.collection('guests').getFirstListItem(`magic_token="${escFilter(token)}"`);
-    return fromRecord<Guest>(r);
-  } catch { return undefined; }
+  return findFirstOrUndefined<Guest>('guests', `magic_token="${escFilter(token)}"`);
 }
 
 export async function getGuestByCode(code: string): Promise<Guest | undefined> {
-  try {
-    const r = await pb.collection('guests').getFirstListItem(`code="${escFilter(code)}"`);
-    return fromRecord<Guest>(r);
-  } catch { return undefined; }
+  return findFirstOrUndefined<Guest>('guests', `code="${escFilter(code)}"`);
 }
 
 export async function getGuestById(id: string): Promise<Guest> {
@@ -50,19 +46,11 @@ export async function addGuest(payload: AddGuestPayload): Promise<{ guest: Guest
   const going = payload.rsvp_status === 'Attending';
   const partySize = payload.max_party_size && payload.max_party_size > 0 ? payload.max_party_size : 1;
   // Party members: the primary guest first, then the host-entered names, capped
-  // at the allowed party size and deduped.
+  // at the allowed party size and deduped by the Party Roster module.
   const primary = payload.name;
-  const names = dedupePartyNames(primary, payload.attendee_names || [], partySize);
-  const incoming = Array.isArray(payload.attendee_details) ? payload.attendee_details : [];
-  const metaByName = new Map(incoming.map((d) => [String(d.name || '').trim().toLowerCase(), d]));
-  const attendee_details = names.map((n) => {
-    const meta = metaByName.get(n.toLowerCase());
-    return {
-      name: n,
-      contact: n.toLowerCase() === primary.toLowerCase() ? (payload.email || payload.phone || '') : (meta?.contact || '').trim(),
-      dietary: (meta?.dietary || '').trim(),
-    };
-  });
+  const attendee_details = mergeParty(primary, payload.attendee_names, [payload.attendee_details], partySize);
+  if (attendee_details[0]) attendee_details[0].contact = payload.email || payload.phone || '';
+  const names = attendee_details.map((d) => d.name);
   const primaryDietary = attendee_details[0]?.dietary || '';
 
   const existing = payload.email || payload.phone
@@ -73,7 +61,7 @@ export async function addGuest(payload: AddGuestPayload): Promise<{ guest: Guest
   if (existing.items.length > 0) {
     const g = fromRecord<Guest>(existing.items[0]);
     // Re-registering an existing contact as "going" promotes the record.
-    if (going && g.rsvp_status !== 'Attending') {
+    if (going && !isAttending(g)) {
       const promoted = fromRecord<Guest>(await pb.collection('guests').update(g.id, {
         rsvp_status: 'Attending', attending_party_size: names.length,
         attendee_names: names, attendee_details, dietary_restrictions: primaryDietary, token_used: true,
@@ -121,18 +109,19 @@ export async function registerGuest(payload: RegisterGuestPayload, refId?: strin
     return { guest: fromRecord<Guest>(existing.items[0]), already_registered: true };
   }
 
-  const details = Array.isArray(payload.attendee_details)
-    ? payload.attendee_details.filter(d => d && typeof d.name === 'string' && d.name.trim()).map(d => ({ name: d.name.trim(), contact: (d.contact || '').trim(), dietary: (d.dietary || '').trim() }))
+  const details = Array.isArray(payload.attendee_details) ? payload.attendee_details : [];
+  const declared = Array.isArray(payload.attendee_names)
+    ? payload.attendee_names.filter(n => typeof n === 'string' && n.trim())
     : [];
-  let names = Array.isArray(payload.attendee_names)
-    ? payload.attendee_names.filter(n => typeof n === 'string' && n.trim()).map(n => n.trim())
-    : [];
-  if (names.length === 0) names = details.map(d => d.name);
-  if (names.length === 0) names = [name];
-  names = names.slice(0, 20);
+  const attendee_details = mergeParty(
+    name,
+    declared.length > 0 ? declared : partyNames(details),
+    [details],
+    MAX_REGISTERED_PARTY
+  );
+  const names = attendee_details.map(d => d.name);
   const partySize = names.length;
-  const finalDetails = details.length > 0 ? details.slice(0, partySize) : names.map(n => ({ name: n, contact: '', dietary: '' }));
-  const primaryDietary = (finalDetails[0]?.dietary || payload.dietary_restrictions || '').trim();
+  const primaryDietary = (attendee_details[0]?.dietary || payload.dietary_restrictions || '').trim();
 
   // Provenance from the inviter's share link, when present.
   const invite = refId ? await pb.collection('invites').getOne(refId).catch(() => null) : null;
@@ -144,7 +133,7 @@ export async function registerGuest(payload: RegisterGuestPayload, refId?: strin
     name, email, phone, delivery_channel, code,
     max_party_size: partySize, attending_party_size: partySize,
     rsvp_status: 'Attending', token_used: true,
-    attendee_names: names, attendee_details: finalDetails,
+    attendee_names: names, attendee_details,
     dietary_restrictions: primaryDietary,
     language_pref: payload.language_pref === 'EN' ? 'EN' : 'FR',
     magic_token, created_at: new Date().toISOString(),
@@ -204,20 +193,10 @@ export async function updateGuest(id: string, updates: Partial<Guest>): Promise<
   // Declining clears the party entirely; otherwise the attended count is the
   // number of named members (not the allowed size).
   const finalNames = declined ? [] : names;
-  const priorByName = new Map((guest.attendee_details || []).map((d) => [d.name, d]));
-  const incomingByName = new Map(
-    (Array.isArray(updates.attendee_details) ? updates.attendee_details : [])
-      .map((d) => [String(d.name || '').trim().toLowerCase(), d])
-  );
-  const attendee_details = finalNames.map((n) => {
-    const prior = priorByName.get(n);
-    const incoming = incomingByName.get(n.toLowerCase());
-    return {
-      name: n,
-      contact: (incoming?.contact ?? prior?.contact ?? ''),
-      dietary: (incoming?.dietary ?? prior?.dietary ?? '').trim(),
-    };
-  });
+  // Incoming details win per member; the stored list fills the gaps.
+  const attendee_details = finalNames.length === 0
+    ? []
+    : mergeParty(primary, finalNames, [updates.attendee_details, guest.attendee_details], finalNames.length);
   const checked_in_names = declined
     ? []
     : (guest.checked_in_names || []).filter((n) =>
@@ -273,11 +252,7 @@ export async function removeGuestAttendee(
     ordered = [chosen, ...ordered.filter((n) => n !== chosen)];
   }
 
-  const priorByName = new Map((guest.attendee_details || []).map((d) => [d.name, d]));
-  const attendee_details = ordered.map((name) => {
-    const prior = priorByName.get(name);
-    return { name, contact: prior?.contact || '', dietary: (prior?.dietary || '').trim() };
-  });
+  const attendee_details = mergeParty(ordered[0], ordered.slice(1), [guest.attendee_details], ordered.length);
 
   let checked_in = guest.checked_in;
   let checked_in_names = (guest.checked_in_names || []).filter(
