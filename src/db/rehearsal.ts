@@ -69,7 +69,7 @@ async function createDemoGuest(spec: DemoGuestSpec): Promise<Guest> {
     rsvp_status: spec.status,
     attending_party_size: attending ? spec.party.length : 0,
     attendee_names: attending ? spec.party : [],
-    attendee_details: attending ? spec.party.map((n) => ({ name: n, contact: '' })) : [],
+    attendee_details: attending ? spec.party.map((n, i) => ({ name: n, contact: '', dietary: i === 0 ? (spec.dietary || '') : '' })) : [],
     dietary_restrictions: spec.dietary || '',
     language_pref: spec.lang,
     magic_token: newMagicToken(),

@@ -53,10 +53,17 @@ export async function addGuest(payload: AddGuestPayload): Promise<{ guest: Guest
   // at the allowed party size and deduped.
   const primary = payload.name;
   const names = dedupePartyNames(primary, payload.attendee_names || [], partySize);
-  const attendee_details = names.map((n) => ({
-    name: n,
-    contact: n.toLowerCase() === primary.toLowerCase() ? (payload.email || payload.phone || '') : '',
-  }));
+  const incoming = Array.isArray(payload.attendee_details) ? payload.attendee_details : [];
+  const metaByName = new Map(incoming.map((d) => [String(d.name || '').trim().toLowerCase(), d]));
+  const attendee_details = names.map((n) => {
+    const meta = metaByName.get(n.toLowerCase());
+    return {
+      name: n,
+      contact: n.toLowerCase() === primary.toLowerCase() ? (payload.email || payload.phone || '') : (meta?.contact || '').trim(),
+      dietary: (meta?.dietary || '').trim(),
+    };
+  });
+  const primaryDietary = attendee_details[0]?.dietary || '';
 
   const existing = payload.email || payload.phone
     ? await pb.collection('guests').getList(1, 1, {
@@ -69,7 +76,7 @@ export async function addGuest(payload: AddGuestPayload): Promise<{ guest: Guest
     if (going && g.rsvp_status !== 'Attending') {
       const promoted = fromRecord<Guest>(await pb.collection('guests').update(g.id, {
         rsvp_status: 'Attending', attending_party_size: names.length,
-        attendee_names: names, attendee_details, token_used: true,
+        attendee_names: names, attendee_details, dietary_restrictions: primaryDietary, token_used: true,
       }));
       return { guest: promoted, magic_token: promoted.magic_token, invite_message: await inviteMessageFor(promoted) };
     }
@@ -87,7 +94,7 @@ export async function addGuest(payload: AddGuestPayload): Promise<{ guest: Guest
     attending_party_size: going ? names.length : partySize,
     attendee_names: names,
     attendee_details,
-    dietary_restrictions: '', language_pref: payload.language_pref || 'FR',
+    dietary_restrictions: primaryDietary, language_pref: payload.language_pref || 'FR',
     magic_token, token_used: going, created_at: new Date().toISOString(),
     is_read_only: false,
   });
@@ -115,7 +122,7 @@ export async function registerGuest(payload: RegisterGuestPayload, refId?: strin
   }
 
   const details = Array.isArray(payload.attendee_details)
-    ? payload.attendee_details.filter(d => d && typeof d.name === 'string' && d.name.trim()).map(d => ({ name: d.name.trim(), contact: (d.contact || '').trim() }))
+    ? payload.attendee_details.filter(d => d && typeof d.name === 'string' && d.name.trim()).map(d => ({ name: d.name.trim(), contact: (d.contact || '').trim(), dietary: (d.dietary || '').trim() }))
     : [];
   let names = Array.isArray(payload.attendee_names)
     ? payload.attendee_names.filter(n => typeof n === 'string' && n.trim()).map(n => n.trim())
@@ -124,7 +131,8 @@ export async function registerGuest(payload: RegisterGuestPayload, refId?: strin
   if (names.length === 0) names = [name];
   names = names.slice(0, 20);
   const partySize = names.length;
-  const finalDetails = details.length > 0 ? details.slice(0, partySize) : names.map(n => ({ name: n, contact: '' }));
+  const finalDetails = details.length > 0 ? details.slice(0, partySize) : names.map(n => ({ name: n, contact: '', dietary: '' }));
+  const primaryDietary = (finalDetails[0]?.dietary || payload.dietary_restrictions || '').trim();
 
   // Provenance from the inviter's share link, when present.
   const invite = refId ? await pb.collection('invites').getOne(refId).catch(() => null) : null;
@@ -137,7 +145,7 @@ export async function registerGuest(payload: RegisterGuestPayload, refId?: strin
     max_party_size: partySize, attending_party_size: partySize,
     rsvp_status: 'Attending', token_used: true,
     attendee_names: names, attendee_details: finalDetails,
-    dietary_restrictions: (payload.dietary_restrictions || '').trim(),
+    dietary_restrictions: primaryDietary,
     language_pref: payload.language_pref === 'EN' ? 'EN' : 'FR',
     magic_token, created_at: new Date().toISOString(),
     is_read_only: false,
@@ -190,8 +198,20 @@ export async function updateGuest(id: string, updates: Partial<Guest>): Promise<
   // Declining clears the party entirely; otherwise the attended count is the
   // number of named members (not the allowed size).
   const finalNames = declined ? [] : names;
-  const contactByName = new Map((guest.attendee_details || []).map((d) => [d.name, d.contact || '']));
-  const attendee_details = finalNames.map((n) => ({ name: n, contact: contactByName.get(n) || '' }));
+  const priorByName = new Map((guest.attendee_details || []).map((d) => [d.name, d]));
+  const incomingByName = new Map(
+    (Array.isArray(updates.attendee_details) ? updates.attendee_details : [])
+      .map((d) => [String(d.name || '').trim().toLowerCase(), d])
+  );
+  const attendee_details = finalNames.map((n) => {
+    const prior = priorByName.get(n);
+    const incoming = incomingByName.get(n.toLowerCase());
+    return {
+      name: n,
+      contact: (incoming?.contact ?? prior?.contact ?? ''),
+      dietary: (incoming?.dietary ?? prior?.dietary ?? '').trim(),
+    };
+  });
   const checked_in_names = declined
     ? []
     : (guest.checked_in_names || []).filter((n) =>
@@ -247,8 +267,11 @@ export async function removeGuestAttendee(
     ordered = [chosen, ...ordered.filter((n) => n !== chosen)];
   }
 
-  const contactByName = new Map((guest.attendee_details || []).map((d) => [d.name, d.contact || '']));
-  const attendee_details = ordered.map((name) => ({ name, contact: contactByName.get(name) || '' }));
+  const priorByName = new Map((guest.attendee_details || []).map((d) => [d.name, d]));
+  const attendee_details = ordered.map((name) => {
+    const prior = priorByName.get(name);
+    return { name, contact: prior?.contact || '', dietary: (prior?.dietary || '').trim() };
+  });
 
   let checked_in = guest.checked_in;
   let checked_in_names = (guest.checked_in_names || []).filter(
@@ -264,6 +287,7 @@ export async function removeGuestAttendee(
     name: ordered[0],
     attendee_names: ordered,
     attendee_details,
+    dietary_restrictions: attendee_details[0]?.dietary || '',
     attending_party_size: ordered.length,
     checked_in,
     checked_in_names,

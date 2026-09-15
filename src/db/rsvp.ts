@@ -61,9 +61,12 @@ export async function submitRsvp(token: string, payload: SubmitRsvpPayload): Pro
     }
     // Never exceed the party size the host granted.
     names = names.slice(0, Math.max(1, Number(guest.max_party_size) || 1));
-    updates.attendee_details = details.slice(0, names.length);
+    const finalDetails = details.slice(0, names.length);
+    updates.attendee_details = finalDetails;
     updates.attendee_names = names;
     updates.attending_party_size = names.length;
+    // Keep the legacy party-level field mirroring the lead's restriction.
+    updates.dietary_restrictions = (finalDetails[0]?.dietary || payload.dietary_restrictions || '').trim();
     keepAttendees = names.length;
   } else {
     updates.attendee_names = [];
