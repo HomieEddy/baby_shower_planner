@@ -1,10 +1,9 @@
 import React, { useEffect, useState } from 'react';
 import { Guest, EventSettings, FloorMapData } from '../../types';
-import { Printer, Scissors, Tag, Ticket } from 'lucide-react';
+import { Printer, Scissors, Tag } from 'lucide-react';
 import { useT, useTf } from '../shared/i18n';
 import { usePrint } from '../shared/hooks';
 import { Select, TextInput } from '../shared/ui';
-import { Segmented } from '../shared/Segmented';
 import { getAttendeeLocations } from '../../lib/tableAssignment';
 import { getPartyMembers } from '../../lib/guestAttendees';
 
@@ -109,15 +108,14 @@ export const EscortCardsGenerator: React.FC<EscortCardsGeneratorProps> = ({ gues
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
           <div>
             <label className="label-mono block text-xs font-bold mb-1">{t.stationeryFormatLabel}</label>
-            <Segmented
-              ariaLabel={t.stationeryFormatLabel}
+            <Select
+              variant="soft"
               value={cardType}
-              onChange={setCardType}
-              options={[
-                { value: 'tent', icon: <Ticket className="w-3.5 h-3.5" />, label: t.foldedTentCardsBtn },
-                { value: 'nametag', icon: <Tag className="w-3.5 h-3.5" />, label: t.nameBadgesBtn },
-              ]}
-            />
+              onChange={(e) => setCardType(e.target.value as 'tent' | 'nametag')}
+            >
+              <option value="tent">{t.foldedTentCardsBtn}</option>
+              <option value="nametag">{t.nameBadgesBtn}</option>
+            </Select>
           </div>
 
           <div>
