@@ -239,6 +239,7 @@ export interface Translations {
   dayOfGuestbookTab: string;
   dayOfSubtitle: string;
   dayOfTitle: string;
+  printFindTableQrBtn: string;
   declinedNote: string;
   declinedWarmText: string;
   deleteAlertTitle: string;
@@ -1513,6 +1514,7 @@ export const translations: Record<Language, Translations> = {
     dayOfGuestbookTab: "Day-Of Digital Guestbook",
     dayOfSubtitle: "Find your name, check in, and see your assigned table on the map — the party lead can check in the whole group at once.",
     dayOfTitle: "Check In & Find Your Seat",
+    printFindTableQrBtn: "Print Find-My-Table QR",
     declinedNote: "* Note: Guests who have already declined will only receive cancellation alerts.",
     declinedWarmText: "Sending warm wishes from afar.",
     deleteAlertTitle: "Delete alert",
@@ -2784,6 +2786,7 @@ export const translations: Record<Language, Translations> = {
     dayOfGuestbookTab: "Livre d'or du jour J",
     dayOfSubtitle: "Trouvez votre nom, enregistrez-vous et découvrez votre table sur le plan — le responsable du groupe peut tout enregistrer d'un coup.",
     dayOfTitle: "Enregistrez-vous & trouvez votre place",
+    printFindTableQrBtn: "Imprimer le QR « Trouver ma table »",
     declinedNote: "* Remarque : les invités ayant décliné ne recevront que les alertes d'annulation.",
     declinedWarmText: "Je vous envoie mes meilleurs vœux de loin.",
     deleteAlertTitle: "Supprimer l'alerte",
