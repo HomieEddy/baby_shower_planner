@@ -3,10 +3,15 @@
 
 import { decodeApiError } from './errors';
 
-export interface GuestContentLockInfo {
+// The canonical guest-content lock shape. Server (db + http framework) and the
+// client all speak this one type.
+export interface GuestContentLock {
+  locked: boolean;
   opensAt?: string;
   closesAt?: string;
 }
+
+export type GuestContentLockInfo = Omit<GuestContentLock, 'locked'>;
 
 // Returns the lock window when `res` is a GUEST_CONTENT_LOCKED 403, else null.
 // Consumes the response body, so callers must not re-read it.

@@ -66,7 +66,7 @@ vi.mock('./client', () => ({
   removeAttendeeFromFloorMaps: async () => {},
 }));
 
-vi.mock('./settings', () => ({ getSettings: async () => ({ date: '', language: 'EN' }) }));
+vi.mock('./settings', () => ({ getSettings: async () => ({ date: '', language: 'EN' }), getSettingsOrDefaults: async () => ({ date: '', language: 'EN' }) }));
 
 import { registerGuest, isApproved, getUniversalInviteMessage, getGuestByToken, addGuest, removeGuestAttendee, updateGuest } from './guests';
 import { createInvite, submitRsvp } from './rsvp';

@@ -1,9 +1,9 @@
 // Floor map read/edit, table assignment and floor-plan email sharing.
 
-import type { FloorMapData, Guest, EventSettings } from '../types';
+import type { FloorMapData, Guest } from '../types';
 import { fromRecord, pb } from './client';
 import { getAllGuests } from './guests';
-import { getSettings } from './settings';
+import { getSettingsOrDefaults } from './settings';
 import { composeFloorPlan } from '../lib/compose';
 import { notifyChannels } from './notify';
 import { applyTablesAndSync } from './floorSync';
@@ -61,8 +61,7 @@ export async function shareFloorPlanEmail(guestIds?: string[], customMessage?: s
     ? await Promise.all(guestIds.map((id) => pb.collection('guests').getOne(id).then((r) => fromRecord<Guest>(r))))
     : await getAllGuests();
   const map = await getFloorMap();
-  let settings: Partial<EventSettings> = {};
-  try { settings = await getSettings(); } catch { /* settings missing — skip send */ }
+  const settings = await getSettingsOrDefaults();
   let count = 0;
   for (const g of guests) {
     if (!g.email) continue;

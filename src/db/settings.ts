@@ -1,8 +1,11 @@
 // Event settings read/write + the guest content window (guestbook + photos).
 
 import type { EventSettings } from '../types';
+import type { GuestContentLock } from '../lib/guestLock';
 import { fromRecord, pb } from './client';
 import { isRehearsalActive } from './rehearsal';
+
+export type { GuestContentLock } from '../lib/guestLock';
 
 export async function getSettings(): Promise<EventSettings> {
   const records = await pb.collection('settings').getFullList();
@@ -10,11 +13,10 @@ export async function getSettings(): Promise<EventSettings> {
   return fromRecord<EventSettings>(records[0]);
 }
 
-export interface GuestContentLock {
-  locked: boolean;
-  opensAt?: string;
-  closesAt?: string;
-}
+// Settings for read paths that tolerate an unseeded event: an empty object
+// stands in for the missing row, so callers stop hand-rolling try/catch.
+export const getSettingsOrDefaults = async (): Promise<Partial<EventSettings>> =>
+  getSettings().catch(() => ({}));
 
 // Guestbook and photo uploads are locked until the event starts
 // (contentOpenAt) and lock again after contentCloseAt.

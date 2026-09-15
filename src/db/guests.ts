@@ -1,11 +1,11 @@
 // Guest admin CRUD + batch import. RSVP/submission logic lives in `rsvp.ts`.
 
-import type { Guest, AddGuestPayload, RegisterGuestPayload, EventSettings, Language } from '../types';
+import type { Guest, AddGuestPayload, RegisterGuestPayload, Language } from '../types';
 import { buildInviteMessage, buildUniversalInviteMessage, composeInvitation } from '../lib/compose';
 import { getPartyMembers } from '../lib/guestAttendees';
 import { DomainError } from '../lib/errors';
 import { escFilter, fromRecord, newMagicToken, newReservationCode, pb, removeAttendeeFromFloorMaps, removeGuestFromFloorMaps } from './client';
-import { getSettings } from './settings';
+import { getSettingsOrDefaults } from './settings';
 import { notifyGuest } from './notify';
 
 // Missing/empty approval_status = approved: legacy host-added guests and
@@ -41,11 +41,7 @@ export async function getGuestById(id: string): Promise<Guest> {
 // Pre-built copy/paste invitation message (bilingual, follows the guest's
 // language preference). Fetches settings lazily; empty settings → minimal message.
 export async function inviteMessageFor(guest: Guest): Promise<string> {
-  let settings: Partial<EventSettings> = {};
-  try {
-    settings = await getSettings();
-  } catch { /* settings not seeded yet — message falls back to essentials */ }
-  return buildInviteMessage(guest, settings, guest.language_pref);
+  return buildInviteMessage(guest, await getSettingsOrDefaults(), guest.language_pref);
 }
 
 export async function addGuest(payload: AddGuestPayload): Promise<{ guest: Guest; magic_token: string; invite_message: string }> {
@@ -172,8 +168,7 @@ export async function setApproval(id: string, decision: 'approved' | 'rejected')
   const updated = await pb.collection('guests').update(id, { approval_status: decision });
   const guest = fromRecord<Guest>(updated);
   if (decision === 'approved' && guest.delivery_channel && guest.delivery_channel !== 'none') {
-    let settings: Partial<EventSettings> = {};
-    try { settings = await getSettings(); } catch { /* settings missing — skip send */ }
+    const settings = await getSettingsOrDefaults();
     await notifyGuest(guest, composeInvitation(guest, settings, guest.language_pref));
   }
   return guest;
@@ -181,9 +176,7 @@ export async function setApproval(id: string, decision: 'approved' | 'rejected')
 
 // Host-facing universal share message (no ref — plain /register link).
 export async function getUniversalInviteMessage(language: Language = 'FR'): Promise<string> {
-  let settings: Partial<EventSettings> = {};
-  try { settings = await getSettings(); } catch { /* settings not seeded yet */ }
-  return buildUniversalInviteMessage(settings, language);
+  return buildUniversalInviteMessage(await getSettingsOrDefaults(), language);
 }
 
 export async function updateGuest(id: string, updates: Partial<Guest>): Promise<Guest> {

@@ -1,9 +1,9 @@
 // Event alerts: read, create (with fan-out to recipients), delete, + handler.
 
-import type { EventAlert, AlertType, EventSettings } from '../types';
+import type { EventAlert, AlertType } from '../types';
 import { fromRecord, pb } from './client';
 import { getAllGuests } from './guests';
-import { getSettings } from './settings';
+import { getSettingsOrDefaults } from './settings';
 import { composeAlert } from '../lib/compose';
 import { notifyGuest } from './notify';
 import type { RouteCtx } from '../server/http';
@@ -30,8 +30,7 @@ export async function createAlert(payload: { type: AlertType; title: string; mes
     if (target === 'ATTENDING') return g.rsvp_status === 'Attending';
     return true;
   });
-  let settings: Partial<EventSettings> = {};
-  try { settings = await getSettings(); } catch { /* settings missing — skip send */ }
+  const settings = await getSettingsOrDefaults();
   let notified = 0;
   for (const g of recipientGuests) {
     // Link-only guests resolve to no channels inside notifyGuest.

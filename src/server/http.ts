@@ -6,6 +6,7 @@ import fs from 'node:fs';
 import crypto from 'node:crypto';
 import { UPLOADS_DIR } from './uploadFiles';
 import { errorMessage, errorStatus } from '../lib/errors';
+import type { GuestContentLock } from '../lib/guestLock';
 
 export const IS_PROD = process.env.NODE_ENV === 'production';
 // Coolify proxies traffic and appends X-Forwarded-For; trust it for rate
@@ -228,5 +229,5 @@ export interface RouteCtx {
   ip: string;
   adminOnly: () => boolean;
   requireAdmin: () => void;
-  guestLock: () => Promise<{ locked: boolean; opensAt?: string; closesAt?: string } | null>;
+  guestLock: () => Promise<GuestContentLock | null>;
 }
