@@ -11,9 +11,9 @@ import { useSearchParams } from 'react-router-dom';
 import type { Guest, FloorMapData, DeliveryChannel, Language } from '../../types';
 import type { Translations } from '../../translations';
 import { adminFetch } from '../../lib/api';
-import { parseCsvLine, csvCell, toCsv, downloadCsv } from '../../lib/csv';
+import { toCsv, downloadCsv } from '../../lib/csv';
 import { getPartyDietary, getAttendeeDietary, type AdditionalAttendee } from '../../lib/guestAttendees';
-import { getGuestPartySize, getAttendeeLocations } from '../../lib/tableAssignment';
+import { getGuestPartySize } from '../../lib/tableAssignment';
 import { GuestImportSchema, EditGuestFormSchema } from '../../lib/validation';
 import { useCapabilities, availableChannels } from '../../lib/capabilities';
 import { decodeApiError } from '../../lib/errors';
@@ -22,8 +22,10 @@ import { useConfirm, useActionConfirm } from '../shared/ConfirmDialog';
 import { useTf, useApiErrorMessage } from '../shared/i18n';
 import { useCopyFeedback } from '../shared/hooks';
 import {
+  buildGuestCsv,
   computeGuestMetrics,
   filterGuests,
+  parseGuestCsvRows,
   type MetricMode,
   type SourceFilter,
   type StatusFilter,
@@ -419,24 +421,7 @@ export function useGuestAdminController({ language, t, guests, onRefresh }: Gues
     }
     try {
       setImportingCsv(true);
-      const lines = rawCsvText.trim().split('\n');
-      const parsedGuests: Record<string, unknown>[] = [];
-      for (let i = 0; i < lines.length; i++) {
-        const line = lines[i].trim();
-        if (!line) continue;
-        if (i === 0 && (line.toLowerCase().includes('name') || line.toLowerCase().includes('email'))) continue;
-        const parts = parseCsvLine(line);
-        if (parts[0]) {
-          parsedGuests.push({
-            name: parts[0],
-            email: parts[1] || '',
-            phone: parts[2] || '',
-            max_party_size: Number(parts[3]) || 2,
-            delivery_channel: parts[4] && ['email', 'text', 'both', 'none'].includes(parts[4].toLowerCase()) ? parts[4].toLowerCase() : 'email',
-            language_pref: language,
-          });
-        }
-      }
+      const parsedGuests = parseGuestCsvRows(rawCsvText, language);
       if (parsedGuests.length === 0) {
         toast.error(t.csvInvalidToast);
         return;
@@ -497,39 +482,7 @@ export function useGuestAdminController({ language, t, guests, onRefresh }: Gues
     }
 
     // First five columns stay import-compatible (name, email, phone, max party, channel).
-    const headers = [
-      'Guest Name', 'Email', 'Phone', 'Max Party Size', 'Delivery Channel',
-      'Reservation Code', 'Group / Party', 'Table', 'Seat', 'RSVP Status',
-      'Attending Party Size', 'Dietary Restrictions', 'Magic RSVP Token', 'Magic RSVP URL', 'Invited By',
-    ];
-    const esc = csvCell;
-    const rows: string[][] = [];
-
-    for (const g of list) {
-      const names = getPartyDietary(g).map((m) => m.name);
-      const locations = getAttendeeLocations(g.id, floorMap, list);
-      const url = `${window.location.origin}/rsvp/${g.magic_token}`;
-      names.forEach((name, i) => {
-        const loc = locations.find((l) => l.attendeeIndex === i) ?? null;
-        rows.push([
-          esc(name),
-          esc(g.email),
-          esc(g.phone),
-          String(g.max_party_size ?? ''),
-          esc(g.delivery_channel || 'none'),
-          esc(g.code),
-          esc(g.name),
-          esc(loc?.tableName ?? ''),
-          loc ? String(loc.seatIndex + 1) : '',
-          esc(g.rsvp_status),
-          String(g.attending_party_size ?? ''),
-          esc(getAttendeeDietary(g, i)),
-          esc(g.magic_token),
-          esc(url),
-          esc(g.invited_by_guest_name || 'Host'),
-        ]);
-      });
-    }
+    const { headers, rows } = buildGuestCsv(list, floorMap, window.location.origin);
 
     downloadCsv(`baby_shower_guests_${new Date().toISOString().split('T')[0]}.csv`, toCsv(headers, rows));
     toast.love(t.exportedToast);
