@@ -36,7 +36,8 @@ import {
 import { CSS } from '@dnd-kit/utilities';
 import { EventSettings, ScheduleItem, Language, CustomTheme } from '../../types';
 import { Translations } from '../../translations';
-import { parseToYmd, formatDateLong, parseTimeRange, formatTimeRangeString } from '../../lib/dateUtils';
+import { parseToYmd, formatDateLong, formatTime12h, parseTimeRange, formatTimeRangeString } from '../../lib/dateUtils';
+import { findDuplicateScheduleTimes, normalizeScheduleTime, sortScheduleByTime } from '../../lib/schedule';
 import { THEME_PRESETS, getThemeById, applyThemeToDocument, getContrastTextColor, getCustomTheme, CUSTOM_THEME_ID, FONT_OPTIONS, DEFAULT_CUSTOM_THEME } from '../../themePresets';
 import { useToast } from '../shared/ToastContext';
 import { useTf } from '../shared/i18n';
@@ -97,8 +98,7 @@ const SortableScheduleItem: React.FC<SortableScheduleItemProps> = ({ item, index
       <div className="grid grid-cols-1 sm:grid-cols-12 gap-3 items-start">
         <div className="sm:col-span-3">
           <label className="label-mono block mb-1">{t.timeLabel}</label>
-          <TextInput type="text" value={item.time} onChange={(e) => onChange(index, 'time', e.target.value)}
-            placeholder={t.timeExamplePh}
+          <TextInput type="time" value={normalizeScheduleTime(item.time)} onChange={(e) => onChange(index, 'time', e.target.value)}
             variant="soft" />
         </div>
         <div className="sm:col-span-4 space-y-2">
@@ -136,6 +136,7 @@ const SortableScheduleItem: React.FC<SortableScheduleItemProps> = ({ item, index
 
 export const AdminSettingsTab: React.FC<AdminSettingsTabProps> = ({ language, t, settings, onSave }) => {
   const { toast } = useToast();
+  const tf = useTf();
 
   const [parentsNames, setParentsNames] = useState(settings?.parentsNames ?? '');
   const [babyName, setBabyName] = useState(settings?.babyName ?? '');
@@ -156,10 +157,10 @@ export const AdminSettingsTab: React.FC<AdminSettingsTabProps> = ({ language, t,
   const [selectedThemeId, setSelectedThemeId] = useState<string>(settings?.themeId || 'teddy-warmth');
   const [customTheme, setCustomTheme] = useState<CustomTheme>(settings?.customTheme ?? DEFAULT_CUSTOM_THEME);
   const [schedule, setSchedule] = useState<ScheduleItem[]>(settings?.schedule && Array.isArray(settings.schedule) ? settings.schedule : [
-    { id: 'sch-1', time: '2:00 PM', titleEn: 'Guest Arrival & Welcome Refreshments', titleFr: 'Arrivée des invités & rafraîchissements', descEn: 'Mingle, find your table on the floor map, and sign the digital guestbook.', descFr: 'Discutez, trouvez votre table sur la carte et signez le livre d\'or virtuel.' },
-    { id: 'sch-2', time: '2:45 PM', titleEn: 'Baby Shower Games & Trivia', titleFr: 'Jeux & quiz sur le thème de bébé', descEn: 'Fun guessing games with special prizes for table winners!', descFr: 'Des jeux amusants avec des prix spéciaux pour les gagnants !' },
-    { id: 'sch-3', time: '3:45 PM', titleEn: 'Gourmet Treats & Cake Cutting', titleFr: 'Buffet gourmand & découpe du gâteau', descEn: 'Enjoy sweet treats, tea, coffee, and celebrate the parents-to-be.', descFr: 'Dégustez des douceurs, du thé, du café et célébrez les futurs parents.' },
-    { id: 'sch-4', time: '4:45 PM', titleEn: 'Gift Opening & Thank You Toast', titleFr: 'Ouverture des cadeaux & toast de remerciement', descEn: 'The parents open gifts from the baby registry and share warm words.', descFr: 'Les parents ouvrent les cadeaux du registre et partagent leurs mots doux.' },
+    { id: 'sch-1', time: '14:00', titleEn: 'Guest Arrival & Welcome Refreshments', titleFr: 'Arrivée des invités & rafraîchissements', descEn: 'Mingle, find your table on the floor map, and sign the digital guestbook.', descFr: 'Discutez, trouvez votre table sur la carte et signez le livre d\'or virtuel.' },
+    { id: 'sch-2', time: '14:45', titleEn: 'Baby Shower Games & Trivia', titleFr: 'Jeux & quiz sur le thème de bébé', descEn: 'Fun guessing games with special prizes for table winners!', descFr: 'Des jeux amusants avec des prix spéciaux pour les gagnants !' },
+    { id: 'sch-3', time: '15:45', titleEn: 'Gourmet Treats & Cake Cutting', titleFr: 'Buffet gourmand & découpe du gâteau', descEn: 'Enjoy sweet treats, tea, coffee, and celebrate the parents-to-be.', descFr: 'Dégustez des douceurs, du thé, du café et célébrez les futurs parents.' },
+    { id: 'sch-4', time: '16:45', titleEn: 'Gift Opening & Thank You Toast', titleFr: 'Ouverture des cadeaux & toast de remerciement', descEn: 'The parents open gifts from the baby registry and share warm words.', descFr: 'Les parents ouvrent les cadeaux du registre et partagent leurs mots doux.' },
   ]);
   const [savingSettings, setSavingSettings] = useState(false);
 
@@ -201,6 +202,15 @@ export const AdminSettingsTab: React.FC<AdminSettingsTabProps> = ({ language, t,
 
   const handleSaveSettings = async (e: React.FormEvent) => {
     e.preventDefault();
+    // Schedule: normalize times, reject duplicate start times, keep chronological.
+    const normalizedSchedule = schedule.map((item) => ({ ...item, time: normalizeScheduleTime(item.time) }));
+    const duplicateTimes = findDuplicateScheduleTimes(normalizedSchedule);
+    if (duplicateTimes.length > 0) {
+      toast.error(tf('scheduleDuplicateTimeError', { time: formatTime12h(duplicateTimes[0], language) }));
+      return;
+    }
+    const sortedSchedule = sortScheduleByTime(normalizedSchedule);
+    setSchedule(sortedSchedule);
     try {
       setSavingSettings(true);
       const formattedDate = formatDateLong(datePickerValue, language);
@@ -215,7 +225,7 @@ export const AdminSettingsTab: React.FC<AdminSettingsTabProps> = ({ language, t,
         registryUrl,
         rsvpDeadline,
         showScheduleTime,
-        schedule,
+        schedule: sortedSchedule,
         themeId: selectedThemeId,
         customTheme,
         contentOpenAt: contentOpenAt ? new Date(contentOpenAt).toISOString() : '',
@@ -416,7 +426,7 @@ export const AdminSettingsTab: React.FC<AdminSettingsTabProps> = ({ language, t,
               </SortableContext>
             </DndContext>
 
-            <button type="button" onClick={() => setSchedule([...schedule, { id: `sch-${Date.now()}`, time: '5:00 PM', titleEn: 'New Event Activity', titleFr: 'Nouvelle activité', descEn: 'Activity description details...', descFr: 'Détails de l\'activité...' }])}
+            <button type="button" onClick={() => setSchedule([...schedule, { id: `sch-${Date.now()}`, time: '17:00', titleEn: 'New Event Activity', titleFr: 'Nouvelle activité', descEn: 'Activity description details...', descFr: 'Détails de l\'activité...' }])}
               className="w-full py-2.5 rounded-2xl border-2 border-dashed border-[#CBAE94] text-xs font-bold text-[#8B735B] hover:bg-[#EFE6DC]/50 transition-colors flex items-center justify-center gap-1.5">
               <Plus className="w-4 h-4" /><span>{t.addScheduleItemBtn}</span>
             </button>

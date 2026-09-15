@@ -694,6 +694,7 @@ export interface Translations {
   scanAtEntrance: string;
   scanTableQr: string;
   scheduleDesc: string;
+  scheduleDuplicateTimeError: string;
   scheduleTimelineTitle: string;
   scheduleTitle: string;
   searchCateringPh: string;
@@ -1927,6 +1928,7 @@ export const translations: Record<Language, Translations> = {
     scanAtEntrance: "Scan at entrance",
     scanTableQr: "Scan Table QR",
     scheduleDesc: "Customize timeline items, times, titles, and descriptions shown on invitations.",
+    scheduleDuplicateTimeError: "Two schedule items start at {{time}}. Give each item a unique start time.",
     scheduleTimelineTitle: "Day Schedule Timeline",
     scheduleTitle: "Schedule of the Day",
     searchCateringPh: "Search guest or requirement...",
@@ -3150,6 +3152,7 @@ export const translations: Record<Language, Translations> = {
     scanAtEntrance: "À présenter à l'entrée",
     scanTableQr: "Scanner QR Table",
     scheduleDesc: "Personnalisez les moments, heures, titres et descriptions affichés sur les invitations.",
+    scheduleDuplicateTimeError: "Deux moments commencent à {{time}}. Donnez à chaque moment une heure de début différente.",
     scheduleTimelineTitle: "Programme de la journée",
     scheduleTitle: "Programme de la journée",
     searchCateringPh: "Rechercher un invité ou une exigence...",
