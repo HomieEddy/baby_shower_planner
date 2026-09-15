@@ -515,17 +515,20 @@ export const GuestFinderPage: React.FC = () => {
                 onClose={() => setVenueOpen(false)}
               />
 
-              {/* Venue — full-screen modal, auto-opens after checking in */}
-              <motion.button
-                initial={{ opacity: 0, y: 10 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: 0.15 }}
-                onClick={() => setVenueOpen(true)}
-                className="w-full py-3.5 rounded-2xl text-sm font-bold bg-[#8B735B] text-white hover:bg-[#4A3F35] transition-colors flex items-center justify-center gap-2 active:scale-[0.99] shadow-md"
-              >
-                <MapPin className="w-4 h-4" />
-                {t.venueBtn}
-              </motion.button>
+              {/* Venue — full-screen modal, auto-opens after checking in.
+                  The entry point only appears once someone has checked in. */}
+              {checkedCount > 0 && (
+                <motion.button
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: 0.15 }}
+                  onClick={() => setVenueOpen(true)}
+                  className="w-full py-3.5 rounded-2xl text-sm font-bold bg-[#8B735B] text-white hover:bg-[#4A3F35] transition-colors flex items-center justify-center gap-2 active:scale-[0.99] shadow-md"
+                >
+                  <MapPin className="w-4 h-4" />
+                  {t.venueBtn}
+                </motion.button>
+              )}
             </motion.div>
           )}
         </AnimatePresence>
