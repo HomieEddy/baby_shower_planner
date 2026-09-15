@@ -46,7 +46,6 @@ import {
   getGuestPartySize,
   getTableOccupiedSeats,
   getTableSeats,
-  getTableSeatedPersonNames,
   getTableStatus,
   getAvailableSeats,
   getUnseatedPartySize,
@@ -54,7 +53,7 @@ import {
   seatParty,
   getSeatingStats,
 } from '../../lib/tableAssignment';
-import { getSeatOccupantInfo } from './floorPlanHelpers';
+import { seatTooltipContent, tableTooltipContent } from './floorPlanHelpers';
 import { suggestSeating, unseatedParties } from '../../lib/seatingSuggestions';
 import type { SmartSuggestion } from '../../lib/seatingSuggestions';
 import { renderTableBody, renderLandmark, SeatRing, TableLabel, renderRoomBoundary } from './venueShapes';
@@ -340,86 +339,11 @@ export const FloorPlanPage = () => {
   } | null>(null);
 
   const handleTableHover = (table: TableElement, guestsList: Guest[], clientX: number, clientY: number) => {
-    const occupiedSeats = getTableOccupiedSeats(table, guestsList);
-    const seatedPersonNames = getTableSeatedPersonNames(table, guestsList);
-    const shapeLabel = table.shape === 'circle' ? t.roundTableBtn : t.rectTableBtn;
-    const names =
-      seatedPersonNames.length > 0 ? seatedPersonNames.join(', ') : t.fpTooltipNoGuests;
-
-    setHoverTooltip({
-      title: table.name,
-      subtitle: `${shapeLabel} • ${occupiedSeats}/${table.capacity} ${t.seatsLabel}`,
-      details: [
-        tf('fpTooltipSeated', { count: seatedPersonNames.length, names }),
-        tf('fpTooltipCapacity', {
-          capacity: table.capacity,
-          available: Math.max(0, table.capacity - occupiedSeats),
-        }),
-      ],
-      x: clientX,
-      y: clientY,
-    });
+    setHoverTooltip({ ...tableTooltipContent(table, guestsList, t, tf), x: clientX, y: clientY });
   };
 
   const handleSeatHover = (table: TableElement, seatIndex: number, guestsList: Guest[], clientX: number, clientY: number) => {
-    const info = getSeatOccupantInfo(table, seatIndex, guestsList);
-
-    if (info.isOccupied) {
-      const details: string[] = [
-        language === 'FR'
-          ? `Table & Siège : Siège n°${seatIndex + 1} (${table.name})`
-          : `Table & Seat: Seat #${seatIndex + 1} at ${table.name}`,
-      ];
-
-      if (info.mainGuestName && info.attendeeName !== info.mainGuestName) {
-        details.push(
-          language === 'FR'
-            ? `Hôte principal : ${info.mainGuestName}`
-            : `Primary Host: ${info.mainGuestName}`
-        );
-      }
-
-      if (info.guestCode) {
-        details.push(
-          language === 'FR'
-            ? `Code de réservation : ${info.guestCode}`
-            : `Reservation Code: ${info.guestCode}`
-        );
-      }
-
-      details.push(
-        language === 'FR'
-          ? `Taille du groupe : ${info.partySize} invité(s)`
-          : `Party Size: ${info.partySize} guest(s)`
-      );
-
-      setHoverTooltip({
-        title: info.attendeeName || (language === 'FR' ? 'Invité' : 'Assigned Guest'),
-        subtitle: language === 'FR'
-          ? `Groupe : ${info.partyName}`
-          : `Party: ${info.partyName}`,
-        details,
-        x: clientX,
-        y: clientY,
-      });
-    } else {
-      setHoverTooltip({
-        title: language === 'FR'
-          ? `Siège n°${seatIndex + 1} (${table.name})`
-          : `Seat #${seatIndex + 1} (${table.name})`,
-        subtitle: language === 'FR' ? 'Siège disponible' : 'Available Seat',
-        details: [
-          language === 'FR'
-            ? `Table : ${table.name} (${table.capacity} sièges au total)`
-            : `Table: ${table.name} (${table.capacity} Seats Total)`,
-          language === 'FR'
-            ? `Statut : Libre / Non assigné`
-            : `Status: Unassigned / Available Chair`,
-        ],
-        x: clientX,
-        y: clientY,
-      });
-    }
+    setHoverTooltip({ ...seatTooltipContent(table, seatIndex, guestsList, t, tf), x: clientX, y: clientY });
   };
 
   const handleLandmarkHover = (landmark: LandmarkElement, clientX: number, clientY: number) => {
@@ -1153,7 +1077,7 @@ export const FloorPlanPage = () => {
               rows={3}
               value={shareCustomMsg}
               onChange={(e) => setShareCustomMsg(e.target.value)}
-              placeholder={language === 'FR' ? "ex : Chers amis, le plan de salle est prêt ! Découvrez votre table..." : "e.g. Dear friends, our baby shower floor plan and table seating is ready! Check where you are seated..."}
+              placeholder={t.sharePlanMessagePh}
               className="w-full p-3 rounded-2xl border-2 border-[#CBAE94] text-xs font-bold text-[#5D5449] bg-white focus:outline-none focus:ring-2 focus:ring-[#8B735B]"
             />
           </div>
