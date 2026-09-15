@@ -1,4 +1,4 @@
-import { lazy, Suspense, useState, useMemo, type DragEvent, type MouseEvent } from 'react';
+﻿import { lazy, Suspense, useState, useMemo, type DragEvent, type MouseEvent } from 'react';
 import {
   Stage,
   Layer,
@@ -104,7 +104,6 @@ export const FloorPlanEditor = ({
     setDraftFloorMap,
     draftGuests,
     isDirty,
-    setIsDirty,
     selectedId,
     selectedType,
     setSelectedId,
@@ -303,8 +302,8 @@ export const FloorPlanEditor = ({
               </h3>
               <span className="text-xs font-mono font-bold text-[#4A3F35] bg-[#EFE6DC] px-2 py-0.5 rounded-lg border border-[#CBAE94]/60">
                 {(draftFloorMap.roomShape ?? 'rectangle') === 'circle'
-                  ? `Ø ${Math.min(draftFloorMap.canvasWidth, draftFloorMap.canvasHeight)} px`
-                  : `${draftFloorMap.canvasWidth} × ${draftFloorMap.canvasHeight} px`}
+                  ? `Ã˜ ${Math.min(draftFloorMap.canvasWidth, draftFloorMap.canvasHeight)} px`
+                  : `${draftFloorMap.canvasWidth} Ã— ${draftFloorMap.canvasHeight} px`}
               </span>
             </div>
 
@@ -353,16 +352,16 @@ export const FloorPlanEditor = ({
                 </label>
                 <div className="grid grid-cols-2 gap-1.5 text-xs font-bold">
                   <button type="button" onClick={() => handleUpdateDiameter(650)} className={`min-h-[44px] px-3 py-2 rounded-xl border transition-all text-left flex items-center gap-1 ${Math.min(draftFloorMap.canvasWidth, draftFloorMap.canvasHeight) === 650 ? 'bg-[#8B735B] text-white border-[#8B735B]' : 'bg-white text-[#5D5449] border-[#CBAE94]/60 hover:bg-[#EFE6DC]'}`}>
-                    <Home className="w-3 h-3" /> Small (Ø 650)
+                    <Home className="w-3 h-3" /> Small (Ã˜ 650)
                   </button>
                   <button type="button" onClick={() => handleUpdateDiameter(850)} className={`min-h-[44px] px-3 py-2 rounded-xl border transition-all text-left flex items-center gap-1 ${Math.min(draftFloorMap.canvasWidth, draftFloorMap.canvasHeight) === 850 ? 'bg-[#8B735B] text-white border-[#8B735B]' : 'bg-white text-[#5D5449] border-[#CBAE94]/60 hover:bg-[#EFE6DC]'}`}>
-                    <Landmark className="w-3 h-3" /> Standard (Ø 850)
+                    <Landmark className="w-3 h-3" /> Standard (Ã˜ 850)
                   </button>
                   <button type="button" onClick={() => handleUpdateDiameter(1100)} className={`min-h-[44px] px-3 py-2 rounded-xl border transition-all text-left flex items-center gap-1 ${Math.min(draftFloorMap.canvasWidth, draftFloorMap.canvasHeight) === 1100 ? 'bg-[#8B735B] text-white border-[#8B735B]' : 'bg-white text-[#5D5449] border-[#CBAE94]/60 hover:bg-[#EFE6DC]'}`}>
-                    <Castle className="w-3 h-3" /> Large (Ø 1100)
+                    <Castle className="w-3 h-3" /> Large (Ã˜ 1100)
                   </button>
                   <button type="button" onClick={() => handleUpdateDiameter(1400)} className={`min-h-[44px] px-3 py-2 rounded-xl border transition-all text-left flex items-center gap-1 ${Math.min(draftFloorMap.canvasWidth, draftFloorMap.canvasHeight) === 1400 ? 'bg-[#8B735B] text-white border-[#8B735B]' : 'bg-white text-[#5D5449] border-[#CBAE94]/60 hover:bg-[#EFE6DC]'}`}>
-                    <Tent className="w-3 h-3" /> Grand (Ø 1400)
+                    <Tent className="w-3 h-3" /> Grand (Ã˜ 1400)
                   </button>
                 </div>
               </div>
@@ -381,7 +380,7 @@ export const FloorPlanEditor = ({
                         : 'bg-white text-[#5D5449] border-[#CBAE94]/60 hover:bg-[#EFE6DC]'
                     }`}
                   >
-                    <Home className="w-3 h-3" /> Small (750×550)
+                    <Home className="w-3 h-3" /> Small (750Ã—550)
                   </button>
                   <button
                     type="button"
@@ -392,7 +391,7 @@ export const FloorPlanEditor = ({
                         : 'bg-white text-[#5D5449] border-[#CBAE94]/60 hover:bg-[#EFE6DC]'
                     }`}
                   >
-                    <Landmark className="w-3 h-3" /> Standard (900×650)
+                    <Landmark className="w-3 h-3" /> Standard (900Ã—650)
                   </button>
                   <button
                     type="button"
@@ -403,7 +402,7 @@ export const FloorPlanEditor = ({
                         : 'bg-white text-[#5D5449] border-[#CBAE94]/60 hover:bg-[#EFE6DC]'
                     }`}
                   >
-                    <Castle className="w-3 h-3" /> Large (1200×850)
+                    <Castle className="w-3 h-3" /> Large (1200Ã—850)
                   </button>
                   <button
                     type="button"
@@ -414,7 +413,7 @@ export const FloorPlanEditor = ({
                         : 'bg-white text-[#5D5449] border-[#CBAE94]/60 hover:bg-[#EFE6DC]'
                     }`}
                   >
-                    <Tent className="w-3 h-3" /> Grand (1500×1000)
+                    <Tent className="w-3 h-3" /> Grand (1500Ã—1000)
                   </button>
                 </div>
               </div>
@@ -650,7 +649,7 @@ export const FloorPlanEditor = ({
             <Suspense
               fallback={
                 <div className="flex-1 w-full flex items-center justify-center text-xs font-mono font-bold text-[#8B735B]">
-                  3D…
+                  3Dâ€¦
                 </div>
               }
             >
@@ -980,7 +979,6 @@ export const FloorPlanEditor = ({
                           l.id === draftSelectedLandmark.id ? { ...l, name: newName } : l
                         ),
                       });
-                      setIsDirty(true);
                     }}
                   />
                 </div>
@@ -998,7 +996,6 @@ export const FloorPlanEditor = ({
                           l.id === draftSelectedLandmark.id ? { ...l, type } : l
                         ),
                       });
-                      setIsDirty(true);
                     }}
                   >
                     <option value="entrance">{t.entranceBtn}</option>
@@ -1083,7 +1080,6 @@ export const FloorPlanEditor = ({
                             tbl.id === draftSelectedTable.id ? { ...tbl, name: newName } : tbl
                           );
                           setDraftFloorMap({ ...draftFloorMap, tables: updatedTables });
-                          setIsDirty(true);
                         }}
                       />
                     </div>
@@ -1103,7 +1099,6 @@ export const FloorPlanEditor = ({
                               tbl.id === draftSelectedTable.id ? { ...tbl, capacity: cap } : tbl
                             );
                             setDraftFloorMap({ ...draftFloorMap, tables: updatedTables });
-                            setIsDirty(true);
                           }}
                         />
                       </div>
@@ -1119,7 +1114,6 @@ export const FloorPlanEditor = ({
                               tbl.id === draftSelectedTable.id ? { ...tbl, shape } : tbl
                             );
                             setDraftFloorMap({ ...draftFloorMap, tables: updatedTables });
-                            setIsDirty(true);
                           }}
                         >
                           <option value="circle">{t.roundShape}</option>
@@ -1183,7 +1177,7 @@ export const FloorPlanEditor = ({
                               <div className="min-w-0">
                                 <p className="font-bold text-[#4A3F35] truncate">{name}</p>
                                 <span className="text-xs text-[#8B735B] font-medium">
-                                  {tf('seatedAtSeatLabel', { seat: String(idx + 1) })} · {guest.name}
+                                  {tf('seatedAtSeatLabel', { seat: String(idx + 1) })} Â· {guest.name}
                                 </span>
                               </div>
                               <button
@@ -1224,7 +1218,7 @@ export const FloorPlanEditor = ({
                           const remaining = pSize - getGuestSeatedCount(g.id, draftFloorMap, draftGuests);
                           return (
                             <option key={g.id} value={g.id}>
-                              {g.name} ({tf('partyOfLabel', { count: pSize })}) — {remaining > 0 ? tf('remainingToSeatLabel', { count: remaining }) : t.allAttendeesSeatedMsg}
+                              {g.name} ({tf('partyOfLabel', { count: pSize })}) â€” {remaining > 0 ? tf('remainingToSeatLabel', { count: remaining }) : t.allAttendeesSeatedMsg}
                             </option>
                           );
                         })}
@@ -1275,7 +1269,7 @@ export const FloorPlanEditor = ({
                 />
               </div>
 
-              {/* Attendee palette — drag a name onto a chair, or tap a name then a chair */}
+              {/* Attendee palette â€” drag a name onto a chair, or tap a name then a chair */}
               <div className="space-y-2 max-h-[22rem] overflow-y-auto pr-1">
                 <span className="text-xs font-mono font-bold uppercase text-[#8B735B] block mb-1">
                   {t.dragAttendeeHint}
@@ -1339,7 +1333,7 @@ export const FloorPlanEditor = ({
                                 }`}
                                 title={
                                   isSeated
-                                    ? `${item.tableName} · ${tf('seatedAtSeatLabel', { seat: String((item.seatIndex ?? 0) + 1) })}`
+                                    ? `${item.tableName} Â· ${tf('seatedAtSeatLabel', { seat: String((item.seatIndex ?? 0) + 1) })}`
                                     : t.dragAttendeeHint
                                 }
                               >
@@ -1393,13 +1387,13 @@ export const FloorPlanEditor = ({
                     <div className="flex flex-wrap gap-1">
                       {getPartyMembers(selectedGuestForSeating).map((name, nIdx) => (
                         <span key={nIdx} className="px-2 py-0.5 bg-white rounded-md border border-[#CBAE94]/60 text-xs font-medium text-[#4A3F35]">
-                          • {name}
+                          â€¢ {name}
                         </span>
                       ))}
                     </div>
                   </div>
 
-                  {/* Live Table Grid — auto-fill the party's remaining members */}
+                  {/* Live Table Grid â€” auto-fill the party's remaining members */}
                   <div className="space-y-2 pt-1">
                     <span className="text-xs font-mono font-bold uppercase text-[#8B735B] block">
                       {t.chooseVenueTableLabel}

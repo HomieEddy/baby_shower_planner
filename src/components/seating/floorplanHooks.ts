@@ -1,8 +1,9 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+﻿import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Guest, FloorMapData, LandmarkElement, TableElement } from '../../types';
 import { applyRoomClamp, clampToRoundRoom } from './floorPlanHelpers';
 import { getGuestPartySize, seatAttendee, seatParty, unseatAttendee, unassignParty } from '../../lib/tableAssignment';
 import { useTf } from '../shared/i18n';
+import { applySeatOutcome, createSeatingDraft, editMap, markSaved, type SeatingDraft } from './seatingDraft';
 
 export interface FloorPlanEditorDeps {
   floorMap: FloorMapData;
@@ -12,18 +13,28 @@ export interface FloorPlanEditorDeps {
   onCancel: () => void;
 }
 
-// Full-screen floor plan editor state: the draft map + all draft mutation
-// handlers. The editor is mounted fresh on every open (parent keys it), so
-// drafts initialize from the current floor map without effects.
+// Full-screen floor plan editor state: the draft (map + guests + dirty flag, one
+// value, see seatingDraft.ts) and all draft mutation handlers. The editor is
+// mounted fresh on every open (parent keys it), so drafts initialize from the
+// current floor map without effects.
 export function useFloorPlanEditor({ floorMap, guests, notify, onSave, onCancel }: FloorPlanEditorDeps) {
   const tf = useTf();
-  const [draftFloorMap, setDraftFloorMap] = useState<FloorMapData>(() =>
-    JSON.parse(JSON.stringify(floorMap))
+  const [draft, setDraft] = useState<SeatingDraft>(() => createSeatingDraft(floorMap, guests));
+  const draftFloorMap = draft.map;
+  const draftGuests = draft.guests;
+  const isDirty = draft.dirty;
+
+  // Every draft edit goes through one of these two: a map-only change, or a
+  // seat mutation that lands both halves at once.
+  const setDraftFloorMap = useCallback(
+    (map: FloorMapData) => setDraft((current) => editMap(current, map)),
+    []
   );
-  const [draftGuests, setDraftGuests] = useState<Guest[]>(() =>
-    JSON.parse(JSON.stringify(guests))
+  const applyOutcome = useCallback(
+    (outcome: { map: FloorMapData; guests: Guest[] }) =>
+      setDraft((current) => applySeatOutcome(current, outcome)),
+    []
   );
-  const [isDirty, setIsDirty] = useState(false);
 
   // Selection state (tables/landmarks on the draft canvas)
   const [selectedId, setSelectedId] = useState<string | null>(null);
@@ -86,7 +97,6 @@ export function useFloorPlanEditor({ floorMap, guests, notify, onSave, onCancel 
       canvasWidth: clampedW,
       canvasHeight: clampedH,
     });
-    setIsDirty(true);
   };
 
   const handleUpdateRoomShape = (shape: 'rectangle' | 'circle' | 'ellipse') => {
@@ -99,14 +109,12 @@ export function useFloorPlanEditor({ floorMap, guests, notify, onSave, onCancel 
     } else {
       setDraftFloorMap({ ...draftFloorMap, roomShape: 'rectangle' });
     }
-    setIsDirty(true);
   };
 
   const handleUpdateDiameter = (diameter: number) => {
     const d = Math.max(500, Math.min(3000, diameter));
     const next: FloorMapData = { ...draftFloorMap, roomShape: 'circle', canvasWidth: d, canvasHeight: d };
     setDraftFloorMap(applyRoomClamp(next));
-    setIsDirty(true);
   };
 
   const handleDraftAddTable = (shape: 'circle' | 'rectangle') => {
@@ -140,7 +148,6 @@ export function useFloorPlanEditor({ floorMap, guests, notify, onSave, onCancel 
     });
     setSelectedId(newTable.id);
     setSelectedType('table');
-    setIsDirty(true);
   };
 
   const handleDraftAddLandmark = (
@@ -165,7 +172,6 @@ export function useFloorPlanEditor({ floorMap, guests, notify, onSave, onCancel 
     });
     setSelectedId(newLandmark.id);
     setSelectedType('landmark');
-    setIsDirty(true);
   };
 
   const handleDraftTableDragEnd = (id: string, e: any) => {
@@ -181,7 +187,6 @@ export function useFloorPlanEditor({ floorMap, guests, notify, onSave, onCancel 
       tbl.id === id ? { ...tbl, x: Math.round(clamped.x), y: Math.round(clamped.y) } : tbl
     );
     setDraftFloorMap({ ...draftFloorMap, tables: updatedTables });
-    setIsDirty(true);
   };
 
   const handleDraftLandmarkDragEnd = (id: string, e: any) => {
@@ -197,7 +202,6 @@ export function useFloorPlanEditor({ floorMap, guests, notify, onSave, onCancel 
       lm.id === id ? { ...lm, x: Math.round(clamped.x), y: Math.round(clamped.y) } : lm
     );
     setDraftFloorMap({ ...draftFloorMap, landmarks: updatedLandmarks });
-    setIsDirty(true);
   };
 
   const handleDraftTransformEnd = () => {
@@ -236,7 +240,6 @@ export function useFloorPlanEditor({ floorMap, guests, notify, onSave, onCancel 
         return t;
       });
       setDraftFloorMap({ ...draftFloorMap, tables: updatedTables });
-      setIsDirty(true);
     } else if (selectedType === 'landmark') {
       const updatedLandmarks = draftFloorMap.landmarks.map((l) => {
         if (l.id === selectedId) {
@@ -261,7 +264,6 @@ export function useFloorPlanEditor({ floorMap, guests, notify, onSave, onCancel 
         return l;
       });
       setDraftFloorMap({ ...draftFloorMap, landmarks: updatedLandmarks });
-      setIsDirty(true);
     }
   };
 
@@ -270,11 +272,9 @@ export function useFloorPlanEditor({ floorMap, guests, notify, onSave, onCancel 
     if (selectedType === 'table') {
       const updatedTables = draftFloorMap.tables.filter((t) => t.id !== selectedId);
       setDraftFloorMap({ ...draftFloorMap, tables: updatedTables });
-      setIsDirty(true);
     } else if (selectedType === 'landmark') {
       const updatedLandmarks = draftFloorMap.landmarks.filter((l) => l.id !== selectedId);
       setDraftFloorMap({ ...draftFloorMap, landmarks: updatedLandmarks });
-      setIsDirty(true);
     }
     setSelectedId(null);
     setSelectedType(null);
@@ -312,53 +312,42 @@ export function useFloorPlanEditor({ floorMap, guests, notify, onSave, onCancel 
       return false;
     }
 
-    setDraftFloorMap(outcome.map);
-    setDraftGuests(outcome.guests);
-    setIsDirty(true);
+    applyOutcome(outcome);
     notify(tf('fpSeatedToast', { guest: guest.name, size: '1', table: targetTable.name }));
     return true;
   };
 
   const handleUnseatAttendee = (tableId: string, seatIndex: number): void => {
-    const outcome = unseatAttendee(draftFloorMap, draftGuests, tableId, seatIndex);
-    setDraftFloorMap(outcome.map);
-    setDraftGuests(outcome.guests);
-    setIsDirty(true);
+    applyOutcome(unseatAttendee(draftFloorMap, draftGuests, tableId, seatIndex));
   };
 
   // Fill a table's free chairs with the party's not-yet-seated members. Any
-  // member who doesn't fit stays unseated — the split.
+  // member who doesn't fit stays unseated â€” the split.
   const handleAutoSeatParty = (guestId: string, tableId: string): boolean => {
     const guest = draftGuests.find((g) => g.id === guestId);
     const target = draftFloorMap.tables.find((t) => t.id === tableId);
     if (!guest || !target) return false;
 
-    const outcome = seatParty(draftFloorMap, draftGuests, guestId, tableId);
-    setDraftFloorMap(outcome.map);
-    setDraftGuests(outcome.guests);
-    setIsDirty(true);
+    applyOutcome(seatParty(draftFloorMap, draftGuests, guestId, tableId));
     notify(tf('fpSeatedToast', { guest: guest.name, size: String(getGuestPartySize(guest)), table: target.name }));
     return true;
   };
 
   const handleUnassignParty = (guestId: string): void => {
     const guest = draftGuests.find((g) => g.id === guestId);
-    const outcome = unassignParty(draftFloorMap, draftGuests, guestId);
-    setDraftFloorMap(outcome.map);
-    setDraftGuests(outcome.guests);
-    setIsDirty(true);
+    applyOutcome(unassignParty(draftFloorMap, draftGuests, guestId));
     if (guest) notify(tf('fpUnseatedToast', { guest: guest.name }));
   };
 
   const handleSaveChanges = async () => {
-    // On success the parent closes the editor (draft unmounts). On a cancelled
-    // or failed save the draft must stay dirty so the discard guard still fires —
-    // never clear the flag here.
+    // On success the parent closes the editor (draft unmounts), so there is
+    // nothing to mark clean here. On a cancelled or failed save the draft must
+    // stay dirty so the discard guard still fires.
     await onSave(draftFloorMap, draftGuests);
   };
 
   const handleCancelEditor = () => {
-    setIsDirty(false);
+    setDraft(markSaved);
     onCancel();
   };
 
@@ -377,7 +366,6 @@ export function useFloorPlanEditor({ floorMap, guests, notify, onSave, onCancel 
     setDraftFloorMap,
     draftGuests,
     isDirty,
-    setIsDirty,
     selectedId,
     selectedType,
     setSelectedId,
