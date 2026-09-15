@@ -1112,7 +1112,6 @@ export const FloorPlanPage = () => {
           notify={setNotification}
           onSave={handleSaveEditorChanges}
           onCancel={handleCancelEditor}
-          hoverTooltip={hoverTooltip}
           setHoverTooltip={setHoverTooltip}
           handleTableHover={handleTableHover}
           handleSeatHover={handleSeatHover}

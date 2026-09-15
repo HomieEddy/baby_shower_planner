@@ -62,7 +62,6 @@ interface FloorPlanEditorProps {
   notify: (msg: string | null) => void;
   onSave: (map: FloorMapData, guests: Guest[]) => Promise<void>;
   onCancel: () => void;
-  hoverTooltip: HoverTooltip | null;
   setHoverTooltip: (t: HoverTooltip | null) => void;
   handleTableHover: (table: TableElement, guestsList: Guest[], clientX: number, clientY: number) => void;
   handleSeatHover: (table: TableElement, seatIndex: number, guestsList: Guest[], clientX: number, clientY: number) => void;
@@ -76,7 +75,6 @@ export const FloorPlanEditor = ({
   notify,
   onSave,
   onCancel,
-  hoverTooltip,
   setHoverTooltip,
   handleTableHover,
   handleSeatHover,
