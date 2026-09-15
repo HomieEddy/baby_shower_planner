@@ -48,11 +48,22 @@ export async function addGuestbookEntry(payload: AddGuestbookPayload): Promise<G
 
 export async function updateGuestbookEntry(
   id: string,
-  payload: { guest_name: string; message: string }
+  payload: { guest_name: string; message: string; photo_url?: string }
 ): Promise<GuestbookEntry> {
+  const previous = await pb.collection('guestbook').getOne(id);
+  const oldUrl = (previous.photo_url as string) || '';
+  const nextUrl = payload.photo_url ?? oldUrl;
   const r = await pb.collection('guestbook').update(id, {
-    guest_name: payload.guest_name, message: payload.message,
+    guest_name: payload.guest_name, message: payload.message, photo_url: nextUrl,
   });
+  // Replaced/removed photo no longer referenced — drop the file.
+  if (oldUrl && oldUrl !== nextUrl && oldUrl.startsWith('/uploads/')) {
+    try {
+      removeUploadFiles([oldUrl]);
+    } catch (err) {
+      console.error('Failed to remove replaced guestbook photo:', err);
+    }
+  }
   return fromRecord<GuestbookEntry>(r);
 }
 

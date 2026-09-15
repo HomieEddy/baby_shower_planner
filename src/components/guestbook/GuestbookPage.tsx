@@ -16,6 +16,7 @@ import {
   ShieldCheck,
   Check,
   X,
+  Camera,
 } from 'lucide-react';
 import { useToast } from '../shared/ToastContext';
 import { useActionConfirm, useConfirm } from '../shared/ConfirmDialog';
@@ -79,6 +80,11 @@ export const GuestbookPage = () => {
   const [editName, setEditName] = useState('');
   const [editMessage, setEditMessage] = useState('');
   const [savingEdit, setSavingEdit] = useState(false);
+  const [editExistingPhoto, setEditExistingPhoto] = useState('');
+  const [editFile, setEditFile] = useState<File | null>(null);
+  const [editPreviewUrl, setEditPreviewUrl] = useState<string | null>(null);
+  const [editRemovePhoto, setEditRemovePhoto] = useState(false);
+  const editFileInputRef = useRef<HTMLInputElement>(null);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
   const nameInputRef = useRef<HTMLInputElement>(null);
@@ -216,6 +222,29 @@ export const GuestbookPage = () => {
     setEditingId(entry.id);
     setEditName(entry.guest_name);
     setEditMessage(entry.message);
+    if (editPreviewUrl) URL.revokeObjectURL(editPreviewUrl);
+    setEditFile(null);
+    setEditPreviewUrl(null);
+    setEditExistingPhoto(entry.photo_url || '');
+    setEditRemovePhoto(false);
+  };
+
+  const handleEditFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files[0]) {
+      const file = e.target.files[0];
+      if (editPreviewUrl) URL.revokeObjectURL(editPreviewUrl);
+      setEditPreviewUrl(URL.createObjectURL(file));
+      setEditFile(file);
+      setEditRemovePhoto(false);
+    }
+  };
+
+  const handleRemoveEditPhoto = () => {
+    if (editPreviewUrl) URL.revokeObjectURL(editPreviewUrl);
+    setEditPreviewUrl(null);
+    setEditFile(null);
+    setEditRemovePhoto(true);
+    if (editFileInputRef.current) editFileInputRef.current.value = '';
   };
 
   const handleSaveEdit = async (id: string) => {
@@ -229,6 +258,22 @@ export const GuestbookPage = () => {
     }
     try {
       setSavingEdit(true);
+
+      // A new file replaces the photo; "remove" clears it; otherwise keep the
+      // existing one (server leaves it untouched when photo_url is omitted).
+      let photoUrl: string | undefined = undefined;
+      if (editFile) {
+        const compressed = await compressImage(editFile);
+        const url = await uploadPhotoBase64(compressed.file);
+        if (!url) {
+          toast.error(t.gbPostErrorToast);
+          return;
+        }
+        photoUrl = url;
+      } else if (editRemovePhoto) {
+        photoUrl = '';
+      }
+
       const res = await fetch(`/api/guestbook/mine/${id}`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
@@ -236,10 +281,14 @@ export const GuestbookPage = () => {
           reservation_code: code.trim(),
           guest_name: editName.trim(),
           message: editMessage.trim(),
+          ...(photoUrl !== undefined ? { photo_url: photoUrl } : {}),
         }),
       });
       if (res.ok) {
         toast.success(t.gbWishUpdatedToast);
+        if (editPreviewUrl) URL.revokeObjectURL(editPreviewUrl);
+        setEditPreviewUrl(null);
+        setEditFile(null);
         setEditingId(null);
         fetchEntries(code);
       } else {
@@ -462,6 +511,48 @@ export const GuestbookPage = () => {
                       placeholder={t.gbMessagePlaceholder}
                       className="w-full px-4 py-3 rounded-2xl border-2 border-[#CBAE94] text-sm font-medium bg-white text-[#5D5449] focus:outline-none focus:ring-2 focus:ring-[#8B735B]"
                     />
+
+                    {/* Attached photo — replace or remove */}
+                    <div className="space-y-2">
+                      <label className="label-mono block text-xs">{t.gbPhotoLabel}</label>
+                      {editPreviewUrl || (!editRemovePhoto && editExistingPhoto) ? (
+                        <div className="relative rounded-2xl overflow-hidden border-2 border-[#CBAE94] bg-white">
+                          <img
+                            src={editPreviewUrl || editExistingPhoto}
+                            alt={t.selectedUploadPreviewAlt}
+                            className="w-full h-40 object-cover"
+                          />
+                          <button
+                            type="button"
+                            onClick={handleRemoveEditPhoto}
+                            aria-label={t.removePhotoBtn}
+                            title={t.removePhotoBtn}
+                            className="absolute top-2 right-2 min-w-[44px] min-h-[44px] bg-[#8B735B] hover:bg-[#5D5449] text-white rounded-full flex items-center justify-center"
+                          >
+                            <X className="w-4 h-4" />
+                          </button>
+                        </div>
+                      ) : (
+                        <button
+                          type="button"
+                          onClick={() => editFileInputRef.current?.click()}
+                          className="w-full border-2 border-dashed border-[#CBAE94] hover:border-[#8B735B] bg-[#EFE6DC]/40 hover:bg-[#EFE6DC] rounded-2xl p-5 text-center cursor-pointer transition-colors space-y-1.5"
+                        >
+                          <div className="w-9 h-9 bg-white rounded-full flex items-center justify-center mx-auto border border-[#CBAE94]">
+                            <Camera className="w-4 h-4 text-[#8B735B]" />
+                          </div>
+                          <p className="text-xs font-bold text-[#5D5449]">{t.tapToChoosePhoto}</p>
+                        </button>
+                      )}
+                      <input
+                        ref={editFileInputRef}
+                        type="file"
+                        accept="image/*"
+                        onChange={handleEditFileChange}
+                        className="hidden"
+                      />
+                    </div>
+
                     <div className="flex items-center justify-end gap-2">
                       <button
                         type="button"

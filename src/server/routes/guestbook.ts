@@ -86,10 +86,18 @@ const ROUTES: Route[] = [
       const data = parseOrFail(GuestbookEntrySchema, {
         guest_name: body.guest_name,
         message: body.message,
-        photo_url: existing.photo_url,
+        // Omitted photo_url keeps the existing one; '' clears it.
+        photo_url: body.photo_url ?? existing.photo_url,
       }, res);
       if (!data) return true;
-      const entry = await updateGuestbookEntry(params[0], { guest_name: data.guest_name, message: data.message });
+      if (data.photo_url && !data.photo_url.startsWith('/uploads/')) {
+        return sendError(res, 'INVALID_PHOTO_URL');
+      }
+      const entry = await updateGuestbookEntry(params[0], {
+        guest_name: data.guest_name,
+        message: data.message,
+        photo_url: data.photo_url ?? '',
+      });
       return sendJson(res, 200, { success: true, entry });
     },
   },
