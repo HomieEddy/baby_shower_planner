@@ -7,8 +7,10 @@ import { MessageContent, renderEmailHtml } from './compose';
 
 let resend: Resend | null = null;
 
+const isConfigured = () => !!process.env.RESEND_API_KEY;
+
 function getClient(): Resend | null {
-  if (!process.env.RESEND_API_KEY) return null;
+  if (!isConfigured()) return null;
   if (!resend) resend = new Resend(process.env.RESEND_API_KEY);
   return resend;
 }
@@ -19,8 +21,8 @@ export async function sendEmail(to: string | undefined, content: MessageContent)
   if (!to) return false;
   const client = getClient();
   if (!client) {
-    console.log(`[MOCK EMAIL] To: ${to} | Subject: ${content.subject}`);
-    return true;
+    console.warn(`[EMAIL] RESEND_API_KEY not set — skipping send to ${to}`);
+    return false;
   }
   try {
     await client.emails.send({ from: FROM(), to, subject: content.subject, html: renderEmailHtml(content) });
