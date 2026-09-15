@@ -53,7 +53,6 @@ import { useFloorPlanEditor } from './floorplanHooks';
 import { ViewModeToggle, ViewMode } from '../shared/ViewModeToggle';
 import { useT, useTf } from '../shared/i18n';
 import { useConfirm } from '../shared/ConfirmDialog';
-import { Language } from '../../types';
 
 interface AttendeeKey {
   guestId: string;
@@ -72,7 +71,6 @@ const FloorPlan3D = lazy(() => import('./FloorPlan3D').then((m) => ({ default: m
 interface FloorPlanEditorProps {
   floorMap: FloorMapData;
   guests: Guest[];
-  language: Language;
   saving: boolean;
   notify: (msg: string | null) => void;
   onSave: (map: FloorMapData, guests: Guest[]) => Promise<void>;
@@ -87,7 +85,6 @@ interface FloorPlanEditorProps {
 export const FloorPlanEditor = ({
   floorMap,
   guests,
-  language,
   saving,
   notify,
   onSave,
@@ -560,49 +557,49 @@ export const FloorPlanEditor = ({
             <div className="grid grid-cols-2 gap-2 text-xs font-bold text-[#5D5449]">
               <button
                 type="button"
-                onClick={() => handleDraftAddLandmark('entrance', 'Main Entrance')}
+                onClick={() => handleDraftAddLandmark('entrance', t.entranceBtn)}
                 className="p-2 rounded-xl border border-[#CBAE94]/60 bg-white hover:bg-[#EFE6DC] text-left transition-colors flex items-center gap-1.5"
               >
                 <MapPin className="w-3.5 h-3.5 text-[#8B735B]" /> {t.entranceBtn}
               </button>
               <button
                 type="button"
-                onClick={() => handleDraftAddLandmark('stage', 'Main Stage')}
+                onClick={() => handleDraftAddLandmark('stage', t.mainStageBtn)}
                 className="p-2 rounded-xl border border-[#CBAE94]/60 bg-white hover:bg-[#EFE6DC] text-left transition-colors flex items-center gap-1.5"
               >
                 <Award className="w-3.5 h-3.5 text-[#8B735B]" /> {t.mainStageBtn}
               </button>
               <button
                 type="button"
-                onClick={() => handleDraftAddLandmark('gifts', 'Gift & Baby Table')}
+                onClick={() => handleDraftAddLandmark('gifts', t.giftTableBtn)}
                 className="p-2 rounded-xl border border-[#CBAE94]/60 bg-white hover:bg-[#EFE6DC] text-left transition-colors flex items-center gap-1.5"
               >
                 <Gift className="w-3.5 h-3.5 text-[#8B735B]" /> {t.giftTableBtn}
               </button>
               <button
                 type="button"
-                onClick={() => handleDraftAddLandmark('restroom', 'Bathroom')}
+                onClick={() => handleDraftAddLandmark('restroom', t.bathroomBtn)}
                 className="p-2 rounded-xl border border-[#CBAE94]/60 bg-white hover:bg-[#EFE6DC] text-left transition-colors flex items-center gap-1.5"
               >
                 <Bath className="w-3.5 h-3.5 text-[#8B735B]" /> {t.bathroomBtn}
               </button>
               <button
                 type="button"
-                onClick={() => handleDraftAddLandmark('dessert', 'Dessert & Cake Bar')}
+                onClick={() => handleDraftAddLandmark('dessert', t.cakeStationBtn)}
                 className="p-2 rounded-xl border border-[#CBAE94]/60 bg-white hover:bg-[#EFE6DC] text-left transition-colors flex items-center gap-1.5"
               >
                 <Utensils className="w-3.5 h-3.5 text-[#8B735B]" /> {t.cakeStationBtn}
               </button>
               <button
                 type="button"
-                onClick={() => handleDraftAddLandmark('bar', 'Mocktail & Drinks Bar')}
+                onClick={() => handleDraftAddLandmark('bar', t.drinksBarBtn)}
                 className="p-2 rounded-xl border border-[#CBAE94]/60 bg-white hover:bg-[#EFE6DC] text-left transition-colors flex items-center gap-1.5"
               >
                 <Utensils className="w-3.5 h-3.5 text-[#8B735B]" /> {t.drinksBarBtn}
               </button>
               <button
                 type="button"
-                onClick={() => handleDraftAddLandmark('food', 'Food Station')}
+                onClick={() => handleDraftAddLandmark('food', t.foodStationBtn)}
                 className="p-2 rounded-xl border border-[#CBAE94]/60 bg-white hover:bg-[#EFE6DC] text-left transition-colors flex items-center gap-1.5"
               >
                 <UtensilsCrossed className="w-3.5 h-3.5 text-[#8B735B]" /> {t.foodStationBtn}
@@ -911,9 +908,9 @@ export const FloorPlanEditor = ({
                         text={
                           selectedGuestForSeating
                             ? canFitGuest
-                              ? `Fits (${Math.min(freeSeatsForGuest, unseatedForGuest)} Seats)`
-                              : `Need ${unseatedForGuest} Seats`
-                            : `${occupiedCount}/${table.capacity} Seats`
+                              ? tf('fpFitsSeats', { count: Math.min(freeSeatsForGuest, unseatedForGuest) })
+                              : tf('fpNeedSeats', { count: unseatedForGuest })
+                            : `${occupiedCount}/${table.capacity} ${t.seatsLabel}`
                         }
                         y={table.height / 2 - 4}
                         width={table.width}
@@ -1140,7 +1137,7 @@ export const FloorPlanEditor = ({
                       <div className="p-2.5 rounded-2xl bg-[#EFE6DC]/50 border border-[#CBAE94]/40 space-y-1 text-xs">
                         <div className="flex justify-between font-bold text-[#4A3F35]">
                           <span>{t.capacityUsageLabel}</span>
-                          <span>{occ} / {draftSelectedTable.capacity} Seats ({free} Free)</span>
+                          <span>{tf('fpCapacityUsage', { occupied: occ, capacity: draftSelectedTable.capacity, free })}</span>
                         </div>
                         <div className="w-full bg-white h-2 rounded-full overflow-hidden border border-[#CBAE94]/40">
                           <div
@@ -1425,7 +1422,7 @@ export const FloorPlanEditor = ({
                                 {table.name}
                               </span>
                               <span className="text-xs font-mono text-[#5D5449]">
-                                {occCount} / {table.capacity} Seats ({free} Free)
+                                {tf('fpCapacityUsage', { occupied: occCount, capacity: table.capacity, free })}
                               </span>
                             </div>
 
@@ -1435,7 +1432,7 @@ export const FloorPlanEditor = ({
                                 onClick={() => handleAutoSeatParty(selectedGuestForSeating.id, table.id)}
                                 className="w-full py-1.5 px-2 rounded-lg bg-[#10B981] hover:bg-[#059669] text-white text-xs font-bold shadow-md transition-all flex items-center justify-center gap-1"
                               >
-                                <Check className="w-3.5 h-3.5" /> {t.seatPartyHere} ({Math.min(remaining, free)} {language === 'FR' ? 'siège(s)' : 'seats'})
+                                <Check className="w-3.5 h-3.5" /> {t.seatPartyHere} ({Math.min(remaining, free)} {t.seatsLabel})
                               </button>
                             ) : (
                               <div className="py-1 px-2 rounded-lg bg-red-100 text-red-700 text-xs font-bold text-center">

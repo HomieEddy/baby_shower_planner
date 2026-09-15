@@ -295,7 +295,7 @@ export const VenueModal = ({ open, selected, floorMap, roster, onClose }: VenueM
                                   {renderTableBody({ table: tbl, isSelected: false })}
 
                                   {/* Table title + capacity */}
-                                  <TableLabel table={tbl} occupied={occupied} />
+                                  <TableLabel table={tbl} occupied={occupied} seatsLabel={t.seatsLabel} />
                                 </Group>
                               );
                             })}

@@ -16,6 +16,7 @@ import { Segmented } from '../shared/Segmented';
 import { motion, AnimatePresence } from 'motion/react';
 import { Modal } from '../shared/Modal';
 import { useActionConfirm } from '../shared/ConfirmDialog';
+import { useToast } from '../shared/ToastContext';
 import { useSettings } from '../../lib/settingsQuery';
 import {
   Stage,
@@ -69,6 +70,7 @@ export const FloorPlanPage = () => {
   const t = useT();
   const tf = useTf();
   const confirmAction = useActionConfirm();
+  const { toast } = useToast();
   const { data: caps } = useCapabilities();
   const sendsBlocked = noProviders(caps);
 
@@ -109,19 +111,20 @@ export const FloorPlanPage = () => {
 
   // Save Floor Map to Backend
   const saveFloorMap = async (newMapData: FloorMapData) => {
+    setSaving(true);
     try {
-      setSaving(true);
       const res = await adminFetch('/api/floorplan', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(newMapData),
       });
-      const data = await res.json();
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        throw new Error(data.message || data.error || `Save failed (${res.status})`);
+      }
       if (data.floorMap) {
         setFloorMap(data.floorMap);
       }
-    } catch (err) {
-      console.error('Error saving floor map:', err);
     } finally {
       setSaving(false);
     }
@@ -339,13 +342,19 @@ export const FloorPlanPage = () => {
   const handleTableHover = (table: TableElement, guestsList: Guest[], clientX: number, clientY: number) => {
     const occupiedSeats = getTableOccupiedSeats(table, guestsList);
     const seatedPersonNames = getTableSeatedPersonNames(table, guestsList);
+    const shapeLabel = table.shape === 'circle' ? t.roundTableBtn : t.rectTableBtn;
+    const names =
+      seatedPersonNames.length > 0 ? seatedPersonNames.join(', ') : t.fpTooltipNoGuests;
 
     setHoverTooltip({
       title: table.name,
-      subtitle: `${table.shape === 'circle' ? 'Round Table' : 'Rectangle Table'} • ${occupiedSeats}/${table.capacity} Seats`,
+      subtitle: `${shapeLabel} • ${occupiedSeats}/${table.capacity} ${t.seatsLabel}`,
       details: [
-        `Seated (${seatedPersonNames.length}): ${seatedPersonNames.length > 0 ? seatedPersonNames.join(', ') : 'No guests assigned yet'}`,
-        `Capacity: ${table.capacity} seats (${Math.max(0, table.capacity - occupiedSeats)} available)`,
+        tf('fpTooltipSeated', { count: seatedPersonNames.length, names }),
+        tf('fpTooltipCapacity', {
+          capacity: table.capacity,
+          available: Math.max(0, table.capacity - occupiedSeats),
+        }),
       ],
       x: clientX,
       y: clientY,
@@ -416,10 +425,10 @@ export const FloorPlanPage = () => {
   const handleLandmarkHover = (landmark: LandmarkElement, clientX: number, clientY: number) => {
     setHoverTooltip({
       title: landmark.name,
-      subtitle: `Venue Feature / Landmark`,
+      subtitle: t.fpTooltipVenueFeature,
       details: [
-        `Type: ${landmark.type.toUpperCase()}`,
-        `Dimensions: ${landmark.width} × ${landmark.height} px`,
+        tf('fpTooltipType', { type: landmark.type.toUpperCase() }),
+        tf('fpTooltipDimensions', { width: landmark.width, height: landmark.height }),
       ],
       x: clientX,
       y: clientY,
@@ -495,7 +504,16 @@ export const FloorPlanPage = () => {
   // Save Full Screen Editor Draft Changes
   const handleSaveEditorChanges = async (map: FloorMapData, editedGuests: Guest[]) => {
     if (!(await confirmAction(t.btnSaveChanges))) return;
-    await saveFloorMap(map);
+    try {
+      await saveFloorMap(map);
+    } catch (err) {
+      // Keep the editor + draft open: a failed save must not look successful.
+      // The in-page notification sits under the full-screen editor, so use the
+      // global toast (z-[9999]) that stays visible above it.
+      console.error('Error saving floor map:', err);
+      toast.error(t.fpSaveFailedToast);
+      return;
+    }
     setGuests(editedGuests);
     setIsEditorModalOpen(false);
     setNotification(t.fpSavedToast);
@@ -1135,7 +1153,7 @@ export const FloorPlanPage = () => {
                             {renderTableBody({ table, isSelected: false })}
 
                             {/* Table Title + Capacity */}
-                            <TableLabel table={table} occupied={occupiedSeats} />
+                            <TableLabel table={table} occupied={occupiedSeats} seatsLabel={t.seatsLabel} />
                           </Group>
                         );
                       })}
@@ -1213,7 +1231,6 @@ export const FloorPlanPage = () => {
           key={`editor-${isEditorModalOpen}`}
           floorMap={floorMap}
           guests={guests}
-          language={language}
           saving={saving}
           notify={setNotification}
           onSave={handleSaveEditorChanges}

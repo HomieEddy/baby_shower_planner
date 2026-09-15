@@ -381,11 +381,27 @@ export interface Translations {
   fpRedidToast: string;
   fpRoomSizeToast: string;
   fpSavedToast: string;
+  fpSaveFailedToast: string;
   fpSeatedToast: string;
   fpSelectSuggestionToast: string;
   fpTableAddedToast: string;
   fpUndidToast: string;
   fpUnseatedToast: string;
+  fpCapacityUsage: string;
+  fpFitsSeats: string;
+  fpNeedSeats: string;
+  fpSuggestReasonExact: string;
+  fpSuggestReasonOptimal: string;
+  fpSuggestReasonGrouping: string;
+  fpTooltipCapacity: string;
+  fpTooltipDimensions: string;
+  fpTooltipNoGuests: string;
+  fpTooltipSeated: string;
+  fpTooltipType: string;
+  fpTooltipVenueFeature: string;
+  matchExactFit: string;
+  matchOptimalCapacity: string;
+  matchPartyGrouping: string;
   fullNamePlaceholder: string;
   fullVenueAddressLabel: string;
   galleryClearFiltersBtn: string;
@@ -1621,11 +1637,27 @@ export const translations: Record<Language, Translations> = {
     fpRedidToast: "↪ Redid seating change",
     fpRoomSizeToast: "Room dimensions set to {{width}} × {{height}} px",
     fpSavedToast: "Floor plan changes saved successfully!",
+    fpSaveFailedToast: "Could not save the floor plan. Your changes are still here — please try again.",
     fpSeatedToast: "Seated {{guest}} (Party of {{size}}) at {{table}}",
     fpSelectSuggestionToast: "Please select at least one suggestion to apply",
     fpTableAddedToast: "Added {{name}}",
     fpUndidToast: "↩ Undid seating change",
     fpUnseatedToast: "Unseated {{guest}}",
+    fpCapacityUsage: "{{occupied}} / {{capacity}} Seats ({{free}} Free)",
+    fpFitsSeats: "Fits ({{count}} Seats)",
+    fpNeedSeats: "Need {{count}} Seats",
+    fpSuggestReasonExact: "Perfect match! Fills all {{count}} open seats with zero wasted space",
+    fpSuggestReasonOptimal: "Great fit for party of {{count}} leaving only {{free}} free seat(s)",
+    fpSuggestReasonGrouping: "Keeps entire party of {{count}} together comfortably",
+    fpTooltipCapacity: "Capacity: {{capacity}} seats ({{available}} available)",
+    fpTooltipDimensions: "Dimensions: {{width}} × {{height}} px",
+    fpTooltipNoGuests: "No guests assigned yet",
+    fpTooltipSeated: "Seated ({{count}}): {{names}}",
+    fpTooltipType: "Type: {{type}}",
+    fpTooltipVenueFeature: "Venue Feature / Landmark",
+    matchExactFit: "Exact Fit",
+    matchOptimalCapacity: "Optimal Capacity",
+    matchPartyGrouping: "Party Grouping",
     fullNamePlaceholder: "Full Name",
     fullVenueAddressLabel: "Full Venue Address (Google Maps compatible)",
     galleryClearFiltersBtn: "Clear Search & Filters",
@@ -2857,11 +2889,27 @@ export const translations: Record<Language, Translations> = {
     fpRedidToast: "↪ Changement de placement rétabli",
     fpRoomSizeToast: "Dimensions de la salle : {{width}} × {{height}} px",
     fpSavedToast: "Modifications du plan enregistrées !",
+    fpSaveFailedToast: "Impossible d'enregistrer le plan. Vos modifications sont conservées — veuillez réessayer.",
     fpSeatedToast: "{{guest}} (groupe de {{size}}) placé(e) à {{table}}",
     fpSelectSuggestionToast: "Veuillez sélectionner au moins une suggestion",
     fpTableAddedToast: "{{name}} ajoutée",
     fpUndidToast: "↩ Changement de placement annulé",
     fpUnseatedToast: "{{guest}} retiré(e) de la table",
+    fpCapacityUsage: "{{occupied}} / {{capacity}} places ({{free}} libres)",
+    fpFitsSeats: "Compatible ({{count}} places)",
+    fpNeedSeats: "Besoin de {{count}} places",
+    fpSuggestReasonExact: "Correspondance parfaite ! Remplit les {{count}} places libres sans gaspillage",
+    fpSuggestReasonOptimal: "Excellent ajustement pour un groupe de {{count}}, ne laissant que {{free}} place(s) libre(s)",
+    fpSuggestReasonGrouping: "Garde tout le groupe de {{count}} confortablement réuni",
+    fpTooltipCapacity: "Capacité : {{capacity}} places ({{available}} libres)",
+    fpTooltipDimensions: "Dimensions : {{width}} × {{height}} px",
+    fpTooltipNoGuests: "Aucun invité assigné pour l'instant",
+    fpTooltipSeated: "Placés ({{count}}) : {{names}}",
+    fpTooltipType: "Type : {{type}}",
+    fpTooltipVenueFeature: "Élément du lieu / Repère",
+    matchExactFit: "Ajustement parfait",
+    matchOptimalCapacity: "Capacité optimale",
+    matchPartyGrouping: "Groupe réuni",
     fullNamePlaceholder: "Nom complet",
     fullVenueAddressLabel: "Adresse du lieu (Google Maps)",
     galleryClearFiltersBtn: "Effacer la recherche et les filtres",

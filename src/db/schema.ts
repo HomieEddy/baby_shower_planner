@@ -61,31 +61,48 @@ async function ensureCollections() {
 async function ensureCollectionFields(colName: string) {
   try {
     const col = await pb.collections.getOne(colName);
-    const names = new Set(col.fields.map((f: { name: string }) => f.name));
     const defFields = toFields(COLLECTION_DEFS.find(d => d.name === colName)!.schema);
-    const missing = defFields
-      .map(f => String(f.name))
-      .filter(n => !names.has(n));
-    const fields = [...(col.fields as unknown as Array<Record<string, unknown>>)];
-    for (const f of fields) {
-      const def = defFields.find(d => String(d.name) === String(f.name));
-      if (def && def.type === 'select' && f.type === 'select') {
-        const defVals = (def.values || []) as string[];
-        const fVals = (f.values || []) as string[];
-        const merged = Array.from(new Set([...defVals, ...fVals]));
-        if (merged.length !== fVals.length) {
-          f.values = merged;
-        }
-      }
-    }
-    if (missing.length > 0) {
-      fields.push(...defFields.filter(f => missing.includes(String(f.name))));
-    }
-    if (missing.length === 0 && fields.every((f, i) => JSON.stringify(f) === JSON.stringify(col.fields[i]))) return;
+    const { fields, changed } = reconcileCollectionFields(
+      col.fields as unknown as Array<Record<string, unknown>>,
+      defFields
+    );
+    if (!changed) return;
     await pb.collections.update(col.id, { fields });
   } catch (err) {
     console.warn(`Could not migrate ${colName} collection fields:`, err);
   }
+}
+
+// Add fields added after a collection already exists and merge new select option
+// values into existing ones (PB rejects a value that isn't in the list, e.g.
+// floor_maps.roomShape gained 'ellipse'). Returns a fresh field list plus whether
+// anything actually changed, so the caller only writes when needed. Pure so the
+// migration can't silently no-op: comparing the input to itself never detects a
+// select merge, hence the explicit `changed` flag and the per-field copy.
+export function reconcileCollectionFields(
+  colFields: Array<Record<string, unknown>>,
+  defFields: Array<Record<string, unknown>>
+): { fields: Array<Record<string, unknown>>; changed: boolean } {
+  const names = new Set(colFields.map(f => f.name));
+  const missing = defFields.map(f => String(f.name)).filter(n => !names.has(n));
+  const fields = colFields.map(f => ({ ...f }));
+  let changed = missing.length > 0;
+  for (const f of fields) {
+    const def = defFields.find(d => String(d.name) === String(f.name));
+    if (def && def.type === 'select' && f.type === 'select') {
+      const defVals = (def.values || []) as string[];
+      const fVals = (f.values || []) as string[];
+      const merged = Array.from(new Set([...defVals, ...fVals]));
+      if (merged.length !== fVals.length) {
+        f.values = merged;
+        changed = true;
+      }
+    }
+  }
+  if (missing.length > 0) {
+    fields.push(...defFields.filter(f => missing.includes(String(f.name))));
+  }
+  return { fields, changed };
 }
 
 // ─── Wipe ─────────────────────────────────────────────────────────
