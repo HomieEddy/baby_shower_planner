@@ -2,7 +2,7 @@ import http from 'node:http';
 import path from 'node:path';
 import fs from 'node:fs';
 import { createServer as createViteServer } from 'vite';
-import { getGuestContentLock, handleAlertRoutes, handleGiftRoutes, handleGuestbookRoutes, handlePhotoRoutes, initPocketBase, runAgendaReminderSweep } from './src/db/service';
+import { getGuestContentLock, initPocketBase, runAgendaReminderSweep } from './src/db/service';
 import {
   applySecurityHeaders,
   BLOCK_BOTS,
@@ -28,6 +28,10 @@ import { handleGuestRoutes } from './src/server/routes/guests';
 import { handleRegisterRoutes } from './src/server/routes/register';
 import { handleRsvpRoutes } from './src/server/routes/rsvp';
 import { handleSettingsRoutes } from './src/server/routes/settings';
+import { handleGuestbookRoutes } from './src/server/routes/guestbook';
+import { handlePhotoRoutes } from './src/server/routes/photos';
+import { handleAlertRoutes } from './src/server/routes/alerts';
+import { handleGiftRoutes } from './src/server/routes/gifts';
 import { handleFloorPlanRoutes } from './src/server/routes/floorplan';
 import { handleAgendaRoutes } from './src/server/routes/agenda';
 import { handleCheckInRoutes } from './src/server/routes/checkin';
