@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { z } from 'zod';
@@ -8,10 +9,16 @@ import {
   Heart,
   BookOpen,
   Printer,
+  Pencil,
+  Trash2,
+  KeyRound,
+  Building2,
+  ShieldCheck,
+  Check,
+  X,
 } from 'lucide-react';
 import { useToast } from '../shared/ToastContext';
-import { useActionConfirm } from '../shared/ConfirmDialog';
-import { useVirtualizer } from '@tanstack/react-virtual';
+import { useActionConfirm, useConfirm } from '../shared/ConfirmDialog';
 import { EmptyState } from '../shared/EmptyState';
 import { BackButton } from '../shared/BackButton';
 import { LockedNotice } from '../shared/LockedNotice';
@@ -19,21 +26,33 @@ import { readGuestLock } from '../../lib/guestLock';
 import { uploadPhotoBase64 } from '../../lib/fileUtils';
 import { compressImage } from '../../lib/imageCompressor';
 import { GuestbookEntrySchema } from '../../lib/validation';
+import { isValidCode } from '../../lib/validation';
 import { useAppStore } from '../../stores/appStore';
-import { useT, useTf } from '../shared/i18n';
-import { usePrint } from '../shared/hooks';
+import { useT } from '../shared/i18n';
+import { usePrint, useFloorMapTables } from '../shared/hooks';
+import { decodeApiError } from '../../lib/errors';
 import { GuestbookForm, GuestbookSuccess } from './GuestbookForm';
 import { GuestbookEntryCard } from './GuestbookEntryCard';
 
 export const GuestbookPage = () => {
   const language = useAppStore((s) => s.language);
   const t = useT();
-  const tf = useTf();
   const { toast } = useToast();
   const confirmAction = useActionConfirm();
+  const confirm = useConfirm();
+  const [searchParams] = useSearchParams();
+
+  const initialCode = searchParams.get('code') || '';
+  const initialTableId = searchParams.get('table') || '';
+  const lockedIdentity = initialCode.length > 0;
 
   const [locked, setLocked] = useState(false);
   const [lockInfo, setLockInfo] = useState<{ opensAt?: string; closesAt?: string } | null>(null);
+
+  const [code, setCode] = useState(initialCode);
+  const [tableId, setTableId] = useState(initialTableId);
+  const { data: tables = [] } = useFloorMapTables();
+  const tableName = tables.find((tbl) => tbl.id === tableId)?.name || '';
 
   const {
     register,
@@ -53,28 +72,27 @@ export const GuestbookPage = () => {
 
   const [entries, setEntries] = useState<GuestbookEntry[]>([]);
   const [loadingEntries, setLoadingEntries] = useState(true);
-  // While printing, render every entry (the virtualizer only mounts visible rows,
-  // which made the "memory book" print just the visible slice).
   const [printing, setPrinting] = useState(false);
 
-  const fileInputRef = useRef<HTMLInputElement>(null);
-  const feedScrollRef = useRef<HTMLDivElement>(null);
-  const nameInputRef = useRef<HTMLInputElement>(null);
+  // Inline edit of one of the guest's own wishes.
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [editName, setEditName] = useState('');
+  const [editMessage, setEditMessage] = useState('');
+  const [savingEdit, setSavingEdit] = useState(false);
 
-  const rowVirtualizer = useVirtualizer({
-    count: entries.length,
-    getScrollElement: () => feedScrollRef.current,
-    estimateSize: () => 120,
-    overscan: 5,
-  });
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const nameInputRef = useRef<HTMLInputElement>(null);
 
   const printKeepsake = usePrint();
 
-  // Fetch guestbook entries
-  const fetchEntries = async () => {
+  // Fetch the guest's own wishes; without a valid code there is nothing to show.
+  const fetchEntries = async (rawCode: string) => {
     try {
-      setLoadingEntries(true);
-      const res = await fetch('/api/guestbook');
+      const trimmed = rawCode.trim();
+      const url = isValidCode(trimmed)
+        ? `/api/guestbook?code=${encodeURIComponent(trimmed)}`
+        : '/api/guestbook';
+      const res = await fetch(url);
       const lock = await readGuestLock(res);
       if (lock) {
         setLocked(true);
@@ -93,8 +111,17 @@ export const GuestbookPage = () => {
   };
 
   useEffect(() => {
-    fetchEntries();
+    (async () => { await fetchEntries(initialCode); })();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
+
+  // Refetch once a typed-in code becomes valid.
+  useEffect(() => {
+    if (!lockedIdentity && isValidCode(code.trim())) {
+      (async () => { await fetchEntries(code); })();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [code]);
 
   useEffect(() => {
     const after = () => setPrinting(false);
@@ -102,7 +129,6 @@ export const GuestbookPage = () => {
     return () => window.removeEventListener('afterprint', after);
   }, []);
 
-  // File selection handler
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
       const file = e.target.files[0];
@@ -113,26 +139,24 @@ export const GuestbookPage = () => {
     }
   };
 
-  // Remove photo handler
   const handleRemovePhoto = () => {
     setSelectedFile(null);
     if (previewUrl) URL.revokeObjectURL(previewUrl);
     setPreviewUrl(null);
-    if (fileInputRef.current) {
-      fileInputRef.current.value = '';
-    }
+    if (fileInputRef.current) fileInputRef.current.value = '';
     toast.info(t.gbPhotoRemovedToast);
   };
 
-  // Form Submit
   const onValid = async (values: z.infer<typeof GuestbookEntrySchema>) => {
+    if (!isValidCode(code.trim())) {
+      toast.error(t.uploadCodeRequiredToast);
+      return;
+    }
     if (!(await confirmAction(t.gbSubmitBtn))) return;
     try {
       setSubmitting(true);
 
       let uploadedPhotoUrl = '';
-
-      // Upload photo if present (compressed to keep entries light)
       if (selectedFile) {
         const compressed = await compressImage(selectedFile);
         uploadedPhotoUrl = await uploadPhotoBase64(compressed.file);
@@ -142,7 +166,6 @@ export const GuestbookPage = () => {
         }
       }
 
-      // Submit guestbook entry
       const res = await fetch('/api/guestbook', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -150,12 +173,14 @@ export const GuestbookPage = () => {
           guest_name: values.guest_name.trim(),
           message: values.message.trim(),
           photo_url: uploadedPhotoUrl,
+          reservation_code: code.trim(),
+          table_name: tableName,
+          table_id: tableId,
         }),
       });
 
       const lock = await readGuestLock(res);
       if (lock) {
-        // The window closed while this page was open.
         setLocked(true);
         setLockInfo(lock);
         return;
@@ -164,10 +189,12 @@ export const GuestbookPage = () => {
       if (res.ok) {
         setSubmitted(true);
         toast.love(t.gbPostedToast);
-        fetchEntries();
+        fetchEntries(code);
         reset({ guest_name: '', message: '' });
       } else {
-        toast.error(t.gbPostFailedToast);
+        const payload = await res.json().catch(() => ({}));
+        const { code: errCode } = decodeApiError(payload, res.status);
+        toast.error(errCode === 'GUESTBOOK_TABLE_FULL' ? t.gbTableFullMsg : t.gbPostFailedToast);
       }
     } catch (err) {
       console.error('Guestbook submit error:', err);
@@ -177,7 +204,6 @@ export const GuestbookPage = () => {
     }
   };
 
-  // Reset form for "Leave another message"
   const handleResetForm = () => {
     reset({ guest_name: '', message: '' });
     setSelectedFile(null);
@@ -186,7 +212,72 @@ export const GuestbookPage = () => {
     setSubmitted(false);
   };
 
-  // Locked state: guestbook only opens during the event window
+  const startEdit = (entry: GuestbookEntry) => {
+    setEditingId(entry.id);
+    setEditName(entry.guest_name);
+    setEditMessage(entry.message);
+  };
+
+  const handleSaveEdit = async (id: string) => {
+    if (!isValidCode(code.trim())) {
+      toast.error(t.uploadCodeRequiredToast);
+      return;
+    }
+    if (!editName.trim() || !editMessage.trim()) {
+      toast.error(t.gbEditValidationMsg);
+      return;
+    }
+    try {
+      setSavingEdit(true);
+      const res = await fetch(`/api/guestbook/mine/${id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          reservation_code: code.trim(),
+          guest_name: editName.trim(),
+          message: editMessage.trim(),
+        }),
+      });
+      if (res.ok) {
+        toast.success(t.gbWishUpdatedToast);
+        setEditingId(null);
+        fetchEntries(code);
+      } else {
+        toast.error(t.gbPostFailedToast);
+      }
+    } catch (err) {
+      console.error('Guestbook edit error:', err);
+      toast.error(t.gbPostErrorToast);
+    } finally {
+      setSavingEdit(false);
+    }
+  };
+
+  const handleDelete = async (entry: GuestbookEntry) => {
+    if (!isValidCode(code.trim())) return;
+    const ok = await confirm({
+      title: t.gbDeleteWishTitle,
+      message: t.gbDeleteWishMsg,
+      confirmText: t.gbDeleteWishBtn,
+    });
+    if (!ok) return;
+    try {
+      const res = await fetch(
+        `/api/guestbook/mine/${entry.id}?code=${encodeURIComponent(code.trim())}`,
+        { method: 'DELETE' }
+      );
+      if (res.ok) {
+        toast.info(t.gbWishDeletedToast);
+        fetchEntries(code);
+      } else {
+        toast.error(t.gbPostFailedToast);
+      }
+    } catch (err) {
+      console.error('Guestbook delete error:', err);
+      toast.error(t.gbPostErrorToast);
+    }
+  };
+
   if (locked) {
     return (
       <motion.div
@@ -204,6 +295,66 @@ export const GuestbookPage = () => {
       </motion.div>
     );
   }
+
+  const identityBlock = (
+    <div className="space-y-4">
+      {lockedIdentity && (
+        <div className="p-4 rounded-2xl bg-[#EFE6DC]/60 border border-[#CBAE94]/50 text-[#5D5449] text-xs font-medium flex items-start gap-2.5">
+          <ShieldCheck className="w-4 h-4 text-[#8B735B] shrink-0 mt-0.5" />
+          <span>{t.uploadLockedIdentityNote}</span>
+        </div>
+      )}
+
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <div>
+          <label className="block text-xs font-bold text-[#4A3F35] uppercase tracking-wider mb-2 flex items-center gap-1.5">
+            <KeyRound className="w-3.5 h-3.5 text-[#8B735B]" />
+            {t.uploadCodeLabel} *
+          </label>
+          <input
+            type="text"
+            inputMode="numeric"
+            maxLength={4}
+            required
+            value={code}
+            onChange={(e) => setCode(e.target.value.replace(/[^0-9]/g, ''))}
+            disabled={lockedIdentity}
+            placeholder={t.uploadCodePlaceholder}
+            className={`w-full px-4 py-3 rounded-2xl border text-sm font-bold tracking-[0.3em] text-[#4A3F35] placeholder-[#8B735B]/60 placeholder:tracking-normal focus:outline-none focus:ring-2 focus:ring-[#8B735B] ${
+              lockedIdentity
+                ? 'bg-[#EFE6DC]/60 border-[#CBAE94]/40 cursor-not-allowed'
+                : 'bg-[#FAF6F0] border-[#CBAE94]/60'
+            }`}
+          />
+        </div>
+
+        <div>
+          <label className="block text-xs font-bold text-[#4A3F35] uppercase tracking-wider mb-2 flex items-center gap-1.5">
+            <Building2 className="w-3.5 h-3.5 text-[#8B735B]" />
+            {t.yourTableLabel}
+          </label>
+          {lockedIdentity ? (
+            <div className="w-full px-4 py-3 rounded-2xl border border-[#CBAE94]/40 bg-[#EFE6DC]/60 text-sm font-bold text-[#4A3F35]">
+              {tableName || '—'}
+            </div>
+          ) : (
+            <select
+              value={tableId}
+              onChange={(e) => setTableId(e.target.value)}
+              className="w-full px-4 py-3 rounded-2xl border border-[#CBAE94]/60 bg-[#FAF6F0] text-sm font-bold text-[#4A3F35] focus:outline-none focus:ring-2 focus:ring-[#8B735B]"
+            >
+              <option value="">{t.selectTablePlaceholder}</option>
+              {tables.map((tbl) => (
+                <option key={tbl.id} value={tbl.id}>
+                  {tbl.name}
+                </option>
+              ))}
+            </select>
+          )}
+        </div>
+      </div>
+    </div>
+  );
 
   return (
     <motion.div
@@ -234,7 +385,6 @@ export const GuestbookPage = () => {
           {t.guestbookSubtitle}
         </p>
 
-        {/* Export Action */}
         <div className="pt-2 flex justify-end border-t border-[#CBAE94]/30">
           <button
             type="button"
@@ -247,10 +397,9 @@ export const GuestbookPage = () => {
         </div>
       </motion.div>
 
-      {/* Main Form or Success Card */}
+      {/* Leave-a-wish form or success card */}
       <div className="card-paper p-6 sm:p-8 print:hidden">
         <AnimatePresence mode="wait">
-          
           {submitted ? (
             <GuestbookSuccess onLeaveAnother={handleResetForm} />
           ) : (
@@ -260,23 +409,25 @@ export const GuestbookPage = () => {
               submitting={submitting}
               previewUrl={previewUrl}
               nameInputRef={nameInputRef}
+              identity={identityBlock}
               onFileChange={handleFileChange}
               onRemovePhoto={handleRemovePhoto}
               onSubmit={handleSubmit(onValid)}
             />
           )}
-
         </AnimatePresence>
       </div>
 
-      {/* Guestbook Entries Feed */}
+      {/* The guest's own wishes */}
       <div className="space-y-4 pt-4">
         <div className="flex items-center justify-between px-2">
           <h3 className="font-gaegu text-2xl font-bold text-[#4A3F35] flex items-center gap-2">
             <Heart className="w-5 h-5 text-rose-500 fill-rose-400" />
-            <span>{tf('gbWishesCount', { count: String(entries.length) })}</span>
+            <span>{t.gbYourWishesTitle}</span>
           </h3>
-          <span className="text-xs font-bold text-[#8B735B]">{t.liveFeedTab}</span>
+          {entries.length > 0 && (
+            <span className="text-xs font-bold text-[#8B735B]">{entries.length}</span>
+          )}
         </div>
 
         {loadingEntries ? (
@@ -284,11 +435,7 @@ export const GuestbookPage = () => {
             {t.loadingGuestbookMsg}
           </div>
         ) : entries.length === 0 ? (
-          <EmptyState
-            type="guestbook"
-            actionLabel={t.gbWriteFirstNoteBtn}
-            onAction={() => nameInputRef.current?.focus()}
-          />
+          <EmptyState type="guestbook" title={t.gbNoWishesYet} />
         ) : printing ? (
           <div className="space-y-4">
             {entries.map((entry) => (
@@ -296,27 +443,75 @@ export const GuestbookPage = () => {
             ))}
           </div>
         ) : (
-          <div ref={feedScrollRef} className="max-h-[60vh] overflow-y-auto pr-1">
-            <div className="relative w-full" style={{ height: `${rowVirtualizer.getTotalSize()}px` }}>
-              {rowVirtualizer.getVirtualItems().map((virtualRow) => {
-                const entry = entries[virtualRow.index];
-                return (
-                  <div
-                    key={entry.id}
-                    data-index={virtualRow.index}
-                    ref={rowVirtualizer.measureElement}
-                    className="absolute top-0 left-0 w-full pb-4"
-                    style={{ transform: `translateY(${virtualRow.start}px)` }}
-                  >
-                    <GuestbookEntryCard entry={entry} />
+          <div className="space-y-4">
+            {entries.map((entry) => (
+              <div key={entry.id}>
+                {editingId === entry.id ? (
+                  <div className="card-paper p-5 border-2 border-[#8B735B]/50 space-y-3">
+                    <input
+                      type="text"
+                      value={editName}
+                      onChange={(e) => setEditName(e.target.value)}
+                      placeholder={t.gbNamePlaceholder}
+                      className="w-full px-4 py-3 rounded-2xl border-2 border-[#CBAE94] text-sm font-bold bg-white text-[#5D5449] focus:outline-none focus:ring-2 focus:ring-[#8B735B]"
+                    />
+                    <textarea
+                      rows={3}
+                      value={editMessage}
+                      onChange={(e) => setEditMessage(e.target.value)}
+                      placeholder={t.gbMessagePlaceholder}
+                      className="w-full px-4 py-3 rounded-2xl border-2 border-[#CBAE94] text-sm font-medium bg-white text-[#5D5449] focus:outline-none focus:ring-2 focus:ring-[#8B735B]"
+                    />
+                    <div className="flex items-center justify-end gap-2">
+                      <button
+                        type="button"
+                        onClick={() => setEditingId(null)}
+                        className="min-h-[44px] px-4 rounded-xl border border-[#CBAE94] text-xs font-bold text-[#4A3F35] inline-flex items-center gap-1.5"
+                      >
+                        <X className="w-3.5 h-3.5" />
+                        {t.gbCancelWishBtn}
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => handleSaveEdit(entry.id)}
+                        disabled={savingEdit}
+                        className="min-h-[44px] px-4 rounded-xl bg-[#8B735B] text-white text-xs font-bold hover:bg-[#705C47] disabled:opacity-50 inline-flex items-center gap-1.5"
+                      >
+                        <Check className="w-3.5 h-3.5" />
+                        {t.gbSaveWishBtn}
+                      </button>
+                    </div>
                   </div>
-                );
-              })}
-            </div>
+                ) : (
+                  <GuestbookEntryCard
+                    entry={entry}
+                    actions={
+                      <>
+                        <button
+                          type="button"
+                          onClick={() => startEdit(entry)}
+                          className="min-h-[44px] px-3 rounded-xl border border-[#CBAE94] text-xs font-bold text-[#4A3F35] hover:bg-[#EFE6DC] inline-flex items-center gap-1.5"
+                        >
+                          <Pencil className="w-3.5 h-3.5" />
+                          {t.gbEditWishBtn}
+                        </button>
+                        <button
+                          type="button"
+                          onClick={() => handleDelete(entry)}
+                          className="min-h-[44px] px-3 rounded-xl border border-rose-300 text-xs font-bold text-rose-700 hover:bg-rose-50 inline-flex items-center gap-1.5"
+                        >
+                          <Trash2 className="w-3.5 h-3.5" />
+                          {t.gbDeleteWishBtn}
+                        </button>
+                      </>
+                    }
+                  />
+                )}
+              </div>
+            ))}
           </div>
         )}
       </div>
     </motion.div>
   );
 };
-

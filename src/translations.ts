@@ -446,6 +446,18 @@ export interface Translations {
   gbPhotoRemovedToast: string;
   gbPostErrorToast: string;
   gbPostFailedToast: string;
+  gbYourWishesTitle: string;
+  gbNoWishesYet: string;
+  gbEditWishBtn: string;
+  gbDeleteWishBtn: string;
+  gbDeleteWishTitle: string;
+  gbDeleteWishMsg: string;
+  gbSaveWishBtn: string;
+  gbCancelWishBtn: string;
+  gbTableFullMsg: string;
+  gbEditValidationMsg: string;
+  gbWishUpdatedToast: string;
+  gbWishDeletedToast: string;
   gbPostedToast: string;
   gbPrintToast: string;
   gbSubmitBtn: string;
@@ -1722,6 +1734,18 @@ export const translations: Record<Language, Translations> = {
     gbPhotoRemovedToast: "Attached photo removed.",
     gbPostErrorToast: "An error occurred while posting your message.",
     gbPostFailedToast: "Failed to post message. Please try again.",
+    gbYourWishesTitle: "Your wishes",
+    gbNoWishesYet: "You haven't left a wish yet.",
+    gbEditWishBtn: "Edit",
+    gbDeleteWishBtn: "Delete",
+    gbDeleteWishTitle: "Delete this wish?",
+    gbDeleteWishMsg: "This can't be undone.",
+    gbSaveWishBtn: "Save",
+    gbCancelWishBtn: "Cancel",
+    gbTableFullMsg: "This table has reached its wish limit.",
+    gbEditValidationMsg: "Add your name and message.",
+    gbWishUpdatedToast: "Your wish was updated.",
+    gbWishDeletedToast: "Your wish was deleted.",
     gbPostedToast: "Your sweet message has been posted to the guestbook!",
     gbPrintToast: "Preparing Memory Keepsake Book for printing/export...",
     gbSubmitBtn: "Send Message to Parents",
@@ -2994,6 +3018,18 @@ export const translations: Record<Language, Translations> = {
     gbPhotoRemovedToast: "Photo jointe retirée.",
     gbPostErrorToast: "Une erreur est survenue lors de la publication.",
     gbPostFailedToast: "Échec de la publication. Veuillez réessayer.",
+    gbYourWishesTitle: "Vos vœux",
+    gbNoWishesYet: "Vous n'avez pas encore laissé de vœu.",
+    gbEditWishBtn: "Modifier",
+    gbDeleteWishBtn: "Supprimer",
+    gbDeleteWishTitle: "Supprimer ce vœu ?",
+    gbDeleteWishMsg: "Cette action est irréversible.",
+    gbSaveWishBtn: "Enregistrer",
+    gbCancelWishBtn: "Annuler",
+    gbTableFullMsg: "Cette table a atteint sa limite de vœux.",
+    gbEditValidationMsg: "Ajoutez votre nom et votre message.",
+    gbWishUpdatedToast: "Votre vœu a été mis à jour.",
+    gbWishDeletedToast: "Votre vœu a été supprimé.",
     gbPostedToast: "Votre message a été publié dans le livre d'or !",
     gbPrintToast: "Préparation du livre de souvenirs pour impression/export...",
     gbSubmitBtn: "Envoyer le message aux parents",
