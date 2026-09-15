@@ -968,8 +968,13 @@ export interface Translations {
   quickGuideLabel: string;
   quickGuideText: string;
   fullScreenCanvasLabel: string;
+  axesToggleLabel: string;
   liveDraftStageLabel: string;
   draftTableInspectorLabel: string;
+  positionRotationLabel: string;
+  centerXLabel: string;
+  centerYLabel: string;
+  rotationDegreesLabel: string;
   noTableSelectedTitle: string;
   noTableSelectedMsg: string;
   switchByGuestModeBtn: string;
@@ -2241,8 +2246,13 @@ export const translations: Record<Language, Translations> = {
     quickGuideLabel: "Quick Guide",
     quickGuideText: "• Click elements on the canvas stage to select them. • Drag elements to position them around the venue floor. • Click {{save}} at top right when done!",
     fullScreenCanvasLabel: "Full-Screen Interactive Canvas",
+    axesToggleLabel: "Show X/Y axes",
     liveDraftStageLabel: "Live Draft Stage",
     draftTableInspectorLabel: "Draft Table Inspector",
+    positionRotationLabel: "Position & Rotation",
+    centerXLabel: "Center X (px)",
+    centerYLabel: "Center Y (px)",
+    rotationDegreesLabel: "Rotation (°)",
     noTableSelectedTitle: "No Table Selected",
     noTableSelectedMsg: "Click on any table on the interactive canvas to edit its capacity, view seated guests, or assign new parties.",
     switchByGuestModeBtn: "Switch to By Guest & Party Mode",
@@ -3504,8 +3514,13 @@ export const translations: Record<Language, Translations> = {
     quickGuideLabel: "Guide rapide",
     quickGuideText: "• Cliquez sur les éléments de la toile pour les sélectionner. • Glissez-les pour les positionner dans la salle. • Cliquez sur {{save}} en haut à droite quand c'est prêt !",
     fullScreenCanvasLabel: "Toile interactive plein écran",
+    axesToggleLabel: "Afficher les axes X/Y",
     liveDraftStageLabel: "Aperçu du brouillon en direct",
     draftTableInspectorLabel: "Inspecteur de table (brouillon)",
+    positionRotationLabel: "Position et rotation",
+    centerXLabel: "Centre X (px)",
+    centerYLabel: "Centre Y (px)",
+    rotationDegreesLabel: "Rotation (°)",
     noTableSelectedTitle: "Aucune table sélectionnée",
     noTableSelectedMsg: "Cliquez sur une table de la toile pour modifier sa capacité, voir les invités placés ou assigner de nouveaux groupes.",
     switchByGuestModeBtn: "Passer au mode Par invité & groupe",

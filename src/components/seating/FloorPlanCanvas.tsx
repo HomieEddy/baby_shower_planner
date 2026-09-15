@@ -4,7 +4,7 @@
 //
 // Note: the 3D view is a separate component; the parent picks between them.
 
-import { useState, type DragEvent as ReactDragEvent, type MouseEvent, type RefObject } from 'react';
+import { useState, type DragEvent as ReactDragEvent, type MouseEvent, type ReactNode, type RefObject } from 'react';
 import { Stage, Layer, Group, Circle, Rect, Text, Transformer } from 'react-konva';
 import type { FloorMapData, Guest, LandmarkElement, SeatOccupant, TableElement } from '../../types';
 import {
@@ -14,10 +14,97 @@ import {
   getUnseatedPartySize,
   canSeatParty,
 } from '../../lib/tableAssignment';
-import { clampToRoundRoom, findNearestSeat } from './floorPlanHelpers';
+import { clampPointToRoom, findNearestSeat } from './floorPlanHelpers';
 import { seatVisual, tableOutline } from './tableVisuals';
 import { SeatRing, renderLandmark, renderRoomBoundary } from './venueShapes';
 import { useT, useTf } from '../shared/i18n';
+
+// Axis ruler thickness (px) drawn above / left of the interactive canvas.
+const AXIS = 18;
+
+// "Nice" tick values (1/2/5 × 10^n) across an axis, aiming for ~8 labels.
+const axisTicks = (size: number): number[] => {
+  if (size <= 0) return [0];
+  const raw = size / 8;
+  const pow = 10 ** Math.floor(Math.log10(raw));
+  const step = [1, 2, 5, 10].map((m) => m * pow).find((s) => s >= raw) ?? pow * 10;
+  const ticks: number[] = [];
+  for (let v = 0; v <= size; v += step) ticks.push(v);
+  return ticks;
+};
+
+// X / Y rulers around the interactive canvas so the increasing direction (and the
+// px scale) is obvious. Purely decorative — never intercepts pointer events.
+const CanvasAxes = ({
+  mapWidth,
+  mapHeight,
+  scale,
+  show,
+  children,
+}: {
+  mapWidth: number;
+  mapHeight: number;
+  scale: number;
+  show: boolean;
+  children: ReactNode;
+}) => {
+  const width = mapWidth * scale;
+  const height = mapHeight * scale;
+  const pad = show ? AXIS : 0;
+  const xTicks = axisTicks(mapWidth);
+  const yTicks = axisTicks(mapHeight);
+  const lastX = xTicks[xTicks.length - 1];
+  const lastY = yTicks[yTicks.length - 1];
+  return (
+    <div className="relative shrink-0 m-auto" style={{ width: width + pad, height: height + pad }}>
+      {show && (
+        <>
+          {/* X axis — values increase to the right */}
+          <div className="absolute select-none pointer-events-none" aria-hidden="true" style={{ left: AXIS, top: 0, width, height: AXIS }}>
+            <div className="absolute inset-x-0 bottom-0 h-px bg-[#CBAE94]" />
+            {xTicks.map((v) => (
+              <div key={`x-${v}`} className="absolute bottom-0" style={{ left: v * scale }}>
+                <div className="absolute bottom-0 w-px h-1 bg-[#8B735B]" />
+                <span
+                  className="absolute bottom-1.5 text-[9px] leading-none font-mono font-bold text-[#8B735B] whitespace-nowrap"
+                  style={{ transform: v === 0 ? 'translateX(0)' : v === lastX ? 'translateX(-100%)' : 'translateX(-50%)' }}
+                >
+                  {v}
+                </span>
+              </div>
+            ))}
+          </div>
+
+          {/* Y axis — values increase downward */}
+          <div className="absolute select-none pointer-events-none" aria-hidden="true" style={{ left: 0, top: AXIS, width: AXIS, height }}>
+            <div className="absolute inset-y-0 right-0 w-px bg-[#CBAE94]" />
+            {yTicks.map((v) => (
+              <div key={`y-${v}`} className="absolute right-0" style={{ top: v * scale }}>
+                <div className="absolute right-0 h-px w-1 bg-[#8B735B]" />
+                <span
+                  className="absolute right-1.5 text-[9px] leading-none font-mono font-bold text-[#8B735B] whitespace-nowrap"
+                  style={{ transform: v === 0 ? 'translateY(0)' : v === lastY ? 'translateY(-100%)' : 'translateY(-50%)' }}
+                >
+                  {v}
+                </span>
+              </div>
+            ))}
+          </div>
+
+          {/* Axis names at the origin */}
+          <div className="absolute select-none pointer-events-none" aria-hidden="true" style={{ left: 0, top: 0, width: AXIS, height: AXIS }}>
+            <span className="absolute right-0.5 top-0 text-[9px] leading-none font-mono font-bold text-[#8B735B]">X</span>
+            <span className="absolute left-0 bottom-0 text-[9px] leading-none font-mono font-bold text-[#8B735B]">Y</span>
+          </div>
+        </>
+      )}
+
+      <div className="absolute" style={{ left: pad, top: pad }}>
+        {children}
+      </div>
+    </div>
+  );
+};
 
 export interface FloorPlanSelection {
   /** Selected table or landmark id. */
@@ -49,6 +136,8 @@ export interface FloorPlanCanvasProps {
   /** The member currently being dragged from the palette, if any. */
   dragging: SeatOccupant | null;
   scale: number;
+  /** Draw the X/Y rulers around the stage. */
+  showAxes: boolean;
   stageRef: RefObject<any>;
   transformerRef: RefObject<any>;
   callbacks: FloorPlanCanvasCallbacks;
@@ -60,6 +149,7 @@ export const FloorPlanCanvas = ({
   selection,
   dragging,
   scale,
+  showAxes,
   stageRef,
   transformerRef,
   callbacks,
@@ -113,23 +203,24 @@ export const FloorPlanCanvas = ({
 
   return (
     <div
-      className={`flex-1 w-full overflow-auto flex justify-center items-center bg-[#FAF6F0] p-3 rounded-2xl border-2 transition-colors ${
+      className={`flex-1 w-full overflow-auto flex bg-[#FAF6F0] p-3 rounded-2xl border-2 transition-colors ${
         dragging ? 'border-emerald-500 bg-emerald-50/40' : 'border-[#CBAE94]/40'
       }`}
       onDragOver={handleDragOver}
       onDragLeave={() => setDropTarget(null)}
       onDrop={handleDrop}
     >
-      <Stage
-        ref={stageRef}
-        width={map.canvasWidth * scale}
-        height={map.canvasHeight * scale}
-        scaleX={scale}
-        scaleY={scale}
-        onMouseDown={(e) => {
-          if (e.target === e.target.getStage()) callbacks.onSelect(null, null);
-        }}
-      >
+      <CanvasAxes mapWidth={map.canvasWidth} mapHeight={map.canvasHeight} scale={scale} show={showAxes}>
+        <Stage
+          ref={stageRef}
+          width={map.canvasWidth * scale}
+          height={map.canvasHeight * scale}
+          scaleX={scale}
+          scaleY={scale}
+          onMouseDown={(e) => {
+            if (e.target === e.target.getStage()) callbacks.onSelect(null, null);
+          }}
+        >
         {/* Layer 1: Grid + Room Boundary */}
         <Layer>{renderRoomBoundary(map)}</Layer>
 
@@ -139,16 +230,15 @@ export const FloorPlanCanvas = ({
             <Group
               key={landmark.id}
               id={landmark.id}
-              x={landmark.x}
-              y={landmark.y}
+              x={landmark.x + landmark.width / 2}
+              y={landmark.y + landmark.height / 2}
+              offsetX={landmark.width / 2}
+              offsetY={landmark.height / 2}
               width={landmark.width}
               height={landmark.height}
               rotation={landmark.rotation || 0}
               draggable
-              dragBoundFunc={(pos: any) => {
-                const p = clampToRoundRoom(pos.x, pos.y, landmark.width, landmark.height, map, true);
-                return { x: p.x, y: p.y };
-              }}
+              dragBoundFunc={(pos: any) => clampPointToRoom(pos.x, pos.y, map)}
               onDragEnd={(e) => callbacks.onLandmarkDragEnd(landmark.id, e)}
               onClick={() => callbacks.onSelect(landmark.id, 'landmark')}
               onMouseEnter={(e) => callbacks.onHoverLandmark(landmark, e.evt.clientX, e.evt.clientY)}
@@ -181,16 +271,15 @@ export const FloorPlanCanvas = ({
               <Group
                 key={table.id}
                 id={table.id}
-                x={table.x}
-                y={table.y}
+                x={table.x + table.width / 2}
+                y={table.y + table.height / 2}
+                offsetX={table.width / 2}
+                offsetY={table.height / 2}
                 width={table.width}
                 height={table.height}
                 rotation={table.rotation || 0}
                 draggable
-                dragBoundFunc={(pos: any) => {
-                  const p = clampToRoundRoom(pos.x, pos.y, table.width, table.height, map);
-                  return { x: p.x, y: p.y };
-                }}
+                dragBoundFunc={(pos: any) => clampPointToRoom(pos.x, pos.y, map)}
                 onDragEnd={(e) => callbacks.onTableDragEnd(table.id, e)}
                 onClick={() => handleTableClick(table)}
                 onMouseEnter={(e) => callbacks.onHoverTable(table, e.evt.clientX, e.evt.clientY)}
@@ -315,7 +404,8 @@ export const FloorPlanCanvas = ({
             onTransformEnd={callbacks.onTransformEnd}
           />
         </Layer>
-      </Stage>
+        </Stage>
+      </CanvasAxes>
     </div>
   );
 };

@@ -849,8 +849,10 @@ export const FloorPlanPage = () => {
                         <Group
                           key={landmark.id}
                           id={landmark.id}
-                          x={landmark.x}
-                          y={landmark.y}
+                          x={landmark.x + landmark.width / 2}
+                          y={landmark.y + landmark.height / 2}
+                          offsetX={landmark.width / 2}
+                          offsetY={landmark.height / 2}
                           width={landmark.width}
                           height={landmark.height}
                           rotation={landmark.rotation || 0}
@@ -924,8 +926,10 @@ export const FloorPlanPage = () => {
                           <Group
                             key={table.id}
                             id={table.id}
-                            x={table.x}
-                            y={table.y}
+                            x={table.x + table.width / 2}
+                            y={table.y + table.height / 2}
+                            offsetX={table.width / 2}
+                            offsetY={table.height / 2}
                             width={table.width}
                             height={table.height}
                             rotation={table.rotation || 0}

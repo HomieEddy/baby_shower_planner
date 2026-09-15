@@ -16,6 +16,7 @@ import {
   UtensilsCrossed,
   Info,
   Layers,
+  Ruler,
   Layout,
   Users,
   Trash2,
@@ -33,6 +34,7 @@ import {
   getAttendeeLocations,
   getGuestSeatedCount,
 } from '../../lib/tableAssignment';
+import { clampElementToRoom } from './floorPlanHelpers';
 import type { HoverTooltipData as HoverTooltip } from './HoverTooltip';
 import { getPartyMembers, isAttending } from '../../lib/guestAttendees';
 import { FloorPlanCanvas } from './FloorPlanCanvas';
@@ -68,6 +70,73 @@ interface FloorPlanEditorProps {
   handleLandmarkHover: (landmark: LandmarkElement, clientX: number, clientY: number) => void;
 }
 
+// Numeric field that keeps its own text while focused and commits the value on
+// blur/Enter. A plain controlled number input fights the user mid-type (typing
+// "-" or clearing the box would jump the element, and clamping resets the caret).
+const NumberField = ({ value, onCommit }: { value: number; onCommit: (v: number) => void }) => {
+  const [text, setText] = useState(String(value));
+  const [synced, setSynced] = useState(value);
+  // Re-sync when the element moves (drag / another field) â€” during render, not
+  // in an effect, so the reset lands in the same commit.
+  if (value !== synced) {
+    setSynced(value);
+    setText(String(value));
+  }
+  return (
+    <TextInput
+      variant="soft"
+      type="number"
+      value={text}
+      onChange={(e) => setText(e.target.value)}
+      onBlur={() => {
+        const v = Number(text);
+        if (text.trim() !== '' && Number.isFinite(v)) onCommit(v);
+        else setText(String(value));
+      }}
+      onKeyDown={(e) => {
+        if (e.key === 'Enter') e.currentTarget.blur();
+      }}
+    />
+  );
+};
+
+// X / Y of the element center + rotation (degrees), shared by the table and
+// landmark inspectors.
+const TransformFields = ({
+  cx,
+  cy,
+  rotation,
+  onChangeCenter,
+  onChangeRotation,
+}: {
+  cx: number;
+  cy: number;
+  rotation: number;
+  onChangeCenter: (cx: number, cy: number) => void;
+  onChangeRotation: (deg: number) => void;
+}) => {
+  const t = useT();
+  return (
+    <div className="space-y-2">
+      <label className="label-mono block">{t.positionRotationLabel}</label>
+      <div className="grid grid-cols-3 gap-2">
+        <div>
+          <label className="label-mono block mb-1">{t.centerXLabel}</label>
+          <NumberField value={Math.round(cx)} onCommit={(v) => onChangeCenter(v, cy)} />
+        </div>
+        <div>
+          <label className="label-mono block mb-1">{t.centerYLabel}</label>
+          <NumberField value={Math.round(cy)} onCommit={(v) => onChangeCenter(cx, v)} />
+        </div>
+        <div>
+          <label className="label-mono block mb-1">{t.rotationDegreesLabel}</label>
+          <NumberField value={Math.round(rotation)} onCommit={onChangeRotation} />
+        </div>
+      </div>
+    </div>
+  );
+};
+
 export const FloorPlanEditor = ({
   floorMap,
   guests,
@@ -84,6 +153,7 @@ export const FloorPlanEditor = ({
   const tf = useTf();
   const confirmDiscard = useConfirm();
   const [viewMode, setViewMode] = useState<ViewMode>('2d');
+  const [showAxes, setShowAxes] = useState(true);
   const {
     draftFloorMap,
     setDraftFloorMap,
@@ -122,7 +192,50 @@ export const FloorPlanEditor = ({
     handleCancelEditor,
   } = useFloorPlanEditor({ floorMap, guests, notify, onSave, onCancel });
 
-  // Palette → canvas interaction state (the canvas owns the drop target).
+  // Move the selected element by its CENTER (clamped inside the room) / set its
+  // rotation. Shared by the X, Y and rotation inputs in both inspectors.
+  const setSelectedCenter = (cx: number, cy: number) => {
+    if (selectedType === 'table' && draftSelectedTable) {
+      const el = draftSelectedTable;
+      const p = clampElementToRoom(cx - el.width / 2, cy - el.height / 2, el.width, el.height, draftFloorMap);
+      setDraftFloorMap({
+        ...draftFloorMap,
+        tables: draftFloorMap.tables.map((x) =>
+          x.id === el.id ? { ...x, x: Math.round(p.x), y: Math.round(p.y) } : x
+        ),
+      });
+    } else if (selectedType === 'landmark' && draftSelectedLandmark) {
+      const el = draftSelectedLandmark;
+      const p = clampElementToRoom(cx - el.width / 2, cy - el.height / 2, el.width, el.height, draftFloorMap);
+      setDraftFloorMap({
+        ...draftFloorMap,
+        landmarks: draftFloorMap.landmarks.map((x) =>
+          x.id === el.id ? { ...x, x: Math.round(p.x), y: Math.round(p.y) } : x
+        ),
+      });
+    }
+  };
+
+  const setSelectedRotation = (deg: number) => {
+    const rotation = ((Math.round(deg) % 360) + 360) % 360;
+    if (selectedType === 'table' && draftSelectedTable) {
+      setDraftFloorMap({
+        ...draftFloorMap,
+        tables: draftFloorMap.tables.map((x) =>
+          x.id === draftSelectedTable.id ? { ...x, rotation } : x
+        ),
+      });
+    } else if (selectedType === 'landmark' && draftSelectedLandmark) {
+      setDraftFloorMap({
+        ...draftFloorMap,
+        landmarks: draftFloorMap.landmarks.map((x) =>
+          x.id === draftSelectedLandmark.id ? { ...x, rotation } : x
+        ),
+      });
+    }
+  };
+
+  // Palette â†’ canvas interaction state (the canvas owns the drop target).
   const [draggingAttendee, setDraggingAttendee] = useState<AttendeeKey | null>(null);
   const [selectedAttendee, setSelectedAttendee] = useState<AttendeeKey | null>(null);
 
@@ -168,7 +281,6 @@ export const FloorPlanEditor = ({
       prev && prev.guestId === key.guestId && prev.attendeeIndex === key.attendeeIndex ? null : key
     );
   };
-
 
   return (
     <div className="fixed inset-0 z-50 bg-[#FAF6F0] flex flex-col w-screen h-screen overflow-hidden animate-fadeIn">
@@ -256,8 +368,8 @@ export const FloorPlanEditor = ({
               </h3>
               <span className="text-xs font-mono font-bold text-[#4A3F35] bg-[#EFE6DC] px-2 py-0.5 rounded-lg border border-[#CBAE94]/60">
                 {(draftFloorMap.roomShape ?? 'rectangle') === 'circle'
-                  ? `Ã˜ ${Math.min(draftFloorMap.canvasWidth, draftFloorMap.canvasHeight)} px`
-                  : `${draftFloorMap.canvasWidth} Ã— ${draftFloorMap.canvasHeight} px`}
+                  ? `ÃƒËœ ${Math.min(draftFloorMap.canvasWidth, draftFloorMap.canvasHeight)} px`
+                  : `${draftFloorMap.canvasWidth} Ãƒâ€” ${draftFloorMap.canvasHeight} px`}
               </span>
             </div>
 
@@ -306,16 +418,16 @@ export const FloorPlanEditor = ({
                 </label>
                 <div className="grid grid-cols-2 gap-1.5 text-xs font-bold">
                   <button type="button" onClick={() => handleUpdateDiameter(650)} className={`min-h-[44px] px-3 py-2 rounded-xl border transition-all text-left flex items-center gap-1 ${Math.min(draftFloorMap.canvasWidth, draftFloorMap.canvasHeight) === 650 ? 'bg-[#8B735B] text-white border-[#8B735B]' : 'bg-white text-[#5D5449] border-[#CBAE94]/60 hover:bg-[#EFE6DC]'}`}>
-                    <Home className="w-3 h-3" /> Small (Ã˜ 650)
+                    <Home className="w-3 h-3" /> Small (ÃƒËœ 650)
                   </button>
                   <button type="button" onClick={() => handleUpdateDiameter(850)} className={`min-h-[44px] px-3 py-2 rounded-xl border transition-all text-left flex items-center gap-1 ${Math.min(draftFloorMap.canvasWidth, draftFloorMap.canvasHeight) === 850 ? 'bg-[#8B735B] text-white border-[#8B735B]' : 'bg-white text-[#5D5449] border-[#CBAE94]/60 hover:bg-[#EFE6DC]'}`}>
-                    <Landmark className="w-3 h-3" /> Standard (Ã˜ 850)
+                    <Landmark className="w-3 h-3" /> Standard (ÃƒËœ 850)
                   </button>
                   <button type="button" onClick={() => handleUpdateDiameter(1100)} className={`min-h-[44px] px-3 py-2 rounded-xl border transition-all text-left flex items-center gap-1 ${Math.min(draftFloorMap.canvasWidth, draftFloorMap.canvasHeight) === 1100 ? 'bg-[#8B735B] text-white border-[#8B735B]' : 'bg-white text-[#5D5449] border-[#CBAE94]/60 hover:bg-[#EFE6DC]'}`}>
-                    <Castle className="w-3 h-3" /> Large (Ã˜ 1100)
+                    <Castle className="w-3 h-3" /> Large (ÃƒËœ 1100)
                   </button>
                   <button type="button" onClick={() => handleUpdateDiameter(1400)} className={`min-h-[44px] px-3 py-2 rounded-xl border transition-all text-left flex items-center gap-1 ${Math.min(draftFloorMap.canvasWidth, draftFloorMap.canvasHeight) === 1400 ? 'bg-[#8B735B] text-white border-[#8B735B]' : 'bg-white text-[#5D5449] border-[#CBAE94]/60 hover:bg-[#EFE6DC]'}`}>
-                    <Tent className="w-3 h-3" /> Grand (Ã˜ 1400)
+                    <Tent className="w-3 h-3" /> Grand (ÃƒËœ 1400)
                   </button>
                 </div>
               </div>
@@ -334,7 +446,7 @@ export const FloorPlanEditor = ({
                         : 'bg-white text-[#5D5449] border-[#CBAE94]/60 hover:bg-[#EFE6DC]'
                     }`}
                   >
-                    <Home className="w-3 h-3" /> Small (750Ã—550)
+                    <Home className="w-3 h-3" /> Small (750Ãƒâ€”550)
                   </button>
                   <button
                     type="button"
@@ -345,7 +457,7 @@ export const FloorPlanEditor = ({
                         : 'bg-white text-[#5D5449] border-[#CBAE94]/60 hover:bg-[#EFE6DC]'
                     }`}
                   >
-                    <Landmark className="w-3 h-3" /> Standard (900Ã—650)
+                    <Landmark className="w-3 h-3" /> Standard (900Ãƒâ€”650)
                   </button>
                   <button
                     type="button"
@@ -356,7 +468,7 @@ export const FloorPlanEditor = ({
                         : 'bg-white text-[#5D5449] border-[#CBAE94]/60 hover:bg-[#EFE6DC]'
                     }`}
                   >
-                    <Castle className="w-3 h-3" /> Large (1200Ã—850)
+                    <Castle className="w-3 h-3" /> Large (1200Ãƒâ€”850)
                   </button>
                   <button
                     type="button"
@@ -367,7 +479,7 @@ export const FloorPlanEditor = ({
                         : 'bg-white text-[#5D5449] border-[#CBAE94]/60 hover:bg-[#EFE6DC]'
                     }`}
                   >
-                    <Tent className="w-3 h-3" /> Grand (1500Ã—1000)
+                    <Tent className="w-3 h-3" /> Grand (1500Ãƒâ€”1000)
                   </button>
                 </div>
               </div>
@@ -592,6 +704,36 @@ export const FloorPlanEditor = ({
                   <span className="hidden sm:inline">{selectedType === 'landmark' ? t.deleteLandmarkBtn : t.deleteTableBtn}</span>
                 </button>
               )}
+              {viewMode === '2d' && (
+                <button
+                  type="button"
+                  onClick={() => setShowAxes((v) => !v)}
+                  aria-pressed={showAxes}
+                  title={t.axesToggleLabel}
+                  className={`p-1.5 rounded-lg border transition-colors ${
+                    showAxes
+                      ? 'bg-[#8B735B] text-white border-[#8B735B]'
+                      : 'bg-white text-[#8B735B] border-[#CBAE94] hover:bg-[#EFE6DC]'
+                  }`}
+                >
+                  <Ruler className="w-3.5 h-3.5" />
+                </button>
+              )}
+              {viewMode === '2d' && (
+                <button
+                  type="button"
+                  onClick={() => setShowAxes((v) => !v)}
+                  aria-pressed={showAxes}
+                  title={t.axesToggleLabel}
+                  className={`p-1.5 rounded-lg border transition-colors ${
+                    showAxes
+                      ? 'bg-[#8B735B] text-white border-[#8B735B]'
+                      : 'bg-white text-[#8B735B] border-[#CBAE94] hover:bg-[#EFE6DC]'
+                  }`}
+                >
+                  <Ruler className="w-3.5 h-3.5" />
+                </button>
+              )}
               <ViewModeToggle value={viewMode} onChange={setViewMode} />
               <span className="hidden md:inline text-xs font-mono text-[#5D5449]">
                 {t.liveDraftStageLabel}
@@ -603,7 +745,7 @@ export const FloorPlanEditor = ({
             <Suspense
               fallback={
                 <div className="flex-1 w-full flex items-center justify-center text-xs font-mono font-bold text-[#8B735B]">
-                  3Dâ€¦
+                  3D…
                 </div>
               }
             >
@@ -636,6 +778,7 @@ export const FloorPlanEditor = ({
               map={draftFloorMap}
               guests={draftGuests}
               scale={modalCanvasScale}
+              showAxes={showAxes}
               stageRef={modalStageRef}
               transformerRef={modalTransformerRef}
               dragging={draggingAttendee}
@@ -725,6 +868,14 @@ export const FloorPlanEditor = ({
                     <option value="custom">{t.customFeatureBtn}</option>
                   </Select>
                 </div>
+
+                <TransformFields
+                  cx={draftSelectedLandmark.x + draftSelectedLandmark.width / 2}
+                  cy={draftSelectedLandmark.y + draftSelectedLandmark.height / 2}
+                  rotation={draftSelectedLandmark.rotation || 0}
+                  onChangeCenter={setSelectedCenter}
+                  onChangeRotation={setSelectedRotation}
+                />
               </div>
             </div>
           )}
@@ -838,6 +989,14 @@ export const FloorPlanEditor = ({
                         </Select>
                       </div>
                     </div>
+
+                    <TransformFields
+                      cx={draftSelectedTable.x + draftSelectedTable.width / 2}
+                      cy={draftSelectedTable.y + draftSelectedTable.height / 2}
+                      rotation={draftSelectedTable.rotation || 0}
+                      onChangeCenter={setSelectedCenter}
+                      onChangeRotation={setSelectedRotation}
+                    />
                   </div>
 
                   {/* Capacity usage bar */}
@@ -894,7 +1053,7 @@ export const FloorPlanEditor = ({
                               <div className="min-w-0">
                                 <p className="font-bold text-[#4A3F35] truncate">{name}</p>
                                 <span className="text-xs text-[#8B735B] font-medium">
-                                  {tf('seatedAtSeatLabel', { seat: String(idx + 1) })} Â· {guest.name}
+                                  {tf('seatedAtSeatLabel', { seat: String(idx + 1) })} · {guest.name}
                                 </span>
                               </div>
                               <button
@@ -935,7 +1094,7 @@ export const FloorPlanEditor = ({
                           const remaining = pSize - getGuestSeatedCount(g.id, draftFloorMap, draftGuests);
                           return (
                             <option key={g.id} value={g.id}>
-                              {g.name} ({tf('partyOfLabel', { count: pSize })}) â€” {remaining > 0 ? tf('remainingToSeatLabel', { count: remaining }) : t.allAttendeesSeatedMsg}
+                              {g.name} ({tf('partyOfLabel', { count: pSize })}) — {remaining > 0 ? tf('remainingToSeatLabel', { count: remaining }) : t.allAttendeesSeatedMsg}
                             </option>
                           );
                         })}
@@ -986,7 +1145,7 @@ export const FloorPlanEditor = ({
                 />
               </div>
 
-              {/* Attendee palette â€” drag a name onto a chair, or tap a name then a chair */}
+              {/* Attendee palette — drag a name onto a chair, or tap a name then a chair */}
               <div className="space-y-2 max-h-[22rem] overflow-y-auto pr-1">
                 <span className="text-xs font-mono font-bold uppercase text-[#8B735B] block mb-1">
                   {t.dragAttendeeHint}
@@ -1047,7 +1206,7 @@ export const FloorPlanEditor = ({
                                 }`}
                                 title={
                                   isSeated
-                                    ? `${item.tableName} Â· ${tf('seatedAtSeatLabel', { seat: String((item.seatIndex ?? 0) + 1) })}`
+                                    ? `${item.tableName} · ${tf('seatedAtSeatLabel', { seat: String((item.seatIndex ?? 0) + 1) })}`
                                     : t.dragAttendeeHint
                                 }
                               >
@@ -1101,13 +1260,13 @@ export const FloorPlanEditor = ({
                     <div className="flex flex-wrap gap-1">
                       {getPartyMembers(selectedGuestForSeating).map((name, nIdx) => (
                         <span key={nIdx} className="px-2 py-0.5 bg-white rounded-md border border-[#CBAE94]/60 text-xs font-medium text-[#4A3F35]">
-                          â€¢ {name}
+                          • {name}
                         </span>
                       ))}
                     </div>
                   </div>
 
-                  {/* Live Table Grid â€” auto-fill the party's remaining members */}
+                  {/* Live Table Grid — auto-fill the party's remaining members */}
                   <div className="space-y-2 pt-1">
                     <span className="text-xs font-mono font-bold uppercase text-[#8B735B] block">
                       {t.chooseVenueTableLabel}
