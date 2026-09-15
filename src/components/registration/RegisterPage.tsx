@@ -9,6 +9,7 @@ import { EventDetailsCard } from '../rsvp/EventDetailsCard';
 import { useT, useTf, useApiErrorMessage } from '../shared/i18n';
 import { BackButton } from '../shared/BackButton';
 import { useToast } from '../shared/ToastContext';
+import { useActionConfirm } from '../shared/ConfirmDialog';
 import { useAppStore } from '../../stores/appStore';
 import { fadeUp } from '../shared/motionPresets';
 import { TextInput, Select } from '../shared/ui';
@@ -34,6 +35,7 @@ export const RegisterPage = () => {
   const tf = useTf();
   const apiError = useApiErrorMessage();
   const { toast } = useToast();
+  const confirmAction = useActionConfirm();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const ref = searchParams.get('ref') || undefined;
@@ -61,6 +63,7 @@ export const RegisterPage = () => {
       toast.error(t.registerNameRequiredToast);
       return;
     }
+    if (!(await confirmAction(t.registerSubmitBtn))) return;
     try {
       setSubmitting(true);
       const extras = data.members.filter((m) => m.name.trim() !== '');
