@@ -19,6 +19,8 @@ const DeliveryChannelEnum = z.enum(['email', 'text', 'both', 'none']);
 const AttendeeInfoSchema = z.object({
   name: z.string(),
   contact: z.string().optional(),
+  // Per-member dietary restriction/allergy (party-level string is legacy).
+  dietary: z.string().optional(),
   magic_token: z.string().optional(),
 });
 export type AttendeeInfo = z.infer<typeof AttendeeInfoSchema>;
@@ -243,6 +245,8 @@ export interface AddGuestPayload {
   rsvp_status?: 'Attending';
   // Names of the additional party members (primary guest is `name`).
   attendee_names?: string[];
+  // Full party (primary first) with each member's contact/dietary.
+  attendee_details?: AttendeeInfo[];
 }
 
 export interface RegisterGuestPayload {
