@@ -181,7 +181,7 @@ export const GuestFinderPage: React.FC = () => {
       const data = await res.json().catch(() => ({}));
       if (!res.ok) {
         const { code, message } = decodeApiError(data, res.status);
-        toast.error(code === 'DECLINED' ? t.checkinDeclinedError : apiError(code, message || t.checkinFailedToast));
+        toast.error(code === 'GUEST_DECLINED' ? t.checkinDeclinedError : apiError(code, message || t.checkinFailedToast));
         return;
       }
       const updated: Guest | undefined = data.guest;

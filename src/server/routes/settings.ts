@@ -1,7 +1,7 @@
 // Event settings read (public get / admin update).
 
 import type { RouteCtx } from '../http';
-import { parseJson, sendJson } from '../http';
+import { parseJson, sendError, sendJson } from '../http';
 import { ReminderSettingsSchema } from '../../lib/validation';
 import type { EventSettings } from '../../types';
 import { getSettings, updateSettings } from '../../db/service';
@@ -26,7 +26,7 @@ export async function handleSettingsRoutes(ctx: RouteCtx): Promise<boolean> {
       const body = await parseJson(req);
       const reminder = ReminderSettingsSchema.partial().safeParse(body);
       if (!reminder.success) {
-        return sendJson(res, 400, { error: reminder.error.issues[0]?.message || 'Invalid settings payload' });
+        return sendError(res, 'INVALID_PAYLOAD', reminder.error.issues[0]?.message);
       }
       const settings = await updateSettings({ ...body, ...reminder.data });
       return sendJson(res, 200, { success: true, settings });

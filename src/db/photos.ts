@@ -6,7 +6,7 @@ import type { EventPhoto } from '../types';
 import { escFilter, fromRecord, pb } from './client';
 import { getUploadFilePath, removeUploadFiles } from '../server/uploadFiles';
 import type { RouteCtx } from '../server/http';
-import { parseJson, sendGuestLocked, sendJson } from '../server/http';
+import { parseJson, sendError, sendGuestLocked, sendJson } from '../server/http';
 import { isValidCode } from '../lib/validation';
 
 // Per-guest photo quota (keyed by reservation code).
@@ -78,7 +78,7 @@ export async function handlePhotoRoutes(ctx: RouteCtx): Promise<boolean> {
       ? body.photo_base64.match(/^data:([A-Za-z-+]+);base64,(.+)$/)
       : null;
     if (!matches || matches.length !== 3) {
-      return sendJson(res, 400, { error: 'photo_base64 data URL is required' });
+      return sendError(res, 'INVALID_PAYLOAD', 'photo_base64 data URL is required');
     }
     const allowed: Record<string, string> = { jpeg: 'jpg', jpg: 'jpg', png: 'png', webp: 'webp', gif: 'gif', heic: 'heic' };
     const ext = allowed[matches[1].split('/')[1]] || 'jpg';
@@ -104,10 +104,10 @@ export async function handlePhotoRoutes(ctx: RouteCtx): Promise<boolean> {
     const body = await parseJson(req);
     const { uploader_name, caption, table_name, table_id, reservation_code, photos } = body;
     const list = Array.isArray(photos) ? photos : [];
-    if (list.length === 0) return sendJson(res, 400, { error: 'photos array is required' });
+    if (list.length === 0) return sendError(res, 'INVALID_PAYLOAD', 'photos array is required');
     for (const p of list) {
       if (typeof p?.url !== 'string' || !p.url.startsWith('/uploads/')) {
-        return sendJson(res, 400, { error: 'Invalid photo URL' });
+        return sendError(res, 'INVALID_PHOTO_URL');
       }
     }
     // Files were written to disk in the previous step; remove them if the
@@ -117,12 +117,12 @@ export async function handlePhotoRoutes(ctx: RouteCtx): Promise<boolean> {
     const code = typeof reservation_code === 'string' ? reservation_code.trim() : '';
     if (!isValidCode(code)) {
       removeBatchFiles();
-      return sendJson(res, 400, { error: 'INVALID_CODE', message: 'A valid 4-digit reservation code is required' });
+      return sendError(res, 'INVALID_CODE', 'A valid 4-digit reservation code is required');
     }
     const guest = await pb.collection('guests').getFirstListItem(`code="${code}"`).catch(() => null);
     if (!guest) {
       removeBatchFiles();
-      return sendJson(res, 400, { error: 'INVALID_CODE', message: 'Reservation code not found' });
+      return sendError(res, 'INVALID_CODE', 'Reservation code not found');
     }
     const usage = await getGuestPhotoUsage(code);
     if (usage.count + list.length > MAX_PHOTOS_PER_GUEST) {
@@ -141,7 +141,7 @@ export async function handlePhotoRoutes(ctx: RouteCtx): Promise<boolean> {
       const filePath = getUploadFilePath(String(p.url));
       if (!fs.existsSync(filePath)) {
         removeBatchFiles();
-        return sendJson(res, 400, { error: 'Invalid photo URL' });
+        return sendError(res, 'INVALID_PHOTO_URL');
       }
       batchBytes += fs.statSync(filePath).size;
     }
@@ -172,7 +172,7 @@ export async function handlePhotoRoutes(ctx: RouteCtx): Promise<boolean> {
     if (method === 'PATCH') {
       ctx.requireAdmin();
       const body = await parseJson(req);
-      if (typeof body.visible !== 'boolean') return sendJson(res, 400, { error: 'visible (boolean) is required' });
+      if (typeof body.visible !== 'boolean') return sendError(res, 'INVALID_PAYLOAD', 'visible (boolean) is required');
       const photo = await setPhotoVisibility(id, body.visible);
       return sendJson(res, 200, { success: true, photo });
     }

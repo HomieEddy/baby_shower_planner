@@ -21,7 +21,6 @@ export const ERROR_REGISTRY = {
 
   // Check-in
   GUEST_DECLINED: { status: 400, message: 'This guest declined the invitation.' },
-  DECLINED: { status: 400, message: 'This guest declined the invitation.' },
   NOT_IN_PARTY: { status: 400, message: 'Name is not part of this party.' },
   ONLY_LEAD: { status: 403, message: 'Only the party lead can do that' },
 
@@ -49,6 +48,15 @@ export const ERROR_REGISTRY = {
   GUEST_CONTENT_LOCKED: { status: 403, message: 'Guest content is locked' },
   PHOTO_LIMIT_REACHED: { status: 400, message: 'Photo limit reached' },
   PHOTO_SIZE_LIMIT_REACHED: { status: 400, message: 'Photo size limit reached' },
+
+  // Generic request failures (route-level guards without a domain code)
+  INVALID_PAYLOAD: { status: 400, message: 'Invalid request payload' },
+  INVALID_INDEX: { status: 400, message: 'Attendee index must be a non-negative integer' },
+  GUEST_ID_REQUIRED: { status: 400, message: 'guestId is required' },
+  INVALID_PHOTO_URL: { status: 400, message: 'Invalid photo URL' },
+  FORBIDDEN: { status: 403, message: 'Forbidden' },
+  PAYLOAD_TOO_LARGE: { status: 413, message: 'Payload too large' },
+  ENDPOINT_NOT_FOUND: { status: 404, message: 'Endpoint not found' },
 
   // Fallback
   SERVER_ERROR: { status: 500, message: 'Something went wrong' },

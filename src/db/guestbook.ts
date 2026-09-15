@@ -5,7 +5,7 @@ import { fromRecord, pb } from './client';
 import { removeUploadFiles } from '../server/uploadFiles';
 import { GuestbookEntrySchema } from '../lib/validation';
 import type { RouteCtx } from '../server/http';
-import { parseJson, sendGuestLocked, sendJson } from '../server/http';
+import { parseJson, sendError, sendGuestLocked, sendJson } from '../server/http';
 
 export async function getAllGuestbookEntries(includeHidden = false): Promise<GuestbookEntry[]> {
   const records = await pb.collection('guestbook').getFullList({ sort: '-created_at' });
@@ -63,11 +63,11 @@ export async function handleGuestbookRoutes(ctx: RouteCtx): Promise<boolean> {
         photo_url: body.photo_url || undefined,
       });
       if (!validation.success) {
-        return sendJson(res, 400, { error: validation.error.issues[0]?.message || 'Invalid guestbook entry' });
+        return sendError(res, 'INVALID_PAYLOAD', validation.error.issues[0]?.message);
       }
       // Only our own uploads dir may be referenced.
       if (validation.data.photo_url && !validation.data.photo_url.startsWith('/uploads/')) {
-        return sendJson(res, 400, { error: 'Invalid photo URL' });
+        return sendError(res, 'INVALID_PHOTO_URL');
       }
       const entry = await addGuestbookEntry(validation.data);
       return sendJson(res, 200, { success: true, entry });
@@ -79,7 +79,7 @@ export async function handleGuestbookRoutes(ctx: RouteCtx): Promise<boolean> {
     const id = pathname.replace('/api/guestbook/', '');
     if (method === 'PATCH') {
       const body = await parseJson(req);
-      if (typeof body.visible !== 'boolean') return sendJson(res, 400, { error: 'visible (boolean) is required' });
+      if (typeof body.visible !== 'boolean') return sendError(res, 'INVALID_PAYLOAD', 'visible (boolean) is required');
       const entry = await setGuestbookEntryVisibility(id, body.visible);
       return sendJson(res, 200, { success: true, entry });
     }

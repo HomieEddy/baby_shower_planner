@@ -5,7 +5,7 @@ import { getSettings } from './settings';
 import { GiftLogSchema } from '../lib/validation';
 import { DomainError } from '../lib/errors';
 import type { RouteCtx } from '../server/http';
-import { parseJson, sendJson } from '../server/http';
+import { parseJson, sendError, sendJson } from '../server/http';
 
 export async function getGifts(): Promise<GiftLog[]> {
   const records = await pb.collection('gifts').getFullList({ sort: '-created_at' });
@@ -59,7 +59,7 @@ export async function handleGiftRoutes(ctx: RouteCtx): Promise<boolean> {
       const body = await parseJson(req);
       const validation = GiftLogSchema.safeParse(body);
       if (!validation.success) {
-        return sendJson(res, 400, { error: validation.error.issues[0]?.message || 'Invalid gift payload' });
+        return sendError(res, 'INVALID_PAYLOAD', validation.error.issues[0]?.message);
       }
       const newGift = await addGift(validation.data);
       return sendJson(res, 200, { success: true, gift: newGift });
@@ -96,9 +96,9 @@ export async function handleGiftRoutes(ctx: RouteCtx): Promise<boolean> {
     const body = await parseJson(req);
     const { channel, text } = body;
     if (!['email', 'text', 'both'].includes(channel)) {
-      return sendJson(res, 400, { error: 'INVALID_CHANNEL', message: 'Invalid delivery channel' });
+      return sendError(res, 'INVALID_CHANNEL');
     }
-    if (!text || !text.trim()) return sendJson(res, 400, { error: 'MESSAGE_REQUIRED', message: 'Thank-you message is required' });
+    if (!text || !text.trim()) return sendError(res, 'MESSAGE_REQUIRED');
     try {
       const { sendGiftThankYou } = await import('./thankyou');
       const result = await sendGiftThankYou(id, channel, text.trim());

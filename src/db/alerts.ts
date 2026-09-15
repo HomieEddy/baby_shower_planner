@@ -7,7 +7,7 @@ import { getSettingsOrDefaults } from './settings';
 import { composeAlert } from '../lib/compose';
 import { notifyGuest } from './notify';
 import type { RouteCtx } from '../server/http';
-import { parseJson, sendJson } from '../server/http';
+import { parseJson, sendError, sendJson } from '../server/http';
 
 export async function getAlerts(): Promise<EventAlert[]> {
   const records = await pb.collection('alerts').getFullList({ sort: '-created_at' });
@@ -62,7 +62,7 @@ export async function handleAlertRoutes(ctx: RouteCtx): Promise<boolean> {
       ctx.requireAdmin();
       const body = await parseJson(req);
       const { type, title, message, target_audience } = body;
-      if (!title || !message) return sendJson(res, 400, { error: 'Title and message are required' });
+      if (!title || !message) return sendError(res, 'INVALID_PAYLOAD', 'Title and message are required');
       const result = await createAlert({ type: type || 'CUSTOM', title, message, target_audience });
       return sendJson(res, 200, { success: true, alert: result.alert, notified_count: result.notified_count });
     }
