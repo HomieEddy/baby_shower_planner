@@ -1044,6 +1044,10 @@ export interface Translations {
   rejectBtn: string;
   guestApprovedToast: string;
   guestRejectedToast: string;
+  approveConfirmTitle: string;
+  approveConfirmMsg: string;
+  rejectConfirmTitle: string;
+  rejectConfirmMsg: string;
   approvalPendingBadge: string;
   inviteStatusInvited: string;
   inviteStatusRegistered: string;
@@ -2269,6 +2273,10 @@ export const translations: Record<Language, Translations> = {
     rejectBtn: "Reject",
     guestApprovedToast: "{{name}} approved.",
     guestRejectedToast: "{{name}} rejected.",
+    approveConfirmTitle: "Approve this registration?",
+    approveConfirmMsg: "{{name}} will be confirmed and their magic link sent on their chosen channel.",
+    rejectConfirmTitle: "Reject this registration?",
+    rejectConfirmMsg: "{{name}} will be marked as not approved and won't be able to confirm.",
     approvalPendingBadge: "Pending approval",
     inviteStatusInvited: "Invited",
     inviteStatusRegistered: "Registered",
@@ -3491,6 +3499,10 @@ export const translations: Record<Language, Translations> = {
     rejectBtn: "Refuser",
     guestApprovedToast: "{{name}} approuvé.",
     guestRejectedToast: "{{name}} refusé.",
+    approveConfirmTitle: "Approuver cette inscription ?",
+    approveConfirmMsg: "{{name}} sera confirmé et son lien magique envoyé sur le canal choisi.",
+    rejectConfirmTitle: "Refuser cette inscription ?",
+    rejectConfirmMsg: "{{name}} sera marqué comme non approuvé et ne pourra pas confirmer.",
     approvalPendingBadge: "Approbation en attente",
     inviteStatusInvited: "Invité",
     inviteStatusRegistered: "Inscrit",

@@ -283,11 +283,22 @@ export function useGuestAdminController({ language, t, guests, onRefresh }: Gues
   };
 
   const handleApproval = async (guest: Guest, decision: 'approve' | 'reject') => {
+    const approving = decision === 'approve';
+    const ok = await confirm({
+      title: approving ? t.approveConfirmTitle : t.rejectConfirmTitle,
+      message: tf(approving ? 'approveConfirmMsg' : 'rejectConfirmMsg', { name: guest.name }),
+      confirmText: approving ? t.approveBtn : t.rejectBtn,
+      variant: approving ? 'warning' : 'danger',
+    });
+    if (!ok) return;
     try {
       const res = await adminFetch(`/api/guests/${guest.id}/${decision}`, { method: 'POST' });
       if (res.ok) {
-        toast.love(tf(decision === 'approve' ? 'guestApprovedToast' : 'guestRejectedToast', { name: guest.name }));
+        toast.love(tf(approving ? 'guestApprovedToast' : 'guestRejectedToast', { name: guest.name }));
         await onRefresh();
+      } else {
+        const { code, message } = decodeApiError(await res.json().catch(() => ({})), res.status);
+        toast.error(apiError(code, message || t.invitesErrorToast));
       }
     } catch (err) {
       console.error('Approval failed:', err);
@@ -354,9 +365,12 @@ export function useGuestAdminController({ language, t, guests, onRefresh }: Gues
         return;
       }
     }
-    // A group ask the host to name the extra members before creating anything.
+    // A link-only invite is created immediately: the host copies the
+    // ready-to-send message from the details modal, and the guest names their
+    // own party when they RSVP. The attendee-naming step is for direct sends.
+    const linkOnly = values.delivery_channel === 'none';
     const partySize = Math.max(1, Number(values.max_party_size) || 1);
-    if (partySize > 1) {
+    if (!linkOnly && partySize > 1) {
       setExtraNames(Array(partySize - 1).fill(''));
       setAttendeeModal({ values, going: markGoing });
       return;

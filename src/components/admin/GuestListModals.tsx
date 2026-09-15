@@ -32,6 +32,7 @@ interface GuestDetailsModalProps {
   onEdit: (guest: Guest) => void;
   onDelete: (id: string, name: string) => void;
   onRemoveAttendee: (guestId: string, attendeeIndex: number, removedName: string, promoteName?: string) => void;
+  onApproval: (guest: Guest, decision: 'approve' | 'reject') => void;
 }
 
 export const GuestDetailsModal = ({
@@ -47,6 +48,7 @@ export const GuestDetailsModal = ({
   onEdit,
   onDelete,
   onRemoveAttendee,
+  onApproval,
 }: GuestDetailsModalProps) => {
   const t = useT();
   const tf = useTf();
@@ -122,6 +124,25 @@ export const GuestDetailsModal = ({
             <span className="px-2.5 py-1 rounded-full bg-[#EFE6DC] text-xs font-medium text-[#8B735B] border border-[#CBAE94] max-w-full">{t.dietaryRestrictionsLabel} {guest.dietary_restrictions}</span>
           ) : null}
         </div>
+
+        {guest.approval_status === 'pending' && (
+          <div className="rounded-2xl border-2 border-amber-300 bg-amber-50 p-4 space-y-3">
+            <div className="flex items-center gap-2 text-sm font-bold text-amber-900">
+              <Clock className="w-4 h-4 shrink-0" />
+              <span>{t.approvalPendingBadge}</span>
+            </div>
+            <div className="flex flex-wrap gap-2">
+              <button type="button" onClick={() => onApproval(guest, 'approve')}
+                className="px-4 min-h-[44px] rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-sm font-bold inline-flex items-center gap-1.5 transition-colors cursor-pointer">
+                <CheckCircle2 className="w-4 h-4" /><span>{t.approveBtn}</span>
+              </button>
+              <button type="button" onClick={() => onApproval(guest, 'reject')}
+                className="px-4 min-h-[44px] rounded-xl border border-rose-300 bg-rose-50 hover:bg-rose-100 text-rose-700 text-sm font-bold inline-flex items-center gap-1.5 transition-colors cursor-pointer">
+                <XCircle className="w-4 h-4" /><span>{t.rejectBtn}</span>
+              </button>
+            </div>
+          </div>
+        )}
 
         <div className="space-y-1.5">
           <label className="label-mono block text-xs font-bold text-[#8B735B]">{tf('includedAttendeesLabel', { count: String(members.length) })}</label>
