@@ -1,11 +1,12 @@
 import React, { useEffect, useState } from 'react';
 import { Guest, EventSettings, FloorMapData } from '../../types';
-import { Printer, Scissors, Tag } from 'lucide-react';
+import { Printer, Scissors, Tag, QrCode } from 'lucide-react';
 import { useT, useTf } from '../shared/i18n';
 import { usePrint } from '../shared/hooks';
 import { Select, TextInput } from '../shared/ui';
 import { getAttendeeLocations } from '../../lib/tableAssignment';
 import { getPartyMembers, isAttending } from '../../lib/guestAttendees';
+import { TableScanQrModal } from './TableScanQrModal';
 
 interface EscortCardsGeneratorProps {
   guests: Guest[];
@@ -32,6 +33,7 @@ export const EscortCardsGenerator: React.FC<EscortCardsGeneratorProps> = ({ gues
     settings?.babyName ? tf('escortHeaderWithBaby', { name: settings.babyName }) : t.escortHeaderDefault
   );
   const [floorMap, setFloorMap] = useState<FloorMapData | null>(null);
+  const [showQrModal, setShowQrModal] = useState(false);
 
   // Seats live on the floor map; fetch it so split parties get one card per person.
   useEffect(() => {
@@ -100,6 +102,27 @@ export const EscortCardsGenerator: React.FC<EscortCardsGeneratorProps> = ({ gues
           >
             <Printer className="w-4 h-4" />
             <span>{tf('escortPrintBtn', { count: filteredRows.length })}</span>
+          </button>
+        </div>
+
+        {/* Main table QR — one standee per table, opens the guest chooser */}
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 rounded-2xl bg-[#EFE6DC]/50 border border-[#CBAE94]/50 p-4">
+          <div className="flex items-center gap-3 min-w-0">
+            <div className="w-10 h-10 rounded-2xl bg-white border border-[#CBAE94] flex items-center justify-center shrink-0">
+              <QrCode className="w-5 h-5 text-[#8B735B]" />
+            </div>
+            <div className="min-w-0">
+              <p className="text-xs font-bold text-[#4A3F35]">{t.tableQrPrintTitle}</p>
+              <p className="text-xs text-[#8B735B]">{t.tableQrPrintSubtitle}</p>
+            </div>
+          </div>
+          <button
+            type="button"
+            onClick={() => setShowQrModal(true)}
+            className="px-4 py-2.5 rounded-xl border-2 border-[#CBAE94] bg-white text-[#4A3F35] font-bold text-xs hover:bg-[#EFE6DC] transition-all flex items-center gap-2 cursor-pointer shrink-0"
+          >
+            <QrCode className="w-4 h-4" />
+            <span>{t.tableQrPrintTitle}</span>
           </button>
         </div>
 
@@ -253,6 +276,12 @@ export const EscortCardsGenerator: React.FC<EscortCardsGeneratorProps> = ({ gues
           </div>
         )}
       </div>
+
+      <TableScanQrModal
+        open={showQrModal}
+        onClose={() => setShowQrModal(false)}
+        tables={floorMap?.tables ?? []}
+      />
     </div>
   );
 };

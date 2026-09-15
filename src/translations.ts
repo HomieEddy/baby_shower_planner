@@ -423,7 +423,6 @@ export interface Translations {
   galleryDeletedToast_other: string;
   galleryFiltersResetToast: string;
   galleryPhotoRemovedToast: string;
-  galleryPrintQrBtn2: string;
   gbEntryDeletedToast: string;
   gbEntryHiddenToast: string;
   gbEntryShownToast: string;
@@ -660,7 +659,6 @@ export interface Translations {
   printMemoryBookBtn: string;
   printPosterBtn: string;
   printReadyBadge: string;
-  printTableQrBtn: string;
   privateHostGalleryLabel: string;
   processImportBtn: string;
   progressSentLabel: string;
@@ -1712,7 +1710,6 @@ export const translations: Record<Language, Translations> = {
     moderationVisibleBadge: "Visible",
     photoHiddenToast: "Photo hidden from guests.",
     photoShownToast: "Photo visible again.",
-    galleryPrintQrBtn2: "Print Table QR Cards",
     gbLeaveAnotherBtn: "Leave Another Message",
     gbMessageLabel: "Message or Words of Advice",
     gbMessagePlaceholder: "Share your blessings, wisdom, or funny parenting tips for the parents...",
@@ -1941,7 +1938,6 @@ export const translations: Record<Language, Translations> = {
     printMemoryBookBtn: "Print Memory Book",
     printPosterBtn: "Print Entrance Poster",
     printReadyBadge: "Print Ready",
-    printTableQrBtn: "Print Table QR Cards",
     privateHostGalleryLabel: "Private Host Gallery",
     processImportBtn: "Process Import",
     progressSentLabel: "{{sent}} of {{total}} Sent ({{percent}}%)",
@@ -2988,7 +2984,6 @@ export const translations: Record<Language, Translations> = {
     moderationVisibleBadge: "Visible",
     photoHiddenToast: "Photo masquée pour les invités.",
     photoShownToast: "Photo à nouveau visible.",
-    galleryPrintQrBtn2: "Imprimer les QR de table",
     gbLeaveAnotherBtn: "Laissez un autre message",
     gbMessageLabel: "Message ou Conseils aux parents",
     gbMessagePlaceholder: "Partagez vos voeux, petits conseils de parents ou mots doux pour les parents...",
@@ -3217,7 +3212,6 @@ export const translations: Record<Language, Translations> = {
     printMemoryBookBtn: "Imprimer le livre de souvenirs",
     printPosterBtn: "Imprimer l'Affiche d'Entrée",
     printReadyBadge: "Prêt à imprimer",
-    printTableQrBtn: "Imprimer les QR de table",
     privateHostGalleryLabel: "Galerie privée des hôtes",
     processImportBtn: "Importer",
     progressSentLabel: "{{sent}} sur {{total}} envoyés ({{percent}}%)",
