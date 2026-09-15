@@ -40,6 +40,7 @@ import { parseToYmd, formatDateLong, formatTime12h, parseTimeRange, formatTimeRa
 import { findDuplicateScheduleTimes, normalizeScheduleItems, normalizeScheduleTime } from '../../lib/schedule';
 import { THEME_PRESETS, getThemeById, applyThemeToDocument, getContrastTextColor, getCustomTheme, CUSTOM_THEME_ID, FONT_OPTIONS, DEFAULT_CUSTOM_THEME } from '../../themePresets';
 import { useToast } from '../shared/ToastContext';
+import { useActionConfirm } from '../shared/ConfirmDialog';
 import { useTf } from '../shared/i18n';
 import { InvitationMessageModal } from './InvitationMessageModal';
 
@@ -136,6 +137,7 @@ const SortableScheduleItem: React.FC<SortableScheduleItemProps> = ({ item, index
 
 export const AdminSettingsTab: React.FC<AdminSettingsTabProps> = ({ language, t, settings, onSave }) => {
   const { toast } = useToast();
+  const confirmAction = useActionConfirm();
   const tf = useTf();
 
   const [parentsNames, setParentsNames] = useState(settings?.parentsNames ?? '');
@@ -209,6 +211,7 @@ export const AdminSettingsTab: React.FC<AdminSettingsTabProps> = ({ language, t,
       toast.error(tf('scheduleDuplicateTimeError', { time: formatTime12h(duplicateTimes[0], language) }));
       return;
     }
+    if (!(await confirmAction(t.saveAllSettingsBtn))) return;
     setSchedule(normalizedSchedule);
     try {
       setSavingSettings(true);

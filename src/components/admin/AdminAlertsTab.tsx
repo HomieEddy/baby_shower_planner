@@ -16,6 +16,7 @@ import { Segmented } from '../shared/Segmented';
 import { IconButton } from '../shared/IconButton';
 import { formatDateLong } from '../../lib/dateUtils';
 import { useToast } from '../shared/ToastContext';
+import { useActionConfirm } from '../shared/ConfirmDialog';
 import { useTf } from '../shared/i18n';
 
 interface AdminAlertsTabProps {
@@ -30,6 +31,7 @@ interface AdminAlertsTabProps {
 
 export const AdminAlertsTab: React.FC<AdminAlertsTabProps> = ({ language, t, guests, alerts, settings, onRefresh, onDeleteAlert }) => {
   const { toast } = useToast();
+  const confirmAction = useActionConfirm();
   const tf = useTf();
 
   const [alertType, setAlertType] = useState<AlertType>('REMINDER');
@@ -81,6 +83,7 @@ export const AdminAlertsTab: React.FC<AdminAlertsTabProps> = ({ language, t, gue
   const handleDispatchAlert = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!alertTitle || !alertMessage) return;
+    if (!(await confirmAction(t.dispatchAlertBtn))) return;
     try {
       setDispatchingAlert(true);
       const res = await adminFetch('/api/alerts', {
