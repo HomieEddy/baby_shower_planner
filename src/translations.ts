@@ -1098,6 +1098,11 @@ export interface Translations {
   optimizationSavedMsg: string;
   optionalLabel: string;
   overallSeatingProgress: string;
+  paginationLabel: string;
+  paginationNext: string;
+  paginationPageOf: string;
+  paginationPrev: string;
+  paginationRange: string;
   packagingZipTitle: string;
   partyMemberLabel: string;
   partySeatsNeededLabel: string;
@@ -2330,6 +2335,11 @@ export const translations: Record<Language, Translations> = {
     optimizationSavedMsg: "Automatic Optimization Saved {{size}} ({{percent}}% smaller payload!)",
     optionalLabel: "Optional",
     overallSeatingProgress: "Overall Seating Progress",
+    paginationLabel: "Pagination",
+    paginationNext: "Next page",
+    paginationPageOf: "Page {{page}} of {{total}}",
+    paginationPrev: "Previous page",
+    paginationRange: "Showing {{from}}-{{to}} of {{total}}",
     packagingZipTitle: "Packaging Photo ZIP Archive",
     partyMemberLabel: "Party Member #{{n}}",
     partySeatsNeededLabel: "Party of {{party}} ({{seats}} seats needed)",
@@ -3559,6 +3569,11 @@ export const translations: Record<Language, Translations> = {
     optimizationSavedMsg: "Optimisation automatique : {{size}} économisés ({{percent}} % de charge en moins !)",
     optionalLabel: "Optionnel",
     overallSeatingProgress: "Progression globale du placement",
+    paginationLabel: "Pagination",
+    paginationNext: "Page suivante",
+    paginationPageOf: "Page {{page}} sur {{total}}",
+    paginationPrev: "Page précédente",
+    paginationRange: "{{from}}-{{to}} sur {{total}}",
     packagingZipTitle: "Préparation de l'archive ZIP des photos",
     partyMemberLabel: "Membre du groupe n° {{n}}",
     partySeatsNeededLabel: "Groupe de {{party}} ({{seats}} places nécessaires)",

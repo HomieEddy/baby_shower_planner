@@ -1,4 +1,4 @@
-import { useCallback, useState } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { TableElement } from '../../types';
 import { useToast } from './ToastContext';
@@ -38,6 +38,36 @@ export function usePrint() {
     [toast, confirmAction, t]
   );
 }
+
+// Client-side pagination for the long admin lists. Every list here is already
+// fully fetched, so slicing in the browser is enough — no server paging. The
+// page is clamped to the current page count, so filtering a list shorter than
+// the current page just falls back to its last page.
+export function usePagination<T>(items: T[], pageSize = 25) {
+  const [storedPage, setPage] = useState(1);
+
+  const total = items.length;
+  const totalPages = Math.max(1, Math.ceil(total / pageSize));
+  const page = Math.min(Math.max(1, storedPage), totalPages);
+
+  const pageItems = useMemo(
+    () => items.slice((page - 1) * pageSize, page * pageSize),
+    [items, page, pageSize]
+  );
+
+  return {
+    pageItems,
+    page,
+    setPage,
+    total,
+    totalPages,
+    pageSize,
+    rangeStart: total === 0 ? 0 : (page - 1) * pageSize + 1,
+    rangeEnd: Math.min(page * pageSize, total),
+  };
+}
+
+export type PaginationState = ReturnType<typeof usePagination<unknown>>;
 
 // Fetch the floor map's tables (shared by the photo upload/gallery pages).
 export function useFloorMapTables() {
