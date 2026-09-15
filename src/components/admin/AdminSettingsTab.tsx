@@ -37,7 +37,7 @@ import { CSS } from '@dnd-kit/utilities';
 import { EventSettings, ScheduleItem, Language, CustomTheme } from '../../types';
 import { Translations } from '../../translations';
 import { parseToYmd, formatDateLong, formatTime12h, parseTimeRange, formatTimeRangeString } from '../../lib/dateUtils';
-import { findDuplicateScheduleTimes, normalizeScheduleTime, sortScheduleByTime } from '../../lib/schedule';
+import { findDuplicateScheduleTimes, normalizeScheduleItems, normalizeScheduleTime } from '../../lib/schedule';
 import { THEME_PRESETS, getThemeById, applyThemeToDocument, getContrastTextColor, getCustomTheme, CUSTOM_THEME_ID, FONT_OPTIONS, DEFAULT_CUSTOM_THEME } from '../../themePresets';
 import { useToast } from '../shared/ToastContext';
 import { useTf } from '../shared/i18n';
@@ -203,14 +203,13 @@ export const AdminSettingsTab: React.FC<AdminSettingsTabProps> = ({ language, t,
   const handleSaveSettings = async (e: React.FormEvent) => {
     e.preventDefault();
     // Schedule: normalize times, reject duplicate start times, keep chronological.
-    const normalizedSchedule = schedule.map((item) => ({ ...item, time: normalizeScheduleTime(item.time) }));
+    const normalizedSchedule = normalizeScheduleItems(schedule);
     const duplicateTimes = findDuplicateScheduleTimes(normalizedSchedule);
     if (duplicateTimes.length > 0) {
       toast.error(tf('scheduleDuplicateTimeError', { time: formatTime12h(duplicateTimes[0], language) }));
       return;
     }
-    const sortedSchedule = sortScheduleByTime(normalizedSchedule);
-    setSchedule(sortedSchedule);
+    setSchedule(normalizedSchedule);
     try {
       setSavingSettings(true);
       const formattedDate = formatDateLong(datePickerValue, language);
@@ -225,7 +224,7 @@ export const AdminSettingsTab: React.FC<AdminSettingsTabProps> = ({ language, t,
         registryUrl,
         rsvpDeadline,
         showScheduleTime,
-        schedule: sortedSchedule,
+        schedule: normalizedSchedule,
         themeId: selectedThemeId,
         customTheme,
         contentOpenAt: contentOpenAt ? new Date(contentOpenAt).toISOString() : '',

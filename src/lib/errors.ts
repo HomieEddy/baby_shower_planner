@@ -51,6 +51,7 @@ export const ERROR_REGISTRY = {
 
   // Generic request failures (route-level guards without a domain code)
   INVALID_PAYLOAD: { status: 400, message: 'Invalid request payload' },
+  SCHEDULE_DUPLICATE_TIME: { status: 400, message: 'Two schedule items share the same start time' },
   INVALID_INDEX: { status: 400, message: 'Attendee index must be a non-negative integer' },
   GUEST_ID_REQUIRED: { status: 400, message: 'guestId is required' },
   INVALID_PHOTO_URL: { status: 400, message: 'Invalid photo URL' },
