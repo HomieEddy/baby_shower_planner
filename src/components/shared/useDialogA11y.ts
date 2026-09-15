@@ -1,4 +1,4 @@
-import { useEffect, RefObject } from 'react';
+import { useEffect, useRef, RefObject } from 'react';
 
 const FOCUSABLE =
   'a[href],button:not([disabled]),textarea:not([disabled]),input:not([disabled]),select:not([disabled]),[tabindex]:not([tabindex="-1"])';
@@ -14,6 +14,14 @@ export function useDialogA11y(
   onClose?: () => void,
   dismissible = true
 ) {
+  // Keep the latest onClose in a ref: depending on its identity would re-run
+  // the effect on every parent render and yank focus out of modal inputs after
+  // each keystroke.
+  const onCloseRef = useRef(onClose);
+  useEffect(() => {
+    onCloseRef.current = onClose;
+  });
+
   useEffect(() => {
     if (!open) return;
     const prevActive = document.activeElement as HTMLElement | null;
@@ -25,8 +33,8 @@ export function useDialogA11y(
     initial?.focus();
 
     const onKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'Escape' && dismissible && onClose) {
-        onClose();
+      if (e.key === 'Escape' && dismissible && onCloseRef.current) {
+        onCloseRef.current();
         return;
       }
       if (e.key !== 'Tab' || !panel) return;
@@ -53,5 +61,5 @@ export function useDialogA11y(
       document.body.style.overflow = prevOverflow;
       prevActive?.focus?.();
     };
-  }, [open, panelRef, onClose, dismissible]);
+  }, [open, panelRef, dismissible]);
 }
