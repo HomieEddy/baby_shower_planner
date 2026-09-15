@@ -57,7 +57,8 @@ describe('suggestSeating', () => {
     expect(out[0].table.id).toBe('t1');
     // t1 now has 3 free; small's best fit is the exact-fit t2.
     expect(out[1].table.id).toBe('t2');
-    expect(out[1].matchBadge).toBe('Exact Fit');
+    expect(out[1].matchBadge).toBe('exact');
+    expect(out[1].reason).toEqual({ kind: 'exact', partySize: 2, free: 0 });
   });
 
   it('returns nothing when no table can hold a party whole', () => {

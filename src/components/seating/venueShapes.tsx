@@ -51,7 +51,8 @@ export const SeatRing = ({ table, renderSeat }: SeatRingProps) => (
 );
 
 // Table name + capacity pill, shared by the host page and the guest modal.
-export const TableLabel = ({ table, occupied }: { table: TableElement; occupied: number }) => (
+// `seatsLabel` is the localized word for "seats" (the renderer is language-agnostic).
+export const TableLabel = ({ table, occupied, seatsLabel }: { table: TableElement; occupied: number; seatsLabel: string }) => (
   <Group>
     <Text
       text={table.name}
@@ -65,7 +66,7 @@ export const TableLabel = ({ table, occupied }: { table: TableElement; occupied:
       padding={4}
     />
     <Text
-      text={`${occupied}/${table.capacity} Seats`}
+      text={`${occupied}/${table.capacity} ${seatsLabel}`}
       y={table.height * 0.58}
       width={table.width}
       align="center"

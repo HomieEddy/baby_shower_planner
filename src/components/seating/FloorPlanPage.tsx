@@ -342,13 +342,19 @@ export const FloorPlanPage = () => {
   const handleTableHover = (table: TableElement, guestsList: Guest[], clientX: number, clientY: number) => {
     const occupiedSeats = getTableOccupiedSeats(table, guestsList);
     const seatedPersonNames = getTableSeatedPersonNames(table, guestsList);
+    const shapeLabel = table.shape === 'circle' ? t.roundTableBtn : t.rectTableBtn;
+    const names =
+      seatedPersonNames.length > 0 ? seatedPersonNames.join(', ') : t.fpTooltipNoGuests;
 
     setHoverTooltip({
       title: table.name,
-      subtitle: `${table.shape === 'circle' ? 'Round Table' : 'Rectangle Table'} • ${occupiedSeats}/${table.capacity} Seats`,
+      subtitle: `${shapeLabel} • ${occupiedSeats}/${table.capacity} ${t.seatsLabel}`,
       details: [
-        `Seated (${seatedPersonNames.length}): ${seatedPersonNames.length > 0 ? seatedPersonNames.join(', ') : 'No guests assigned yet'}`,
-        `Capacity: ${table.capacity} seats (${Math.max(0, table.capacity - occupiedSeats)} available)`,
+        tf('fpTooltipSeated', { count: seatedPersonNames.length, names }),
+        tf('fpTooltipCapacity', {
+          capacity: table.capacity,
+          available: Math.max(0, table.capacity - occupiedSeats),
+        }),
       ],
       x: clientX,
       y: clientY,
@@ -419,10 +425,10 @@ export const FloorPlanPage = () => {
   const handleLandmarkHover = (landmark: LandmarkElement, clientX: number, clientY: number) => {
     setHoverTooltip({
       title: landmark.name,
-      subtitle: `Venue Feature / Landmark`,
+      subtitle: t.fpTooltipVenueFeature,
       details: [
-        `Type: ${landmark.type.toUpperCase()}`,
-        `Dimensions: ${landmark.width} × ${landmark.height} px`,
+        tf('fpTooltipType', { type: landmark.type.toUpperCase() }),
+        tf('fpTooltipDimensions', { width: landmark.width, height: landmark.height }),
       ],
       x: clientX,
       y: clientY,
@@ -1147,7 +1153,7 @@ export const FloorPlanPage = () => {
                             {renderTableBody({ table, isSelected: false })}
 
                             {/* Table Title + Capacity */}
-                            <TableLabel table={table} occupied={occupiedSeats} />
+                            <TableLabel table={table} occupied={occupiedSeats} seatsLabel={t.seatsLabel} />
                           </Group>
                         );
                       })}
@@ -1225,7 +1231,6 @@ export const FloorPlanPage = () => {
           key={`editor-${isEditorModalOpen}`}
           floorMap={floorMap}
           guests={guests}
-          language={language}
           saving={saving}
           notify={setNotification}
           onSave={handleSaveEditorChanges}

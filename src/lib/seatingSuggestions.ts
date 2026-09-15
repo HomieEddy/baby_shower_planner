@@ -1,9 +1,11 @@
 // Smart seating suggestions: a pure greedy pass that proposes complete
 // placements for the largest parties first. Shared by the host page; testable
-// without React. Reasons are the existing display strings (not yet localized).
+// without React. Returns codes, not display strings — the caller localizes them.
 
 import type { FloorMapData, Guest, TableElement } from '../types';
 import { getAvailableSeats, getGuestPartySize, getGuestSeatedCount } from './tableAssignment';
+
+export type SuggestionFit = 'exact' | 'optimal' | 'grouping';
 
 export interface SmartSuggestion {
   id: string;
@@ -11,8 +13,8 @@ export interface SmartSuggestion {
   table: TableElement;
   partySize: number;
   freeSeats: number;
-  matchBadge: 'Exact Fit' | 'Optimal Capacity' | 'Party Grouping';
-  reason: string;
+  matchBadge: SuggestionFit;
+  reason: { kind: SuggestionFit; partySize: number; free: number };
 }
 
 // Attending guests with at least one member still unseated (split-aware).
@@ -47,14 +49,8 @@ export function suggestSeating(floorMap: FloorMapData, guests: Guest[]): SmartSu
     const chosenTable = candidates[0];
     const freeSeats = tableCapacities[chosenTable.id];
     const fitDelta = freeSeats - partySize;
-    const matchBadge: SmartSuggestion['matchBadge'] =
-      fitDelta === 0 ? 'Exact Fit' : fitDelta <= 2 ? 'Optimal Capacity' : 'Party Grouping';
-    const reason =
-      fitDelta === 0
-        ? `Perfect match! Fills all ${partySize} open seats with zero wasted space`
-        : fitDelta <= 2
-          ? `Great fit for party of ${partySize} leaving only ${fitDelta} free seat(s)`
-          : `Keeps entire party of ${partySize} together comfortably`;
+    const kind: SuggestionFit =
+      fitDelta === 0 ? 'exact' : fitDelta <= 2 ? 'optimal' : 'grouping';
 
     generated.push({
       id: `sug-${g.id}-${chosenTable.id}`,
@@ -62,8 +58,8 @@ export function suggestSeating(floorMap: FloorMapData, guests: Guest[]): SmartSu
       table: chosenTable,
       partySize,
       freeSeats,
-      matchBadge,
-      reason,
+      matchBadge: kind,
+      reason: { kind, partySize, free: fitDelta },
     });
     tableCapacities[chosenTable.id] -= partySize;
   }

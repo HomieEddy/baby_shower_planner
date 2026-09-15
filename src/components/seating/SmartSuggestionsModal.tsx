@@ -65,6 +65,18 @@ export const SmartSuggestionsModal = ({
       <div className="flex-1 overflow-y-auto space-y-3 pr-1">
         {suggestions.map((sug) => {
           const isChecked = selectedIds.has(sug.id);
+          const badge =
+            sug.matchBadge === 'exact'
+              ? t.matchExactFit
+              : sug.matchBadge === 'optimal'
+                ? t.matchOptimalCapacity
+                : t.matchPartyGrouping;
+          const reason =
+            sug.reason.kind === 'exact'
+              ? tf('fpSuggestReasonExact', { count: sug.reason.partySize })
+              : sug.reason.kind === 'optimal'
+                ? tf('fpSuggestReasonOptimal', { count: sug.reason.partySize, free: sug.reason.free })
+                : tf('fpSuggestReasonGrouping', { count: sug.reason.partySize });
 
           return (
             <label
@@ -98,7 +110,7 @@ export const SmartSuggestionsModal = ({
 
                 <div className="text-right">
                   <span className="inline-block px-2.5 py-1 rounded-full text-xs font-mono font-bold uppercase tracking-wider bg-amber-100 text-amber-900 border border-amber-300">
-                    {sug.matchBadge}
+                    {badge}
                   </span>
                   <div className="text-xs font-bold text-[#8B735B] mt-1">
                     {t.assignToLabel} <span className="text-[#4A3F35] underline">{sug.table.name}</span>
@@ -107,7 +119,7 @@ export const SmartSuggestionsModal = ({
               </div>
 
               <div className="text-xs text-[#8B735B] bg-[#FAF6F0] p-2 rounded-xl border border-[#CBAE94]/30 font-medium">
-                {sug.reason}
+                {reason}
               </div>
             </label>
           );
