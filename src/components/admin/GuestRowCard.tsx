@@ -8,6 +8,7 @@ import {
   Check,
 } from 'lucide-react';
 import { Guest } from '../../types';
+import { getGuestPartySize } from '../../lib/tableAssignment';
 import { useT, useTf } from '../shared/i18n';
 
 interface GuestRowCardProps {
@@ -30,6 +31,7 @@ export const GuestRowCard = ({
   const tf = useTf();
   const initials = guest.name.split(' ').map((w) => w[0]).filter(Boolean).slice(0, 2).join('').toUpperCase();
   const contactLine = [guest.email, guest.phone].filter(Boolean).join(' · ');
+  const extras = getGuestPartySize(guest) - 1;
 
   return (
     <motion.div
@@ -61,7 +63,10 @@ export const GuestRowCard = ({
           </div>
           <div className="min-w-0">
             <div className="flex items-center gap-2 flex-wrap">
-              <h4 className="font-bold text-[#5D5449] text-sm truncate">{guest.name}</h4>
+              <h4 className="font-bold text-[#5D5449] text-sm truncate">
+                {guest.name}
+                {extras > 0 && <span className="ml-1.5 font-mono text-xs text-[#8B735B]">+{extras}</span>}
+              </h4>
               {guest.approval_status === 'pending' && (
                 <span className="px-2 py-0.5 rounded-md bg-amber-50 border border-amber-300 text-xs font-mono font-bold text-amber-800">
                   {t.approvalPendingBadge}

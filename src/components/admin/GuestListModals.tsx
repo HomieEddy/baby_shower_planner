@@ -17,7 +17,7 @@ import { useConfirm } from '../shared/ConfirmDialog';
 import { useT, useTf } from '../shared/i18n';
 import { Guest } from '../../types';
 import { getGuestPartySize } from '../../lib/tableAssignment';
-import { getPartyMembers } from '../../lib/guestAttendees';
+import { getPartyMembers, getAttendeeDietary, getPartyDietarySummary, hasDietaryRestriction } from '../../lib/guestAttendees';
 import { channelLabel } from '../../lib/capabilities';
 
 interface GuestDetailsModalProps {
@@ -137,8 +137,8 @@ export const GuestDetailsModal = ({
           <span className="px-2.5 py-1 rounded-lg bg-[#EFE6DC] border border-[#CBAE94] text-xs font-bold font-mono text-[#8B735B]">{t.reservationCodeLabel} {guest.code}</span>
           <span className="px-2.5 py-1 rounded-lg bg-white border border-[#CBAE94] text-xs font-bold text-[#5D5449]">{t.colPartySize}: {partySize} / {maxSize}</span>
           <span className="px-2.5 py-1 rounded-lg bg-white border border-[#CBAE94] text-xs font-bold text-[#5D5449]">{channelLabelValue}</span>
-          {guest.dietary_restrictions ? (
-            <span className="px-2.5 py-1 rounded-full bg-[#EFE6DC] text-xs font-medium text-[#8B735B] border border-[#CBAE94] max-w-full">{t.dietaryRestrictionsLabel} {guest.dietary_restrictions}</span>
+          {getPartyDietarySummary(guest) ? (
+            <span className="px-2.5 py-1 rounded-full bg-[#EFE6DC] text-xs font-medium text-[#8B735B] border border-[#CBAE94] max-w-full">{t.dietaryRestrictionsLabel} {getPartyDietarySummary(guest)}</span>
           ) : null}
         </div>
 
@@ -164,15 +164,19 @@ export const GuestDetailsModal = ({
         <div className="space-y-1.5">
           <label className="label-mono block text-xs font-bold text-[#8B735B]">{tf('includedAttendeesLabel', { count: String(members.length) })}</label>
           <div className="flex flex-wrap gap-1.5">
-            {members.map((n, i) => (
-              <span key={i} className="inline-flex items-center gap-1 px-2 py-0.5 rounded-lg bg-[#EFE6DC] border border-[#CBAE94] text-xs font-mono text-[#8B735B]">
-                {n}
-                <button type="button" onClick={() => requestRemove(i, n)} title={t.removeAttendeeTitle}
-                  className="text-[#8B735B]/60 hover:text-rose-600 transition-colors cursor-pointer">
-                  <X className="w-3 h-3" />
-                </button>
-              </span>
-            ))}
+            {members.map((n, i) => {
+              const dietary = getAttendeeDietary(guest, i);
+              return (
+                <span key={i} className="inline-flex items-center gap-1 px-2 py-0.5 rounded-lg bg-[#EFE6DC] border border-[#CBAE94] text-xs font-mono text-[#8B735B]">
+                  {n}
+                  {hasDietaryRestriction(dietary) && <span className="text-amber-800">· {dietary}</span>}
+                  <button type="button" onClick={() => requestRemove(i, n)} title={t.removeAttendeeTitle}
+                    className="text-[#8B735B]/60 hover:text-rose-600 transition-colors cursor-pointer">
+                    <X className="w-3 h-3" />
+                  </button>
+                </span>
+              );
+            })}
           </div>
         </div>
 

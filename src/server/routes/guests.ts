@@ -56,6 +56,7 @@ export async function handleGuestRoutes(ctx: RouteCtx): Promise<boolean> {
       const extraNames = Array.isArray(attendee_names)
         ? attendee_names.filter((n: unknown): n is string => typeof n === 'string').slice(0, 20)
         : undefined;
+      const attendeeDetails = Array.isArray(body.attendee_details) ? body.attendee_details.slice(0, 20) : undefined;
 
       const result = await addGuest({
         name: name.trim(), email: email?.trim() || '', phone: phone?.trim() || '',
@@ -63,6 +64,7 @@ export async function handleGuestRoutes(ctx: RouteCtx): Promise<boolean> {
         language_pref: language_pref === 'EN' ? 'EN' : 'FR',
         rsvp_status: isGoing ? 'Attending' : undefined,
         attendee_names: extraNames,
+        attendee_details: attendeeDetails,
       });
       return sendJson(res, 200, result);
     }

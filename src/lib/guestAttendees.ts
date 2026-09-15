@@ -46,6 +46,34 @@ export function dedupePartyNames(
   return names;
 }
 
+// Dietary restrictions are stored per party member inside `attendee_details`.
+// Legacy records carry one party-level string; it applies to the lead and is
+// still read as a fallback so old data keeps showing up.
+export function getAttendeeDietary(guest: Guest, index: number): string {
+  const own = (guest.attendee_details?.[index]?.dietary || '').trim();
+  if (own) return own;
+  if (index === 0) return (guest.dietary_restrictions || '').trim();
+  return '';
+}
+
+export function hasDietaryRestriction(text: string): boolean {
+  const r = (text || '').trim().toLowerCase();
+  return r.length > 0 && r !== 'none';
+}
+
+// Per-member dietary, aligned index-for-index with getPartyMembers.
+export function getPartyDietary(guest: Guest): { name: string; dietary: string }[] {
+  return getPartyMembers(guest).map((name, i) => ({ name, dietary: getAttendeeDietary(guest, i) }));
+}
+
+// Compact "Name: restriction, Name: restriction" string for lists and CSVs.
+export function getPartyDietarySummary(guest: Guest): string {
+  return getPartyDietary(guest)
+    .filter((m) => hasDietaryRestriction(m.dietary))
+    .map((m) => `${m.name}: ${m.dietary}`)
+    .join(' · ');
+}
+
 // Primary guest check-in is tracked by `checked_in`; other party members by
 // `checked_in_names`. Matching is case-insensitive.
 export function isMemberCheckedIn(guest: Guest, name: string): boolean {
@@ -63,30 +91,35 @@ export function isPartyLead(guest: Guest, name: string): boolean {
 export function stripPrimaryAttendees(
   attendeeDetails?: AttendeeInfo[],
   attendeeNames?: string[]
-): { name: string; contact: string }[] {
+): { name: string; contact: string; dietary: string }[] {
   if (attendeeDetails && attendeeDetails.length > 0) {
-    return attendeeDetails.slice(1).map((d) => ({ name: d.name || '', contact: d.contact || '' }));
+    return attendeeDetails.slice(1).map((d) => ({ name: d.name || '', contact: d.contact || '', dietary: d.dietary || '' }));
   }
   if (attendeeNames && attendeeNames.length > 0) {
-    return attendeeNames.slice(1).map((n) => ({ name: n, contact: '' }));
+    return attendeeNames.slice(1).map((n) => ({ name: n, contact: '', dietary: '' }));
   }
-  return [{ name: '', contact: '' }];
+  return [{ name: '', contact: '', dietary: '' }];
 }
 
 export interface AdditionalAttendee {
   name: string;
   contact?: string;
+  dietary?: string;
 }
 
 export function buildAttendeePayload(
   primaryName: string,
   additional: AdditionalAttendee[],
-  rsvpStatus: 'Attending' | 'Declined'
+  rsvpStatus: 'Attending' | 'Declined',
+  primaryDietary = ''
 ): { attendee_details: AttendeeInfo[]; attendee_names: string[] } {
   if (rsvpStatus === 'Declined') {
     return { attendee_details: [], attendee_names: [] };
   }
-  const details: AttendeeInfo[] = [{ name: primaryName, contact: '' }, ...additional];
+  const details: AttendeeInfo[] = [
+    { name: primaryName, contact: '', dietary: primaryDietary.trim() },
+    ...additional.map((a) => ({ name: a.name, contact: a.contact || '', dietary: (a.dietary || '').trim() })),
+  ];
   return {
     attendee_details: details,
     attendee_names: details.map((a) => a.name),

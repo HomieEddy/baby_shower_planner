@@ -21,7 +21,8 @@ export function scrubForRoster(g: Guest): Guest {
 }
 
 // Token-matched guest: they hold the invite link, so their own reservation
-// code and dietary note are returned (email/phone/token stay scrubbed).
+// code and dietary notes are returned (email/phone/token stay scrubbed, and
+// member contacts are dropped — only name + dietary survive).
 export function scrubForGuestLookup(g: Guest): Guest {
   return {
     ...g,
@@ -29,7 +30,9 @@ export function scrubForGuestLookup(g: Guest): Guest {
     phone: '',
     magic_token: '',
     token_used: false,
-    attendee_details: undefined,
+    attendee_details: Array.isArray(g.attendee_details)
+      ? g.attendee_details.map((d) => ({ name: d.name, dietary: d.dietary }))
+      : undefined,
     delivery_channel: undefined,
   };
 }

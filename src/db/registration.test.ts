@@ -163,6 +163,22 @@ describe('submitRsvp approval gate', () => {
     expect(updated.rsvp_status).toBe('Attending');
     expect(updated.dietary_restrictions).toBe('x');
   });
+
+  it('stores per-member dietary and mirrors the lead into the legacy field', async () => {
+    const { guest } = await registerGuest({ name: 'Alice', email: 'a@x.com', language_pref: 'EN', attendee_names: ['Alice', 'Bob'] });
+    await h.fake.pb.collection('guests').update(guest.id, { approval_status: 'approved', token_used: false });
+    const updated = await submitRsvp(guest.magic_token, {
+      rsvp_status: 'Attending',
+      attendee_names: ['Alice', 'Bob'],
+      attendee_details: [{ name: 'Alice', dietary: 'Vegan' }, { name: 'Bob', dietary: 'Nut-free' }],
+      dietary_restrictions: '',
+    });
+    expect(updated.attendee_details).toEqual([
+      { name: 'Alice', dietary: 'Vegan' },
+      { name: 'Bob', dietary: 'Nut-free' },
+    ]);
+    expect(updated.dietary_restrictions).toBe('Vegan');
+  });
 });
 
 describe('removeGuestAttendee', () => {
@@ -232,6 +248,26 @@ describe('updateGuest party sync', () => {
     expect(g.attending_party_size).toBe(0);
     expect(g.checked_in).toBe(false);
     expect(g.checked_in_names).toEqual([]);
+  });
+
+  it('keeps each member dietary across a party edit', async () => {
+    seed();
+    const g = await updateGuest('g1', {
+      name: 'Alice', max_party_size: 5, rsvp_status: 'Attending',
+      attendee_names: ['Alice', 'Bob', 'Cara'],
+      attendee_details: [
+        { name: 'Alice', dietary: 'Vegan' },
+        { name: 'Bob', dietary: 'Gluten-Free' },
+        { name: 'Cara', dietary: '' },
+      ],
+      dietary_restrictions: 'Vegan',
+    });
+    expect(g.attendee_details).toEqual([
+      { name: 'Alice', contact: '', dietary: 'Vegan' },
+      { name: 'Bob', contact: '', dietary: 'Gluten-Free' },
+      { name: 'Cara', contact: '', dietary: '' },
+    ]);
+    expect(g.dietary_restrictions).toBe('Vegan');
   });
 });
 

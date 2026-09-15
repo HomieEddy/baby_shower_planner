@@ -21,7 +21,7 @@ const RegisterSchema = z.object({
   email: z.string(),
   phone: z.string(),
   language_pref: z.enum(['EN', 'FR']),
-  members: z.array(z.object({ name: z.string(), contact: z.string() })),
+  members: z.array(z.object({ name: z.string(), contact: z.string(), dietary: z.string() })),
   dietary: z.string(),
 });
 type RegisterFormValues = z.infer<typeof RegisterSchema>;
@@ -45,7 +45,7 @@ export const RegisterPage = () => {
   const [submitting, setSubmitting] = useState(false);
   const [result, setResult] = useState<RegisterResult | null>(null);
 
-  const { register, handleSubmit, control, formState: { errors } } = useForm<RegisterFormValues>({
+  const { register, handleSubmit, control, watch, formState: { errors } } = useForm<RegisterFormValues>({
     resolver: zodResolver(RegisterSchema),
     defaultValues: {
       name: '',
@@ -69,8 +69,8 @@ export const RegisterPage = () => {
       const extras = data.members.filter((m) => m.name.trim() !== '');
       const attendee_names = [data.name.trim(), ...extras.map((m) => m.name.trim())];
       const attendee_details = [
-        { name: data.name.trim(), contact: (data.email || data.phone || '').trim() },
-        ...extras.map((m) => ({ name: m.name.trim(), contact: m.contact.trim() })),
+        { name: data.name.trim(), contact: (data.email || data.phone || '').trim(), dietary: data.dietary.trim() },
+        ...extras.map((m) => ({ name: m.name.trim(), contact: m.contact.trim(), dietary: m.dietary.trim() })),
       ];
       const res = await fetch('/api/register', {
         method: 'POST',
@@ -193,9 +193,10 @@ export const RegisterPage = () => {
                 <span className="label-mono block">{t.registerMembersTitle}</span>
               </div>
               {fields.map((field, index) => (
-                <div key={field.id} className="grid grid-cols-1 sm:grid-cols-[1fr_1fr_auto] gap-2 items-start">
+                <div key={field.id} className="grid grid-cols-1 sm:grid-cols-[1fr_1fr_1fr_auto] gap-2 items-start">
                   <TextInput type="text" aria-label={`${t.registerMemberPh} ${index + 1}`} placeholder={t.registerMemberPh} {...register(`members.${index}.name`)} />
                   <TextInput type="text" aria-label={t.attendeeContactLabel} placeholder={t.attendeeContactPlaceholder} {...register(`members.${index}.contact`)} />
+                  <TextInput type="text" aria-label={t.colDietary} placeholder={t.dietaryPlaceholder} {...register(`members.${index}.dietary`)} />
                   <button
                     type="button"
                     onClick={() => remove(index)}
@@ -209,7 +210,7 @@ export const RegisterPage = () => {
               ))}
               <button
                 type="button"
-                onClick={() => append({ name: '', contact: '' })}
+                onClick={() => append({ name: '', contact: '', dietary: '' })}
                 className="w-full py-2.5 rounded-xl border border-dashed border-[#4A3F35]/30 bg-white/80 hover:bg-white text-xs font-bold text-[#4A3F35] transition-colors flex items-center justify-center gap-1.5"
               >
                 <Users className="w-4 h-4 text-[#8B735B]" />
@@ -218,7 +219,9 @@ export const RegisterPage = () => {
             </div>
 
             <div>
-              <label htmlFor="reg-dietary" className="label-mono block mb-1">{t.dietaryLabel}</label>
+              <label htmlFor="reg-dietary" className="label-mono block mb-1">
+                {tf('dietaryForMember', { name: watch('name').trim() || t.finderPartyLead })}
+              </label>
               <textarea
                 id="reg-dietary"
                 rows={2}

@@ -36,12 +36,14 @@ export const GuestImportSchema = Guest.pick({
   delivery_channel: true,
   max_party_size: true,
   language_pref: true,
+  dietary_restrictions: true,
 }).extend({
   name: z.string().min(1, 'Name is required'),
   email: z.string().email().optional().or(z.literal('')),
   max_party_size: z.number().min(1).default(1),
   delivery_channel: z.enum(['email', 'text', 'both', 'none']).default('email'),
   language_pref: z.enum(['EN', 'FR']).default('FR'),
+  dietary_restrictions: z.string().default(''),
 });
 
 // Covers the whole domain (so no guest field is silently stripped on update)

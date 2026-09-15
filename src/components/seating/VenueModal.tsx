@@ -10,7 +10,7 @@ import { useDialogA11y } from '../shared/useDialogA11y';
 import { ViewModeToggle, ViewMode } from '../shared/ViewModeToggle';
 import { getGuestPartySize, getTableOccupiedSeats, getTableSeats, getAttendeeSeatLocation } from '../../lib/tableAssignment';
 import { getSeatLocalPosition } from './floorPlanHelpers';
-import { getPartyMembers } from '../../lib/guestAttendees';
+import { getPartyMembers, getPartyDietarySummary } from '../../lib/guestAttendees';
 import { FinderSelection } from './GuestFinderPage';
 
 const FloorPlan3D = lazy(() => import('./FloorPlan3D').then((m) => ({ default: m.FloorPlan3D })));
@@ -184,7 +184,7 @@ export const VenueModal = ({ open, selected, floorMap, roster, onClose }: VenueM
                         <MapPin className="w-4 h-4 text-[#8B735B]" />
                         {t.finderNearEntrance}
                       </p>
-                      {selected.guest.dietary_restrictions && (
+                      {getPartyDietarySummary(selected.guest) && (
                         <motion.p
                           className="flex items-center gap-2 font-bold text-[#8B735B]"
                           initial={{ opacity: 0 }}
@@ -192,7 +192,7 @@ export const VenueModal = ({ open, selected, floorMap, roster, onClose }: VenueM
                           transition={{ delay: 0.5 }}
                         >
                           <Utensils className="w-4 h-4" />
-                          {tf('finderDietaryNote', { dietary: selected.guest.dietary_restrictions })}
+                          {tf('finderDietaryNote', { dietary: getPartyDietarySummary(selected.guest) })}
                         </motion.p>
                       )}
                     </div>
