@@ -1,6 +1,6 @@
 import { motion } from 'motion/react';
 import { useNavigate } from 'react-router-dom';
-import { UserRound, ShieldCheck, CalendarDays, Baby, Users } from 'lucide-react';
+import { UserRound, ShieldCheck, Baby } from 'lucide-react';
 import { useSettings } from '../../lib/settingsQuery';
 import { useAppStore } from '../../stores/appStore';
 import { useT } from '../shared/i18n';
@@ -32,15 +32,6 @@ export const LandingPage = () => {
       <div className="bg-white rounded-2xl border border-[#CBAE94]/40 p-8 shadow-sm space-y-3">
         <button
           type="button"
-          onClick={() => navigate('/register')}
-          className="w-full py-2.5 rounded-xl bg-[#D4A373] text-white font-bold text-sm hover:bg-[#C08D5C] transition-colors flex items-center justify-center gap-2 cursor-pointer"
-        >
-          <Users className="w-4 h-4" />
-          {t.landingRegisterBtn}
-        </button>
-        <p className="text-xs text-[#A09080] font-sans text-center">{t.landingRegisterCaption}</p>
-        <button
-          type="button"
           onClick={() => navigate('/portal')}
           className="w-full py-2.5 rounded-xl bg-[#8B735B] text-white font-bold text-sm hover:bg-[#4A3F35] transition-colors flex items-center justify-center gap-2 cursor-pointer"
         >
@@ -62,14 +53,6 @@ export const LandingPage = () => {
         >
           <ShieldCheck className="w-4 h-4" />
           {t.landingAdminBtn}
-        </button>
-        <button
-          type="button"
-          onClick={() => navigate('/event')}
-          className="w-full py-2.5 rounded-xl border-2 border-[#CBAE94] bg-white text-[#4A3F35] font-bold text-sm hover:bg-[#EFE6DC] transition-colors flex items-center justify-center gap-2 cursor-pointer"
-        >
-          <CalendarDays className="w-4 h-4" />
-          {t.landingEventBtn}
         </button>
       </div>
     </motion.div>

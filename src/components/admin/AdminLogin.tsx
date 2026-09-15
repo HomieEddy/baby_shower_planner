@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Baby, Lock, Eye, EyeOff, LogIn } from 'lucide-react';
 import { useT } from '../shared/i18n';
+import { BackButton } from '../shared/BackButton';
 
 export const AdminLogin = () => {
     const t = useT();
@@ -86,7 +87,11 @@ export const AdminLogin = () => {
           </form>
         </div>
 
-        <p className="text-center text-xs text-[#A09080] mt-6 font-mono">
+        <div className="text-center mt-6">
+          <BackButton />
+        </div>
+
+        <p className="text-center text-xs text-[#A09080] mt-4 font-mono">
           Bébé Baby Shower Planner
         </p>
       </div>

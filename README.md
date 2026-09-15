@@ -18,19 +18,24 @@ Spreadsheets and group chats handle one of these well, poorly, and the rest not 
 
 **For guests**: no app, no account. Just invitation magic links and day-of QR codes:
 
+- Self-register through the universal invitation link (lands as pending until a host approves)
 - RSVP online in a couple of taps
+- Log back in with a 4-digit reservation code or by pasting a magic link
 - Check in and find their table on the day
 - Sign the guestbook and upload photos during the event
 
 **For the host**: everything in one admin dashboard:
 
-- Guest list with live RSVP tracking, bulk invitations by email or SMS
+- Guest list with live RSVP tracking, pending-registration approval, and bulk invitations by email or SMS
 - Catering manifest with dietary restrictions, allergies, and a visual breakdown
 - Drag-and-drop floor plan editor and printable escort cards
-- Gift log, baby predictions (due date, weight, name guesses), and check-in tracking
+- Planning agenda with calendar and kanban views, plus per-task reminders
+- Urgent alerts broadcast to selected guests
+- Gift log and thank-you tracker with AI-drafted messages
 - Live guestbook feed and a photo gallery with slideshow
-- Thank-you tracker with AI-drafted messages
+- Check-in tracking
 - Event theming and full EN/FR bilingual support throughout
+- Rehearsal mode: seed disposable demo data to smoke-test every flow, then clean it up in one click
 
 ## From side project to product
 
@@ -40,7 +45,44 @@ I plan to share it more broadly in the future: first as a free tool for friends 
 
 ## The stack
 
-React 19 + Vite frontend, native Node HTTP backend, PocketBase for storage, Tailwind CSS, Zustand, TanStack Query, and offline support via vite-plugin-pwa.
+- **Frontend**: React 19 + TypeScript, Vite, Tailwind CSS v4, `motion/react`, React Router v7 (client-side routing)
+- **Backend**: a native Node HTTP server (`server.ts`) with security wrappers and per-feature `/api/*` route handlers — no framework
+- **Database**: PocketBase (JS SDK, server-side); collections auto-created on first boot
+- **State & data**: Zustand for UI state, TanStack Query for server state
+- **Forms & validation**: react-hook-form + Zod, with domain schemas as the single source of truth
+- **Tables & charts**: TanStack Table (catering manifest), TanStack Virtual (guestbook feed), Recharts
+- **Seating & drag-and-drop**: `react-konva` floor plan editor, `@dnd-kit` sortable agenda
+- **i18n**: i18next / react-i18next behind a small `useT()` hook; EN/FR everywhere
+- **PWA**: `vite-plugin-pwa` for offline support
+
+## Architecture
+
+```
+src/
+  main.tsx            entry -> src/App.tsx (BrowserRouter + Routes, route-level lazy loading)
+  components/
+    landing/          guest landing, portal (code/magic-link login), event details, 404
+    registration/     universal self-registration form
+    rsvp/             RSVP flow + event details card
+    guestbook/        guestbook page
+    photos/           guest upload + host gallery (lightbox, slideshow)
+    seating/          floor plan editor, day-of finder, QR modal, shapes
+    admin/            host dashboard (sidebar nav) + tools + login
+    shared/           cross-feature UI (Modal, Toast, i18n, form primitives, motion)
+    layout/           Header, Footer
+  server/             HTTP framework (src/server/http.ts) + per-feature route handlers
+  db/                 PocketBase data layer (feature modules + service.ts barrel)
+  lib/                validation, date formatting, image compression, API helpers
+  stores/             Zustand stores (appStore language, settingsStore)
+  translations.ts     EN/FR strings
+  themePresets.ts     visual theme definitions
+server.ts             native Node server: security wrapping + dispatch + SPA fallback
+```
+
+- **Two UI surfaces**: guest pages render without the admin header/nav; the admin surface (`/login`, `/admin`, `/photo-gallery`, `/seating`) shows the header. `/find-my-table` and `/check-in` show only a slim FR/EN bar.
+- **Validation**: domain shapes live in `src/lib/domain.ts`; form/payload schemas in `src/lib/validation.ts` derive from them, and PocketBase field defs derive from the same schemas.
+- **Theming**: CSS custom properties applied at runtime from `themePresets.ts`.
+- **Uploads**: photos arrive as base64 JSON (`POST /api/upload` → `/api/photos/upload`); never multipart.
 
 ## Ports
 
@@ -78,38 +120,26 @@ Data persists in the `pb_data` volume. To start over: `curl -X POST http://local
 
 `THANKYOU_AI_API_KEY` powers the AI thank-you drafts (OpenCode Go, default model `deepseek-v4-flash`; any OpenAI-compatible endpoint works via `THANKYOU_AI_BASE_URL`); without it, drafts fall back to a built-in template. `RESEND_API_KEY` / `TWILIO_*` are optional; without them invitations fall back to console logging.
 
-## Testing Email & SMS
-
-Provider keys live in the gitignored `.env` file (docker compose substitutes them into the app container):
-
-| Variable | Where to get it | Notes |
-|---|---|---|
-| `RESEND_API_KEY` | https://resend.com/api-keys | Sandbox mode (`onboarding@resend.dev` sender) only delivers to the **account owner's verified email** |
-| `EMAIL_FROM` | | Default `Baby Shower <onboarding@resend.dev>`; use your verified domain sender if you have one |
-| `TWILIO_ACCOUNT_SID` | https://console.twilio.com | |
-| `TWILIO_AUTH_TOKEN` | Twilio console | |
-| `TWILIO_PHONE_NUMBER` | Twilio console → Phone Numbers | Trial accounts can only send to **verified numbers** |
-
-After editing `.env`, recreate the container so the vars apply:
-
-```sh
-docker compose up -d
-```
-
-Then in the admin app (`/admin`): add a guest with `delivery_channel` email/text/both (guest email must be your verified address in sandbox/trial mode), and use **Send Invite** / the invitations button. Watch delivery in the app logs: `docker compose logs app -f` (lines tagged `[RESEND]` / `[TWILIO]`). Without keys the same flow logs `[MOCK EMAIL]` / `[MOCK SMS]` and always reports success.
-
 ## Guest & Admin Surfaces
 
-Guests never see the admin header/nav. They reach their pages only via invitation magic links and day-of QR codes:
+Guests never see the admin header/nav. They reach their pages via invitation links and day-of QR codes:
 
-- `/`: landing page (guest/host/event entry buttons)
+- `/`: landing page (guest login + host login). The register and event-details links are intentionally not advertised here, so they're only reachable from the invitation the host shares.
+- `/register`: universal self-registration (optional `?ref=` referrer); new records start **pending** until approved
 - `/portal`: guest login — enter the 4-digit reservation code or paste a magic link
-- `/event`: event details card
+- `/event`: event details card (also embedded in the RSVP flow)
 - `/rsvp/:token`: reservation / RSVP
-- `/seating?guest=<token>`: floor map
+- `/find-my-table?guest=<token>`: day-of check-in and table lookup (QR links pre-select the guest)
+- `/check-in`: alias of `/find-my-table` so older links and QRs keep working
 - `/guestbook` and `/upload-photos`: guestbook and photo uploads, **time-locked**
 
-The guest content window (settings → "Guest Content Window" in the host dashboard) controls when the guestbook and photo uploads open (`contentOpenAt`, defaults to event start) and close (`contentCloseAt`). Outside the window guests see a locked page and the API returns 403; the admin always has access. Admin-only routes (`/admin`, `/photo-gallery`) require the admin password.
+The guest content window (settings → "Guest Content Window" in the host dashboard) controls when the guestbook and photo uploads open (`contentOpenAt`, defaults to event start) and close (`contentCloseAt`). Outside the window guests see a locked page and the API returns 403; the admin always has access. Admin-only routes (`/admin`, `/photo-gallery`, `/seating`) require the admin password.
+
+## Testing
+
+- Unit / component: `npm test` (Vitest + Testing Library). Includes EN/FR translation integrity tests (key parity, no emoji, symmetric placeholders).
+- End-to-end: `npm run test:e2e` (Playwright, `e2e/`) — needs the app on `:3025`.
+- Type check + lint: `npm run lint:all`.
 
 ## Deploy
 

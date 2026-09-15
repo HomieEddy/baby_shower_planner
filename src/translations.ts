@@ -530,7 +530,6 @@ export interface Translations {
   landingGuestBtn: string;
   landingGuestCaption: string;
   landingHeroSubtitle: string;
-  landingRegisterCaption: string;
   linkCopied: string;
   linkOnlyHint: string;
   liveFeedTab: string;
@@ -1756,7 +1755,6 @@ export const translations: Record<Language, Translations> = {
     landingEventBtn: "Event Details",
     landingGuestBtn: "Guest Login",
     landingGuestCaption: "Already have an invite code or magic link",
-    landingRegisterCaption: "New here — add your party and RSVP",
     landingHeroSubtitle: "Log in to RSVP, find your seat, and join the celebration.",
     linkCopied: "Copied!",
     linkOnlyHint: "You'll get a ready-to-send message to share yourself (WhatsApp, Messenger…).",
@@ -2980,7 +2978,6 @@ export const translations: Record<Language, Translations> = {
     landingGuestBtn: "Connexion Invité",
     landingGuestCaption: "Vous avez déjà un code ou un lien magique",
     landingHeroSubtitle: "Connectez-vous pour répondre, trouver votre table et célébrer avec nous.",
-    landingRegisterCaption: "Nouveau — ajoutez votre groupe et répondez",
     linkCopied: "Copié !",
     linkOnlyHint: "Vous recevrez un message prêt à envoyer à partager vous-même (WhatsApp, Messenger…).",
     liveFeedTab: "Fil en direct",
