@@ -639,6 +639,17 @@ export interface Translations {
   portalResolving: string;
   portalSubtitle: string;
   portalTitle: string;
+  scanTitle: string;
+  scanSubtitle: string;
+  scanAtTable: string;
+  scanGuestbookCard: string;
+  scanGuestbookDesc: string;
+  scanPhotosCard: string;
+  scanPhotosDesc: string;
+  scanEnterCodeTitle: string;
+  scanEnterCodeHint: string;
+  scanRateLimited: string;
+  scanChooseAgainBtn: string;
   presetEnglish: string;
   presetFrench: string;
   prevSlideBtn: string;
@@ -1909,6 +1920,17 @@ export const translations: Record<Language, Translations> = {
     portalResolving: "Looking up your invitation...",
     portalSubtitle: "Enter the 4-digit code from your invitation or paste your magic link.",
     portalTitle: "Guest Portal",
+    scanTitle: "Welcome!",
+    scanSubtitle: "What would you like to do?",
+    scanAtTable: "Table {{table}}",
+    scanGuestbookCard: "Leave a Wish",
+    scanGuestbookDesc: "Write a message in the guestbook.",
+    scanPhotosCard: "Share Photos",
+    scanPhotosDesc: "Upload photos from your table.",
+    scanEnterCodeTitle: "Enter your reservation code",
+    scanEnterCodeHint: "It's on your name badge or escort card.",
+    scanRateLimited: "Too many attempts. Please try again in a minute.",
+    scanChooseAgainBtn: "Choose something else",
     presetEnglish: "English (EN)",
     presetFrench: "Français (FR)",
     prevSlideBtn: "Previous Slide",
@@ -2484,14 +2506,14 @@ export const translations: Record<Language, Translations> = {
     guestsCount_one: "{{count}} guest",
     guestsCount_other: "{{count}} guests",
     assignToLabel: "Assign to",
-    tableQrPhotoDrop: "Photo Drop",
-    tableQrShareTitle: "Share Your Baby Shower Photos!",
+    tableQrPhotoDrop: "Scan Me",
+    tableQrShareTitle: "Share a Wish or a Photo!",
     tableQrAlt: "QR code for {{name}}",
-    tableQrScanDesc: "Scan this QR code with your smartphone camera to instantly upload table photos into the hosts' memory library!",
-    tableQrCardFooter: "Table: {{name}} • Scan & Upload • No App Required",
-    tableQrPrintTitle: "Print Table Photo Upload Standees",
-    tableQrPrintSubtitle: "Place these QR standees on every table so guests can upload photos!",
-    tableQrHowItWorks: "Guests scan the QR code placed on their table. It opens the Photo Upload portal directly with their table pre-selected!",
+    tableQrScanDesc: "Scan this code with your phone, choose Guestbook or Photo Upload, then enter your reservation code.",
+    tableQrCardFooter: "{{name}} • Guestbook & Photos • No App Required",
+    tableQrPrintTitle: "Print Table QR Standees",
+    tableQrPrintSubtitle: "Place one on every table so guests can open the guestbook or upload photos.",
+    tableQrHowItWorks: "Guests scan the QR, choose Guestbook or Photo Upload, and enter their reservation code to continue.",
     tableQrPrintModeLabel: "Print Mode:",
     tableQrSingleStandee: "Single Table Standee",
     tableQrAllStandees: "All Venue Tables ({{count}} Standees)",
@@ -3174,6 +3196,17 @@ export const translations: Record<Language, Translations> = {
     portalResolving: "Recherche de votre invitation...",
     portalSubtitle: "Entrez le code à 4 chiffres de votre invitation ou collez votre lien magique.",
     portalTitle: "Portail Invité",
+    scanTitle: "Bienvenue !",
+    scanSubtitle: "Que souhaitez-vous faire ?",
+    scanAtTable: "Table {{table}}",
+    scanGuestbookCard: "Laisser un vœu",
+    scanGuestbookDesc: "Écrivez un message dans le livre d'or.",
+    scanPhotosCard: "Partager des photos",
+    scanPhotosDesc: "Téléversez vos photos de table.",
+    scanEnterCodeTitle: "Saisissez votre code de réservation",
+    scanEnterCodeHint: "Il se trouve sur votre badge ou votre carte de table.",
+    scanRateLimited: "Trop de tentatives. Veuillez réessayer dans une minute.",
+    scanChooseAgainBtn: "Choisir autre chose",
     presetEnglish: "English (EN)",
     presetFrench: "Français (FR)",
     prevSlideBtn: "Diapositive précédente",
@@ -3749,14 +3782,14 @@ export const translations: Record<Language, Translations> = {
     guestsCount_one: "{{count}} invité",
     guestsCount_other: "{{count}} invités",
     assignToLabel: "Assigner à",
-    tableQrPhotoDrop: "Dépôt photo",
-    tableQrShareTitle: "Partagez vos photos du baby shower !",
+    tableQrPhotoDrop: "Scannez-moi",
+    tableQrShareTitle: "Partagez un vœu ou une photo !",
     tableQrAlt: "Code QR pour {{name}}",
-    tableQrScanDesc: "Scannez ce code QR avec l'appareil photo de votre téléphone pour envoyer instantanément les photos de votre table dans la galerie des hôtes !",
-    tableQrCardFooter: "Table : {{name}} • Scannez et envoyez • Aucune appli requise",
-    tableQrPrintTitle: "Imprimer les chevalets QR de partage photo",
-    tableQrPrintSubtitle: "Placez ces chevalets QR sur chaque table pour que les invités puissent envoyer des photos !",
-    tableQrHowItWorks: "Les invités scannent le code QR placé sur leur table. Il ouvre le portail d'envoi de photos avec leur table déjà sélectionnée !",
+    tableQrScanDesc: "Scannez ce code avec votre téléphone, choisissez le livre d'or ou l'envoi de photos, puis saisissez votre code de réservation.",
+    tableQrCardFooter: "{{name}} • Livre d'or et photos • Aucune appli requise",
+    tableQrPrintTitle: "Imprimer les chevalets QR de table",
+    tableQrPrintSubtitle: "Placez-en un sur chaque table pour que les invités ouvrent le livre d'or ou envoient des photos.",
+    tableQrHowItWorks: "Les invités scannent le code QR, choisissent le livre d'or ou l'envoi de photos, puis saisissent leur code de réservation.",
     tableQrPrintModeLabel: "Mode d'impression :",
     tableQrSingleStandee: "Chevalet d'une table",
     tableQrAllStandees: "Toutes les tables ({{count}} chevalets)",
