@@ -581,10 +581,8 @@ export interface Translations {
   nameExamplePlaceholder: string;
   navAdmin: string;
   navFloorplan: string;
-  navGuestbook: string;
   navPhotoGallery: string;
   navRsvp: string;
-  navUploadPhotos: string;
   nextSlideBtn: string;
   noAlertsYetMsg: string;
   noDietaryMsg: string;
@@ -1190,8 +1188,6 @@ export interface Translations {
   zipAddingPhotoStatus: string;
   // UI navigation audit additions
   backBtn: string;
-  navGroupGuestPages: string;
-  navGroupSeating: string;
   pageNotFoundTitle: string;
   pageNotFoundMsg: string;
   skipToContent: string;
@@ -1861,10 +1857,8 @@ export const translations: Record<Language, Translations> = {
     nameExamplePlaceholder: "e.g., Aunt Sarah & Mark",
     navAdmin: "Co-Host Dashboard",
     navFloorplan: "Floor Map & Seating",
-    navGuestbook: "QR Digital Guestbook",
     navPhotoGallery: "Host Photo Gallery",
     navRsvp: "RSVP & Event Info",
-    navUploadPhotos: "Upload Event Photos",
     nextSlideBtn: "Next Slide",
     noAlertsYetMsg: "No active broadcast alerts dispatched yet.",
     noDietaryMsg: "No dietary restrictions reported yet.",
@@ -2468,8 +2462,6 @@ export const translations: Record<Language, Translations> = {
     zipAddingPhotoStatus: "Adding photo {{current}} of {{total}}...",
     // UI navigation audit additions
     backBtn: "Back",
-    navGroupGuestPages: "Guest Pages",
-    navGroupSeating: "Seating",
     pageNotFoundTitle: "Page Not Found",
     pageNotFoundMsg: "That page doesn't exist or was moved.",
     skipToContent: "Skip to content",
@@ -3136,10 +3128,8 @@ export const translations: Record<Language, Translations> = {
     nameExamplePlaceholder: "ex : Tante Sarah & Marc",
     navAdmin: "Tableau de Bord Hôte",
     navFloorplan: "Plan de Salle & Placement",
-    navGuestbook: "Livre d'or QR",
     navPhotoGallery: "Galerie Photo Hôte",
     navRsvp: "RSVP & Détails",
-    navUploadPhotos: "Partager des Photos",
     nextSlideBtn: "Diapositive suivante",
     noAlertsYetMsg: "Aucune alerte active diffusée pour l'instant.",
     noDietaryMsg: "Aucune restriction alimentaire signalée pour l'instant.",
@@ -3743,8 +3733,6 @@ export const translations: Record<Language, Translations> = {
     zipAddingPhotoStatus: "Ajout de la photo {{current}} sur {{total}}...",
     // UI navigation audit additions
     backBtn: "Retour",
-    navGroupGuestPages: "Pages invités",
-    navGroupSeating: "Placement",
     pageNotFoundTitle: "Page introuvable",
     pageNotFoundMsg: "Cette page n'existe pas ou a été déplacée.",
     skipToContent: "Aller au contenu",
