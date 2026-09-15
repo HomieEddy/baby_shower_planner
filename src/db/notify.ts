@@ -6,6 +6,7 @@ import type { Guest, EventSettings } from '../types';
 import type { MessageContent } from '../lib/compose';
 import { composeInvitation, composeReminder } from '../lib/compose';
 import { getSettings } from './settings';
+import { requireProvider } from './providers';
 
 export type Channel = 'email' | 'text';
 
@@ -71,6 +72,7 @@ async function loadSettings(): Promise<Partial<EventSettings>> {
 const failedDelivery = (r: NotifyResult) => r.failed.length > 0;
 
 export async function sendInvitations(guestIds?: string[]): Promise<{ sent: number; failed: number }> {
+  requireProvider(['email', 'text']);
   const { getAllGuests } = await import('./guests');
   const all = await getAllGuests();
   const guests = guestIds && guestIds.length > 0 ? all.filter((g) => guestIds.includes(g.id)) : all;
@@ -84,6 +86,7 @@ export async function sendInvitations(guestIds?: string[]): Promise<{ sent: numb
 }
 
 export async function sendReminders(): Promise<{ sent: number; failed: number }> {
+  requireProvider(['email', 'text']);
   const { getAllGuests } = await import('./guests');
   const guests = (await getAllGuests()).filter((g) => g.rsvp_status === 'Pending');
   const settings = await loadSettings();

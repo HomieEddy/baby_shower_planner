@@ -6,6 +6,7 @@ import { getAllGuests } from './guests';
 import { getSettingsOrDefaults } from './settings';
 import { composeAlert } from '../lib/compose';
 import { notifyGuest } from './notify';
+import { requireProvider } from './providers';
 
 export async function getAlerts(): Promise<EventAlert[]> {
   const records = await pb.collection('alerts').getFullList({ sort: '-created_at' });
@@ -13,6 +14,7 @@ export async function getAlerts(): Promise<EventAlert[]> {
 }
 
 export async function createAlert(payload: { type: AlertType; title: string; message: string; target_audience?: 'ALL' | 'PENDING' | 'ATTENDING' }): Promise<{ alert: EventAlert; notified_count: number }> {
+  requireProvider(['email', 'text']);
   const r = await pb.collection('alerts').create({
     type: payload.type, title: payload.title, message: payload.message,
     active: true, target_audience: payload.target_audience || 'ALL',

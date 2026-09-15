@@ -58,6 +58,7 @@ import { suggestSeating, unseatedParties } from '../../lib/seatingSuggestions';
 import type { SmartSuggestion } from '../../lib/seatingSuggestions';
 import { renderTableBody, renderLandmark, SeatRing, TableLabel, renderRoomBoundary } from './venueShapes';
 import { useAppStore } from '../../stores/appStore';
+import { useCapabilities, noProviders } from '../../lib/capabilities';
 
 const FloorPlan3D = lazy(() => import('./FloorPlan3D').then((m) => ({ default: m.FloorPlan3D })));
 import { useT, useTf } from '../shared/i18n';
@@ -68,6 +69,8 @@ export const FloorPlanPage = () => {
   const t = useT();
   const tf = useTf();
   const confirmAction = useActionConfirm();
+  const { data: caps } = useCapabilities();
+  const sendsBlocked = noProviders(caps);
 
   // Floor Map Data State
   const [floorMap, setFloorMap] = useState<FloorMapData | null>(null);
@@ -732,7 +735,9 @@ export const FloorPlanPage = () => {
 
                 <button
                   onClick={() => setIsEmailModalOpen(true)}
-                  className="w-full inline-flex items-center justify-center gap-2 px-3.5 py-2.5 rounded-2xl border-2 border-[#CBAE94] text-xs font-bold text-[#5D5449] bg-white hover:bg-[#EFE6DC] transition-colors"
+                  disabled={sendsBlocked}
+                  title={sendsBlocked ? t.providerNotConfigured : undefined}
+                  className="w-full inline-flex items-center justify-center gap-2 px-3.5 py-2.5 rounded-2xl border-2 border-[#CBAE94] text-xs font-bold text-[#5D5449] bg-white hover:bg-[#EFE6DC] transition-colors disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-white"
                 >
                   <Mail className="w-4 h-4 text-[#8B735B]" /> {t.btnShareEmail}
                 </button>
@@ -1192,8 +1197,9 @@ export const FloorPlanPage = () => {
             </button>
             <button
               type="submit"
-              disabled={sendingEmail}
-              className="inline-flex items-center gap-2 px-5 py-2.5 rounded-2xl bg-[#8B735B] hover:bg-[#705C47] text-white text-xs font-bold shadow-md transition-all"
+              disabled={sendingEmail || sendsBlocked}
+              title={sendsBlocked ? t.providerNotConfigured : undefined}
+              className="inline-flex items-center gap-2 px-5 py-2.5 rounded-2xl bg-[#8B735B] hover:bg-[#705C47] text-white text-xs font-bold shadow-md transition-all disabled:opacity-40 disabled:cursor-not-allowed"
             >
               {sendingEmail ? t.sendingSeatingEmailsBtn : t.sendSeatingEmailsBtn}
             </button>

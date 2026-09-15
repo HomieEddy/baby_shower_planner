@@ -98,7 +98,9 @@ export const AdminAgendaTab: React.FC<AdminAgendaTabProps> = ({ language, t, set
   const [savingReminders, setSavingReminders] = useState(false);
   const [testingReminder, setTestingReminder] = useState(false);
 
-  const channelConfigured = (emailOn && hostEmail.trim()) || (smsOn && hostPhone.trim());
+  const channelConfigured =
+    (emailOn && !!caps?.email && !!hostEmail.trim()) ||
+    (smsOn && !!caps?.sms && !!hostPhone.trim());
 
   const handleSaveReminders = async () => {
     if (!(await confirmAction(t.agendaReminderSaveBtn))) return;
@@ -200,7 +202,7 @@ export const AdminAgendaTab: React.FC<AdminAgendaTabProps> = ({ language, t, set
       on ? 'border-[#8B735B] bg-[#EFE6DC] text-[#8B735B]' : 'border-[#CBAE94]/50 bg-white text-[#5D5449] hover:bg-[#EFE6DC]/40'
     }`;
 
-  const mock = caps && ((!caps.email && emailOn) || (!caps.sms && smsOn));
+  const missingProvider = !!caps && ((emailOn && !caps.email) || (smsOn && !caps.sms));
 
   return (
     <motion.div key="agenda" variants={adminContainerVariants} initial="hidden" animate="show" className="space-y-8">
@@ -274,12 +276,16 @@ export const AdminAgendaTab: React.FC<AdminAgendaTabProps> = ({ language, t, set
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <button type="button" onClick={() => setReminderForm((f) => ({ ...f, emailOn: !f.emailOn }))} className={toggleCls(emailOn)}>
+          <button type="button" disabled={!caps?.email} title={!caps?.email ? t.providerNotConfigured : undefined}
+            onClick={() => setReminderForm((f) => ({ ...f, emailOn: !f.emailOn }))}
+            className={`${toggleCls(emailOn)} disabled:opacity-40 disabled:cursor-not-allowed`}>
             <Mail className="w-4 h-4" />
             {t.agendaReminderEmailLabel}
             {caps?.email ? null : <span className="ml-auto text-xs font-mono text-amber-700 bg-amber-100 px-1.5 py-0.5 rounded-full">{t.mockBadge}</span>}
           </button>
-          <button type="button" onClick={() => setReminderForm((f) => ({ ...f, smsOn: !f.smsOn }))} className={toggleCls(smsOn)}>
+          <button type="button" disabled={!caps?.sms} title={!caps?.sms ? t.providerNotConfigured : undefined}
+            onClick={() => setReminderForm((f) => ({ ...f, smsOn: !f.smsOn }))}
+            className={`${toggleCls(smsOn)} disabled:opacity-40 disabled:cursor-not-allowed`}>
             <MessageSquare className="w-4 h-4" />
             {t.agendaReminderSmsLabel}
             {caps?.sms ? null : <span className="ml-auto text-xs font-mono text-amber-700 bg-amber-100 px-1.5 py-0.5 rounded-full">{t.mockBadge}</span>}
@@ -316,7 +322,7 @@ export const AdminAgendaTab: React.FC<AdminAgendaTabProps> = ({ language, t, set
           </div>
         </div>
 
-        {mock && <p className="text-xs text-amber-800 bg-amber-50 border border-amber-200 rounded-2xl px-4 py-3 font-mono">{t.agendaMockHint}</p>}
+        {missingProvider && <p className="text-xs text-amber-800 bg-amber-50 border border-amber-200 rounded-2xl px-4 py-3 font-mono">{t.providerNotConfigured}</p>}
 
         <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 pt-1 border-t border-[#CBAE94]/30">
           <button

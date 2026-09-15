@@ -6,6 +6,7 @@ import { getAllGuests } from './guests';
 import { getSettingsOrDefaults } from './settings';
 import { composeFloorPlan } from '../lib/compose';
 import { notifyChannels } from './notify';
+import { requireProvider } from './providers';
 import { applyTablesAndSync } from './floorSync';
 import { getAttendeeLocations } from '../lib/tableAssignment';
 
@@ -57,6 +58,7 @@ export async function updateFloorMap(data: Partial<FloorMapData>): Promise<Floor
 // target table's free chairs in party order. Seat-level edits go through
 // updateFloorMap (bulk) instead.
 export async function shareFloorPlanEmail(guestIds?: string[], customMessage?: string): Promise<{ count: number }> {
+  requireProvider(['email']);
   const guests: Guest[] = guestIds?.length
     ? await Promise.all(guestIds.map((id) => pb.collection('guests').getOne(id).then((r) => fromRecord<Guest>(r))))
     : await getAllGuests();

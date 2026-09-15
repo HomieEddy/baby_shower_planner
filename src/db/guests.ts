@@ -167,8 +167,14 @@ export async function setApproval(id: string, decision: 'approved' | 'rejected')
   const updated = await pb.collection('guests').update(id, { approval_status: decision });
   const guest = fromRecord<Guest>(updated);
   if (decision === 'approved' && guest.delivery_channel && guest.delivery_channel !== 'none') {
-    const settings = await getSettingsOrDefaults();
-    await notifyGuest(guest, composeInvitation(guest, settings, guest.language_pref));
+    // Best effort: the approval is already persisted, so a delivery failure must
+    // not surface as a 500 (which made the UI show an error after it succeeded).
+    try {
+      const settings = await getSettingsOrDefaults();
+      await notifyGuest(guest, composeInvitation(guest, settings, guest.language_pref));
+    } catch (err) {
+      console.error('[approval] notification failed:', err);
+    }
   }
   return guest;
 }

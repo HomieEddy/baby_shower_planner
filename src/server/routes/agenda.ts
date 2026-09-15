@@ -10,6 +10,8 @@ import {
   deleteAgendaTask,
   getAgendaTasks,
   getSettings,
+  providerAvailability,
+  requireProvider,
   reorderAgendaTasks,
   updateAgendaTask,
 } from '../../db/service';
@@ -56,13 +58,20 @@ export async function handleAgendaRoutes(ctx: RouteCtx): Promise<boolean> {
       due_date: settings.date || '', due_time: undefined,
       status: 'todo', position: 0, reminder_sent: false, created_at: '',
     };
+    const providers = providerAvailability();
+    // Block the test when a requested channel has no provider configured.
+    const requested: Array<'email' | 'text'> = [];
+    if (channels.email && settings.hostEmail) requested.push('email');
+    if (channels.sms && settings.hostPhone) requested.push('text');
+    if (requested.length > 0) requireProvider(requested);
+
     const results: Record<string, boolean> = {};
     const content = composeAgenda(settings, sampleTask);
-    if (channels.email && settings.hostEmail) {
+    if (channels.email && providers.email && settings.hostEmail) {
       const { sendEmail } = await import('../../lib/email');
       results.email = await sendEmail(settings.hostEmail, content);
     }
-    if (channels.sms && settings.hostPhone) {
+    if (channels.sms && providers.sms && settings.hostPhone) {
       const { sendSms } = await import('../../lib/sms');
       results.sms = await sendSms(settings.hostPhone, content);
     }

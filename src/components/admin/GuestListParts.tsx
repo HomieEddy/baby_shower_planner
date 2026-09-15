@@ -18,6 +18,7 @@ import { ActionsMenu } from '../shared/ActionsMenu';
 import { Segmented } from '../shared/Segmented';
 import { AdminToolbar } from './AdminToolbar';
 import { getGuestPartySize } from '../../lib/tableAssignment';
+import { useCapabilities, noProviders } from '../../lib/capabilities';
 
 export const GuestToolbar = ({
   className = '',
@@ -47,6 +48,8 @@ export const GuestToolbar = ({
   onSendReminders: () => void;
 }) => {
   const t = useT();
+  const { data: caps } = useCapabilities();
+  const sendsBlocked = noProviders(caps);
   return (
     <AdminToolbar
       className={className}
@@ -75,7 +78,7 @@ export const GuestToolbar = ({
             items={[
               { label: t.importCsvBtn, icon: <Upload className="w-3.5 h-3.5 shrink-0" />, onClick: onOpenImport },
               { label: t.exportCsvBtn, icon: <Download className="w-3.5 h-3.5 shrink-0" />, onClick: onExportCsv },
-              { label: t.remindBtn, icon: <BellRing className="w-3.5 h-3.5 shrink-0" />, onClick: onSendReminders },
+              { label: t.remindBtn, icon: <BellRing className="w-3.5 h-3.5 shrink-0" />, onClick: onSendReminders, disabled: sendsBlocked, title: sendsBlocked ? t.providerNotConfigured : undefined },
             ]}
           />
         </>
@@ -177,6 +180,8 @@ export const BulkActionsBar = ({
 }) => {
   const t = useT();
   const tf = useTf();
+  const { data: caps } = useCapabilities();
+  const sendsBlocked = noProviders(caps);
   return (
     <motion.div initial={{ opacity: 0, y: -6 }} animate={{ opacity: 1, y: 0 }}
       className="sticky top-2 z-20 flex flex-wrap items-center gap-2 bg-[#EFE6DC] border-2 border-[#8B735B] rounded-2xl px-4 py-2.5 mb-3 shadow-md">
@@ -186,8 +191,9 @@ export const BulkActionsBar = ({
         {allSelected ? <CheckSquare className="w-3.5 h-3.5" /> : <Square className="w-3.5 h-3.5" />}
         <span className="hidden md:inline">{allSelected ? t.deselectAllBtn : t.selectAllBtn}</span>
       </button>
-      <button onClick={onResend}
-        className="px-3 py-1.5 rounded-full bg-[#8B735B] text-white font-bold text-xs hover:bg-[#4A3F35] transition-all flex items-center gap-1 shadow-2xs">
+      <button onClick={onResend} disabled={sendsBlocked}
+        title={sendsBlocked ? t.providerNotConfigured : undefined}
+        className="px-3 py-1.5 rounded-full bg-[#8B735B] text-white font-bold text-xs hover:bg-[#4A3F35] transition-all flex items-center gap-1 shadow-2xs disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-[#8B735B]">
         <Send className="w-3.5 h-3.5" /><span className="hidden md:inline">{t.bulkResendBtn}</span>
       </button>
       <button onClick={onExport}

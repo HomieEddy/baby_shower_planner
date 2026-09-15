@@ -55,6 +55,7 @@ export const ERROR_REGISTRY = {
   INVALID_INDEX: { status: 400, message: 'Attendee index must be a non-negative integer' },
   GUEST_ID_REQUIRED: { status: 400, message: 'guestId is required' },
   INVALID_PHOTO_URL: { status: 400, message: 'Invalid photo URL' },
+  PROVIDER_NOT_CONFIGURED: { status: 503, message: 'No email or SMS provider is configured' },
   FORBIDDEN: { status: 403, message: 'Forbidden' },
   PAYLOAD_TOO_LARGE: { status: 413, message: 'Payload too large' },
   ENDPOINT_NOT_FOUND: { status: 404, message: 'Endpoint not found' },

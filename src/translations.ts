@@ -1169,6 +1169,7 @@ export interface Translations {
   escortHeaderDefault: string;
   qrCodeAlt: string;
   mockBadge: string;
+  providerNotConfigured: string;
   breadcrumbLabel: string;
   openNavLabel: string;
   closeNavLabel: string;
@@ -2407,6 +2408,7 @@ export const translations: Record<Language, Translations> = {
     escortHeaderDefault: "Welcome to Our Baby Shower",
     qrCodeAlt: "QR code",
     mockBadge: "MOCK",
+    providerNotConfigured: "No email or SMS provider is configured",
     breadcrumbLabel: "Breadcrumb",
     openNavLabel: "Open navigation",
     closeNavLabel: "Close navigation",
@@ -3642,6 +3644,7 @@ export const translations: Record<Language, Translations> = {
     escortHeaderDefault: "Bienvenue à notre baby shower",
     qrCodeAlt: "Code QR",
     mockBadge: "SIMULÉ",
+    providerNotConfigured: "Aucun fournisseur e-mail ou SMS n'est configuré",
     breadcrumbLabel: "Fil d'Ariane",
     openNavLabel: "Ouvrir la navigation",
     closeNavLabel: "Fermer la navigation",

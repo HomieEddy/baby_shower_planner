@@ -6,6 +6,7 @@ import { getGiftById } from './gifts';
 import { DomainError } from '../lib/errors';
 import { composeThankYou } from '../lib/compose';
 import { notifyChannels, type Channel } from './notify';
+import { requireProvider } from './providers';
 
 function buildFallbackDraft(gift: GiftLog, settings: Partial<EventSettings>, language: Language): string {
   const parents = settings.parentsNames?.trim() || (language === 'EN' ? 'the expecting parents' : 'les futurs parents');
@@ -88,6 +89,11 @@ export async function sendGiftThankYou(
   channel: 'email' | 'text' | 'both',
   text: string
 ): Promise<{ sent: string[]; failed: string[] }> {
+  const channels: Channel[] = [];
+  if (channel === 'email' || channel === 'both') channels.push('email');
+  if (channel === 'text' || channel === 'both') channels.push('text');
+  requireProvider(channels);
+
   const gift = await getGiftById(giftId);
   const records = await pb.collection('guests').getFullList();
   const guestRecord = gift.guest_id
@@ -96,9 +102,6 @@ export async function sendGiftThankYou(
   if (!guestRecord) throw new DomainError('GUEST_NOT_FOUND');
   const guest = fromRecord<Guest>(guestRecord);
 
-  const channels: Channel[] = [];
-  if (channel === 'email' || channel === 'both') channels.push('email');
-  if (channel === 'text' || channel === 'both') channels.push('text');
   const { sent, failed } = await notifyChannels(guest, composeThankYou(guest, text, guest.language_pref), channels);
   if (sent.length === 0 && failed.length === 0) {
     throw new DomainError(channel === 'email' || channel === 'both' ? 'NO_EMAIL' : 'NO_PHONE');
