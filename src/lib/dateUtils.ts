@@ -43,8 +43,8 @@ export function parseTimeRange(timeStr: string): { startTime: string; endTime: s
 
   const parts = timeStr.split(/[-–—]/);
   if (parts.length >= 2) {
-    const start24 = parseSingleTimeTo24h(parts[0].trim());
-    const end24 = parseSingleTimeTo24h(parts[1].trim());
+    const start24 = parseTimeTo24h(parts[0].trim());
+    const end24 = parseTimeTo24h(parts[1].trim());
     return {
       startTime: start24 || '14:00',
       endTime: end24 || '18:00',
@@ -53,8 +53,7 @@ export function parseTimeRange(timeStr: string): { startTime: string; endTime: s
   return { startTime: '14:00', endTime: '18:00' };
 }
 
-function parseSingleTimeTo24h(str: string): string | null {
-  if (!str) return null;
+export function parseTimeTo24h(str: string): string | null {  if (!str) return null;
   if (/^\d{1,2}:\d{2}$/.test(str)) {
     const [h, m] = str.split(':').map(Number);
     return `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`;
