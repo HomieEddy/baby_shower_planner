@@ -3,7 +3,7 @@
 import fs from 'node:fs';
 import crypto from 'node:crypto';
 import type { RouteCtx } from '../http';
-import { parseJson, sendError, sendGuestLocked, sendJson } from '../http';
+import { parseJson, rateLimit, sendError, sendGuestLocked, sendJson } from '../http';
 import { isValidCode } from '../../lib/validation';
 import { getUploadFilePath, removeUploadFiles } from '../uploadFiles';
 import {
@@ -18,16 +18,27 @@ import {
 // Per-guest photo quota (keyed by reservation code).
 const MAX_PHOTOS_PER_GUEST = 12;
 const MAX_PHOTOS_BYTES_PER_GUEST = 24 * 1024 * 1024; // 24 MB across all 12
+const MAX_UPLOADS_PER_MINUTE = 30; // bounds orphaned files on disk
 
 export async function handlePhotoRoutes(ctx: RouteCtx): Promise<boolean> {
-  const { req, res, url } = ctx;
+  const { req, res, url, ip } = ctx;
   const method = req.method || 'GET';
   const pathname = url.pathname;
 
   if (pathname === '/api/upload' && method === 'POST') {
+    // Raw file writes are guest content: same window as the guestbook and the
+    // gallery. Orphans (a file written but never registered) are unbounded
+    // disk, so the write also gets its own per-IP budget.
+    const lock = await ctx.guestLock();
+    if (lock) return sendGuestLocked(res, lock);
+    if (!rateLimit(`upload:${ip}`, MAX_UPLOADS_PER_MINUTE, 60_000).allowed) {
+      return sendError(res, 'RATE_LIMITED');
+    }
     const body = await parseJson(req);
     const matches = typeof body.photo_base64 === 'string'
-      ? body.photo_base64.match(/^data:([A-Za-z-+]+);base64,(.+)$/)
+      // The MIME type contains a slash (`data:image/jpeg;base64,…`), so the
+      // capture class must allow it — without `/` every valid upload 400s.
+      ? body.photo_base64.match(/^data:([A-Za-z-+/]+);base64,(.+)$/)
       : null;
     if (!matches || matches.length !== 3) {
       return sendError(res, 'INVALID_PAYLOAD', 'photo_base64 data URL is required');
