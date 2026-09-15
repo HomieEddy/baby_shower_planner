@@ -3,6 +3,7 @@
 import type { RouteCtx } from '../http';
 import { parseJson, sendError, sendJson } from '../http';
 import { ReminderSettingsSchema } from '../../lib/validation';
+import { SettingsSchema } from '../../lib/domain';
 import type { EventSettings } from '../../types';
 import { getSettings, updateSettings } from '../../db/service';
 
@@ -24,6 +25,13 @@ export async function handleSettingsRoutes(ctx: RouteCtx): Promise<boolean> {
     if (method === 'POST') {
       ctx.requireAdmin();
       const body = await parseJson(req);
+      // Only the domain's own keys may reach PocketBase: the raw body used to
+      // be spread straight into the update.
+      const settingsKeys = new Set(Object.keys(SettingsSchema.shape));
+      const unknown = Object.keys(body || {}).filter((key) => !settingsKeys.has(key));
+      if (unknown.length > 0) {
+        return sendError(res, 'INVALID_PAYLOAD', `Unknown setting: ${unknown[0]}`);
+      }
       const reminder = ReminderSettingsSchema.partial().safeParse(body);
       if (!reminder.success) {
         return sendError(res, 'INVALID_PAYLOAD', reminder.error.issues[0]?.message);
