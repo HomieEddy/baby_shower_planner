@@ -12,7 +12,7 @@ import type { Guest, FloorMapData, DeliveryChannel, Language } from '../../types
 import type { Translations } from '../../translations';
 import { adminFetch } from '../../lib/api';
 import { parseCsvLine, csvCell, toCsv, downloadCsv } from '../../lib/csv';
-import { getPartyMembers } from '../../lib/guestAttendees';
+import { getPartyDietary, getAttendeeDietary, type AdditionalAttendee } from '../../lib/guestAttendees';
 import { getGuestPartySize, getAttendeeLocations } from '../../lib/tableAssignment';
 import { GuestImportSchema, EditGuestFormSchema } from '../../lib/validation';
 import { useCapabilities, availableChannels } from '../../lib/capabilities';
@@ -96,7 +96,7 @@ export function useGuestAdminController({ language, t, guests, onRefresh }: Gues
   const [markGoing, setMarkGoing] = useState(false);
   // Party-member entry: when the group size is > 1 the host names the members.
   const [attendeeModal, setAttendeeModal] = useState<{ values: AddGuestFormValues; going: boolean } | null>(null);
-  const [extraNames, setExtraNames] = useState<string[]>([]);
+  const [extraMembers, setExtraMembers] = useState<AdditionalAttendee[]>([]);
 
   const { register, handleSubmit, setValue, setFocus, watch, formState: { errors } } = useForm<AddGuestFormValues>({
     resolver: zodResolver(GuestImportSchema),
@@ -107,6 +107,7 @@ export function useGuestAdminController({ language, t, guests, onRefresh }: Gues
       delivery_channel: 'none',
       max_party_size: 2,
       language_pref: language,
+      dietary_restrictions: '',
     },
   });
 
@@ -120,11 +121,12 @@ export function useGuestAdminController({ language, t, guests, onRefresh }: Gues
       delivery_channel: 'none',
       max_party_size: 2,
       rsvp_status: 'Pending',
+      dietary_restrictions: '',
     },
   });
   const [savingEdit, setSavingEdit] = useState(false);
   // Additional members (primary guest excluded) while editing a party.
-  const [editExtraNames, setEditExtraNames] = useState<string[]>([]);
+  const [editMembers, setEditMembers] = useState<AdditionalAttendee[]>([]);
 
   // ── CSV import modal ────────────────────────────────────────────
   const [showCsvImportModal, setShowCsvImportModal] = useState(false);
@@ -167,7 +169,7 @@ export function useGuestAdminController({ language, t, guests, onRefresh }: Gues
     setSearchParams((prev) => { const p = new URLSearchParams(prev); p.set('guest', g.id); p.delete('edit'); return p; });
 
   const handleOpenEditGuest = (g: Guest) => {
-    setEditExtraNames(getPartyMembers(g).slice(1));
+    setEditMembers(getPartyDietary(g).slice(1).map((m) => ({ name: m.name, dietary: m.dietary })));
     setSearchParams((prev) => { const p = new URLSearchParams(prev); p.set('guest', g.id); p.set('edit', '1'); return p; });
     resetEditForm({
       name: g.name,
@@ -178,6 +180,7 @@ export function useGuestAdminController({ language, t, guests, onRefresh }: Gues
         : 'none',
       max_party_size: Number(g.max_party_size || getGuestPartySize(g) || 2),
       rsvp_status: g.rsvp_status,
+      dietary_restrictions: getAttendeeDietary(g, 0),
     });
   };
 
@@ -212,6 +215,16 @@ export function useGuestAdminController({ language, t, guests, onRefresh }: Gues
     try {
       setSavingEdit(true);
       const maxParty = Math.max(1, Number(values.max_party_size) || 1);
+      const primaryDietary = (values.dietary_restrictions || '').trim();
+      const extras = values.rsvp_status === 'Declined'
+        ? []
+        : editMembers
+            .map((m) => ({ name: m.name.trim(), contact: '', dietary: (m.dietary || '').trim() }))
+            .filter((m) => m.name)
+            .slice(0, Math.max(0, maxParty - 1));
+      // Full party (primary first) carries the per-member dietary; attendee_names
+      // triggers the backend's party rebuild.
+      const party = [{ name: values.name.trim(), contact: '', dietary: primaryDietary }, ...extras];
       const res = await adminFetch(`/api/guests/${editingGuest.id}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
@@ -222,8 +235,9 @@ export function useGuestAdminController({ language, t, guests, onRefresh }: Gues
           delivery_channel: values.delivery_channel,
           max_party_size: maxParty,
           rsvp_status: values.rsvp_status,
-          // Additional members; the backend derives the attended count and seats.
-          attendee_names: values.rsvp_status === 'Declined' ? [] : editExtraNames.slice(0, Math.max(0, maxParty - 1)),
+          dietary_restrictions: primaryDietary,
+          attendee_names: party.map((m) => m.name),
+          attendee_details: party,
         }),
       });
       const data = await res.json();
@@ -308,9 +322,13 @@ export function useGuestAdminController({ language, t, guests, onRefresh }: Gues
     }
   };
 
-  const submitGuest = async (values: AddGuestFormValues, extras: string[], going: boolean) => {
+  const submitGuest = async (values: AddGuestFormValues, extras: AdditionalAttendee[], going: boolean) => {
     try {
       setSubmittingGuest(true);
+      const attendee_details = [
+        { name: values.name.trim(), contact: (values.email || values.phone || '').trim(), dietary: (values.dietary_restrictions || '').trim() },
+        ...extras.map((m) => ({ name: m.name, contact: m.contact || '', dietary: (m.dietary || '').trim() })),
+      ];
       const res = await adminFetch('/api/guests', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -322,7 +340,8 @@ export function useGuestAdminController({ language, t, guests, onRefresh }: Gues
           max_party_size: values.max_party_size,
           language_pref: values.language_pref,
           going,
-          attendee_names: extras,
+          attendee_names: extras.map((m) => m.name),
+          attendee_details,
         }),
       });
       const data = await res.json();
@@ -373,7 +392,7 @@ export function useGuestAdminController({ language, t, guests, onRefresh }: Gues
     const linkOnly = values.delivery_channel === 'none';
     const partySize = Math.max(1, Number(values.max_party_size) || 1);
     if (!linkOnly && partySize > 1) {
-      setExtraNames(Array(partySize - 1).fill(''));
+      setExtraMembers(Array.from({ length: partySize - 1 }, () => ({ name: '', contact: '', dietary: '' })));
       setAttendeeModal({ values, going: markGoing });
       return;
     }
@@ -383,7 +402,9 @@ export function useGuestAdminController({ language, t, guests, onRefresh }: Gues
 
   const handleConfirmAttendees = async () => {
     if (!attendeeModal) return;
-    const extras = extraNames.map((n) => n.trim()).filter(Boolean);
+    const extras = extraMembers
+      .map((m) => ({ name: m.name.trim(), contact: '', dietary: (m.dietary || '').trim() }))
+      .filter((m) => m.name);
     const { values, going } = attendeeModal;
     if (!(await confirmAction(going ? t.createInviteBtn : t.sendInviteBtn))) return;
     setAttendeeModal(null);
@@ -485,7 +506,7 @@ export function useGuestAdminController({ language, t, guests, onRefresh }: Gues
     const rows: string[][] = [];
 
     for (const g of list) {
-      const names = getPartyMembers(g);
+      const names = getPartyDietary(g).map((m) => m.name);
       const locations = getAttendeeLocations(g.id, floorMap, list);
       const url = `${window.location.origin}/rsvp/${g.magic_token}`;
       names.forEach((name, i) => {
@@ -502,7 +523,7 @@ export function useGuestAdminController({ language, t, guests, onRefresh }: Gues
           loc ? String(loc.seatIndex + 1) : '',
           esc(g.rsvp_status),
           String(g.attending_party_size ?? ''),
-          esc(g.dietary_restrictions || ''),
+          esc(getAttendeeDietary(g, i)),
           esc(g.magic_token),
           esc(url),
           esc(g.invited_by_guest_name || 'Host'),
@@ -590,9 +611,9 @@ export function useGuestAdminController({ language, t, guests, onRefresh }: Gues
     // add form
     register, handleSubmit, setValue, setFocus, deliveryChannel, errors, markGoing, setMarkGoing,
     channelOptions, submittingGuest, handleAddGuest,
-    attendeeModal, setAttendeeModal, extraNames, setExtraNames, handleConfirmAttendees,
+    attendeeModal, setAttendeeModal, extraMembers, setExtraMembers, handleConfirmAttendees,
     // edit form
-    registerEdit, handleSubmitEdit, editErrors, savingEdit, editExtraNames, setEditExtraNames,
+    registerEdit, handleSubmitEdit, editErrors, savingEdit, editMembers, setEditMembers,
     editMaxParty, editStatus, editPrimaryName, handleOpenEditGuest, handleSaveEditGuest,
     // modals + message
     viewingGuest, editingGuest, closeGuestModal, closeEditModal, handleOpenViewGuest,

@@ -25,6 +25,7 @@ import { Guest, Language } from '../../types';
 import { Translations } from '../../translations';
 import { channelLabel } from '../../lib/capabilities';
 import { getGuestPartySize as getPartySize } from '../../lib/tableAssignment';
+import { getPartyDietarySummary } from '../../lib/guestAttendees';
 import { Modal } from '../shared/Modal';
 import { useTf } from '../shared/i18n';
 import { EmptyState } from '../shared/EmptyState';
@@ -53,8 +54,8 @@ export const AdminGuestsTab: React.FC<AdminGuestsTabProps> = ({ language, t, gue
     totalPartySize, totalAttendingPartySize, pendingPartySize, declinedPartySize,
     register, handleSubmit, setValue, setFocus, deliveryChannel, errors, markGoing, setMarkGoing,
     channelOptions, submittingGuest, handleAddGuest,
-    attendeeModal, setAttendeeModal, extraNames, setExtraNames, handleConfirmAttendees,
-    registerEdit, handleSubmitEdit, editErrors, savingEdit, editExtraNames, setEditExtraNames,
+    attendeeModal, setAttendeeModal, extraMembers, setExtraMembers, handleConfirmAttendees,
+    registerEdit, handleSubmitEdit, editErrors, savingEdit, editMembers, setEditMembers,
     editMaxParty, editStatus, editPrimaryName, handleOpenEditGuest, handleSaveEditGuest,
     viewingGuest, editingGuest, closeGuestModal, closeEditModal, handleOpenViewGuest,
     viewingMessage, loadingMessage,
@@ -185,6 +186,10 @@ export const AdminGuestsTab: React.FC<AdminGuestsTabProps> = ({ language, t, gue
                 <TextInput type="number" min="1" max="20" required {...register('max_party_size', { valueAsNumber: true })} />
                 {errors.max_party_size && <p className="text-rose-600 text-xs">{errors.max_party_size.message}</p>}
               </div>
+              <div>
+                <label className="label-mono block mb-1">{tf('dietaryForMember', { name: t.finderPartyLead })}</label>
+                <TextInput type="text" placeholder={t.dietaryPlaceholder} {...register('dietary_restrictions')} />
+              </div>
               <div className="flex items-end">
                 <motion.button whileTap={{ scale: 0.98 }} type="submit" disabled={submittingGuest}
                   className="btn-accent w-full py-2.5 px-6 text-sm disabled:opacity-50">
@@ -218,8 +223,8 @@ export const AdminGuestsTab: React.FC<AdminGuestsTabProps> = ({ language, t, gue
                     {' · '}
                     {tf('guestPartySizeLabel', { count: String(getGuestPartySize(g)), max: String(g.max_party_size || 1) })}
                   </p>
-                  {g.dietary_restrictions ? (
-                    <p className="text-xs text-[#8B735B] truncate">{g.dietary_restrictions}</p>
+                  {getPartyDietarySummary(g) ? (
+                    <p className="text-xs text-[#8B735B] truncate">{getPartyDietarySummary(g)}</p>
                   ) : null}
                 </div>
                 <div className="flex items-center gap-2 shrink-0">
@@ -381,13 +386,20 @@ export const AdminGuestsTab: React.FC<AdminGuestsTabProps> = ({ language, t, gue
               {attendeeModal?.values.name.trim()}
             </div>
           </div>
-          {extraNames.map((name, i) => (
-            <div key={i}>
-              <label className="label-mono block mb-1 text-xs font-bold text-[#8B735B]">
-                {t.fieldName} {i + 1}
-              </label>
-              <TextInput type="text" value={name} placeholder={t.nameExamplePh}
-                onChange={(e) => setExtraNames((prev) => prev.map((n, j) => (j === i ? e.target.value : n)))} />
+          {extraMembers.map((member, i) => (
+            <div key={i} className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+              <div>
+                <label className="label-mono block mb-1 text-xs font-bold text-[#8B735B]">
+                  {t.fieldName} {i + 1}
+                </label>
+                <TextInput type="text" value={member.name} placeholder={t.nameExamplePh}
+                  onChange={(e) => setExtraMembers((prev) => prev.map((m, j) => (j === i ? { ...m, name: e.target.value } : m)))} />
+              </div>
+              <div>
+                <label className="label-mono block mb-1 text-xs font-bold text-[#8B735B]">{t.colDietary}</label>
+                <TextInput type="text" value={member.dietary || ''} placeholder={t.dietaryPlaceholder}
+                  onChange={(e) => setExtraMembers((prev) => prev.map((m, j) => (j === i ? { ...m, dietary: e.target.value } : m)))} />
+              </div>
             </div>
           ))}
         </div>
@@ -442,7 +454,7 @@ export const AdminGuestsTab: React.FC<AdminGuestsTabProps> = ({ language, t, gue
                         valueAsNumber: true,
                         onChange: (e) => {
                           const m = Math.max(1, Number((e.target as HTMLInputElement).value) || 1);
-                          setEditExtraNames((prev) => prev.slice(0, Math.max(0, m - 1)));
+                          setEditMembers((prev) => prev.slice(0, Math.max(0, m - 1)));
                         },
                       })} />
                     {editErrors.max_party_size && <p className="text-rose-600 text-xs">{editErrors.max_party_size.message}</p>}
@@ -459,27 +471,33 @@ export const AdminGuestsTab: React.FC<AdminGuestsTabProps> = ({ language, t, gue
                 {editStatus !== 'Declined' && (
                   <div className="space-y-2 rounded-2xl border border-[#CBAE94]/60 bg-[#EFE6DC]/30 p-3.5">
                     <label className="label-mono block text-xs font-bold text-[#8B735B]">
-                      {tf('includedAttendeesLabel', { count: String(editExtraNames.length + 1) })}
+                      {tf('includedAttendeesLabel', { count: String(editMembers.length + 1) })}
                     </label>
-                    <div className="flex items-center gap-2">
-                      <div className="flex-1 px-3 py-2 rounded-xl border border-[#CBAE94] bg-white/60 text-sm font-bold text-[#5D5449] truncate">
-                        {editPrimaryName}
+                    <div className="space-y-1.5 p-2 rounded-xl border border-[#CBAE94] bg-white/60">
+                      <div className="flex items-center gap-2">
+                        <span className="flex-1 text-sm font-bold text-[#5D5449] truncate">{editPrimaryName}</span>
+                        <span className="shrink-0 px-2 py-0.5 rounded-full bg-[#EFE6DC] border border-[#CBAE94] text-xs font-mono font-bold text-[#8B735B]">{t.finderPartyLead}</span>
                       </div>
-                      <span className="shrink-0 px-2 py-0.5 rounded-full bg-[#EFE6DC] border border-[#CBAE94] text-xs font-mono font-bold text-[#8B735B]">{t.finderPartyLead}</span>
+                      <TextInput type="text" placeholder={t.dietaryPlaceholder} aria-label={tf('dietaryForMember', { name: editPrimaryName })}
+                        {...registerEdit('dietary_restrictions')} />
                     </div>
-                    {editExtraNames.map((name, i) => (
-                      <div key={i} className="flex items-center gap-2">
-                        <TextInput type="text" value={name} placeholder={t.nameExamplePh}
-                          onChange={(e) => setEditExtraNames((prev) => prev.map((n, j) => (j === i ? e.target.value : n)))} />
-                        <button type="button" onClick={() => setEditExtraNames((prev) => prev.filter((_, j) => j !== i))}
-                          title={t.removeAttendeeTitle}
-                          className="shrink-0 p-2 rounded-xl border border-rose-300 bg-rose-50 hover:bg-rose-100 text-rose-700 transition-colors cursor-pointer">
-                          <XCircle className="w-4 h-4" />
-                        </button>
+                    {editMembers.map((member, i) => (
+                      <div key={i} className="space-y-1.5 p-2 rounded-xl border border-[#CBAE94]/60 bg-white/60">
+                        <div className="flex items-center gap-2">
+                          <TextInput type="text" value={member.name} placeholder={t.nameExamplePh}
+                            onChange={(e) => setEditMembers((prev) => prev.map((m, j) => (j === i ? { ...m, name: e.target.value } : m)))} />
+                          <button type="button" onClick={() => setEditMembers((prev) => prev.filter((_, j) => j !== i))}
+                            title={t.removeAttendeeTitle}
+                            className="shrink-0 p-2 rounded-xl border border-rose-300 bg-rose-50 hover:bg-rose-100 text-rose-700 transition-colors cursor-pointer">
+                            <XCircle className="w-4 h-4" />
+                          </button>
+                        </div>
+                        <TextInput type="text" value={member.dietary || ''} placeholder={t.dietaryPlaceholder} aria-label={t.colDietary}
+                          onChange={(e) => setEditMembers((prev) => prev.map((m, j) => (j === i ? { ...m, dietary: e.target.value } : m)))} />
                       </div>
                     ))}
-                    <button type="button" disabled={editExtraNames.length >= editMaxParty - 1}
-                      onClick={() => setEditExtraNames((prev) => [...prev, ''])}
+                    <button type="button" disabled={editMembers.length >= editMaxParty - 1}
+                      onClick={() => setEditMembers((prev) => [...prev, { name: '', contact: '', dietary: '' }])}
                       className="w-full py-2 rounded-xl border border-dashed border-[#CBAE94] text-xs font-bold text-[#8B735B] hover:bg-[#EFE6DC] disabled:opacity-40 disabled:cursor-not-allowed inline-flex items-center justify-center gap-1.5">
                       <UserPlus className="w-3.5 h-3.5" /> {t.addAnotherGuestBtn}
                     </button>
