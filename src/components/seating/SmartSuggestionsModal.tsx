@@ -1,17 +1,7 @@
 import { Wand2, Sparkles } from 'lucide-react';
-import { Guest, TableElement } from '../../types';
+import type { SmartSuggestion } from '../../lib/seatingSuggestions';
 import { Modal } from '../shared/Modal';
 import { useT, useTf } from '../shared/i18n';
-
-export interface SmartSuggestion {
-  id: string;
-  guest: Guest;
-  table: TableElement;
-  partySize: number;
-  freeSeats: number;
-  matchBadge: 'Exact Fit' | 'Optimal Capacity' | 'Party Grouping';
-  reason: string;
-}
 
 interface SmartSuggestionsModalProps {
   open: boolean;

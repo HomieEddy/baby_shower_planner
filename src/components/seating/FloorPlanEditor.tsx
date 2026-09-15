@@ -45,7 +45,8 @@ import {
   getUnseatedPartySize,
   canSeatParty,
 } from '../../lib/tableAssignment';
-import { findNearestSeat } from './floorPlanHelpers';
+import { findNearestSeat, clampToRoundRoom } from './floorPlanHelpers';
+import type { HoverTooltipData as HoverTooltip } from './HoverTooltip';
 import { getPartyMembers } from '../../lib/guestAttendees';
 import { SeatRing, renderRoomBoundary, renderLandmark } from './venueShapes';
 import { useFloorPlanEditor } from './floorplanHooks';
@@ -67,14 +68,6 @@ interface PaletteItem extends AttendeeKey {
 }
 
 const FloorPlan3D = lazy(() => import('./FloorPlan3D').then((m) => ({ default: m.FloorPlan3D })));
-
-export interface HoverTooltip {
-  title: string;
-  subtitle?: string;
-  details: string[];
-  x: number;
-  y: number;
-}
 
 interface FloorPlanEditorProps {
   floorMap: FloorMapData;
@@ -134,7 +127,6 @@ export const FloorPlanEditor = ({
     handleUpdateDraftRoomSize,
     handleUpdateRoomShape,
     handleUpdateDiameter,
-    clampCirclePos,
     handleDraftAddTable,
     handleDraftAddLandmark,
     handleDraftTableDragEnd,
@@ -731,7 +723,7 @@ export const FloorPlanEditor = ({
                       rotation={landmark.rotation || 0}
                       draggable
                       dragBoundFunc={(pos: any) => {
-                        const p = clampCirclePos(pos.x, pos.y, landmark.width, landmark.height, draftFloorMap, true);
+                        const p = clampToRoundRoom(pos.x, pos.y, landmark.width, landmark.height, draftFloorMap, true);
                         return { x: p.x, y: p.y };
                       }}
                       onDragEnd={(e) => handleDraftLandmarkDragEnd(landmark.id, e)}
@@ -793,7 +785,7 @@ export const FloorPlanEditor = ({
                       rotation={table.rotation || 0}
                       draggable
                       dragBoundFunc={(pos: any) => {
-                        const p = clampCirclePos(pos.x, pos.y, table.width, table.height, draftFloorMap);
+                        const p = clampToRoundRoom(pos.x, pos.y, table.width, table.height, draftFloorMap);
                         return { x: p.x, y: p.y };
                       }}
                       onDragEnd={(e) => handleDraftTableDragEnd(table.id, e)}

@@ -53,6 +53,8 @@ import {
   seatParty,
 } from '../../lib/tableAssignment';
 import { getSeatOccupantInfo } from './floorPlanHelpers';
+import { suggestSeating, unseatedParties } from '../../lib/seatingSuggestions';
+import type { SmartSuggestion } from '../../lib/seatingSuggestions';
 import { renderTableBody, renderLandmark, SeatRing, TableLabel, renderRoomBoundary } from './venueShapes';
 import { useAppStore } from '../../stores/appStore';
 
@@ -201,16 +203,6 @@ export const FloorPlanPage = () => {
   // ---------------------------------------------------------
   // FEATURE 3: SMART SEATING SUGGESTION
   // ---------------------------------------------------------
-  interface SmartSuggestion {
-    id: string;
-    guest: Guest;
-    table: TableElement;
-    partySize: number;
-    freeSeats: number;
-    matchBadge: 'Exact Fit' | 'Optimal Capacity' | 'Party Grouping';
-    reason: string;
-  }
-
   const [isSmartSuggestOpen, setIsSmartSuggestOpen] = useState(false);
   const [smartSuggestions, setSmartSuggestions] = useState<SmartSuggestion[]>([]);
   const [selectedSuggestionIds, setSelectedSuggestionIds] = useState<Set<string>>(new Set());
@@ -218,74 +210,13 @@ export const FloorPlanPage = () => {
   const handleGenerateSmartSuggestions = () => {
     if (!floorMap) return;
 
-    // Attending guests with at least one member still unseated (split-aware)
-    const unassigned = guests.filter((g) => {
-      if (g.rsvp_status !== 'Attending') return false;
-      return getGuestSeatedCount(g.id, floorMap, guests) < getGuestPartySize(g);
-    });
-
-    if (unassigned.length === 0) {
+    if (unseatedParties(floorMap, guests).length === 0) {
       setNotification(t.fpAllSeatedToast);
       setTimeout(() => setNotification(null), 3000);
       return;
     }
 
-    // Sort by party size descending so larger groups get optimal placement first
-    const sortedGuests = [...unassigned].sort(
-      (a, b) => getGuestPartySize(b) - getGuestPartySize(a)
-    );
-
-    // Track capacity per table
-    const tableCapacities: Record<string, number> = {};
-    floorMap.tables.forEach((t) => {
-      tableCapacities[t.id] = getAvailableSeats(t, guests);
-    });
-
-    const generated: SmartSuggestion[] = [];
-
-    for (const g of sortedGuests) {
-      const partySize = getGuestPartySize(g);
-
-      // Find tables that can fit partySize
-      const candidates = floorMap.tables.filter(
-        (t) => (tableCapacities[t.id] || 0) >= partySize
-      );
-
-      if (candidates.length === 0) continue;
-
-      // Pick table with smallest remaining seats delta (closest fit)
-      candidates.sort((a, b) => {
-        const freeA = tableCapacities[a.id] || 0;
-        const freeB = tableCapacities[b.id] || 0;
-        return (freeA - partySize) - (freeB - partySize);
-      });
-
-      const chosenTable = candidates[0];
-      const freeSeats = tableCapacities[chosenTable.id];
-      const fitDelta = freeSeats - partySize;
-
-      const matchBadge: 'Exact Fit' | 'Optimal Capacity' | 'Party Grouping' =
-        fitDelta === 0 ? 'Exact Fit' : fitDelta <= 2 ? 'Optimal Capacity' : 'Party Grouping';
-      const reason =
-        fitDelta === 0
-          ? `Perfect match! Fills all ${partySize} open seats with zero wasted space`
-          : fitDelta <= 2
-            ? `Great fit for party of ${partySize} leaving only ${fitDelta} free seat(s)`
-            : `Keeps entire party of ${partySize} together comfortably`;
-
-      generated.push({
-        id: `sug-${g.id}-${chosenTable.id}`,
-        guest: g,
-        table: chosenTable,
-        partySize,
-        freeSeats,
-        matchBadge,
-        reason,
-      });
-
-      tableCapacities[chosenTable.id] -= partySize;
-    }
-
+    const generated = suggestSeating(floorMap, guests);
     if (generated.length === 0) {
       setNotification(t.fpNoFitToast);
       setTimeout(() => setNotification(null), 4000);
