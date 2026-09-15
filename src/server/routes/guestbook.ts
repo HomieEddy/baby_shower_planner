@@ -76,6 +76,7 @@ const ROUTES: Route[] = [
   {
     method: 'PATCH',
     path: /^\/api\/guestbook\/mine\/([^/]+)$/,
+    lock: true,
     body: true,
     handler: async ({ body, params }, { res }) => {
       const code = typeof body.reservation_code === 'string' ? body.reservation_code.trim() : '';
@@ -96,6 +97,7 @@ const ROUTES: Route[] = [
   {
     method: 'DELETE',
     path: /^\/api\/guestbook\/mine\/([^/]+)$/,
+    lock: true,
     handler: async ({ params, query }, { res }) => {
       const code = (query.get('code') || '').trim();
       if (!isValidCode(code)) return sendError(res, 'INVALID_CODE');
