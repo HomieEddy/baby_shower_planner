@@ -863,6 +863,7 @@ export interface Translations {
   uploadBatchLimitToast: string;
   uploadCodeLabel: string;
   uploadCodePlaceholder: string;
+  uploadLockedIdentityNote: string;
   uploadCodeRequiredToast: string;
   uploadInvalidCodeToast: string;
   uploadPhotoLimitToast: string;
@@ -2147,6 +2148,7 @@ export const translations: Record<Language, Translations> = {
     uploadBatchLimitToast: "You can upload at most 12 photos at a time.",
     uploadCodeLabel: "Reservation code",
     uploadCodePlaceholder: "4-digit code from your invitation",
+    uploadLockedIdentityNote: "Your table and reservation code came from the table QR code. Just add your name below.",
     uploadCodeRequiredToast: "Enter the 4-digit reservation code from your invitation.",
     uploadInvalidCodeToast: "Reservation code not found. Check your invitation.",
     uploadPhotoLimitToast: "Photo limit reached: {{remaining}} of 12 left for this reservation.",
@@ -3421,6 +3423,7 @@ export const translations: Record<Language, Translations> = {
     uploadBatchLimitToast: "Vous pouvez téléverser au maximum 12 photos à la fois.",
     uploadCodeLabel: "Code de réservation",
     uploadCodePlaceholder: "Code à 4 chiffres de votre invitation",
+    uploadLockedIdentityNote: "Votre table et votre code de réservation proviennent du QR de la table. Ajoutez simplement votre nom ci-dessous.",
     uploadCodeRequiredToast: "Entrez le code de réservation à 4 chiffres de votre invitation.",
     uploadInvalidCodeToast: "Code de réservation introuvable. Vérifiez votre invitation.",
     uploadPhotoLimitToast: "Limite de photos atteinte : {{remaining}} sur 12 restantes pour cette réservation.",

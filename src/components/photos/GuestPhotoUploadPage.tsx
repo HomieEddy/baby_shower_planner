@@ -45,13 +45,16 @@ export const GuestPhotoUploadPage = () => {
   const tf = useTf();
   const apiError = useApiErrorMessage();
   const [searchParams] = useSearchParams();
-  const initialTableId = searchParams.get('tableId') || undefined;
+  const initialTableId = searchParams.get('table') || searchParams.get('tableId') || undefined;
+  const initialCode = searchParams.get('code') || '';
+  // Arriving from a table QR: the seating area + reservation code are fixed.
+  const lockedIdentity = initialCode.length > 0;
   const { toast } = useToast();
   const confirmAction = useActionConfirm();
   const { data: tables = [] } = useFloorMapTables();
   const [selectedTableId, setSelectedTableId] = useState<string>(initialTableId || '');
   const [uploaderName, setUploaderName] = useState('');
-  const [reservationCode, setReservationCode] = useState('');
+  const [reservationCode, setReservationCode] = useState(initialCode);
   const [caption, setCaption] = useState('');
 
   const [fileItems, setFileItems] = useState<OptimizedFileItem[]>([]);
@@ -372,6 +375,13 @@ export const GuestPhotoUploadPage = () => {
               </div>
             )}
 
+            {lockedIdentity && (
+              <div className="p-4 rounded-2xl bg-[#EFE6DC]/60 border border-[#CBAE94]/50 text-[#5D5449] text-xs font-medium flex items-start gap-2.5">
+                <ShieldCheck className="w-4 h-4 text-[#8B735B] shrink-0 mt-0.5" />
+                <span>{t.uploadLockedIdentityNote}</span>
+              </div>
+            )}
+
             {/* Table & Guest Identity Selection */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               {/* Select Table */}
@@ -383,7 +393,12 @@ export const GuestPhotoUploadPage = () => {
                 <select
                   value={selectedTableId}
                   onChange={(e) => setSelectedTableId(e.target.value)}
-                  className="w-full px-4 py-3 rounded-2xl bg-[#FAF6F0] border border-[#CBAE94]/60 text-xs font-bold text-[#4A3F35] focus:outline-none focus:ring-2 focus:ring-[#8B735B]"
+                  disabled={lockedIdentity}
+                  className={`w-full px-4 py-3 rounded-2xl border text-xs font-bold text-[#4A3F35] focus:outline-none focus:ring-2 focus:ring-[#8B735B] ${
+                    lockedIdentity
+                      ? 'bg-[#EFE6DC]/60 border-[#CBAE94]/40 cursor-not-allowed'
+                      : 'bg-[#FAF6F0] border-[#CBAE94]/60'
+                  }`}
                 >
                   <option value="">{t.selectTablePlaceholder}</option>
                   {tables.map((t) => (
@@ -421,10 +436,15 @@ export const GuestPhotoUploadPage = () => {
                 inputMode="numeric"
                 maxLength={4}
                 required
+                disabled={lockedIdentity}
                 value={reservationCode}
                 onChange={(e) => setReservationCode(e.target.value.replace(/[^0-9]/g, ''))}
                 placeholder={t.uploadCodePlaceholder}
-                className="w-full max-w-xs px-4 py-3 rounded-2xl bg-[#FAF6F0] border border-[#CBAE94]/60 text-sm font-bold tracking-[0.3em] text-[#4A3F35] placeholder-[#8B735B]/60 placeholder:tracking-normal focus:outline-none focus:ring-2 focus:ring-[#8B735B]"
+                className={`w-full max-w-xs px-4 py-3 rounded-2xl border text-sm font-bold tracking-[0.3em] text-[#4A3F35] placeholder-[#8B735B]/60 placeholder:tracking-normal focus:outline-none focus:ring-2 focus:ring-[#8B735B] ${
+                  lockedIdentity
+                    ? 'bg-[#EFE6DC]/60 border-[#CBAE94]/40 cursor-not-allowed'
+                    : 'bg-[#FAF6F0] border-[#CBAE94]/60'
+                }`}
               />
             </div>
 
