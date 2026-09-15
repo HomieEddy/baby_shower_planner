@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react';
 import { motion } from 'motion/react';
-import { Heart, MessageSquare, Trash2, Eye, EyeOff } from 'lucide-react';
+import { Heart, MessageSquare, Trash2, Eye, EyeOff, QrCode } from 'lucide-react';
 import { GuestbookEntry } from '../../types';
 import { adminCardVariants, adminContainerVariants } from '../shared/motionPresets';
 import { useT, useTf } from '../shared/i18n';
@@ -10,8 +10,9 @@ import { SearchInput } from '../shared/ui';
 import { Segmented } from '../shared/Segmented';
 import { IconButton } from '../shared/IconButton';
 import { Pagination } from '../shared/Pagination';
-import { usePagination } from '../shared/hooks';
+import { usePagination, useFloorMapTables } from '../shared/hooks';
 import { AdminToolbar } from './AdminToolbar';
+import { TableScanQrModal } from './TableScanQrModal';
 import { adminFetch } from '../../lib/api';
 
 export const AdminGuestbookFeed = ({ entries, onRefresh }: { entries: GuestbookEntry[]; onRefresh: () => Promise<void> }) => {
@@ -22,6 +23,8 @@ export const AdminGuestbookFeed = ({ entries, onRefresh }: { entries: GuestbookE
   const confirmAction = useActionConfirm();
   const [searchTerm, setSearchTerm] = useState('');
   const [visibilityFilter, setVisibilityFilter] = useState<'all' | 'visible' | 'hidden'>('all');
+  const [qrOpen, setQrOpen] = useState(false);
+  const { data: tables = [] } = useFloorMapTables();
 
   const hiddenCount = entries.filter((e) => e.visible === false).length;
 
@@ -77,7 +80,7 @@ export const AdminGuestbookFeed = ({ entries, onRefresh }: { entries: GuestbookE
   return (
     <motion.div variants={adminContainerVariants} initial="hidden" animate="show" className="space-y-8">
       <motion.div variants={adminCardVariants} className="card-paper p-6 sm:p-8 space-y-6">
-        <div className="flex items-center justify-between">
+        <div className="flex items-start justify-between gap-3">
           <div>
             <div className="label-mono">{t.dayOfGuestbookTab}</div>
             <h3 className="font-sans text-2xl font-bold text-[#8B735B]">
@@ -87,6 +90,14 @@ export const AdminGuestbookFeed = ({ entries, onRefresh }: { entries: GuestbookE
               {t.guestbookFeedSubtitle}
             </p>
           </div>
+          <button
+            type="button"
+            onClick={() => setQrOpen(true)}
+            className="shrink-0 px-4 py-2.5 rounded-2xl bg-[#8B735B] text-white text-xs font-bold hover:bg-[#705C47] transition-colors flex items-center gap-2 cursor-pointer"
+          >
+            <QrCode className="w-4 h-4" />
+            <span>{t.tableQrPrintTitle}</span>
+          </button>
         </div>
 
         {entries.length > 0 && (
@@ -202,6 +213,8 @@ export const AdminGuestbookFeed = ({ entries, onRefresh }: { entries: GuestbookE
           onPageChange={entriesPager.setPage}
         />
       </motion.div>
+
+      <TableScanQrModal open={qrOpen} onClose={() => setQrOpen(false)} tables={tables} />
     </motion.div>
   );
 };
