@@ -1,13 +1,4 @@
-﻿import { lazy, Suspense, useState, useMemo, type DragEvent, type MouseEvent } from 'react';
-import {
-  Stage,
-  Layer,
-  Rect,
-  Circle,
-  Text,
-  Group,
-  Transformer,
-} from 'react-konva';
+﻿import { lazy, Suspense, useState, useMemo, type DragEvent } from 'react';
 import {
   Maximize2,
   X,
@@ -33,7 +24,7 @@ import {
   Square,
   Circle as CircleIcon,
 } from 'lucide-react';
-import { Guest, FloorMapData, LandmarkElement, SeatOccupant, TableElement } from '../../types';
+import { Guest, FloorMapData, LandmarkElement, TableElement } from '../../types';
 import { TextInput, Select } from '../shared/ui';
 import {
   getGuestPartySize,
@@ -41,14 +32,10 @@ import {
   getTableSeats,
   getAttendeeLocations,
   getGuestSeatedCount,
-  getAvailableSeats,
-  getUnseatedPartySize,
-  canSeatParty,
 } from '../../lib/tableAssignment';
-import { findNearestSeat, clampToRoundRoom } from './floorPlanHelpers';
 import type { HoverTooltipData as HoverTooltip } from './HoverTooltip';
 import { getPartyMembers, isAttending } from '../../lib/guestAttendees';
-import { SeatRing, renderRoomBoundary, renderLandmark } from './venueShapes';
+import { FloorPlanCanvas } from './FloorPlanCanvas';
 import { useFloorPlanEditor } from './floorplanHooks';
 import { ViewModeToggle, ViewMode } from '../shared/ViewModeToggle';
 import { useT, useTf } from '../shared/i18n';
@@ -137,10 +124,9 @@ export const FloorPlanEditor = ({
     handleCancelEditor,
   } = useFloorPlanEditor({ floorMap, guests, notify, onSave, onCancel });
 
-  // Per-seat drag/tap state (DOM palette -> Konva canvas).
+  // Palette → canvas interaction state (the canvas owns the drop target).
   const [draggingAttendee, setDraggingAttendee] = useState<AttendeeKey | null>(null);
   const [selectedAttendee, setSelectedAttendee] = useState<AttendeeKey | null>(null);
-  const [dropTarget, setDropTarget] = useState<{ tableId: string; seatIndex: number } | null>(null);
 
   // Every attending person, in party order, with their current chair (if any).
   const palette = useMemo<PaletteItem[]>(() => {
@@ -179,42 +165,12 @@ export const FloorPlanEditor = ({
     e.dataTransfer.setData('text/plain', `${key.guestId}:${key.attendeeIndex}`);
   };
 
-  const eventToSeat = (e: DragEvent | MouseEvent) => {
-    const stage = modalStageRef.current;
-    if (!stage) return null;
-    const rect = stage.container().getBoundingClientRect();
-    const x = (e.clientX - rect.left) / modalCanvasScale;
-    const y = (e.clientY - rect.top) / modalCanvasScale;
-    return findNearestSeat(draftFloorMap, x, y);
-  };
-
-  const handleCanvasDragOver = (e: DragEvent) => {
-    if (!draggingAttendee && !e.dataTransfer.types.includes('text/plain')) return;
-    e.preventDefault();
-    e.dataTransfer.dropEffect = 'move';
-    setDropTarget(eventToSeat(e));
-  };
-
-  const handleCanvasDrop = (e: DragEvent) => {
-    e.preventDefault();
-    // Prefer state, fall back to the dataTransfer payload for very fast drags.
-    let key = draggingAttendee;
-    if (!key) {
-      const raw = e.dataTransfer.getData('text/plain');
-      const [guestId, idx] = raw.split(':');
-      if (guestId && idx !== undefined) key = { guestId, attendeeIndex: Number(idx) };
-    }
-    const seat = dropTarget ?? eventToSeat(e);
-    setDraggingAttendee(null);
-    setDropTarget(null);
-    if (key && seat) handleSeatAttendee(key.guestId, key.attendeeIndex, seat.tableId, seat.seatIndex);
-  };
-
   const handlePaletteItemClick = (key: AttendeeKey) => {
     setSelectedAttendee((prev) =>
       prev && prev.guestId === key.guestId && prev.attendeeIndex === key.attendeeIndex ? null : key
     );
   };
+
 
   return (
     <div className="fixed inset-0 z-50 bg-[#FAF6F0] flex flex-col w-screen h-screen overflow-hidden animate-fadeIn">
@@ -678,265 +634,28 @@ export const FloorPlanEditor = ({
               </div>
             </Suspense>
           ) : (
-          <div
-            className={`flex-1 w-full overflow-auto flex justify-center items-center bg-[#FAF6F0] p-3 rounded-2xl border-2 transition-colors ${
-              draggingAttendee ? 'border-emerald-500 bg-emerald-50/40' : 'border-[#CBAE94]/40'
-            }`}
-            onDragOver={handleCanvasDragOver}
-            onDragLeave={() => setDropTarget(null)}
-            onDrop={handleCanvasDrop}
-          >
-            <Stage
-              ref={modalStageRef}
-              width={draftFloorMap.canvasWidth * modalCanvasScale}
-              height={draftFloorMap.canvasHeight * modalCanvasScale}
-              scaleX={modalCanvasScale}
-              scaleY={modalCanvasScale}
-              onMouseDown={(e) => {
-                if (e.target === e.target.getStage()) {
-                  setSelectedId(null);
-                  setSelectedType(null);
-                }
+            <FloorPlanCanvas
+              map={draftFloorMap}
+              guests={draftGuests}
+              scale={modalCanvasScale}
+              stageRef={modalStageRef}
+              transformerRef={modalTransformerRef}
+              dragging={draggingAttendee}
+              selection={{ id: selectedId, attendee: selectedAttendee, party: selectedGuestForSeating }}
+              callbacks={{
+                onSelect: (id, type) => { setSelectedId(id); setSelectedType(type); },
+                onPickAttendee: setSelectedAttendee,
+                onSeatAttendee: handleSeatAttendee,
+                onAutoSeatParty: handleAutoSeatParty,
+                onTableDragEnd: handleDraftTableDragEnd,
+                onLandmarkDragEnd: handleDraftLandmarkDragEnd,
+                onTransformEnd: handleDraftTransformEnd,
+                onHoverTable: (table, x, y) => handleTableHover(table, draftGuests, x, y),
+                onHoverSeat: (table, idx, x, y) => handleSeatHover(table, idx, draftGuests, x, y),
+                onHoverLandmark: handleLandmarkHover,
+                onHoverEnd: () => setHoverTooltip(null),
               }}
-            >
-              {/* Layer 1: Grid + Room Boundary */}
-              <Layer>
-                {renderRoomBoundary(draftFloorMap)}
-              </Layer>
-
-              {/* Layer 2: Landmarks */}
-              <Layer>
-                {draftFloorMap.landmarks.map((landmark) => {
-                  const isSelected = selectedId === landmark.id;
-                  return (
-                    <Group
-                      key={landmark.id}
-                      id={landmark.id}
-                      x={landmark.x}
-                      y={landmark.y}
-                      width={landmark.width}
-                      height={landmark.height}
-                      rotation={landmark.rotation || 0}
-                      draggable
-                      dragBoundFunc={(pos: any) => {
-                        const p = clampToRoundRoom(pos.x, pos.y, landmark.width, landmark.height, draftFloorMap, true);
-                        return { x: p.x, y: p.y };
-                      }}
-                      onDragEnd={(e) => handleDraftLandmarkDragEnd(landmark.id, e)}
-                      onClick={() => {
-                        setSelectedId(landmark.id);
-                        setSelectedType('landmark');
-                      }}
-                      onMouseEnter={(e) => handleLandmarkHover(landmark, e.evt.clientX, e.evt.clientY)}
-                      onMouseMove={(e) => handleLandmarkHover(landmark, e.evt.clientX, e.evt.clientY)}
-                      onMouseLeave={() => setHoverTooltip(null)}
-                    >
-                      {renderLandmark(landmark, isSelected)}
-                    </Group>
-                  );
-                })}
-              </Layer>
-
-              {/* Layer 3: Tables */}
-              <Layer>
-                {draftFloorMap.tables.map((table) => {
-                  const isSelected = selectedId === table.id;
-                  const tableSeats = getTableSeats(table, draftGuests);
-                  const occupiedCount = getTableOccupiedSeats(table, draftGuests);
-                  const isFull = occupiedCount >= table.capacity;
-
-                  // Guest-first seating highlight: any free chair, matching seatParty.
-                  const canFitGuest = selectedGuestForSeating
-                    ? canSeatParty(table, draftFloorMap, draftGuests, selectedGuestForSeating.id)
-                    : false;
-                  const freeSeatsForGuest = selectedGuestForSeating ? getAvailableSeats(table, draftGuests) : 0;
-                  const unseatedForGuest = selectedGuestForSeating
-                    ? getUnseatedPartySize(selectedGuestForSeating.id, draftFloorMap, draftGuests)
-                    : 0;
-
-                  // Dynamic stroke styling
-                  let strokeColor = isSelected ? '#4A3F35' : isFull ? '#10B981' : '#CBAE94';
-                  let strokeWidth = isSelected ? 4 : 2;
-                  let dashPattern: number[] | undefined = undefined;
-
-                  if (selectedGuestForSeating) {
-                    if (canFitGuest) {
-                      strokeColor = '#10B981';
-                      strokeWidth = 5;
-                    } else {
-                      strokeColor = '#EF4444';
-                      strokeWidth = 2;
-                      dashPattern = [4, 4];
-                    }
-                  }
-
-                  return (
-                    <Group
-                      key={table.id}
-                      id={table.id}
-                      x={table.x}
-                      y={table.y}
-                      width={table.width}
-                      height={table.height}
-                      rotation={table.rotation || 0}
-                      draggable
-                      dragBoundFunc={(pos: any) => {
-                        const p = clampToRoundRoom(pos.x, pos.y, table.width, table.height, draftFloorMap);
-                        return { x: p.x, y: p.y };
-                      }}
-                      onDragEnd={(e) => handleDraftTableDragEnd(table.id, e)}
-                      onClick={() => {
-                        if (selectedAttendee) {
-                          handleSeatAttendee(selectedAttendee.guestId, selectedAttendee.attendeeIndex, table.id, null);
-                          setSelectedAttendee(null);
-                        } else if (selectedGuestForSeating) {
-                          handleAutoSeatParty(selectedGuestForSeating.id, table.id);
-                        } else {
-                          setSelectedId(table.id);
-                          setSelectedType('table');
-                        }
-                      }}
-                      onMouseEnter={(e) => handleTableHover(table, draftGuests, e.evt.clientX, e.evt.clientY)}
-                      onMouseMove={(e) => handleTableHover(table, draftGuests, e.evt.clientX, e.evt.clientY)}
-                      onMouseLeave={() => setHoverTooltip(null)}
-                    >
-                      {/* Seat Circles around Table */}
-                      <SeatRing
-                        table={table}
-                        renderSeat={(pos, idx) => {
-                          const occupant: SeatOccupant | null = tableSeats[idx] ?? null;
-                          const isDropTargetSeat = dropTarget?.tableId === table.id && dropTarget.seatIndex === idx;
-                          const isPickedSeat =
-                            !!occupant &&
-                            !!selectedAttendee &&
-                            occupant.guestId === selectedAttendee.guestId &&
-                            occupant.attendeeIndex === selectedAttendee.attendeeIndex;
-
-                          let seatFill = occupant ? '#8B735B' : '#FFFDF9';
-                          let seatStroke = '#CBAE94';
-                          let seatRadius = 8;
-                          if (isDropTargetSeat) {
-                            seatFill = '#A7F3D0';
-                            seatStroke = '#059669';
-                            seatRadius = 10;
-                          } else if (isPickedSeat) {
-                            seatFill = '#FDE68A';
-                            seatStroke = '#D97706';
-                          } else if (selectedAttendee && !occupant) {
-                            seatFill = '#D1FAE5';
-                            seatStroke = '#059669';
-                          }
-
-                          return (
-                            <Circle
-                              key={`dseat-${table.id}-${idx}`}
-                              x={pos.x}
-                              y={pos.y}
-                              radius={seatRadius}
-                              fill={seatFill}
-                              stroke={seatStroke}
-                              strokeWidth={2}
-                              onClick={(e) => {
-                                e.cancelBubble = true;
-                                if (selectedAttendee) {
-                                  handleSeatAttendee(selectedAttendee.guestId, selectedAttendee.attendeeIndex, table.id, idx);
-                                  setSelectedAttendee(null);
-                                } else if (occupant) {
-                                  setSelectedAttendee({ guestId: occupant.guestId, attendeeIndex: occupant.attendeeIndex });
-                                } else {
-                                  setSelectedAttendee(null);
-                                }
-                              }}
-                              onMouseEnter={(e) => {
-                                e.cancelBubble = true;
-                                handleSeatHover(table, idx, draftGuests, e.evt.clientX, e.evt.clientY);
-                              }}
-                              onMouseMove={(e) => {
-                                e.cancelBubble = true;
-                                handleSeatHover(table, idx, draftGuests, e.evt.clientX, e.evt.clientY);
-                              }}
-                              onMouseLeave={() => setHoverTooltip(null)}
-                            />
-                          );
-                        }}
-                      />
-                      {/* Table Base Shape */}
-                      {table.shape === 'circle' ? (
-                        <Circle
-                          x={table.width / 2}
-                          y={table.height / 2}
-                          radius={table.width / 2}
-                          fill={table.color || '#8B735B'}
-                          stroke={strokeColor}
-                          strokeWidth={strokeWidth}
-                          dash={dashPattern}
-                          shadowBlur={isSelected || (selectedGuestForSeating && canFitGuest) ? 12 : 4}
-                          shadowColor={selectedGuestForSeating && canFitGuest ? '#10B981' : '#8B735B'}
-                          shadowOpacity={0.4}
-                        />
-                      ) : (
-                        <Rect
-                          width={table.width}
-                          height={table.height}
-                          fill={table.color || '#8B735B'}
-                          stroke={strokeColor}
-                          strokeWidth={strokeWidth}
-                          dash={dashPattern}
-                          cornerRadius={14}
-                          shadowBlur={isSelected || (selectedGuestForSeating && canFitGuest) ? 12 : 4}
-                          shadowColor={selectedGuestForSeating && canFitGuest ? '#10B981' : '#8B735B'}
-                          shadowOpacity={0.4}
-                        />
-                      )}
-
-                      {/* Table Title */}
-                      <Text
-                        text={table.name}
-                        width={table.width}
-                        height={table.height / 2}
-                        align="center"
-                        verticalAlign="middle"
-                        fontSize={12}
-                        fontStyle="bold"
-                        fill="#FFFFFF"
-                        padding={4}
-                      />
-
-                      {/* Capacity Badge */}
-                      <Text
-                        text={
-                          selectedGuestForSeating
-                            ? canFitGuest
-                              ? tf('fpFitsSeats', { count: Math.min(freeSeatsForGuest, unseatedForGuest) })
-                              : tf('fpNeedSeats', { count: unseatedForGuest })
-                            : `${occupiedCount}/${table.capacity} ${t.seatsLabel}`
-                        }
-                        y={table.height / 2 - 4}
-                        width={table.width}
-                        height={table.height / 2}
-                        align="center"
-                        verticalAlign="middle"
-                        fontSize={10}
-                        fill={selectedGuestForSeating ? (canFitGuest ? '#A7F3D0' : '#FECACA') : '#FFE6D5'}
-                      />
-                    </Group>
-                  );
-                })}
-
-                {/* Transformer for selected item in modal */}
-                <Transformer
-                  ref={modalTransformerRef}
-                  boundBoxFunc={(oldBox, newBox) => {
-                    if (newBox.width < 40 || newBox.height < 30) {
-                      return oldBox;
-                    }
-                    return newBox;
-                  }}
-                  onTransformEnd={handleDraftTransformEnd}
-                />
-              </Layer>
-            </Stage>
-          </div>
+            />
           )}
         </div>
 
@@ -1319,10 +1038,7 @@ export const FloorPlanEditor = ({
                                 type="button"
                                 draggable
                                 onDragStart={(e) => handleDragStart(e, item)}
-                                onDragEnd={() => {
-                                  setDraggingAttendee(null);
-                                  setDropTarget(null);
-                                }}
+                                onDragEnd={() => setDraggingAttendee(null)}
                                 onClick={() => handlePaletteItemClick(item)}
                                 className={`px-2 py-1 rounded-lg border text-xs font-bold cursor-grab active:cursor-grabbing transition-all ${
                                   isPicked
