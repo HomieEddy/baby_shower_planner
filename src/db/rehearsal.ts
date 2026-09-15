@@ -8,6 +8,7 @@
 
 import type { Guest, TableElement, LandmarkElement, SeatOccupant } from '../types';
 import { fromRecord, newMagicToken, newReservationCode, pb } from './client';
+import { applyTablesAndSync } from './floorSync';
 import { deleteRecordsSince } from './schema';
 
 // ponytail: in-memory flag + cutoff. If the server restarts mid-rehearsal the
@@ -123,11 +124,13 @@ async function seedFloorMap(guestsBySlug: Record<string, Guest>): Promise<number
     { id: 'rehearsal-lm-gifts', name: 'Gifts', type: 'gifts', x: 420, y: 430, width: 100, height: 50 },
     { id: 'rehearsal-lm-food', name: 'Food', type: 'food', x: 700, y: 40, width: 110, height: 50 },
   ];
+  // Same guard as the host editor: validate the layout and sync table_id.
+  const syncedTables = await applyTablesAndSync(tables, Object.values(guestsBySlug));
   const payload = {
     canvasWidth: 850,
     canvasHeight: 520,
     roomShape: 'rectangle',
-    tables,
+    tables: syncedTables,
     landmarks,
     updatedAt: new Date().toISOString(),
   };
@@ -154,12 +157,6 @@ async function seedFloorMap(guestsBySlug: Record<string, Guest>): Promise<number
     rehearsalMapId = created.id;
   }
 
-  // Mirror the assigned table id onto the seated guests (legacy scalar).
-  for (const table of tables) {
-    for (const guestId of table.assignedGuestIds) {
-      await pb.collection('guests').update(guestId, { table_id: table.id });
-    }
-  }
   return tables.length;
 }
 

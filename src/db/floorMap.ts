@@ -1,17 +1,13 @@
 // Floor map read/edit, table assignment and floor-plan email sharing.
 
-import type { FloorMapData, Guest, EventSettings, TableElement } from '../types';
+import type { FloorMapData, Guest, EventSettings } from '../types';
 import { fromRecord, pb } from './client';
 import { getAllGuests } from './guests';
 import { getSettings } from './settings';
 import { composeFloorPlan } from '../lib/compose';
 import { notifyChannels } from './notify';
-import {
-  getAttendeeLocations,
-  materializeTableSeats,
-  syncGuestTableIds,
-  validateTables,
-} from '../lib/tableAssignment';
+import { applyTablesAndSync } from './floorSync';
+import { getAttendeeLocations } from '../lib/tableAssignment';
 
 function normalizeFloorMap(record: any): FloorMapData {
   const data = fromRecord<FloorMapData>(record);
@@ -46,14 +42,8 @@ export async function updateFloorMap(data: Partial<FloorMapData>): Promise<Floor
   if (!payload.roomShape) payload.roomShape = (data.roomShape as string) || 'rectangle';
   if (data.tables) {
     const allGuests = await getAllGuests();
-    const tables: TableElement[] = data.tables.map((t) => materializeTableSeats(t, allGuests));
-    validateTables(tables, allGuests);
-    payload.tables = tables;
-    // Legacy scalar mirror, derived in one place (lib/tableAssignment).
-    const tableIdByGuest = new Map(syncGuestTableIds(tables, allGuests).map((g) => [g.id, g.table_id]));
-    for (const guest of allGuests) {
-      await pb.collection('guests').update(guest.id, { table_id: tableIdByGuest.get(guest.id) || null });
-    }
+    // Materialize + validate + refresh the table_id mirror in one guard.
+    payload.tables = await applyTablesAndSync(data.tables, allGuests);
   }
   if (id) {
     const r = await pb.collection('floor_maps').update(id, payload);

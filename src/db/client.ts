@@ -33,6 +33,9 @@ export function newReservationCode(): string {
 // Remove a guest's seats from every table (decline, deletion). `keepAttendees`
 // keeps the first N attendees seated (RSVP party shrink) and drops the rest.
 // The pure trim lives in lib/tableAssignment; this is only the PB adapter.
+// ponytail: trims rebuild assignedGuestIds but skip validate/mirror — callers
+// already write the affected guest's table_id and no other seat moves. Route
+// through floorSync.applyTablesAndSync if a future trim can shift other guests.
 export async function removeGuestFromFloorMaps(guestId: string, keepAttendees = 0): Promise<void> {
   try {
     const maps = await pb.collection('floor_maps').getFullList();
