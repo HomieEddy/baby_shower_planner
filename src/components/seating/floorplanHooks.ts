@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Guest, FloorMapData, LandmarkElement, TableElement } from '../../types';
-import { clampToRoundRoom } from './floorPlanHelpers';
+import { clampElementToRoom, clampPointToRoom } from './floorPlanHelpers';
 import { getGuestPartySize, seatAttendee, seatParty, unseatAttendee, unassignParty } from '../../lib/tableAssignment';
 import { useTf } from '../shared/i18n';
 
@@ -89,18 +89,19 @@ export function useFloorPlanEditor({ floorMap, guests, notify, onSave, onCancel 
     setIsDirty(true);
   };
 
-  // ponytail: wall-clamp — keeps whole element inside round(circle/ellipse) wall.
-  // Math lives in clampToRoundRoom (floorPlanHelpers) so it stays unit-testable.
+  // ponytail: center-clamp — free-form placement, but the element center must
+  // stay inside the round(circle/ellipse) wall. Math lives in clampElementToRoom
+  // (floorPlanHelpers) so it stays unit-testable.
   const clampAllToCircle = (map: FloorMapData): FloorMapData => {
     if ((map.roomShape ?? 'rectangle') !== 'circle' && map.roomShape !== 'ellipse') return map;
     return {
       ...map,
       tables: map.tables.map((t) => {
-        const p = clampToRoundRoom(t.x, t.y, t.width, t.height, map);
+        const p = clampElementToRoom(t.x, t.y, t.width, t.height, map);
         return p.x === t.x && p.y === t.y ? t : { ...t, x: Math.round(p.x), y: Math.round(p.y) };
       }),
       landmarks: map.landmarks.map((l) => {
-        const p = clampToRoundRoom(l.x, l.y, l.width, l.height, map, true);
+        const p = clampElementToRoom(l.x, l.y, l.width, l.height, map);
         return p.x === l.x && p.y === l.y ? l : { ...l, x: Math.round(p.x), y: Math.round(p.y) };
       }),
     };
@@ -132,7 +133,7 @@ export function useFloorPlanEditor({ floorMap, guests, notify, onSave, onCancel 
     const rawY = 180 + (tableCount * 25) % 180;
     const w = shape === 'circle' ? 120 : 180;
     const h = shape === 'circle' ? 120 : 95;
-    const clamped = clampToRoundRoom(rawX, rawY, w, h, draftFloorMap);
+    const clamped = clampElementToRoom(rawX, rawY, w, h, draftFloorMap);
     // If circular room is small and table would still be outside center, place near center
     const finalX = Math.round(clamped.x);
     const finalY = Math.round(clamped.y);
@@ -163,7 +164,7 @@ export function useFloorPlanEditor({ floorMap, guests, notify, onSave, onCancel 
   ) => {
     const w = 150;
     const h = 60;
-    const p = clampToRoundRoom(120, 120, w, h, draftFloorMap, true);
+    const p = clampElementToRoom(120, 120, w, h, draftFloorMap);
     const newLandmark: LandmarkElement = {
       id: `lm-${Date.now()}`,
       name,
@@ -182,33 +183,36 @@ export function useFloorPlanEditor({ floorMap, guests, notify, onSave, onCancel 
     setIsDirty(true);
   };
 
+  // The canvas group renders with its origin at the element CENTER (offsetX/Y =
+  // half-size), so e.target.x()/y() is the center — clamp that, then store the
+  // top-left the data model uses.
   const handleDraftTableDragEnd = (id: string, e: any) => {
-    const rawX = Math.round(e.target.x());
-    const rawY = Math.round(e.target.y());
+    const rawCx = Math.round(e.target.x());
+    const rawCy = Math.round(e.target.y());
     const t = draftFloorMap.tables.find((x) => x.id === id);
-    const clamped = t ? clampToRoundRoom(rawX, rawY, t.width, t.height, draftFloorMap) : { x: rawX, y: rawY };
-    if (t && (clamped.x !== rawX || clamped.y !== rawY)) {
-      e.target.x(clamped.x);
-      e.target.y(clamped.y);
+    const c = t ? clampPointToRoom(rawCx, rawCy, draftFloorMap) : { x: rawCx, y: rawCy };
+    if (t && (c.x !== rawCx || c.y !== rawCy)) {
+      e.target.x(c.x);
+      e.target.y(c.y);
     }
     const updatedTables = draftFloorMap.tables.map((tbl) =>
-      tbl.id === id ? { ...tbl, x: Math.round(clamped.x), y: Math.round(clamped.y) } : tbl
+      tbl.id === id ? { ...tbl, x: Math.round(c.x - tbl.width / 2), y: Math.round(c.y - tbl.height / 2) } : tbl
     );
     setDraftFloorMap({ ...draftFloorMap, tables: updatedTables });
     setIsDirty(true);
   };
 
   const handleDraftLandmarkDragEnd = (id: string, e: any) => {
-    const rawX = Math.round(e.target.x());
-    const rawY = Math.round(e.target.y());
+    const rawCx = Math.round(e.target.x());
+    const rawCy = Math.round(e.target.y());
     const l = draftFloorMap.landmarks.find((x) => x.id === id);
-    const clamped = l ? clampToRoundRoom(rawX, rawY, l.width, l.height, draftFloorMap, true) : { x: rawX, y: rawY };
-    if (l && (clamped.x !== rawX || clamped.y !== rawY)) {
-      e.target.x(clamped.x);
-      e.target.y(clamped.y);
+    const c = l ? clampPointToRoom(rawCx, rawCy, draftFloorMap) : { x: rawCx, y: rawCy };
+    if (l && (c.x !== rawCx || c.y !== rawCy)) {
+      e.target.x(c.x);
+      e.target.y(c.y);
     }
     const updatedLandmarks = draftFloorMap.landmarks.map((lm) =>
-      lm.id === id ? { ...lm, x: Math.round(clamped.x), y: Math.round(clamped.y) } : lm
+      lm.id === id ? { ...lm, x: Math.round(c.x - lm.width / 2), y: Math.round(c.y - lm.height / 2) } : lm
     );
     setDraftFloorMap({ ...draftFloorMap, landmarks: updatedLandmarks });
     setIsDirty(true);
@@ -231,17 +235,14 @@ export function useFloorPlanEditor({ floorMap, guests, notify, onSave, onCancel 
         if (t.id === selectedId) {
           const newW = Math.max(50, Math.round(t.width * scaleX));
           const newH = Math.max(50, Math.round(t.height * scaleY));
-          const rawX = Math.round(node.x());
-          const rawY = Math.round(node.y());
-          const p = clampToRoundRoom(rawX, rawY, newW, newH, draftFloorMap);
-          if (p.x !== rawX || p.y !== rawY) {
-            node.x(p.x);
-            node.y(p.y);
-          }
+          // Node origin is the element center (offset = half-size): keep it inside.
+          const c = clampPointToRoom(node.x(), node.y(), draftFloorMap);
+          node.x(c.x);
+          node.y(c.y);
           return {
             ...t,
-            x: Math.round(p.x),
-            y: Math.round(p.y),
+            x: Math.round(c.x - newW / 2),
+            y: Math.round(c.y - newH / 2),
             width: newW,
             height: newH,
             rotation,
@@ -256,17 +257,13 @@ export function useFloorPlanEditor({ floorMap, guests, notify, onSave, onCancel 
         if (l.id === selectedId) {
           const newW = Math.max(60, Math.round(l.width * scaleX));
           const newH = Math.max(30, Math.round(l.height * scaleY));
-          const rawX = Math.round(node.x());
-          const rawY = Math.round(node.y());
-          const p = clampToRoundRoom(rawX, rawY, newW, newH, draftFloorMap, true);
-          if (p.x !== rawX || p.y !== rawY) {
-            node.x(p.x);
-            node.y(p.y);
-          }
+          const c = clampPointToRoom(node.x(), node.y(), draftFloorMap);
+          node.x(c.x);
+          node.y(c.y);
           return {
             ...l,
-            x: Math.round(p.x),
-            y: Math.round(p.y),
+            x: Math.round(c.x - newW / 2),
+            y: Math.round(c.y - newH / 2),
             width: newW,
             height: newH,
             rotation,
