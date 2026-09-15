@@ -70,11 +70,11 @@ export const UnassignedGuestsSidebar = ({
       {selectedGuest && (
         <div className="p-3.5 rounded-2xl bg-emerald-50 border-2 border-emerald-400 space-y-2.5 shadow-sm">
           <div className="flex items-start justify-between gap-2">
-            <div>
+            <div className="min-w-0 flex-1">
               <span className="px-2 py-0.5 rounded-md bg-emerald-600 text-white text-xs font-mono font-bold uppercase">
                 {t.activeSeatingTargetLabel}
               </span>
-              <h4 className="font-bold text-[#4A3F35] text-sm mt-1">
+              <h4 className="font-bold text-[#4A3F35] text-sm mt-1 break-words">
                 {selectedGuest.name}
               </h4>
               <p className="text-xs text-emerald-800 font-bold">
@@ -83,7 +83,7 @@ export const UnassignedGuestsSidebar = ({
             </div>
             <button
               onClick={() => onSelectGuest(null)}
-              className="inline-flex min-w-[44px] min-h-[44px] items-center justify-center rounded-lg text-emerald-700 hover:bg-emerald-200 transition-colors"
+              className="shrink-0 inline-flex min-w-[44px] min-h-[44px] items-center justify-center rounded-lg text-emerald-700 hover:bg-emerald-200 transition-colors"
               title={t.clearSelectionBtn}
               aria-label={t.clearSelectionBtn}
             >
@@ -112,10 +112,10 @@ export const UnassignedGuestsSidebar = ({
                     }}
                     className="w-full min-h-[44px] p-2 rounded-xl bg-white hover:bg-emerald-100 border border-emerald-300 text-left transition-all flex items-center justify-between group shadow-sm"
                   >
-                    <span className="text-xs font-bold text-[#4A3F35] group-hover:text-emerald-900 flex items-center gap-1">
-                      <Utensils className="w-3 h-3" /> {tbl.name}
+                    <span className="min-w-0 text-xs font-bold text-[#4A3F35] group-hover:text-emerald-900 flex items-center gap-1">
+                      <Utensils className="w-3 h-3 shrink-0" /> <span className="truncate">{tbl.name}</span>
                     </span>
-                    <span className="text-xs font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-md border border-emerald-200">
+                    <span className="shrink-0 text-xs font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-md border border-emerald-200">
                       {tf('freeSeatsCount', { count: free })}
                     </span>
                   </button>
@@ -158,15 +158,17 @@ export const UnassignedGuestsSidebar = ({
                 }`}
               >
                 <div className="flex items-start justify-between gap-2">
-                  <div>
-                    <h4 className="font-bold text-[#4A3F35] text-xs">
+                  <div className="min-w-0 flex-1">
+                    <h4 className="font-bold text-[#4A3F35] text-xs truncate">
                       {g.name}
                     </h4>
-                    <p className="text-xs text-[#8B735B] font-medium">
-                      {g.email}
-                    </p>
+                    {g.email && (
+                      <p className="text-xs text-[#8B735B] font-medium truncate">
+                        {g.email}
+                      </p>
+                    )}
                   </div>
-                  <span className="px-2 py-0.5 rounded-full bg-[#EFE6DC] text-[#8B735B] text-xs font-bold border border-[#CBAE94]/60 whitespace-nowrap">
+                  <span className="shrink-0 px-2 py-0.5 rounded-full bg-[#EFE6DC] text-[#8B735B] text-xs font-bold border border-[#CBAE94]/60 whitespace-nowrap">
                     {tf('partyOfLabel', { count: guestPSize })}
                   </span>
                 </div>
@@ -176,7 +178,7 @@ export const UnassignedGuestsSidebar = ({
                     {g.attendee_names.map((att, aIdx) => (
                       <span
                         key={aIdx}
-                        className="px-2 py-0.5 rounded-md bg-[#FAF6F0] border border-[#CBAE94]/40 text-xs text-[#5D5449] font-medium"
+                        className="max-w-full break-words px-2 py-0.5 rounded-md bg-[#FAF6F0] border border-[#CBAE94]/40 text-xs text-[#5D5449] font-medium"
                       >
                         • {att}
                       </span>
