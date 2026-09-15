@@ -5,6 +5,7 @@ import { isInReminderWindow, taskDueAt, REMINDER_ADVANCE_MS } from '../lib/dateU
 import { composeAgenda } from '../lib/compose';
 import { fromRecord, pb } from './client';
 import { getSettings } from './settings';
+import { providerAvailability } from './providers';
 
 export async function getAgendaTasks(): Promise<AgendaTask[]> {
   const records = await pb.collection('agenda_tasks').getFullList({ sort: 'status,position,created_at' });
@@ -75,7 +76,11 @@ export async function runAgendaReminderSweep(now: Date = new Date()): Promise<{ 
     return { reminded: 0, failed: 0 }; // no settings — nothing to send to
   }
   const channels = settings.reminderChannels ?? { email: false, sms: false };
-  if ((!channels.email && !channels.sms) || (channels.email && !settings.hostEmail) || (channels.sms && !settings.hostPhone)) {
+  // Only channels that are both enabled and backed by a configured provider.
+  const providers = providerAvailability();
+  const emailOn = channels.email && providers.email && !!settings.hostEmail;
+  const smsOn = channels.sms && providers.sms && !!settings.hostPhone;
+  if (!emailOn && !smsOn) {
     return { reminded: 0, failed: 0 };
   }
   const advanceMs = REMINDER_ADVANCE_MS[settings.reminderAdvance || '1d'];
@@ -84,11 +89,11 @@ export async function runAgendaReminderSweep(now: Date = new Date()): Promise<{ 
   for (const task of due) {
     const content = composeAgenda(settings, task);
     let ok = true;
-    if (channels.email && settings.hostEmail) {
+    if (emailOn) {
       const { sendEmail } = await import('../lib/email');
       ok = await sendEmail(settings.hostEmail, content) && ok;
     }
-    if (channels.sms && settings.hostPhone) {
+    if (smsOn) {
       const { sendSms } = await import('../lib/sms');
       ok = await sendSms(settings.hostPhone, content) && ok;
     }

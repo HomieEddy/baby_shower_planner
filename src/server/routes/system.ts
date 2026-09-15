@@ -5,6 +5,7 @@ import type { RouteCtx } from '../http';
 import { parseJson, sendJson } from '../http';
 import {
   getRehearsalStatus,
+  providerAvailability,
   sendInvitations,
   sendReminders,
   startRehearsal,
@@ -23,10 +24,7 @@ export async function handleSystemRoutes(ctx: RouteCtx): Promise<boolean> {
 
   // Delivery provider availability — the UI hides channels that can't send.
   if (pathname === '/api/capabilities' && method === 'GET') {
-    return sendJson(res, 200, {
-      email: !!process.env.RESEND_API_KEY,
-      sms: !!(process.env.TWILIO_ACCOUNT_SID && process.env.TWILIO_AUTH_TOKEN && process.env.TWILIO_PHONE_NUMBER),
-    });
+    return sendJson(res, 200, providerAvailability());
   }
 
   if (pathname === '/api/send-invitations' && method === 'POST') {
