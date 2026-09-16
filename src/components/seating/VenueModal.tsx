@@ -302,7 +302,7 @@ export const VenueModal = ({ open, selected, floorMap, roster, onClose }: VenueM
                           </Layer>
                         </Stage>
 
-                        {/* Pulsing ring on the guest's table */}
+                        {/* Static ring on the guest's table — only the seat pulses */}
                         {targetTableCenter && (
                           <div
                             className="absolute pointer-events-none"
@@ -312,18 +312,9 @@ export const VenueModal = ({ open, selected, floorMap, roster, onClose }: VenueM
                               transform: 'translate(-50%, -50%)',
                             }}
                           >
-                            <motion.span
+                            <span
                               aria-hidden
                               className="absolute inset-0 rounded-full border-[3px] border-[#C9A227]"
-                              initial={{ scale: 0.6, opacity: 0.9 }}
-                              animate={{ scale: [0.7, 1.9], opacity: [0.85, 0] }}
-                              transition={{ duration: 1.4, repeat: Infinity, ease: 'easeOut' }}
-                            />
-                            <motion.span
-                              aria-hidden
-                              className="absolute inset-0 rounded-full border-2 border-[#C9A227]"
-                              animate={{ scale: [1, 1.25], opacity: [0.9, 0.25] }}
-                              transition={{ duration: 1.4, repeat: Infinity, ease: 'easeInOut' }}
                             />
                             <span className="absolute inset-0 rounded-full bg-[#C9A227]/20 blur-[2px]" />
                           </div>
@@ -362,12 +353,12 @@ export const VenueModal = ({ open, selected, floorMap, roster, onClose }: VenueM
                           >
                             <motion.span
                               aria-hidden
-                              className="absolute inset-0 rounded-full bg-[#4A9D6E]/30"
+                              className="absolute inset-0 rounded-full bg-[#C53030]/30"
                               animate={{ scale: [1, 2], opacity: [0.6, 0] }}
                               transition={{ duration: 1.8, repeat: Infinity, ease: 'easeOut' }}
                             />
                             <motion.div
-                              className="relative w-8 h-8 rounded-full bg-[#4A9D6E] text-white flex items-center justify-center shadow-lg"
+                              className="relative w-8 h-8 rounded-full bg-[#C53030] text-white flex items-center justify-center shadow-lg"
                               animate={{ y: [0, -5, 0] }}
                               transition={{ duration: 1.8, repeat: Infinity, ease: 'easeInOut' }}
                             >
@@ -383,11 +374,7 @@ export const VenueModal = ({ open, selected, floorMap, roster, onClose }: VenueM
                   {/* Legend */}
                   <div className="flex flex-wrap items-center justify-center gap-4 mt-3 text-xs font-mono font-bold text-[#5D5449]">
                     <span className="flex items-center gap-1.5">
-                      <motion.span
-                        className="w-2.5 h-2.5 rounded-full bg-[#C9A227]"
-                        animate={{ opacity: [1, 0.35, 1] }}
-                        transition={{ duration: 1.4, repeat: Infinity }}
-                      />
+                      <span className="w-2.5 h-2.5 rounded-full bg-[#C9A227]" />
                       {t.finderLegendYourTable}
                     </span>
                     {seatCenter && (
@@ -402,11 +389,7 @@ export const VenueModal = ({ open, selected, floorMap, roster, onClose }: VenueM
                     )}
                     {entrance && (
                       <span className="flex items-center gap-1.5">
-                        <motion.span
-                          className="w-2.5 h-2.5 rounded-full bg-[#4A9D6E]"
-                          animate={{ scale: [1, 1.5, 1], opacity: [1, 0.5, 1] }}
-                          transition={{ duration: 1.8, repeat: Infinity }}
-                        />
+                        <span className="w-2.5 h-2.5 rounded-full bg-[#C53030]" />
                         {t.finderLegendEntrance}
                       </span>
                     )}

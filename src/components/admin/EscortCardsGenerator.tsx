@@ -1,11 +1,12 @@
 import React, { useEffect, useState } from 'react';
 import { Guest, EventSettings, FloorMapData } from '../../types';
-import { Printer, Scissors, Tag } from 'lucide-react';
+import { Printer, Scissors, Tag, QrCode } from 'lucide-react';
 import { useT, useTf } from '../shared/i18n';
 import { usePrint } from '../shared/hooks';
 import { Select, TextInput } from '../shared/ui';
 import { getAttendeeLocations } from '../../lib/tableAssignment';
 import { getPartyMembers, isAttending } from '../../lib/guestAttendees';
+import { TableScanQrModal } from './TableScanQrModal';
 
 interface EscortCardsGeneratorProps {
   guests: Guest[];
@@ -28,11 +29,11 @@ export const EscortCardsGenerator: React.FC<EscortCardsGeneratorProps> = ({ gues
   const print = usePrint();
   const [cardType, setCardType] = useState<'tent' | 'nametag'>('tent');
   const [selectedTableFilter, setSelectedTableFilter] = useState<string>('ALL');
-  const [showQrCode, setShowQrCode] = useState(true);
   const [customHeader, setCustomHeader] = useState(
     settings?.babyName ? tf('escortHeaderWithBaby', { name: settings.babyName }) : t.escortHeaderDefault
   );
   const [floorMap, setFloorMap] = useState<FloorMapData | null>(null);
+  const [showQrModal, setShowQrModal] = useState(false);
 
   // Seats live on the floor map; fetch it so split parties get one card per person.
   useEffect(() => {
@@ -104,8 +105,29 @@ export const EscortCardsGenerator: React.FC<EscortCardsGeneratorProps> = ({ gues
           </button>
         </div>
 
+        {/* Main table QR — one standee per table, opens the guest chooser */}
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 rounded-2xl bg-[#EFE6DC]/50 border border-[#CBAE94]/50 p-4">
+          <div className="flex items-center gap-3 min-w-0">
+            <div className="w-10 h-10 rounded-2xl bg-white border border-[#CBAE94] flex items-center justify-center shrink-0">
+              <QrCode className="w-5 h-5 text-[#8B735B]" />
+            </div>
+            <div className="min-w-0">
+              <p className="text-xs font-bold text-[#4A3F35]">{t.tableQrPrintTitle}</p>
+              <p className="text-xs text-[#8B735B]">{t.tableQrPrintSubtitle}</p>
+            </div>
+          </div>
+          <button
+            type="button"
+            onClick={() => setShowQrModal(true)}
+            className="px-4 py-2.5 rounded-xl border-2 border-[#CBAE94] bg-white text-[#4A3F35] font-bold text-xs hover:bg-[#EFE6DC] transition-all flex items-center gap-2 cursor-pointer shrink-0"
+          >
+            <QrCode className="w-4 h-4" />
+            <span>{t.tableQrPrintTitle}</span>
+          </button>
+        </div>
+
         {/* Customization Options */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
           <div>
             <label className="label-mono block text-xs font-bold mb-1">{t.stationeryFormatLabel}</label>
             <Select
@@ -144,17 +166,6 @@ export const EscortCardsGenerator: React.FC<EscortCardsGeneratorProps> = ({ gues
             />
           </div>
 
-          <div className="flex items-end pb-1">
-            <label className="flex items-center gap-2 cursor-pointer text-xs font-bold text-[#4A3F35]">
-              <input
-                type="checkbox"
-                checked={showQrCode}
-                onChange={(e) => setShowQrCode(e.target.checked)}
-                className="w-4 h-4 rounded-md accent-[#8B735B]"
-              />
-              <span>{t.includeQrLabel}</span>
-            </label>
-          </div>
         </div>
       </div>
 
@@ -181,10 +192,6 @@ export const EscortCardsGenerator: React.FC<EscortCardsGeneratorProps> = ({ gues
               const seatLine = row.seatNumber
                 ? tf('seatedAtSeatLabel', { seat: String(row.seatNumber) })
                 : '';
-              const magicUrl = `${window.location.origin}/rsvp/${guest.magic_token}`;
-              const qrApi = `https://api.qrserver.com/v1/create-qr-code/?size=100x100&data=${encodeURIComponent(
-                magicUrl
-              )}`;
 
               if (cardType === 'tent') {
                 return (
@@ -223,6 +230,9 @@ export const EscortCardsGenerator: React.FC<EscortCardsGeneratorProps> = ({ gues
                         <p className="text-xs font-mono font-bold text-[#8B735B] truncate">
                           {seatLine}
                         </p>
+                        <p className="text-xs font-mono font-bold text-[#4A3F35] truncate">
+                          {t.uploadCodeLabel}: {guest.code}
+                        </p>
                       </div>
 
                       <div className="flex flex-col items-center justify-center text-right shrink-0">
@@ -232,13 +242,6 @@ export const EscortCardsGenerator: React.FC<EscortCardsGeneratorProps> = ({ gues
                         <div className="px-3 py-1 rounded-xl bg-[#EFE6DC] border border-[#CBAE94] text-[#4A3F35] font-bold text-sm font-mono mt-0.5">
                           {tableNum}
                         </div>
-                        {showQrCode && (
-                          <img
-                            src={qrApi}
-                            alt={t.qrCodeAlt}
-                            className="w-10 h-10 mt-1.5 rounded-md border border-[#CBAE94]"
-                          />
-                        )}
                       </div>
                     </div>
                   </div>
@@ -257,17 +260,14 @@ export const EscortCardsGenerator: React.FC<EscortCardsGeneratorProps> = ({ gues
                     </div>
 
                     <div className="text-center my-auto py-2 min-w-0">
-                      <p className="text-xs text-[#8B735B] uppercase font-mono tracking-widest">
-                        {t.helloMyNameIsLabel}
-                      </p>
                       <h2 className="font-newsreader text-3xl font-bold text-[#4A3F35] mt-1 leading-tight break-words line-clamp-2">
                         {row.name}
                       </h2>
                     </div>
 
                     <div className="flex items-center justify-between border-t border-[#CBAE94]/40 pt-2 text-xs font-mono">
-                      <span className="font-bold text-[#8B735B]">{t.tableFilterLabel} {tableNum}</span>
-                      <span className="text-xs text-[#8B735B]">{seatLine}</span>
+                      <span className="font-bold text-[#8B735B]">{t.tableFilterLabel} {tableNum}{seatLine ? ` · ${seatLine}` : ''}</span>
+                      <span className="font-bold text-[#4A3F35]">{t.uploadCodeLabel} {guest.code}</span>
                     </div>
                   </div>
                 );
@@ -276,6 +276,12 @@ export const EscortCardsGenerator: React.FC<EscortCardsGeneratorProps> = ({ gues
           </div>
         )}
       </div>
+
+      <TableScanQrModal
+        open={showQrModal}
+        onClose={() => setShowQrModal(false)}
+        tables={floorMap?.tables ?? []}
+      />
     </div>
   );
 };

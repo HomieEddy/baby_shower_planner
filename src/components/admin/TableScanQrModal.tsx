@@ -7,7 +7,7 @@ import { useT, useTf } from '../shared/i18n';
 
 const qrUrl = (tableId: string) =>
   `https://api.qrserver.com/v1/create-qr-code/?size=300x300&data=${encodeURIComponent(
-    `${window.location.origin}/upload-photos?tableId=${tableId}`
+    `${window.location.origin}/scan?table=${tableId}`
   )}`;
 
 const QrStandeeCard = ({ table, last }: { table: TableElement; last?: boolean }) => {
@@ -46,7 +46,7 @@ const QrStandeeCard = ({ table, last }: { table: TableElement; last?: boolean })
   );
 };
 
-export const TableQrModal = ({ open, onClose, tables }: { open: boolean; onClose: () => void; tables: TableElement[] }) => {
+export const TableScanQrModal = ({ open, onClose, tables }: { open: boolean; onClose: () => void; tables: TableElement[] }) => {
   const t = useT();
   const tf = useTf();
   const confirmAction = useActionConfirm();

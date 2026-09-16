@@ -27,9 +27,7 @@ import {
   Settings,
   AlertTriangle,
   MessageSquare,
-  Camera,
   MapPin,
-  BookOpen,
   Image as ImageIcon,
   Trash2,
   UserCheck,
@@ -274,10 +272,13 @@ export const AdminDashboard = () => {
   };
 
   const rehearsalActive = rehearsal?.active === true;
+  // Rehearsal links are token-free: the host picks any demo guest themselves.
   const rehearsalLinks = rehearsalActive
     ? [
-        ...(rehearsal?.pendingToken ? [{ href: `/rsvp/${rehearsal.pendingToken}`, label: t.rehearsalOpenRsvp }] : []),
-        ...(rehearsal?.sample?.magic_token ? [{ href: `/find-my-table?guest=${rehearsal.sample.magic_token}`, label: t.rehearsalOpenFinder }] : []),
+        { href: '/portal', label: t.rehearsalOpenRsvp },
+        { href: '/find-my-table', label: t.rehearsalOpenFinder },
+        { href: '/scan', label: t.rehearsalOpenScan },
+        { href: '/event', label: t.landingEventBtn },
         { href: '/guestbook', label: t.rehearsalOpenGuestbook },
         { href: '/upload-photos', label: t.rehearsalOpenUpload },
         { href: '/register', label: t.rehearsalOpenRegister },
@@ -476,41 +477,19 @@ export const AdminDashboard = () => {
               );
             })}
 
-            {/* Page links — the dashboard is the single admin nav, so standalone
-                admin and guest-facing pages are opened from here. */}
+            {/* Page links — the dashboard is the single admin nav. Floor Map
+                and Photo Gallery open as their own pages from the same list. */}
             <div className="pt-3 mt-2 border-t border-[#CBAE94]/30 space-y-1">
-              <span className="label-mono block px-3 pb-1">{t.navGroupSeating}</span>
               <SidebarPageLink
                 to="/seating"
                 icon={MapPin}
                 label={t.navFloorplan}
                 onNavigate={() => setSidebarOpen(false)}
               />
-            </div>
-            <div className="pt-3 mt-2 border-t border-[#CBAE94]/30 space-y-1">
-              <span className="label-mono block px-3 pb-1">{t.navGroupGuestPages}</span>
               <SidebarPageLink
                 to="/photo-gallery"
                 icon={ImageIcon}
                 label={t.navPhotoGallery}
-                onNavigate={() => setSidebarOpen(false)}
-              />
-              <SidebarPageLink
-                to="/guestbook"
-                icon={BookOpen}
-                label={t.navGuestbook}
-                onNavigate={() => setSidebarOpen(false)}
-              />
-              <SidebarPageLink
-                to="/upload-photos"
-                icon={Camera}
-                label={t.navUploadPhotos}
-                onNavigate={() => setSidebarOpen(false)}
-              />
-              <SidebarPageLink
-                to="/event"
-                icon={CalendarDays}
-                label={t.landingEventBtn}
                 onNavigate={() => setSidebarOpen(false)}
               />
             </div>

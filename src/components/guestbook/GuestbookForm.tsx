@@ -1,4 +1,5 @@
 import { useRef } from 'react';
+import type { ReactNode } from 'react';
 import { FieldErrors, UseFormRegister } from 'react-hook-form';
 import { motion } from 'motion/react';
 import { Camera, Send, X, CheckCircle2, Sparkles } from 'lucide-react';
@@ -14,6 +15,8 @@ interface GuestbookFormProps {
   submitting: boolean;
   previewUrl: string | null;
   nameInputRef: React.RefObject<HTMLInputElement | null>;
+  /** Reservation code + table identity fields, rendered above the name input. */
+  identity?: ReactNode;
   onFileChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
   onRemovePhoto: () => void;
   onSubmit: () => void;
@@ -25,6 +28,7 @@ export const GuestbookForm = ({
   submitting,
   previewUrl,
   nameInputRef,
+  identity,
   onFileChange,
   onRemovePhoto,
   onSubmit,
@@ -41,6 +45,8 @@ export const GuestbookForm = ({
       onSubmit={onSubmit}
       className="space-y-6"
     >
+      {identity}
+
       {/* Name Input */}
       <div className="space-y-1.5">
         <label htmlFor="gb-name" className="label-mono block">

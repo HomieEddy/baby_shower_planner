@@ -1,9 +1,10 @@
+import type { ReactNode } from 'react';
 import { motion } from 'motion/react';
 import { Clock, User } from 'lucide-react';
 import { GuestbookEntry } from '../../types';
 import { cardItem } from '../shared/motionPresets';
 
-export const GuestbookEntryCard = ({ entry }: { entry: GuestbookEntry }) => {
+export const GuestbookEntryCard = ({ entry, actions }: { entry: GuestbookEntry; actions?: ReactNode }) => {
   return (
     <motion.div
       variants={cardItem}
@@ -44,6 +45,12 @@ export const GuestbookEntryCard = ({ entry }: { entry: GuestbookEntry }) => {
             alt={`Photo by ${entry.guest_name}`}
             className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
           />
+        </div>
+      )}
+
+      {actions && (
+        <div className="flex items-center justify-end gap-2 pt-3 border-t border-dashed border-[#CBAE94]/50">
+          {actions}
         </div>
       )}
     </motion.div>

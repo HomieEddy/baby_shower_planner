@@ -6,8 +6,11 @@ import { getPartyMembers, isMemberCheckedIn } from '../../lib/guestAttendees';
 import { getGuestPartySize } from '../../lib/tableAssignment';
 import { useToast } from '../shared/ToastContext';
 import { useActionConfirm } from '../shared/ConfirmDialog';
-import { CheckCircle2, RotateCcw, Users, UserCheck, UserX, ChevronDown, ChevronRight } from 'lucide-react';
+import { CheckCircle2, RotateCcw, Users, UserCheck, UserX, ChevronDown, ChevronRight, QrCode } from 'lucide-react';
 import { useT, useTf, useApiErrorMessage } from '../shared/i18n';
+import { useAppStore } from '../../stores/appStore';
+import { useSettings } from '../../lib/settingsQuery';
+import { DayOfQrModal } from '../seating/DayOfQrModal';
 import { decodeApiError } from '../../lib/errors';
 import { SearchInput } from '../shared/ui';
 import { MetricCard } from '../shared/MetricCard';
@@ -19,6 +22,8 @@ export const GuestCheckIn = () => {
   const t = useT();
   const tf = useTf();
   const apiError = useApiErrorMessage();
+  const language = useAppStore((s) => s.language);
+  const settings = useSettings();
   const { toast } = useToast();
   const confirmAction = useActionConfirm();
   const [guests, setGuests] = useState<Guest[]>([]);
@@ -27,6 +32,7 @@ export const GuestCheckIn = () => {
   const [stats, setStats] = useState({ total: 0, checkedIn: 0, expected: 0 });
   const [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState<string | null>(null);
+  const [qrOpen, setQrOpen] = useState(false);
 
   const fetchData = useCallback(async (isActive: () => boolean = () => true) => {
     const [gRes, sRes] = await Promise.all([
@@ -102,6 +108,18 @@ export const GuestCheckIn = () => {
         <MetricCard label={t.totalGuestsLabel} value={stats.total} icon={<Users className="w-5 h-5" />} />
         <MetricCard label={t.checkedInLabel} value={stats.checkedIn} icon={<UserCheck className="w-5 h-5" />} iconClass="text-green-600" />
         <MetricCard label={t.notYetLabel} value={notYet} icon={<UserX className="w-5 h-5" />} iconClass="text-amber-600" />
+      </div>
+
+      {/* Find-my-table QR poster */}
+      <div className="flex justify-end">
+        <button
+          type="button"
+          onClick={() => setQrOpen(true)}
+          className="px-4 py-2.5 rounded-2xl bg-[#8B735B] text-white text-xs font-bold hover:bg-[#705C47] transition-colors flex items-center gap-2 cursor-pointer"
+        >
+          <QrCode className="w-4 h-4" />
+          <span>{t.printFindTableQrBtn}</span>
+        </button>
       </div>
 
       {/* Search */}
@@ -264,6 +282,13 @@ export const GuestCheckIn = () => {
         rangeEnd={pager.rangeEnd}
         total={pager.total}
         onPageChange={pager.setPage}
+      />
+
+      <DayOfQrModal
+        isOpen={qrOpen}
+        onClose={() => setQrOpen(false)}
+        language={language}
+        settings={settings}
       />
     </motion.div>
   );

@@ -239,6 +239,7 @@ export interface Translations {
   dayOfGuestbookTab: string;
   dayOfSubtitle: string;
   dayOfTitle: string;
+  printFindTableQrBtn: string;
   declinedNote: string;
   declinedWarmText: string;
   deleteAlertTitle: string;
@@ -423,7 +424,6 @@ export interface Translations {
   galleryDeletedToast_other: string;
   galleryFiltersResetToast: string;
   galleryPhotoRemovedToast: string;
-  galleryPrintQrBtn2: string;
   gbEntryDeletedToast: string;
   gbEntryHiddenToast: string;
   gbEntryShownToast: string;
@@ -446,6 +446,18 @@ export interface Translations {
   gbPhotoRemovedToast: string;
   gbPostErrorToast: string;
   gbPostFailedToast: string;
+  gbYourWishesTitle: string;
+  gbNoWishesYet: string;
+  gbEditWishBtn: string;
+  gbDeleteWishBtn: string;
+  gbDeleteWishTitle: string;
+  gbDeleteWishMsg: string;
+  gbSaveWishBtn: string;
+  gbCancelWishBtn: string;
+  gbTableFullMsg: string;
+  gbEditValidationMsg: string;
+  gbWishUpdatedToast: string;
+  gbWishDeletedToast: string;
   gbPostedToast: string;
   gbPrintToast: string;
   gbSubmitBtn: string;
@@ -506,7 +518,6 @@ export interface Translations {
   importCsvBtn: string;
   importCsvTitle: string;
   importingBtn: string;
-  includeQrLabel: string;
   insufficientSeats: string;
   invalidTokenMsg: string;
   invalidTokenTitle: string;
@@ -583,10 +594,8 @@ export interface Translations {
   nameExamplePlaceholder: string;
   navAdmin: string;
   navFloorplan: string;
-  navGuestbook: string;
   navPhotoGallery: string;
   navRsvp: string;
-  navUploadPhotos: string;
   nextSlideBtn: string;
   noAlertsYetMsg: string;
   noDietaryMsg: string;
@@ -640,6 +649,17 @@ export interface Translations {
   portalResolving: string;
   portalSubtitle: string;
   portalTitle: string;
+  scanTitle: string;
+  scanSubtitle: string;
+  scanAtTable: string;
+  scanGuestbookCard: string;
+  scanGuestbookDesc: string;
+  scanPhotosCard: string;
+  scanPhotosDesc: string;
+  scanEnterCodeTitle: string;
+  scanEnterCodeHint: string;
+  scanRateLimited: string;
+  scanChooseAgainBtn: string;
   presetEnglish: string;
   presetFrench: string;
   prevSlideBtn: string;
@@ -650,7 +670,6 @@ export interface Translations {
   printMemoryBookBtn: string;
   printPosterBtn: string;
   printReadyBadge: string;
-  printTableQrBtn: string;
   privateHostGalleryLabel: string;
   processImportBtn: string;
   progressSentLabel: string;
@@ -855,6 +874,7 @@ export interface Translations {
   uploadBatchLimitToast: string;
   uploadCodeLabel: string;
   uploadCodePlaceholder: string;
+  uploadLockedIdentityNote: string;
   uploadCodeRequiredToast: string;
   uploadInvalidCodeToast: string;
   uploadPhotoLimitToast: string;
@@ -909,6 +929,7 @@ export interface Translations {
   rehearsalOpenFinder: string;
   rehearsalOpenGuestbook: string;
   rehearsalOpenRegister: string;
+  rehearsalOpenScan: string;
   rehearsalOpenRsvp: string;
   rehearsalOpenUpload: string;
   rehearsalQuickLinks: string;
@@ -1027,7 +1048,6 @@ export interface Translations {
   paperLayoutLabel: string;
   noAttendingGuestsMsg: string;
   seatedAtLabel: string;
-  helloMyNameIsLabel: string;
   pauseBtn: string;
   playBtn: string;
   memoryMomentTitle: string;
@@ -1182,8 +1202,6 @@ export interface Translations {
   zipAddingPhotoStatus: string;
   // UI navigation audit additions
   backBtn: string;
-  navGroupGuestPages: string;
-  navGroupSeating: string;
   pageNotFoundTitle: string;
   pageNotFoundMsg: string;
   skipToContent: string;
@@ -1199,7 +1217,6 @@ export interface Translations {
   escortPaperLayout: string;
   escortHeaderWithBaby: string;
   escortHeaderDefault: string;
-  qrCodeAlt: string;
   mockBadge: string;
   providerNotConfigured: string;
   breadcrumbLabel: string;
@@ -1510,6 +1527,7 @@ export const translations: Record<Language, Translations> = {
     dayOfGuestbookTab: "Day-Of Digital Guestbook",
     dayOfSubtitle: "Find your name, check in, and see your assigned table on the map — the party lead can check in the whole group at once.",
     dayOfTitle: "Check In & Find Your Seat",
+    printFindTableQrBtn: "Print Find-My-Table QR",
     declinedNote: "* Note: Guests who have already declined will only receive cancellation alerts.",
     declinedWarmText: "Sending warm wishes from afar.",
     deleteAlertTitle: "Delete alert",
@@ -1704,7 +1722,6 @@ export const translations: Record<Language, Translations> = {
     moderationVisibleBadge: "Visible",
     photoHiddenToast: "Photo hidden from guests.",
     photoShownToast: "Photo visible again.",
-    galleryPrintQrBtn2: "Print Table QR Cards",
     gbLeaveAnotherBtn: "Leave Another Message",
     gbMessageLabel: "Message or Words of Advice",
     gbMessagePlaceholder: "Share your blessings, wisdom, or funny parenting tips for the parents...",
@@ -1718,6 +1735,18 @@ export const translations: Record<Language, Translations> = {
     gbPhotoRemovedToast: "Attached photo removed.",
     gbPostErrorToast: "An error occurred while posting your message.",
     gbPostFailedToast: "Failed to post message. Please try again.",
+    gbYourWishesTitle: "Your wishes",
+    gbNoWishesYet: "You haven't left a wish yet.",
+    gbEditWishBtn: "Edit",
+    gbDeleteWishBtn: "Delete",
+    gbDeleteWishTitle: "Delete this wish?",
+    gbDeleteWishMsg: "This can't be undone.",
+    gbSaveWishBtn: "Save",
+    gbCancelWishBtn: "Cancel",
+    gbTableFullMsg: "This table has reached its wish limit.",
+    gbEditValidationMsg: "Add your name and message.",
+    gbWishUpdatedToast: "Your wish was updated.",
+    gbWishDeletedToast: "Your wish was deleted.",
     gbPostedToast: "Your sweet message has been posted to the guestbook!",
     gbPrintToast: "Preparing Memory Keepsake Book for printing/export...",
     gbSubmitBtn: "Send Message to Parents",
@@ -1778,7 +1807,6 @@ export const translations: Record<Language, Translations> = {
     importCsvBtn: "Import CSV",
     importCsvTitle: "Batch import guests from CSV",
     importingBtn: "Importing...",
-    includeQrLabel: "Include RSVP / Table QR Code",
     insufficientSeats: "Insufficient Seats",
     invalidTokenMsg: "This magic invitation link is invalid or expired. Please contact the shower co-hosts.",
     invalidTokenTitle: "Invalid or Expired Invitation",
@@ -1856,10 +1884,8 @@ export const translations: Record<Language, Translations> = {
     nameExamplePlaceholder: "e.g., Aunt Sarah & Mark",
     navAdmin: "Co-Host Dashboard",
     navFloorplan: "Floor Map & Seating",
-    navGuestbook: "QR Digital Guestbook",
     navPhotoGallery: "Host Photo Gallery",
     navRsvp: "RSVP & Event Info",
-    navUploadPhotos: "Upload Event Photos",
     nextSlideBtn: "Next Slide",
     noAlertsYetMsg: "No active broadcast alerts dispatched yet.",
     noDietaryMsg: "No dietary restrictions reported yet.",
@@ -1913,6 +1939,17 @@ export const translations: Record<Language, Translations> = {
     portalResolving: "Looking up your invitation...",
     portalSubtitle: "Enter the 4-digit code from your invitation or paste your magic link.",
     portalTitle: "Guest Portal",
+    scanTitle: "Welcome!",
+    scanSubtitle: "What would you like to do?",
+    scanAtTable: "Table {{table}}",
+    scanGuestbookCard: "Leave a Wish",
+    scanGuestbookDesc: "Write a message in the guestbook.",
+    scanPhotosCard: "Share Photos",
+    scanPhotosDesc: "Upload photos from your table.",
+    scanEnterCodeTitle: "Enter your reservation code",
+    scanEnterCodeHint: "It's on your name badge or escort card.",
+    scanRateLimited: "Too many attempts. Please try again in a minute.",
+    scanChooseAgainBtn: "Choose something else",
     presetEnglish: "English (EN)",
     presetFrench: "Français (FR)",
     prevSlideBtn: "Previous Slide",
@@ -1923,7 +1960,6 @@ export const translations: Record<Language, Translations> = {
     printMemoryBookBtn: "Print Memory Book",
     printPosterBtn: "Print Entrance Poster",
     printReadyBadge: "Print Ready",
-    printTableQrBtn: "Print Table QR Cards",
     privateHostGalleryLabel: "Private Host Gallery",
     processImportBtn: "Process Import",
     progressSentLabel: "{{sent}} of {{total}} Sent ({{percent}}%)",
@@ -2133,6 +2169,7 @@ export const translations: Record<Language, Translations> = {
     uploadBatchLimitToast: "You can upload at most 12 photos at a time.",
     uploadCodeLabel: "Reservation code",
     uploadCodePlaceholder: "4-digit code from your invitation",
+    uploadLockedIdentityNote: "Your table and reservation code came from the table QR code. Just add your name below.",
     uploadCodeRequiredToast: "Enter the 4-digit reservation code from your invitation.",
     uploadInvalidCodeToast: "Reservation code not found. Check your invitation.",
     uploadPhotoLimitToast: "Photo limit reached: {{remaining}} of 12 left for this reservation.",
@@ -2187,6 +2224,7 @@ export const translations: Record<Language, Translations> = {
     rehearsalOpenFinder: "Find my table / check-in",
     rehearsalOpenGuestbook: "Guestbook",
     rehearsalOpenRegister: "Self-registration",
+    rehearsalOpenScan: "Table QR chooser",
     rehearsalOpenRsvp: "Guest RSVP",
     rehearsalOpenUpload: "Photo upload",
     rehearsalQuickLinks: "Try a guest flow",
@@ -2305,7 +2343,6 @@ export const translations: Record<Language, Translations> = {
     paperLayoutLabel: "Paper layout",
     noAttendingGuestsMsg: "No attending guests yet - cards will appear here once guests confirm.",
     seatedAtLabel: "Seated At",
-    helloMyNameIsLabel: "Hello, My Name Is",
     pauseBtn: "Pause",
     playBtn: "Play",
     memoryMomentTitle: "Bebe Memory Moment",
@@ -2453,8 +2490,6 @@ export const translations: Record<Language, Translations> = {
     zipAddingPhotoStatus: "Adding photo {{current}} of {{total}}...",
     // UI navigation audit additions
     backBtn: "Back",
-    navGroupGuestPages: "Guest Pages",
-    navGroupSeating: "Seating",
     pageNotFoundTitle: "Page Not Found",
     pageNotFoundMsg: "That page doesn't exist or was moved.",
     skipToContent: "Skip to content",
@@ -2470,7 +2505,6 @@ export const translations: Record<Language, Translations> = {
     escortPaperLayout: "2-Column Grid (Standard A4 / Letter)",
     escortHeaderWithBaby: "Celebrating Baby {{name}}",
     escortHeaderDefault: "Welcome to Our Baby Shower",
-    qrCodeAlt: "QR code",
     mockBadge: "MOCK",
     providerNotConfigured: "No email or SMS provider is configured",
     breadcrumbLabel: "Breadcrumb",
@@ -2490,14 +2524,14 @@ export const translations: Record<Language, Translations> = {
     guestsCount_one: "{{count}} guest",
     guestsCount_other: "{{count}} guests",
     assignToLabel: "Assign to",
-    tableQrPhotoDrop: "Photo Drop",
-    tableQrShareTitle: "Share Your Baby Shower Photos!",
+    tableQrPhotoDrop: "Scan Me",
+    tableQrShareTitle: "Share a Wish or a Photo!",
     tableQrAlt: "QR code for {{name}}",
-    tableQrScanDesc: "Scan this QR code with your smartphone camera to instantly upload table photos into the hosts' memory library!",
-    tableQrCardFooter: "Table: {{name}} • Scan & Upload • No App Required",
-    tableQrPrintTitle: "Print Table Photo Upload Standees",
-    tableQrPrintSubtitle: "Place these QR standees on every table so guests can upload photos!",
-    tableQrHowItWorks: "Guests scan the QR code placed on their table. It opens the Photo Upload portal directly with their table pre-selected!",
+    tableQrScanDesc: "Scan this code with your phone, choose Guestbook or Photo Upload, then enter your reservation code.",
+    tableQrCardFooter: "{{name}} • Guestbook & Photos • No App Required",
+    tableQrPrintTitle: "Print Table QR Standees",
+    tableQrPrintSubtitle: "Place one on every table so guests can open the guestbook or upload photos.",
+    tableQrHowItWorks: "Guests scan the QR, choose Guestbook or Photo Upload, and enter their reservation code to continue.",
     tableQrPrintModeLabel: "Print Mode:",
     tableQrSingleStandee: "Single Table Standee",
     tableQrAllStandees: "All Venue Tables ({{count}} Standees)",
@@ -2778,6 +2812,7 @@ export const translations: Record<Language, Translations> = {
     dayOfGuestbookTab: "Livre d'or du jour J",
     dayOfSubtitle: "Trouvez votre nom, enregistrez-vous et découvrez votre table sur le plan — le responsable du groupe peut tout enregistrer d'un coup.",
     dayOfTitle: "Enregistrez-vous & trouvez votre place",
+    printFindTableQrBtn: "Imprimer le QR « Trouver ma table »",
     declinedNote: "* Remarque : les invités ayant décliné ne recevront que les alertes d'annulation.",
     declinedWarmText: "Je vous envoie mes meilleurs vœux de loin.",
     deleteAlertTitle: "Supprimer l'alerte",
@@ -2972,7 +3007,6 @@ export const translations: Record<Language, Translations> = {
     moderationVisibleBadge: "Visible",
     photoHiddenToast: "Photo masquée pour les invités.",
     photoShownToast: "Photo à nouveau visible.",
-    galleryPrintQrBtn2: "Imprimer les QR de table",
     gbLeaveAnotherBtn: "Laissez un autre message",
     gbMessageLabel: "Message ou Conseils aux parents",
     gbMessagePlaceholder: "Partagez vos voeux, petits conseils de parents ou mots doux pour les parents...",
@@ -2986,6 +3020,18 @@ export const translations: Record<Language, Translations> = {
     gbPhotoRemovedToast: "Photo jointe retirée.",
     gbPostErrorToast: "Une erreur est survenue lors de la publication.",
     gbPostFailedToast: "Échec de la publication. Veuillez réessayer.",
+    gbYourWishesTitle: "Vos vœux",
+    gbNoWishesYet: "Vous n'avez pas encore laissé de vœu.",
+    gbEditWishBtn: "Modifier",
+    gbDeleteWishBtn: "Supprimer",
+    gbDeleteWishTitle: "Supprimer ce vœu ?",
+    gbDeleteWishMsg: "Cette action est irréversible.",
+    gbSaveWishBtn: "Enregistrer",
+    gbCancelWishBtn: "Annuler",
+    gbTableFullMsg: "Cette table a atteint sa limite de vœux.",
+    gbEditValidationMsg: "Ajoutez votre nom et votre message.",
+    gbWishUpdatedToast: "Votre vœu a été mis à jour.",
+    gbWishDeletedToast: "Votre vœu a été supprimé.",
     gbPostedToast: "Votre message a été publié dans le livre d'or !",
     gbPrintToast: "Préparation du livre de souvenirs pour impression/export...",
     gbSubmitBtn: "Envoyer le message aux parents",
@@ -3046,7 +3092,6 @@ export const translations: Record<Language, Translations> = {
     importCsvBtn: "Importer CSV",
     importCsvTitle: "Importer des invités depuis un CSV",
     importingBtn: "Importation...",
-    includeQrLabel: "Inclure le QR code RSVP / table",
     insufficientSeats: "Nombre de places insuffisant",
     invalidTokenMsg: "Ce lien magique est invalide ou a expiré. Veuillez contacter les hôtes de la baby shower.",
     invalidTokenTitle: "Lien d'invitation invalide",
@@ -3124,10 +3169,8 @@ export const translations: Record<Language, Translations> = {
     nameExamplePlaceholder: "ex : Tante Sarah & Marc",
     navAdmin: "Tableau de Bord Hôte",
     navFloorplan: "Plan de Salle & Placement",
-    navGuestbook: "Livre d'or QR",
     navPhotoGallery: "Galerie Photo Hôte",
     navRsvp: "RSVP & Détails",
-    navUploadPhotos: "Partager des Photos",
     nextSlideBtn: "Diapositive suivante",
     noAlertsYetMsg: "Aucune alerte active diffusée pour l'instant.",
     noDietaryMsg: "Aucune restriction alimentaire signalée pour l'instant.",
@@ -3181,6 +3224,17 @@ export const translations: Record<Language, Translations> = {
     portalResolving: "Recherche de votre invitation...",
     portalSubtitle: "Entrez le code à 4 chiffres de votre invitation ou collez votre lien magique.",
     portalTitle: "Portail Invité",
+    scanTitle: "Bienvenue !",
+    scanSubtitle: "Que souhaitez-vous faire ?",
+    scanAtTable: "Table {{table}}",
+    scanGuestbookCard: "Laisser un vœu",
+    scanGuestbookDesc: "Écrivez un message dans le livre d'or.",
+    scanPhotosCard: "Partager des photos",
+    scanPhotosDesc: "Téléversez vos photos de table.",
+    scanEnterCodeTitle: "Saisissez votre code de réservation",
+    scanEnterCodeHint: "Il se trouve sur votre badge ou votre carte de table.",
+    scanRateLimited: "Trop de tentatives. Veuillez réessayer dans une minute.",
+    scanChooseAgainBtn: "Choisir autre chose",
     presetEnglish: "English (EN)",
     presetFrench: "Français (FR)",
     prevSlideBtn: "Diapositive précédente",
@@ -3191,7 +3245,6 @@ export const translations: Record<Language, Translations> = {
     printMemoryBookBtn: "Imprimer le livre de souvenirs",
     printPosterBtn: "Imprimer l'Affiche d'Entrée",
     printReadyBadge: "Prêt à imprimer",
-    printTableQrBtn: "Imprimer les QR de table",
     privateHostGalleryLabel: "Galerie privée des hôtes",
     processImportBtn: "Importer",
     progressSentLabel: "{{sent}} sur {{total}} envoyés ({{percent}}%)",
@@ -3401,6 +3454,7 @@ export const translations: Record<Language, Translations> = {
     uploadBatchLimitToast: "Vous pouvez téléverser au maximum 12 photos à la fois.",
     uploadCodeLabel: "Code de réservation",
     uploadCodePlaceholder: "Code à 4 chiffres de votre invitation",
+    uploadLockedIdentityNote: "Votre table et votre code de réservation proviennent du QR de la table. Ajoutez simplement votre nom ci-dessous.",
     uploadCodeRequiredToast: "Entrez le code de réservation à 4 chiffres de votre invitation.",
     uploadInvalidCodeToast: "Code de réservation introuvable. Vérifiez votre invitation.",
     uploadPhotoLimitToast: "Limite de photos atteinte : {{remaining}} sur 12 restantes pour cette réservation.",
@@ -3455,6 +3509,7 @@ export const translations: Record<Language, Translations> = {
     rehearsalOpenFinder: "Trouver ma table / enregistrement",
     rehearsalOpenGuestbook: "Livre d'or",
     rehearsalOpenRegister: "Inscription libre",
+    rehearsalOpenScan: "Sélecteur QR de table",
     rehearsalOpenRsvp: "RSVP invité",
     rehearsalOpenUpload: "Téléverser des photos",
     rehearsalQuickLinks: "Tester un parcours invité",
@@ -3573,7 +3628,6 @@ export const translations: Record<Language, Translations> = {
     paperLayoutLabel: "Disposition papier",
     noAttendingGuestsMsg: "Aucun invité confirmé pour l'instant — les cartes apparaîtront ici une fois les invités confirmés.",
     seatedAtLabel: "Placé à",
-    helloMyNameIsLabel: "Bonjour, je m'appelle",
     pauseBtn: "Pause",
     playBtn: "Lecture",
     memoryMomentTitle: "Moment souvenir Bébé",
@@ -3721,8 +3775,6 @@ export const translations: Record<Language, Translations> = {
     zipAddingPhotoStatus: "Ajout de la photo {{current}} sur {{total}}...",
     // UI navigation audit additions
     backBtn: "Retour",
-    navGroupGuestPages: "Pages invités",
-    navGroupSeating: "Placement",
     pageNotFoundTitle: "Page introuvable",
     pageNotFoundMsg: "Cette page n'existe pas ou a été déplacée.",
     skipToContent: "Aller au contenu",
@@ -3738,7 +3790,6 @@ export const translations: Record<Language, Translations> = {
     escortPaperLayout: "Grille 2 colonnes (A4 / Letter standard)",
     escortHeaderWithBaby: "Célébration de bébé {{name}}",
     escortHeaderDefault: "Bienvenue à notre baby shower",
-    qrCodeAlt: "Code QR",
     mockBadge: "SIMULÉ",
     providerNotConfigured: "Aucun fournisseur e-mail ou SMS n'est configuré",
     breadcrumbLabel: "Fil d'Ariane",
@@ -3758,14 +3809,14 @@ export const translations: Record<Language, Translations> = {
     guestsCount_one: "{{count}} invité",
     guestsCount_other: "{{count}} invités",
     assignToLabel: "Assigner à",
-    tableQrPhotoDrop: "Dépôt photo",
-    tableQrShareTitle: "Partagez vos photos du baby shower !",
+    tableQrPhotoDrop: "Scannez-moi",
+    tableQrShareTitle: "Partagez un vœu ou une photo !",
     tableQrAlt: "Code QR pour {{name}}",
-    tableQrScanDesc: "Scannez ce code QR avec l'appareil photo de votre téléphone pour envoyer instantanément les photos de votre table dans la galerie des hôtes !",
-    tableQrCardFooter: "Table : {{name}} • Scannez et envoyez • Aucune appli requise",
-    tableQrPrintTitle: "Imprimer les chevalets QR de partage photo",
-    tableQrPrintSubtitle: "Placez ces chevalets QR sur chaque table pour que les invités puissent envoyer des photos !",
-    tableQrHowItWorks: "Les invités scannent le code QR placé sur leur table. Il ouvre le portail d'envoi de photos avec leur table déjà sélectionnée !",
+    tableQrScanDesc: "Scannez ce code avec votre téléphone, choisissez le livre d'or ou l'envoi de photos, puis saisissez votre code de réservation.",
+    tableQrCardFooter: "{{name}} • Livre d'or et photos • Aucune appli requise",
+    tableQrPrintTitle: "Imprimer les chevalets QR de table",
+    tableQrPrintSubtitle: "Placez-en un sur chaque table pour que les invités ouvrent le livre d'or ou envoient des photos.",
+    tableQrHowItWorks: "Les invités scannent le code QR, choisissent le livre d'or ou l'envoi de photos, puis saisissent leur code de réservation.",
     tableQrPrintModeLabel: "Mode d'impression :",
     tableQrSingleStandee: "Chevalet d'une table",
     tableQrAllStandees: "Toutes les tables ({{count}} chevalets)",

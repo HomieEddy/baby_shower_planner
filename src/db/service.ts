@@ -31,9 +31,13 @@ export {
 export type { GuestContactPayload, GuestInviteResult } from './rsvp';
 export {
   addGuestbookEntry,
+  countGuestbookEntriesForTable,
   deleteGuestbookEntry,
   getAllGuestbookEntries,
+  getGuestbookEntriesByCode,
+  getGuestbookEntry,
   setGuestbookEntryVisibility,
+  updateGuestbookEntry,
 } from './guestbook';
 export { getGuestContentLock, getSettings, updateSettings } from './settings';
 export type { GuestContentLock } from './settings';

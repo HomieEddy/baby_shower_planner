@@ -1,6 +1,7 @@
-import { Component, ReactNode, useState } from 'react';
-import { Canvas, ThreeEvent } from '@react-three/fiber';
+import { Component, ReactNode, useRef, useState } from 'react';
+import { Canvas, ThreeEvent, useFrame } from '@react-three/fiber';
 import { OrbitControls, Grid, Html, useCursor } from '@react-three/drei';
+import { DoubleSide, type Mesh, type MeshBasicMaterial } from 'three';
 import { Guest, FloorMapData, LandmarkElement, TableElement } from '../../types';
 import {
   WORLD_SCALE,
@@ -30,7 +31,7 @@ const C = {
 };
 
 const LANDMARK_COLORS: Record<LandmarkElement['type'], string> = {
-  entrance: '#4A9D6E',
+  entrance: '#C53030',
   stage: '#8B735B',
   gifts: '#D4A373',
   dessert: '#E9A3A3',
@@ -172,8 +173,28 @@ const Chair3D = ({ table, seatIndex, fill, dimmed = false, onSeatHover, onLeave 
   );
 };
 
-// ─── Table ────────────────────────────────────────────────────────
+// ─── Target seat pulse (day-of highlight) ────────────────────────
 
+const SeatPulse3D = ({ table, seatIndex }: { table: TableElement; seatIndex: number }) => {
+  const pos = seatLocalWorld(table, seatIndex);
+  const ring = useRef<Mesh>(null);
+  const material = useRef<MeshBasicMaterial>(null);
+  useFrame(({ clock }) => {
+    const cycle = 1.3;
+    const p = (clock.getElapsedTime() % cycle) / cycle;
+    const s = 0.7 + p * 1.1;
+    ring.current?.scale.setScalar(s);
+    if (material.current) material.current.opacity = 0.75 * (1 - p);
+  });
+  return (
+    <mesh ref={ring} position={[pos.x, 0.03, pos.z]} rotation={[-Math.PI / 2, 0, 0]}>
+      <ringGeometry args={[0.16, 0.24, 32]} />
+      <meshBasicMaterial ref={material} color={C.mine} transparent opacity={0.7} side={DoubleSide} depthWrite={false} />
+    </mesh>
+  );
+};
+
+// ─── Table ────────────────────────────────────────────────────────
 interface TableProps {
   floorMap: FloorMapData;
   table: TableElement;
@@ -311,6 +332,11 @@ const Table3D = ({
             onLeave={onLeave}
           />
         ))}
+
+        {/* Green pulse on the guest's own seat */}
+        {isTarget && targetSeatIndex != null && (
+          <SeatPulse3D table={table} seatIndex={targetSeatIndex} />
+        )}
 
         {/* Table name label */}
         <Html

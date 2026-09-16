@@ -45,6 +45,9 @@ const GuestPortalPage = lazy(() =>
 const EventDetailsPage = lazy(() =>
   import('./components/landing/EventDetailsPage').then((m) => ({ default: m.EventDetailsPage }))
 );
+const TableScanPage = lazy(() =>
+  import('./components/landing/TableScanPage').then((m) => ({ default: m.TableScanPage }))
+);
 const RegisterPage = lazy(() =>
   import('./components/registration/RegisterPage').then((m) => ({ default: m.RegisterPage }))
 );
@@ -95,11 +98,11 @@ function MainAppContent() {
     location.pathname.startsWith('/admin') ||
     location.pathname === '/photo-gallery' ||
     location.pathname === '/seating';
-  const isGuestDayOf = location.pathname === '/find-my-table' || location.pathname === '/check-in';
+  const isGuestDayOf = location.pathname === '/find-my-table' || location.pathname === '/check-in' || location.pathname === '/scan';
   const showHeader = (isAdminSurface || requireAuth()) && !isGuestDayOf;
   const showFinderLangBar = isGuestDayOf;
   // Full-bleed guest pages own their layout; don't letterbox them in the shell.
-  const isFullBleed = ['/find-my-table', '/check-in', '/upload-photos', '/photo-gallery'].includes(
+  const isFullBleed = ['/find-my-table', '/check-in', '/scan', '/upload-photos', '/photo-gallery'].includes(
     location.pathname
   );
 
@@ -145,6 +148,7 @@ function MainAppContent() {
             <Route path="/portal" element={<GuestPortalPage />} />
             <Route path="/register" element={<RegisterPage />} />
             <Route path="/event" element={<EventDetailsPage />} />
+            <Route path="/scan" element={<TableScanPage />} />
             <Route path="/rsvp" element={<Navigate to="/" replace />} />
             <Route path="/rsvp/:token" element={<RsvpPage />} />
             <Route path="/admin" element={<RequireAdmin><AdminDashboard /></RequireAdmin>} />

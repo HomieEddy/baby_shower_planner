@@ -4,7 +4,6 @@ import {
   Camera,
   Image as ImageIcon,
   Trash2,
-  QrCode,
   Play,
   Building2,
   RefreshCw,
@@ -23,7 +22,6 @@ import { EmptyState } from '../shared/EmptyState';
 import { PhotoCard } from './PhotoCard';
 import { PhotoLightbox } from './PhotoLightbox';
 import { PhotoSlideshow } from './PhotoSlideshow';
-import { TableQrModal } from './TableQrModal';
 import { EventPhoto } from '../../types';
 import { useT, useTf } from '../shared/i18n';
 import { useFloorMapTables } from '../shared/hooks';
@@ -55,9 +53,6 @@ export const HostPhotoGalleryPage: React.FC = () => {
   const [isSlideshowActive, setIsSlideshowActive] = useState(false);
   const [slideshowIndex, setSlideshowIndex] = useState(0);
   const [isSlideshowPlaying, setIsSlideshowPlaying] = useState(true);
-
-  // Table QR printable modal state
-  const [isTableQrModalOpen, setIsTableQrModalOpen] = useState(false);
 
   // Photo Selection & ZIP Download State
   const [selectedPhotoIds, setSelectedPhotoIds] = useState<string[]>([]);
@@ -312,15 +307,6 @@ export const HostPhotoGalleryPage: React.FC = () => {
           </div>
 
           <div className="flex flex-wrap items-center gap-2.5">
-            <button
-              type="button"
-              onClick={() => setIsTableQrModalOpen(true)}
-              className="px-4 py-2.5 rounded-2xl bg-amber-700 hover:bg-amber-800 text-white text-xs font-bold shadow-md transition-all flex items-center gap-2"
-            >
-              <QrCode className="w-4 h-4" />
-              <span>{t.printTableQrBtn}</span>
-            </button>
-
             {photos.length > 0 && (
               <button
                 type="button"
@@ -517,10 +503,10 @@ export const HostPhotoGalleryPage: React.FC = () => {
                 ? t.noGuestPhotosDesc
                 : t.noMatchingPhotosDesc
             }
-            actionLabel={photos.length === 0 ? t.galleryPrintQrBtn2 : t.galleryClearFiltersBtn}
+            actionLabel={photos.length === 0 ? undefined : t.galleryClearFiltersBtn}
             onAction={
               photos.length === 0
-                ? () => setIsTableQrModalOpen(true)
+                ? undefined
                 : () => {
                     setSearchQuery('');
                     setSelectedTableFilter('all');
@@ -581,9 +567,6 @@ export const HostPhotoGalleryPage: React.FC = () => {
             onClose={() => setIsSlideshowActive(false)}
           />
         )}
-
-        {/* Print Table QR Cards Modal */}
-        <TableQrModal open={isTableQrModalOpen} onClose={() => setIsTableQrModalOpen(false)} tables={tables} />
 
         {/* ZIP Compression Progress Modal */}
         <Modal open={isZipping} onClose={() => {}} dismissible={false} maxWidth="md">
