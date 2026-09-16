@@ -94,7 +94,7 @@ export const AdminGuestsTab: React.FC<AdminGuestsTabProps> = ({ language, t, gue
       <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
         <MetricCard label={t.statAttending} icon={<CheckCircle2 className="w-5 h-5" />}
           value={metricMode === 'party' ? totalAttendingPartySize : attendingGuests.length}
-          footer={t.statTotalAttendingParty} onClick={() => { filters.onStatus('Attending'); scrollToList(); }} />
+          footer={metricMode === 'party' ? t.statTotalAttendingParty : t.statTotalAttendingInvites} onClick={() => { filters.onStatus('Attending'); scrollToList(); }} />
         <MetricCard label={t.statPending} icon={<Clock className="w-5 h-5" />}
           value={metricMode === 'party' ? pendingPartySize : pendingGuests.length}
           footer={t.awaitingResponse} iconClass="text-[#5D5449]" onClick={() => { filters.onStatus('Pending'); scrollToList(); }} />
@@ -106,7 +106,7 @@ export const AdminGuestsTab: React.FC<AdminGuestsTabProps> = ({ language, t, gue
           footer={t.approvalPendingBadge} iconClass="text-amber-700" onClick={() => approvalRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })} />
         <MetricCard label={t.statTotalGuests} icon={<Users className="w-5 h-5" />}
           value={metricMode === 'party' ? totalPartySize : guests.length}
-          footer={t.totalGuestInvites} onClick={() => { filters.onStatus('All'); scrollToList(); }} />
+          footer={metricMode === 'party' ? t.statTotalPartySize : t.totalGuestInvites} onClick={() => { filters.onStatus('All'); scrollToList(); }} />
       </div>
 
       {/* Add Guest Form */}

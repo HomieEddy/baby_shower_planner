@@ -55,7 +55,7 @@ export function useGuestAdminController({ language, t, guests, onRefresh }: Gues
   const [sourceFilter, setSourceFilter] = useState<SourceFilter>('All');
 
   const [metricMode, setMetricMode] = useState<MetricMode>(() =>
-    localStorage.getItem('guestMetricMode') === 'party' ? 'party' : 'invites'
+    localStorage.getItem('guestMetricMode') === 'invites' ? 'invites' : 'party'
   );
   const switchMetricMode = (m: MetricMode) => {
     setMetricMode(m);
