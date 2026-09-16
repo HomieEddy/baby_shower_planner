@@ -39,7 +39,7 @@ export {
   setGuestbookEntryVisibility,
   updateGuestbookEntry,
 } from './guestbook';
-export { getGuestContentLock, getSettings, updateSettings } from './settings';
+export { getGuestContentLock, getSettings, getSettingsOrUndefined, updateSettings } from './settings';
 export type { GuestContentLock } from './settings';
 export { createAlert, deleteAlert, getAlerts } from './alerts';
 export { getFloorMap, shareFloorPlanEmail, updateFloorMap } from './floorMap';

@@ -6,14 +6,19 @@ import { handleRoutes, type Route } from '../route';
 import { ReminderSettingsSchema } from '../../lib/validation';
 import { SettingsSchema } from '../../lib/domain';
 import type { EventSettings } from '../../types';
-import { getSettings, updateSettings } from '../../db/service';
+import { getSettingsOrUndefined, updateSettings } from '../../db/service';
 
 const ROUTES: Route[] = [
   {
     method: 'GET',
     path: '/api/settings',
     handler: async (_req, { res, adminOnly }) => {
-      const settings = await getSettings();
+      const settings = await getSettingsOrUndefined();
+      // An event with no settings row is a valid state (a fresh deploy, before
+      // the host has been through setup), not an outage: guests render neutral
+      // values and the dashboard shows setup. Answering 200 with an explicit
+      // absence keeps that distinguishable from a row whose values are empty.
+      if (!settings) return sendJson(res, 200, { settings: null });
       // Host contact details are admin-only; guests need event info + footer names.
       if (!adminOnly()) {
         delete (settings as Partial<EventSettings>).hostEmail;

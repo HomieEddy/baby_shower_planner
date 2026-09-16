@@ -192,7 +192,7 @@ describe('admin routes are gated', () => {
 
   it('keeps GET /api/settings public but hides the host contact details', async () => {
     const service = await import('../../db/service');
-    vi.mocked(service.getSettings).mockResolvedValueOnce({ babyName: 'Lou', hostEmail: 'h@x.com', hostPhone: '555' } as never);
+    vi.mocked(service.getSettingsOrUndefined).mockResolvedValueOnce({ babyName: 'Lou', hostEmail: 'h@x.com', hostPhone: '555' } as never);
     const res = await call('GET', '/api/settings');
     expect(h.requireAdmin).not.toHaveBeenCalled();
     expect(res.statusCode).toBe(200);
