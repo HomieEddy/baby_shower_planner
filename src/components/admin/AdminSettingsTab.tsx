@@ -44,6 +44,7 @@ import { THEME_PRESETS, getThemeById, applyThemeToDocument, getContrastTextColor
 import { useToast } from '../shared/ToastContext';
 import { useActionConfirm } from '../shared/ConfirmDialog';
 import { useTf } from '../shared/i18n';
+import { DEFAULT_LANGUAGE } from '../../stores/appStore';
 import { uploadPhotoBase64 } from '../../lib/fileUtils';
 import { InvitationMessageModal } from './InvitationMessageModal';
 
@@ -199,6 +200,7 @@ export const AdminSettingsTab: React.FC<AdminSettingsTabProps> = ({ language, t,
   const tf = useTf();
 
   const [eventTitle, setEventTitle] = useState(settings?.eventTitle ?? '');
+  const [eventLanguage, setEventLanguage] = useState<Language>(settings?.defaultLanguage ?? DEFAULT_LANGUAGE);
   const [parentsNames, setParentsNames] = useState(settings?.parentsNames ?? '');
   const [babyName, setBabyName] = useState(settings?.babyName ?? '');
   const [datePickerValue, setDatePickerValue] = useState(settings?.date ? parseToYmd(settings.date) : '');
@@ -303,6 +305,7 @@ export const AdminSettingsTab: React.FC<AdminSettingsTabProps> = ({ language, t,
       const formattedTime = formatTimeRangeString(startTime, endTime, language);
       await onSave({
         eventTitle,
+        defaultLanguage: eventLanguage,
         parentsNames,
         babyName,
         date: formattedDate,
@@ -356,6 +359,17 @@ export const AdminSettingsTab: React.FC<AdminSettingsTabProps> = ({ language, t,
           <div>
             <label className="label-mono block mb-1">{t.eventTitleLabel}</label>
             <TextInput type="text" value={eventTitle} onChange={(e) => setEventTitle(e.target.value)} />
+          </div>
+          <div>
+            <label className="label-mono block mb-1">{t.eventLanguageLabel}</label>
+            <select
+              value={eventLanguage}
+              onChange={(e) => setEventLanguage(e.target.value as Language)}
+              className="w-full px-4 py-3 rounded-2xl border-2 border-[#CBAE94] bg-white text-sm font-bold text-[#4A3F35] focus:outline-none focus:border-[#8B735B] shadow-xs cursor-pointer"
+            >
+              <option value="EN">{t.presetEnglish}</option>
+              <option value="FR">{t.presetFrench}</option>
+            </select>
           </div>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>

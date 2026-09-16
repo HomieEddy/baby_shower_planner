@@ -180,7 +180,11 @@ export const SettingsSchema = z.object({
   hostPhone: z.string().optional(),
   reminderChannels: z.object({ email: z.boolean(), sms: z.boolean() }).optional(),
   reminderAdvance: z.enum(['1h', '6h', '1d', '2d', '1w']).optional(),
+  // The host's own language for agenda reminders (not the guests' default).
   language: LanguageEnum.optional(),
+  // The event's default language for guest-facing surfaces. Distinct from
+  // `language`, which is the host agenda-reminder language.
+  defaultLanguage: LanguageEnum.optional(),
 });
 export type EventSettings = z.infer<typeof SettingsSchema>;
 

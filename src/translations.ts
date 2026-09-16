@@ -311,6 +311,7 @@ export interface Translations {
   eventDetailsSoonMsg: string;
   eventDetailsSoonTitle: string;
   eventFallbackTitle: string;
+  eventLanguageLabel: string;
   eventTitleLabel: string;
   eventTimeLabel: string;
   eventTimeRangeLabel: string;
@@ -1608,6 +1609,7 @@ export const translations: Record<Language, Translations> = {
     eventDetailsSoonMsg: "The hosts are putting the finishing touches on the celebration page. Please check back later.",
     eventDetailsSoonTitle: "Event details coming soon",
     eventFallbackTitle: "Our Celebration",
+    eventLanguageLabel: "Event Language",
     eventTitleLabel: "Event Title",
     eventTimeLabel: "Time",
     eventTimeRangeLabel: "Event Time Range",
@@ -2902,6 +2904,7 @@ export const translations: Record<Language, Translations> = {
     eventDetailsSoonMsg: "Les hôtes finalisent la page de célébration. Revenez plus tard.",
     eventDetailsSoonTitle: "Les détails de l'événement arrivent bientôt",
     eventFallbackTitle: "Notre célébration",
+    eventLanguageLabel: "Langue de l'événement",
     eventTitleLabel: "Titre de l'événement",
     eventTimeLabel: "Heure",
     eventTimeRangeLabel: "Plage horaire de l'événement",

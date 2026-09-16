@@ -85,6 +85,7 @@ function MainAppContent() {
   const settings = useSettings();
   const location = useLocation();
   const language = useAppStore((s) => s.language);
+  const setEventDefaultLanguage = useAppStore((s) => s.setEventDefaultLanguage);
   const t = useT();
 
   // Guest-facing pages render without the admin header/nav — unless the
@@ -108,7 +109,13 @@ function MainAppContent() {
     applyThemeToDocument(activeTheme);
   }, [settings?.themeId, settings?.customTheme]);
 
-  // Keep the document language in sync with the FR/EN toggle for screen readers.
+  // The event's default language seeds the app for a guest who has not chosen
+  // one. A guest's own saved choice always wins — the store enforces that.
+  useEffect(() => {
+    setEventDefaultLanguage(settings?.defaultLanguage);
+  }, [settings?.defaultLanguage, setEventDefaultLanguage]);
+
+  // Keep the document language in sync with the resolved language for screen readers.
   useEffect(() => {
     document.documentElement.lang = language === 'FR' ? 'fr' : 'en';
   }, [language]);

@@ -24,3 +24,17 @@ describe('Document title', () => {
     expect(document.title).toBe('Notre célébration');
   });
 });
+
+describe('Document language', () => {
+  it("resolves from the event's default language", () => {
+    h.settings = { eventTitle: 'Sophie & Marc', defaultLanguage: 'EN' };
+    render(<App />);
+    expect(document.documentElement.lang).toBe('en');
+  });
+
+  it('falls back to one language when the event has no default', () => {
+    h.settings = { eventTitle: 'Sophie & Marc' };
+    render(<App />);
+    expect(document.documentElement.lang).toBe('fr');
+  });
+});
