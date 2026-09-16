@@ -9,8 +9,8 @@ import {
   BOT_UA_RE,
   clientIp,
   GLOBAL_LIMIT,
+  adminGuard,
   HttpError,
-  LOGIN_ATTEMPT_LIMIT,
   MAX_BODY_BYTES,
   MIME_TYPES,
   originMatchesHost,
@@ -18,7 +18,6 @@ import {
   sendJson,
   sendError,
   serveStaticFile,
-  timingSafeEqualStr,
   validateSecrets,
 } from './src/server/http';
 import type { RouteCtx } from './src/server/http';
@@ -72,19 +71,7 @@ async function requestHandler(req: http.IncomingMessage, res: http.ServerRespons
   if (serveStaticFile(pathname, res)) return;
 
   const ADMIN_TOKEN = process.env.ADMIN_TOKEN;
-  const adminOnly = () =>
-    !ADMIN_TOKEN ||
-    (typeof req.headers['x-admin-token'] === 'string' &&
-      timingSafeEqualStr(req.headers['x-admin-token'], ADMIN_TOKEN));
-
-  // Admin gate with brute-force protection: failed auth counts against the
-  // caller's IP and excess attempts get a 429 instead of a 401.
-  const requireAdmin = () => {
-    if (adminOnly()) return;
-    const fail = rateLimit(`login:${ip}`, LOGIN_ATTEMPT_LIMIT, 60_000);
-    if (!fail.allowed) throw new HttpError(429, 'Too many attempts. Try again later.');
-    throw new HttpError(401, 'Unauthorized');
-  };
+  const { adminOnly, requireAdmin } = adminGuard(req.headers['x-admin-token'], ADMIN_TOKEN, ip);
 
   // Guest content window lock (guestbook + photos): admins bypass it.
   const guestLock: RouteCtx['guestLock'] = async () => {

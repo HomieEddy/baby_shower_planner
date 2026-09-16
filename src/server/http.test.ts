@@ -92,6 +92,22 @@ describe('originMatchesHost', () => {
   });
 });
 
+describe('isAdminRequest', () => {
+  it('denies when no admin token is configured, with or without a header', async () => {
+    const { isAdminRequest } = await loadHttp();
+    expect(isAdminRequest(undefined, undefined)).toBe(false);
+    expect(isAdminRequest('babyshower-admin-2026', undefined)).toBe(false);
+    expect(isAdminRequest('babyshower-admin-2026', '')).toBe(false);
+  });
+
+  it('authorises only the exact configured token', async () => {
+    const { isAdminRequest } = await loadHttp();
+    expect(isAdminRequest('correct-token-value', 'correct-token-value')).toBe(true);
+    expect(isAdminRequest('wrong-token-value', 'correct-token-value')).toBe(false);
+    expect(isAdminRequest(undefined, 'correct-token-value')).toBe(false);
+  });
+});
+
 describe('validateSecrets', () => {
   it('refuses to start in production with known-weak secrets', async () => {
     const exit = vi.spyOn(process, 'exit').mockImplementation((() => undefined) as never);

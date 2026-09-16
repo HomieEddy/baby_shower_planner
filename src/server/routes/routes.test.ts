@@ -1,7 +1,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { EventEmitter } from 'node:events';
 import type http from 'node:http';
-import { HttpError } from '../http';
+import { adminGuard, HttpError } from '../http';
 import type { RouteCtx } from '../http';
 
 // Cross-module smoke test for the route seam: the real dispatcher and the real
@@ -57,7 +57,14 @@ const HANDLERS = [
   handleCheckInRoutes,
 ];
 
-const call = async (method: string, pathname: string, body?: unknown) => {
+// `guard` lets a test drive the real admin gate (adminGuard) through the
+// dispatcher instead of the default stubs, which is how "unset denies" is pinned.
+const call = async (
+  method: string,
+  pathname: string,
+  body?: unknown,
+  guard?: { adminOnly: () => boolean; requireAdmin: () => void }
+) => {
   const out: { statusCode?: number; body?: any } = {};
   const response = {
     writeHead: (statusCode: number) => { out.statusCode = statusCode; return response; },
@@ -75,8 +82,8 @@ const call = async (method: string, pathname: string, body?: unknown) => {
     res: response as unknown as http.ServerResponse,
     url: new URL(`http://localhost${pathname}`),
     ip: '127.0.0.1',
-    adminOnly: h.adminOnly,
-    requireAdmin: h.requireAdmin,
+    adminOnly: guard?.adminOnly ?? h.adminOnly,
+    requireAdmin: guard?.requireAdmin ?? h.requireAdmin,
     guestLock: h.guestLock,
   } as RouteCtx;
 
@@ -202,6 +209,21 @@ describe('admin routes are gated', () => {
     expect(res.body.settings).toMatchObject({ babyName: 'Lou' });
     expect(res.body.settings).not.toHaveProperty('hostEmail');
     expect(res.body.settings).not.toHaveProperty('hostPhone');
+  });
+});
+
+describe('the admin gate is closed when the secret is absent', () => {
+  const at = (header: unknown, token: string | undefined) => adminGuard(header, token, '198.51.100.7');
+
+  it('401s an admin route with ADMIN_TOKEN unset, with or without a header', async () => {
+    expect((await call('GET', '/api/guests', undefined, at(undefined, undefined))).statusCode).toBe(401);
+    expect((await call('GET', '/api/guests', undefined, at('anything', undefined))).statusCode).toBe(401);
+    expect((await call('GET', '/api/guests', undefined, at('anything', ''))).statusCode).toBe(401);
+  });
+
+  it('200s with the correct token and 401s with a wrong one', async () => {
+    expect((await call('GET', '/api/guests', undefined, at('correct-token-value', 'correct-token-value'))).statusCode).toBe(200);
+    expect((await call('GET', '/api/guests', undefined, at('wrong-token-value', 'correct-token-value'))).statusCode).toBe(401);
   });
 });
 

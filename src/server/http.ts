@@ -36,6 +36,26 @@ export function timingSafeEqualStr(a: string, b: string): boolean {
   return bufA.length === bufB.length && crypto.timingSafeEqual(bufA, bufB);
 }
 
+// The sole admin gate: a configured token AND a matching header. An absent or
+// empty token denies, never opens — a deploy missing ADMIN_TOKEN is locked.
+export function isAdminRequest(headerValue: unknown, adminToken: string | undefined): boolean {
+  return !!adminToken && typeof headerValue === 'string' && timingSafeEqualStr(headerValue, adminToken);
+}
+
+// The request-bound admin guard: `adminOnly` for auth-aware reads, `requireAdmin`
+// for routes marked admin. Failed auth counts against the caller's IP and excess
+// attempts get a 429 instead of a 401.
+export function adminGuard(headerValue: unknown, adminToken: string | undefined, ip: string) {
+  const adminOnly = () => isAdminRequest(headerValue, adminToken);
+  const requireAdmin = () => {
+    if (adminOnly()) return;
+    const fail = rateLimit(`login:${ip}`, LOGIN_ATTEMPT_LIMIT, 60_000);
+    if (!fail.allowed) throw new HttpError(429, 'Too many attempts. Try again later.');
+    throw new HttpError(401, 'Unauthorized');
+  };
+  return { adminOnly, requireAdmin };
+}
+
 export function clientIp(req: http.IncomingMessage): string {
   if (TRUST_PROXY) {
     const xff = req.headers['x-forwarded-for'];

@@ -95,7 +95,7 @@ Guest CRUD, RSVP (token-based), guestbook, photo upload/gallery, floor plan edit
 | `MAX_BODY_BYTES` | No | Max JSON body size (default 25 MB) |
 | `UPLOAD_DIR` | No | Persistent volume path for guest photo uploads |
 
-`ADMIN_TOKEN`: the admin login page validates against this value. Leave unset to disable admin protection (not recommended).
+`ADMIN_TOKEN`: the admin login page validates against this value. An absent or empty token **denies** admin rather than disabling protection — admin routes answer 401, so a deploy missing the var is locked. Production refuses to boot without a strong token (`validateSecrets`).
 
 Security hardening (rate limits, bot blocking, CSP/HSTS headers, prod secret validation) lives in `server.ts` + `src/server/http.ts`: see `SECURITY.md` for the deployment runbook. Production refuses to start with missing/weak secrets.
 
