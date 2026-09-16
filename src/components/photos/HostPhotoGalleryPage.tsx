@@ -31,7 +31,7 @@ import { SearchInput } from '../shared/ui';
 import { Pagination } from '../shared/Pagination';
 import { usePagination } from '../shared/hooks';
 
-export const HostPhotoGalleryPage: React.FC = () => {
+export const HostPhotoGalleryPage: React.FC<{ onChanged?: () => void }> = ({ onChanged }) => {
   const t = useT();
   const tf = useTf();
   const { toast } = useToast();
@@ -93,6 +93,7 @@ export const HostPhotoGalleryPage: React.FC = () => {
       }
       setPhotos((prev) => prev.filter((p) => !selectedPhotoIds.includes(p.id)));
       setSelectedPhotoIds([]);
+      onChanged?.();
       toast.success(tf('galleryDeletedToast', { count }));
     } catch (err) {
       console.error('Failed to delete selected photos:', err);
@@ -237,6 +238,7 @@ export const HostPhotoGalleryPage: React.FC = () => {
         if (selectedPhotoIndex !== null) {
           setSelectedPhotoIndex(null);
         }
+        onChanged?.();
         toast.success(t.galleryPhotoRemovedToast);
       } else {
         toast.error(t.galleryDeleteErrorToast);
@@ -289,8 +291,8 @@ export const HostPhotoGalleryPage: React.FC = () => {
   const selectedPhoto = selectedPhotoIndex !== null ? filteredPhotos[selectedPhotoIndex] : null;
 
   return (
-    <div className="min-h-screen bg-[#FAF6F0] py-8 px-4 sm:px-6 lg:px-8 font-sans">
-      <div className="max-w-7xl mx-auto space-y-6">
+    <div className="font-sans">
+      <div className="space-y-6">
         {/* Top Header Banner */}
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-[#FFFDF9] p-6 sm:p-8 rounded-3xl border border-[#CBAE94]/60 shadow-lg">
           <div className="space-y-1">

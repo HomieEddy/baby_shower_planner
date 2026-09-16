@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
-import { Guest, GuestbookEntry, EventSettings, EventAlert, GiftLog } from '../../types';
+import { Guest, GuestbookEntry, EventSettings, EventAlert, GiftLog, EventPhoto } from '../../types';
 import { CateringSummaryView } from './CateringSummaryView';
 import { EscortCardsGenerator } from './EscortCardsGenerator';
 import { ThankYouTrackerView } from './ThankYouTrackerView';
@@ -10,6 +10,7 @@ import { AdminSettingsTab } from './AdminSettingsTab';
 import { AdminAlertsTab } from './AdminAlertsTab';
 import { AdminGuestbookFeed } from './AdminGuestbookFeed';
 import { AdminAgendaTab } from './AdminAgendaTab';
+import { HostPhotoGalleryPage } from '../photos/HostPhotoGalleryPage';
 import { useToast } from '../shared/ToastContext';
 import { useConfirm } from '../shared/ConfirmDialog';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
@@ -53,6 +54,7 @@ const TABS = [
   { id: 'settings', icon: Settings },
   { id: 'alerts', icon: AlertTriangle },
   { id: 'guestbook', icon: MessageSquare },
+  { id: 'photos', icon: ImageIcon },
 ] as const;
 
 type TabId = (typeof TABS)[number]['id'];
@@ -131,24 +133,27 @@ export const AdminDashboard = () => {
       case 'settings': return t.tabHostSettings;
       case 'alerts': return t.tabUrgentAlerts;
       case 'guestbook': return `${t.tabGuestbookFeed} (${guestbookEntries.length})`;
+      case 'photos': return `${t.navPhotoGallery} (${photos.length})`;
     }
   };
 
   const overviewQuery = useQuery({
     queryKey: ['admin-overview'],
     queryFn: async () => {
-      const [resGuests, resGb, resAlt, resGifts, resRehearsal] = await Promise.all([
+      const [resGuests, resGb, resAlt, resGifts, resRehearsal, resPhotos] = await Promise.all([
         adminFetch('/api/guests'),
         adminFetch('/api/guestbook'),
         adminFetch('/api/alerts'),
         adminFetch('/api/gifts'),
         fetch('/api/rehearsal'),
+        adminFetch('/api/photos'),
       ]);
       return {
         guests: ((await resGuests.json()).guests ?? []) as Guest[],
         guestbookEntries: ((await resGb.json()).entries ?? []) as GuestbookEntry[],
         alerts: ((await resAlt.json()).alerts ?? []) as EventAlert[],
         gifts: ((await resGifts.json()).gifts ?? []) as GiftLog[],
+        photos: ((await resPhotos.json()).photos ?? []) as EventPhoto[],
         rehearsal: (await resRehearsal.json()) as {
           active: boolean;
           sample?: { name: string; code: string; magic_token: string };
@@ -157,11 +162,12 @@ export const AdminDashboard = () => {
       };
     },
   });
-  const { guests, guestbookEntries, alerts, gifts, rehearsal } = overviewQuery.data ?? {
+  const { guests, guestbookEntries, alerts, gifts, rehearsal, photos } = overviewQuery.data ?? {
     guests: [] as Guest[],
     guestbookEntries: [] as GuestbookEntry[],
     alerts: [] as EventAlert[],
     gifts: [] as GiftLog[],
+    photos: [] as EventPhoto[],
     rehearsal: { active: false } as {
       active: boolean;
       sample?: { name: string; code: string; magic_token: string };
@@ -478,18 +484,12 @@ export const AdminDashboard = () => {
             })}
 
             {/* Page links — the dashboard is the single admin nav. Floor Map
-                and Photo Gallery open as their own pages from the same list. */}
+                opens as its own page from the same list. */}
             <div className="pt-3 mt-2 border-t border-[#CBAE94]/30 space-y-1">
               <SidebarPageLink
                 to="/seating"
                 icon={MapPin}
                 label={t.navFloorplan}
-                onNavigate={() => setSidebarOpen(false)}
-              />
-              <SidebarPageLink
-                to="/photo-gallery"
-                icon={ImageIcon}
-                label={t.navPhotoGallery}
                 onNavigate={() => setSidebarOpen(false)}
               />
             </div>
@@ -558,6 +558,12 @@ export const AdminDashboard = () => {
 
       {adminSubTab === 'guestbook' && (
         <AdminGuestbookFeed entries={guestbookEntries} onRefresh={refreshOverview} />
+      )}
+
+      {adminSubTab === 'photos' && (
+        <TabPane>
+          <HostPhotoGalleryPage onChanged={refreshOverview} />
+        </TabPane>
       )}
 
       {adminSubTab === 'checkin' && (

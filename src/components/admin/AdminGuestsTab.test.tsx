@@ -88,14 +88,14 @@ const metricCard = (label: string, footer: string) =>
   screen.getByRole('button', { name: new RegExp(`${label}[\\s\\S]*${footer}`) });
 
 describe('admin guest list: metrics', () => {
-  it('counts invites by default and party members in party mode', async () => {
+  it('counts party members by default and invites in invites mode', async () => {
     await setup();
 
     const attendingCard = metricCard(t.statAttending, t.statTotalAttendingParty);
-    expect(within(attendingCard).getByText('1')).toBeInTheDocument();
-
-    fireEvent.click(screen.getByRole('button', { name: t.colPartySize }));
     expect(within(attendingCard).getByText('2')).toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole('button', { name: t.metricInvitesLabel }));
+    expect(within(attendingCard).getByText('1')).toBeInTheDocument();
   });
 
   it('filters the list from a metric card', async () => {
