@@ -289,8 +289,8 @@ export const HostPhotoGalleryPage: React.FC = () => {
   const selectedPhoto = selectedPhotoIndex !== null ? filteredPhotos[selectedPhotoIndex] : null;
 
   return (
-    <div className="min-h-screen bg-[#FAF6F0] py-8 px-4 sm:px-6 lg:px-8 font-sans">
-      <div className="max-w-7xl mx-auto space-y-6">
+    <div className="font-sans">
+      <div className="space-y-6">
         {/* Top Header Banner */}
         <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-[#FFFDF9] p-6 sm:p-8 rounded-3xl border border-[#CBAE94]/60 shadow-lg">
           <div className="space-y-1">

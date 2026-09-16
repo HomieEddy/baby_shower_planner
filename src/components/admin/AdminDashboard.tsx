@@ -10,6 +10,7 @@ import { AdminSettingsTab } from './AdminSettingsTab';
 import { AdminAlertsTab } from './AdminAlertsTab';
 import { AdminGuestbookFeed } from './AdminGuestbookFeed';
 import { AdminAgendaTab } from './AdminAgendaTab';
+import { HostPhotoGalleryPage } from '../photos/HostPhotoGalleryPage';
 import { useToast } from '../shared/ToastContext';
 import { useConfirm } from '../shared/ConfirmDialog';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
@@ -53,6 +54,7 @@ const TABS = [
   { id: 'settings', icon: Settings },
   { id: 'alerts', icon: AlertTriangle },
   { id: 'guestbook', icon: MessageSquare },
+  { id: 'photos', icon: ImageIcon },
 ] as const;
 
 type TabId = (typeof TABS)[number]['id'];
@@ -131,6 +133,7 @@ export const AdminDashboard = () => {
       case 'settings': return t.tabHostSettings;
       case 'alerts': return t.tabUrgentAlerts;
       case 'guestbook': return `${t.tabGuestbookFeed} (${guestbookEntries.length})`;
+      case 'photos': return t.navPhotoGallery;
     }
   };
 
@@ -478,18 +481,12 @@ export const AdminDashboard = () => {
             })}
 
             {/* Page links — the dashboard is the single admin nav. Floor Map
-                and Photo Gallery open as their own pages from the same list. */}
+                opens as its own page from the same list. */}
             <div className="pt-3 mt-2 border-t border-[#CBAE94]/30 space-y-1">
               <SidebarPageLink
                 to="/seating"
                 icon={MapPin}
                 label={t.navFloorplan}
-                onNavigate={() => setSidebarOpen(false)}
-              />
-              <SidebarPageLink
-                to="/photo-gallery"
-                icon={ImageIcon}
-                label={t.navPhotoGallery}
                 onNavigate={() => setSidebarOpen(false)}
               />
             </div>
@@ -558,6 +555,12 @@ export const AdminDashboard = () => {
 
       {adminSubTab === 'guestbook' && (
         <AdminGuestbookFeed entries={guestbookEntries} onRefresh={refreshOverview} />
+      )}
+
+      {adminSubTab === 'photos' && (
+        <TabPane>
+          <HostPhotoGalleryPage />
+        </TabPane>
       )}
 
       {adminSubTab === 'checkin' && (

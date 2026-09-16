@@ -33,9 +33,6 @@ const GuestFinderPage = lazy(() =>
 const GuestPhotoUploadPage = lazy(() =>
   import('./components/photos/GuestPhotoUploadPage').then((m) => ({ default: m.GuestPhotoUploadPage }))
 );
-const HostPhotoGalleryPage = lazy(() =>
-  import('./components/photos/HostPhotoGalleryPage').then((m) => ({ default: m.HostPhotoGalleryPage }))
-);
 const LandingPage = lazy(() =>
   import('./components/landing/LandingPage').then((m) => ({ default: m.LandingPage }))
 );
@@ -96,13 +93,12 @@ function MainAppContent() {
   const isAdminSurface =
     location.pathname === '/login' ||
     location.pathname.startsWith('/admin') ||
-    location.pathname === '/photo-gallery' ||
     location.pathname === '/seating';
   const isGuestDayOf = location.pathname === '/find-my-table' || location.pathname === '/check-in' || location.pathname === '/scan';
   const showHeader = (isAdminSurface || requireAuth()) && !isGuestDayOf;
   const showFinderLangBar = isGuestDayOf;
   // Full-bleed guest pages own their layout; don't letterbox them in the shell.
-  const isFullBleed = ['/find-my-table', '/check-in', '/scan', '/upload-photos', '/photo-gallery'].includes(
+  const isFullBleed = ['/find-my-table', '/check-in', '/scan', '/upload-photos'].includes(
     location.pathname
   );
 
@@ -152,7 +148,7 @@ function MainAppContent() {
             <Route path="/rsvp" element={<Navigate to="/" replace />} />
             <Route path="/rsvp/:token" element={<RsvpPage />} />
             <Route path="/admin" element={<RequireAdmin><AdminDashboard /></RequireAdmin>} />
-            <Route path="/photo-gallery" element={<RequireAdmin><HostPhotoGalleryPage /></RequireAdmin>} />
+            <Route path="/photo-gallery" element={<Navigate to="/admin?tab=photos" replace />} />
             <Route path="/guestbook" element={<GuestbookPage />} />
             {/* One merged day-of page: check in + find your seat.
                 /check-in is an alias so old links and QRs keep working. */}

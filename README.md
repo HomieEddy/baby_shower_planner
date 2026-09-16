@@ -79,7 +79,7 @@ src/
 server.ts             native Node server: security wrapping + dispatch + SPA fallback
 ```
 
-- **Two UI surfaces**: guest pages render without the admin header/nav; the admin surface (`/login`, `/admin`, `/photo-gallery`, `/seating`) shows the header. `/find-my-table` and `/check-in` show only a slim FR/EN bar.
+- **Two UI surfaces**: guest pages render without the admin header/nav; the admin surface (`/login`, `/admin`, `/seating`) shows the header. `/find-my-table` and `/check-in` show only a slim FR/EN bar.
 - **Validation**: domain shapes live in `src/lib/domain.ts`; form/payload schemas in `src/lib/validation.ts` derive from them, and PocketBase field defs derive from the same schemas.
 - **Theming**: CSS custom properties applied at runtime from `themePresets.ts`.
 - **Uploads**: photos arrive as base64 JSON (`POST /api/upload` → `/api/photos/upload`); never multipart.
@@ -133,7 +133,7 @@ Guests never see the admin header/nav. They reach their pages via invitation lin
 - `/check-in`: alias of `/find-my-table` so older links and QRs keep working
 - `/guestbook` and `/upload-photos`: guestbook and photo uploads, **time-locked**
 
-The guest content window (settings → "Guest Content Window" in the host dashboard) controls when the guestbook and photo uploads open (`contentOpenAt`, defaults to event start) and close (`contentCloseAt`). Outside the window guests see a locked page and the API returns 403; the admin always has access. Admin-only routes (`/admin`, `/photo-gallery`, `/seating`) require the admin password.
+The guest content window (settings → "Guest Content Window" in the host dashboard) controls when the guestbook and photo uploads open (`contentOpenAt`, defaults to event start) and close (`contentCloseAt`). Outside the window guests see a locked page and the API returns 403; the admin always has access. Admin-only routes (`/admin`, `/seating`) require the admin password.
 
 ## Testing
 
