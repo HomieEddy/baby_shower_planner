@@ -801,8 +801,10 @@ export interface Translations {
   statDeclined: string;
   statPending: string;
   statSeated: string;
+  statTotalAttendingInvites: string;
   statTotalAttendingParty: string;
   statTotalGuests: string;
+  statTotalPartySize: string;
   statUnseated: string;
   stationeryFormatLabel: string;
   stationeryTitle: string;
@@ -2096,8 +2098,10 @@ export const translations: Record<Language, Translations> = {
     statDeclined: "Declined",
     statPending: "Pending",
     statSeated: "Seats Assigned",
+    statTotalAttendingInvites: "Total invitations attending",
     statTotalAttendingParty: "Total Guests Attending",
     statTotalGuests: "Total Invited",
+    statTotalPartySize: "Total party size",
     statUnseated: "Unseated Confirmed",
     stationeryFormatLabel: "Stationery Format",
     stationeryTitle: "Printable Stationery Generator",
@@ -3381,8 +3385,10 @@ export const translations: Record<Language, Translations> = {
     statDeclined: "Absents",
     statPending: "En attente",
     statSeated: "Places assignées",
+    statTotalAttendingInvites: "Total des invitations présentes",
     statTotalAttendingParty: "Total de personnes présentes",
     statTotalGuests: "Invités totaux",
+    statTotalPartySize: "Taille totale du groupe",
     statUnseated: "Non assignés",
     stationeryFormatLabel: "Format de papeterie",
     stationeryTitle: "Générateur de papeterie imprimable",
