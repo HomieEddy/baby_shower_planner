@@ -13,14 +13,6 @@ import { useT } from '../shared/i18n';
 import { cardStagger, cardItem, fadeUp } from '../shared/motionPresets';
 import { parseToYmd, parseTimeRange, formatTimeRangeString } from '../../lib/dateUtils';
 import { formatScheduleTime } from '../../lib/schedule';
-import {
-  WatercolorBow,
-  FloatingTeddyBalloons,
-  BigHeartBalloon,
-  BabyBlocks3D,
-  TeddyOnCloud,
-} from './ArtworkElements';
-import { artworkLayout } from './artworkLayout';
 import { CurvedText } from './CurvedText';
 
 // "Eddy & Nana" / "Eddy et Nana" → [Eddy, Nana]; null when not splittable.
@@ -145,38 +137,6 @@ export const EventDetailsCard = ({
             boxShadow: '0 10px 40px -12px color-mix(in srgb, var(--ink) 28%, transparent)',
           }}
         >
-          {/* Watercolor invitation background */}
-          <div
-            aria-hidden
-            className="absolute inset-0 rounded-t-[110px] sm:rounded-t-[170px] rounded-b-[24px] overflow-hidden pointer-events-none"
-          >
-            <img
-              src="/artwork/watercolor-bg.jpg"
-              alt=""
-              draggable={false}
-              className="w-full h-full object-cover"
-            />
-          </div>
-
-          {/* Satin bow perched on the arch apex */}
-          <div className={artworkLayout.bow.wrapper}>
-            <WatercolorBow className={artworkLayout.bow.className} />
-          </div>
-
-          {/* Corner artwork */}
-          <div className={artworkLayout.floatingTeddy.wrapper}>
-            <FloatingTeddyBalloons className={artworkLayout.floatingTeddy.className} />
-          </div>
-          <div className={artworkLayout.bigBalloon.wrapper}>
-            <BigHeartBalloon className={artworkLayout.bigBalloon.className} />
-          </div>
-          <div className={artworkLayout.blocks.wrapper}>
-            <BabyBlocks3D className={artworkLayout.blocks.className} />
-          </div>
-          <div className={artworkLayout.teddyCloud.wrapper}>
-            <TeddyOnCloud className={artworkLayout.teddyCloud.className} />
-          </div>
-
           {/* Sliding content */}
           <div className="relative z-20 flex-1 flex flex-col min-h-0">
             <div

@@ -1,6 +1,6 @@
 import { Link } from 'react-router-dom';
 import { motion } from 'motion/react';
-import { Globe, Baby, LayoutDashboard } from 'lucide-react';
+import { Globe, PartyPopper, LayoutDashboard } from 'lucide-react';
 import { useSettings } from '../../lib/settingsQuery';
 import { eventDisplayName } from '../../lib/eventName';
 import { useAppStore } from '../../stores/appStore';
@@ -59,7 +59,7 @@ export const Header: React.FC<HeaderProps> = ({ minimal = false, sticky = true }
               whileHover={{ rotate: 12, scale: 1.1 }}
               transition={{ type: 'spring', stiffness: 300, damping: 15 }}
             >
-              <Baby className="w-5 h-5 sm:w-6 sm:h-6 text-[#4A3F35]" />
+              <PartyPopper className="w-5 h-5 sm:w-6 sm:h-6 text-[#4A3F35]" />
             </motion.div>
             <div className="min-w-0">
               <h2 className="font-gaegu text-3xl sm:text-4xl font-bold text-[#4A3F35] leading-none truncate">

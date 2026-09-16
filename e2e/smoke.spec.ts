@@ -1,15 +1,14 @@
 import { test, expect } from '@playwright/test';
 
-test('landing page shows guest, host, and event details entry buttons', async ({ page }) => {
+test('landing page offers guest entry and no host sign-in', async ({ page }) => {
   await page.goto('/');
   await expect(page.getByRole('button', { name: /Guest Login|Connexion Invité/i })).toBeVisible();
-  await expect(page.getByRole('button', { name: /Host Login|Connexion Hôte/i })).toBeVisible();
-  await expect(page.getByRole('button', { name: /Event Details|Détails de l'événement/i })).toBeVisible();
+  // The host reaches /admin from the welcome email, never from the guest landing.
+  await expect(page.getByRole('button', { name: /Host Login|Connexion Hôte/i })).toHaveCount(0);
   await expect(page.getByRole('heading', { level: 1 })).toBeVisible();
 
-  // event details live on their own page
-  await page.getByRole('button', { name: /Event Details|Détails de l'événement/i }).click();
-  await expect(page).toHaveURL(/\/event$/);
+  // event details live on their own page, reachable by URL
+  await page.goto('/event');
   await expect(page.getByRole('heading', { level: 1 })).toBeVisible();
   await expect(page.getByText(/Event details coming soon|détails de l'événement arrivent bientôt/i)).toHaveCount(0);
 

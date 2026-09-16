@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Baby, Lock, Eye, EyeOff, LogIn } from 'lucide-react';
+import { PartyPopper, Lock, Eye, EyeOff, LogIn } from 'lucide-react';
 import { useSettings } from '../../lib/settingsQuery';
 import { eventDisplayName } from '../../lib/eventName';
 import { useT } from '../shared/i18n';
@@ -44,7 +44,7 @@ export const AdminLogin = () => {
         {/* Brand */}
         <div className="text-center mb-8">
           <div className="w-16 h-16 bg-[#E9E0D2] border-2 border-[#4A3F35] rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-xs">
-            <Baby className="w-8 h-8 text-[#4A3F35]" />
+            <PartyPopper className="w-8 h-8 text-[#4A3F35]" />
           </div>
           <h1 className="font-gaegu text-3xl font-bold text-[#4A3F35]">{eventDisplayName(settings, t.eventFallbackTitle)}</h1>
           <p className="text-sm text-[#A09080] mt-1 font-mono">{t.adminLoginLabel}</p>

@@ -1,6 +1,6 @@
 import { motion } from 'motion/react';
 import { useNavigate } from 'react-router-dom';
-import { UserRound, ShieldCheck, Baby } from 'lucide-react';
+import { UserRound, PartyPopper } from 'lucide-react';
 import { useSettings } from '../../lib/settingsQuery';
 import { useAppStore } from '../../stores/appStore';
 import { useT } from '../shared/i18n';
@@ -22,7 +22,7 @@ export const LandingPage = () => {
       {/* Brand */}
       <div className="text-center mb-8">
         <div className="w-16 h-16 bg-[#E9E0D2] border-2 border-[#4A3F35] rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-xs">
-          <Baby className="w-8 h-8 text-[#4A3F35]" />
+          <PartyPopper className="w-8 h-8 text-[#4A3F35]" />
         </div>
         <h1 className="font-newsreader text-3xl font-bold text-[#4A3F35]">{title}</h1>
         <p className="text-sm text-[#A09080] mt-1 font-mono">{t.landingHeroSubtitle}</p>
@@ -39,21 +39,6 @@ export const LandingPage = () => {
           {t.landingGuestBtn}
         </button>
         <p className="text-xs text-[#A09080] font-sans text-center">{t.landingGuestCaption}</p>
-
-        <div className="flex items-center gap-3 py-1" aria-hidden>
-          <span className="flex-1 border-t border-[#CBAE94]/50" />
-          <span className="text-xs font-mono font-bold text-[#A09080] uppercase tracking-widest">{t.landingEntryLabel}</span>
-          <span className="flex-1 border-t border-[#CBAE94]/50" />
-        </div>
-
-        <button
-          type="button"
-          onClick={() => navigate('/admin')}
-          className="w-full py-2.5 rounded-xl border-2 border-[#CBAE94] bg-white text-[#4A3F35] font-bold text-sm hover:bg-[#EFE6DC] transition-colors flex items-center justify-center gap-2 cursor-pointer"
-        >
-          <ShieldCheck className="w-4 h-4" />
-          {t.landingAdminBtn}
-        </button>
       </div>
     </motion.div>
   );
