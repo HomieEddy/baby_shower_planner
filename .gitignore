@@ -9,3 +9,5 @@ test-results/
 !.env.example
 .impeccable/
 scripts/
+# Local file issue tracker (see docs/SAAS-TRANSFORMATION.md §16); working files only.
+.scratch/
