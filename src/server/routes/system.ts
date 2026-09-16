@@ -5,6 +5,7 @@ import { sendJson } from '../http';
 import type { RouteCtx } from '../http';
 import { handleRoutes, type Route } from '../route';
 import {
+  getPublicRehearsalStatus,
   getRehearsalStatus,
   providerAvailability,
   sendInvitations,
@@ -55,10 +56,13 @@ const ROUTES: Route[] = [
   },
 
   // Rehearsal mode: seed disposable demo data, then remove only what it created.
+  // The public read is a guest projection: the on/off flag only. The sample
+  // links (a live magic token) stay behind the admin token.
   {
     method: 'GET',
     path: '/api/rehearsal',
-    handler: (_req, { res }) => sendJson(res, 200, getRehearsalStatus()),
+    handler: (_req, { res, adminOnly }) =>
+      sendJson(res, 200, adminOnly() ? getRehearsalStatus() : getPublicRehearsalStatus()),
   },
   {
     method: 'POST',

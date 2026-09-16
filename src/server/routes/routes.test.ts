@@ -24,6 +24,12 @@ vi.mock('../../db/service', async (importOriginal) => {
   stubs.selfCheckIn = vi.fn(async () => ({ ok: true, guest: {} }));
   stubs.getFloorMap = vi.fn(async () => ({ id: 'm1', canvasWidth: 850, canvasHeight: 520, tables: [], landmarks: [], updatedAt: '' }));
   stubs.getGuestIdsForIdentity = vi.fn(async () => []);
+  stubs.getRehearsalStatus = vi.fn(() => ({
+    active: true,
+    sample: { name: 'Rehearsal Guest', code: '4242', magic_token: 'tok-sample' },
+    pendingToken: 'pend-token',
+  }));
+  stubs.getPublicRehearsalStatus = vi.fn(() => ({ active: true }));
   // The floor-plan projection is pure: keep it real so the route assertions
   // check the actual guest shape, not a stubbed one.
   stubs.projectFloorMapForGuest = actual.projectFloorMapForGuest;
@@ -286,6 +292,23 @@ describe('the floor plan read is a projection for guests', () => {
     const res = await call('GET', '/api/floorplan', undefined, admin);
     expect(res.body.floorMap).toEqual(SAMPLE_MAP);
     expect(vi.mocked(service.getGuestIdsForIdentity)).not.toHaveBeenCalled();
+  });
+});
+
+describe('the rehearsal status read is split by audience', () => {
+  const at = (token: string | undefined) => adminGuard(token, token, '198.51.100.9');
+
+  it('returns only { active } to a non-admin', async () => {
+    const res = await call('GET', '/api/rehearsal', undefined, at(undefined));
+    expect(res.statusCode).toBe(200);
+    expect(res.body).toEqual({ active: true });
+  });
+
+  it('returns the full status, tokens included, to an admin', async () => {
+    const res = await call('GET', '/api/rehearsal', undefined, at('correct-token-value'));
+    expect(res.statusCode).toBe(200);
+    expect(res.body).toMatchObject({ active: true, pendingToken: 'pend-token' });
+    expect(res.body.sample).toEqual({ name: 'Rehearsal Guest', code: '4242', magic_token: 'tok-sample' });
   });
 });
 

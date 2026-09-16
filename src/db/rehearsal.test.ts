@@ -18,7 +18,7 @@ vi.mock('./client', async () => {
 
 vi.mock('../server/uploadFiles', () => ({ removeUploadFiles: vi.fn() }));
 
-import { getRehearsalStatus, isRehearsalActive, startRehearsal, stopRehearsal } from './rehearsal';
+import { getPublicRehearsalStatus, getRehearsalStatus, isRehearsalActive, startRehearsal, stopRehearsal } from './rehearsal';
 
 function seedRealGuest() {
   h.fake.ensure('guests').push({
@@ -62,6 +62,8 @@ describe('rehearsal', () => {
     expect(result.counts.guests).toBe(8);
     expect(isRehearsalActive()).toBe(true);
     expect(getRehearsalStatus().sample?.code).toBeTruthy();
+    // The public projection hides the seeded sample links entirely.
+    expect(getPublicRehearsalStatus()).toEqual({ active: true });
 
     // 8 demo guests on top of the 1 real guest.
     expect(h.fake.ensure('guests').length).toBe(9);

@@ -35,6 +35,12 @@ export function getRehearsalStatus(): {
   return { active, sample: lastSeed.sample, pendingToken: lastSeed.pendingToken };
 }
 
+// The guest projection: only whether a rehearsal is running. The seeded sample
+// links carry a live magic token, so they stay behind the admin token.
+export function getPublicRehearsalStatus(): { active: boolean } {
+  return { active };
+}
+
 interface DemoGuestSpec {
   slug: string;
   name: string;

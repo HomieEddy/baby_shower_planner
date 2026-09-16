@@ -147,7 +147,7 @@ export const AdminDashboard = () => {
         adminFetch('/api/guestbook'),
         adminFetch('/api/alerts'),
         adminFetch('/api/gifts'),
-        fetch('/api/rehearsal'),
+        adminFetch('/api/rehearsal'),
         adminFetch('/api/photos'),
       ]);
       return {
