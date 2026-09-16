@@ -277,6 +277,7 @@ export const AdminDashboard = () => {
     ? [
         { href: '/portal', label: t.rehearsalOpenRsvp },
         { href: '/find-my-table', label: t.rehearsalOpenFinder },
+        { href: '/scan', label: t.rehearsalOpenScan },
         { href: '/event', label: t.landingEventBtn },
         { href: '/guestbook', label: t.rehearsalOpenGuestbook },
         { href: '/upload-photos', label: t.rehearsalOpenUpload },

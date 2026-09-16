@@ -929,6 +929,7 @@ export interface Translations {
   rehearsalOpenFinder: string;
   rehearsalOpenGuestbook: string;
   rehearsalOpenRegister: string;
+  rehearsalOpenScan: string;
   rehearsalOpenRsvp: string;
   rehearsalOpenUpload: string;
   rehearsalQuickLinks: string;
@@ -2223,6 +2224,7 @@ export const translations: Record<Language, Translations> = {
     rehearsalOpenFinder: "Find my table / check-in",
     rehearsalOpenGuestbook: "Guestbook",
     rehearsalOpenRegister: "Self-registration",
+    rehearsalOpenScan: "Table QR chooser",
     rehearsalOpenRsvp: "Guest RSVP",
     rehearsalOpenUpload: "Photo upload",
     rehearsalQuickLinks: "Try a guest flow",
@@ -3507,6 +3509,7 @@ export const translations: Record<Language, Translations> = {
     rehearsalOpenFinder: "Trouver ma table / enregistrement",
     rehearsalOpenGuestbook: "Livre d'or",
     rehearsalOpenRegister: "Inscription libre",
+    rehearsalOpenScan: "Sélecteur QR de table",
     rehearsalOpenRsvp: "RSVP invité",
     rehearsalOpenUpload: "Téléverser des photos",
     rehearsalQuickLinks: "Tester un parcours invité",
