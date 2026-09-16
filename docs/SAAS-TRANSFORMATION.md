@@ -1,10 +1,15 @@
 # SaaS Transformation
 
-> Status: **Settled design, not yet implemented.** This document records the
+> Status: **Settled design, implementation starting.** This document records the
 > business proposition, the decisions reached in the grilling session, the gap
 > between the current product and a sellable service, and the implementation
 > roadmap. It is the source of truth for turning the self-hosted single-event
 > app into a hosted, per-event paid product.
+>
+> Implementation happens on the `saas-dev` branch, which deploys nowhere.
+> §1–§15 cover the business and the product gaps; **§16 covers the landing page,
+> the onboarding flow, and the split between the product brand and the event
+> brand**.
 
 ---
 
@@ -111,7 +116,7 @@ No free tier. No guest limit on either tier.
 | Shareable invitation magic links | Yes | Yes |
 | **RSVP capture** (attending/declined, party size, dietary) | Yes | Yes |
 | Guest self-registration queue | Yes | Yes |
-| Event details page + theme presets | Yes | Yes |
+| Event details page + theme presets + event title | Yes | Yes |
 | CSV guest import / export | Yes | Yes |
 | Bulk email/SMS invitations & reminders | — | Yes |
 | Catering manifest + dietary breakdown | — | Yes |
@@ -123,7 +128,7 @@ No free tier. No guest limit on either tier.
 | Gift log + AI-drafted thank-yous + sending | — | Yes |
 | Agenda / tasks + reminders | — | Yes |
 | Broadcast alerts | — | Yes |
-| Character/Logo upload | — | Yes |
+| Brand kit: logo upload + invitation background image | — | Yes |
 | Custom domain | — | Yes |
 | Keepsake exports (memory book, photo album) | — | Yes |
 | Priority support | — | Yes |
@@ -131,8 +136,10 @@ No free tier. No guest limit on either tier.
 Rationale for the line: **RSVP capture must be in Basic.** It is the wedge job
 — without it, Basic loses to a free Google Form plus a spreadsheet. Premium
 sells the *execution* of the event (seating, catering, day-of, keepsakes) at
-the moment the organizer is most invested. Theme presets stay Basic; a logo
-upload is the branding step reserved for Premium.
+the moment the organizer is most invested. Event title, theme presets and the
+event's default language stay Basic: an event is unusable to its own organizer
+without them. The brand kit — logo and invitation background image — is the
+branding step reserved for Premium.
 
 ### 5.3 Payment
 
@@ -236,6 +243,12 @@ Required before the first paid event:
   never reuse it, and delete it on the retention clock.
 - **Deploy-per-event is a privacy asset** — destroying the deploy destroys the
   data; say so in the policy as the deletion mechanism.
+- **No third-party assets ship with the product.** Every guest-facing visual is
+  either app-owned code (CSS/SVG) or content the organizer uploaded. This keeps
+  the product free of any asset whose licence does not permit commercial
+  redistribution, and it is why the bundled illustration set was deleted rather
+  than replaced (§16.6). Re-check this rule before adding any stock art,
+  illustration pack, or icon set to the guest surface.
 
 ---
 
@@ -280,6 +293,27 @@ Supporting facts: collections carry no owner/tenant field
 quota is 12 photos / 24 MB (`src/db/photos.ts:12-14`); rehearsal mode
 (`src/db/rehearsal.ts`) seeds and cleanly removes disposable demo data — the
 basis for the public demo.
+
+### 10.1 Landing, onboarding & identity gaps
+
+Found in the landing/onboarding review, ranked separately from §10 above. §10
+ranks what is missing to *sell* the product; this ranks what is missing for a
+stranger to *run* it. Every row here must be closed before the first paying
+event is handed over.
+
+| # | Gap | Current state | Severity |
+|---|---|---|---|
+| 11 | **App identity is the founder's, not the event's** — the tab title, PWA name, header, login page and app icon name the product on every customer's deploy | `index.html:6`, `vite.config.ts:16-27`, `public/icon.svg`, `Header.tsx:65`, `AdminLogin.tsx:46,95` | Blocks onboarding |
+| 12 | **No first run** — no create-event step; `GET /api/settings` throws (500) on an unseeded event | `src/db/settings.ts:19-22`, `src/server/routes/settings.ts:16` | Blocks onboarding |
+| 13 | **Public data leaks on a live deploy** — `/api/rehearsal` hands out a guest name and magic token while active; `/api/alerts` returns host-internal fields; `/api/floorplan` serves the whole plan to guests | `system.ts:58-62`, `rehearsal.ts:253-257`, `alerts.ts:9-13`, `floorplan.ts:14-18` | Blocks onboarding (trust) |
+| 14 | **The admin login is advertised to guests** on the event landing, behind one shared secret | `LandingPage.tsx:51`, `server.ts:67-80`, `AdminLogin.tsx:30` | Blocks onboarding (trust) |
+| 15 | **The invitation card is hardcoded and its art is third-party** — a literal "Baby Shower" arch, 5 fixed PNGs plus a watercolour background (~5 MB on the RSVP page) | `EventDetailsCard.tsx:147-177,213`, `ArtworkElements.tsx:16-72`, `public/artwork/` | Product + legal |
+| 16 | **Guest copy is the founder's event** — a real date, "View Amazon Baby Registry", placeholder names | `translations.ts:2016`, `:1983-1984` | Product |
+| 17 | **Theming is four tokens over a light-mode-only class remap** — several hundred hardcoded hexes escape it entirely | `index.css:98-205`, `themePresets.ts:16-157` | Product |
+| 18 | **Outbound mail is sent as the founder** from Resend's sandbox domain, with "Baby Shower" hardcoded in subjects and bodies | `email.ts:18`, `compose.ts:61-62,117-118,190,228` | Blocks the core promise |
+| 19 | **No per-event default language** — guests land in whatever the last visitor toggled | `index.html:2`, `src/stores/appStore.ts` | Cosmetic |
+| 20 | **Downloads leak the old brand** — `bebe-*-qr-*.png`, `Baby_Shower_Photos.zip`, `baby_shower_guests_*.csv` | `DayOfQrModal.tsx:56`, `HostPhotoGalleryPage.tsx:105,114,315` | Cosmetic |
+| 21 | **`logout()` is dead code** — no way to end a session | `src/lib/api.ts:18-20` | Cosmetic |
 
 ---
 
@@ -397,3 +431,142 @@ Domain terms follow `CONTEXT.md`; use them exactly.
 - **Guest** — an invitee; no account; reaches pages by magic link or QR code.
 - **Basic / Premium** — the two one-time tiers (see §5.2).
 - **Attendee**, **Split**, **Seat**, **Table Assignment** — see `CONTEXT.md`.
+
+---
+
+## 16. Landing page & onboarding
+
+Added after the landing/onboarding review. §1–§15 describe the business and the
+product gaps. This section describes how a stranger becomes a paying organizer,
+and where the product brand and the event brand each live.
+
+### 16.1 Two surfaces, two brands
+
+Deploy-per-event means two surfaces with two owners of the visual identity:
+
+- **The marketing site** owns the *product* brand. It is a separate static
+  deploy at the root domain, with its own build, and it is the only place the
+  product names itself.
+- **The event app** owns the *event's* identity. It never advertises the product
+  beyond a discreet footer credit. A customer's deployment must say *their*
+  event, not ours — in the tab title, the PWA name, the header, the login page
+  and the app icon (§10.1 #11).
+
+Treat the event app as a white-label artefact. Anything that names the product
+inside it is a bug.
+
+### 16.2 The event landing page (guest-facing)
+
+`/` on an event deploy is the *event's* landing, not the product's, and stays
+guest-facing:
+
+- Names the event from settings (title, honoree, date, venue) — never the
+  product.
+- Two calls to action for guests (open invitation, find my table) and no host
+  entry point: the admin login moves off the landing page entirely (§10.1 #14).
+  The host reaches `/admin` from the welcome email instead.
+- Carries an event-branded document title and social preview, so a shared link
+  reads as the event rather than as the product.
+
+### 16.3 The marketing site (separate deploy)
+
+A standalone static site — its own directory, its own Vercel project, no shared
+build with the app. Plain HTML/CSS/JS in EN and FR: a framework is not worth a
+build step at this page count, and hand-written pages are what crawlers want.
+Sections: hero → live demo of a real event → two-tier pricing → FAQ → CTA.
+Content follows §11 — SEO first, no paid ads until there is funnel data.
+
+Its job is acquisition and checkout. It is *not* a second copy of the app.
+
+### 16.4 Onboarding: stranger → paying organizer
+
+```
+marketing site → pricing → checkout → payment received
+   → provisioning (operator) → welcome email
+   → first-run wizard → invite guests → (upgrade) → post-event keepsakes
+```
+
+- **Checkout** collects the organizer's email, a preferred slug, the event date
+  and the plan. Everything after it is an operator action in the hybrid phase
+  (§5.1, §16.5).
+- **Provisioning** stands up the event's stack and seeds its settings from the
+  checkout data, so the organizer's first login is a real, named event and never
+  an empty shell (§10.1 #12, §16.7).
+- **Welcome email** carries the event URL, the admin URL and the generated admin
+  password. It is the only place that password is ever sent.
+- **First-run wizard** completes what checkout could not know (§16.6).
+- The rest of the journey is the product: invite guests, run the event, upgrade,
+  keep the keepsakes.
+
+### 16.5 Payment in the hybrid phase
+
+Take the money first, provision by hand, and **do not build a control plane**
+(§5.1). Concretely: **Stripe Payment Links**, one per tier, with custom fields
+for slug and event date, and a success page stating that the event link arrives
+within 24 hours. No webhook, no checkout code, no backend — until provisioning
+itself is automated, an automated checkout only manufactures work for the
+operator.
+
+An upgrade is a second Payment Link for the price difference (§5.4).
+
+### 16.6 First run & customization
+
+**First run.** Provisioning seeds the event, so the wizard exists for the
+unseeded case (an event with no settings row). `GET /api/settings` must return
+"no settings" rather than erroring, and the host dashboard must render a setup
+wizard instead of a broken dashboard. The wizard writes the first settings row
+and nothing else.
+
+**Customization.** The rule is that an organizer can make the event look like
+theirs without us shipping a single third-party asset:
+
+| Layer | Tier | Notes |
+|---|---|---|
+| Event title | Basic | Replaces the hardcoded "Baby Shower" arch and headings |
+| Theme preset / custom colours + font | Basic | Already implemented (§6) |
+| Default language | Basic | EN or FR per event |
+| Logo upload | Premium | Replaces the app icon and header mark |
+| Invitation background image | Premium | Replaces the watercolour background |
+
+**No bundled artwork.** The illustration set that shipped the baby-shower art
+was **deleted, not replaced** (§8): it was third-party art whose licence does
+not clearly permit commercial redistribution. The invitation card is decorated
+by theme-driven CSS alone — arch border, dot texture, gradient — and organizers
+supply their own imagery. If the bare card later reads as too plain, the
+replacement is **self-authored SVG** tinted by the theme accent, never stock
+art.
+
+### 16.7 Provisioning runbook
+
+For the first ~20 events: a script and a registry, not a platform.
+
+- A **provisioning script** takes slug, plan, owner email, event date and
+  language; generates that event's secrets (notably a unique `ADMIN_TOKEN`,
+  never the compose default); writes the event's env; brings up the stack; seeds
+  settings through the API; and prints the admin credentials for the welcome
+  email.
+- A **deployment registry** (a small JSON file or a spreadsheet) records slug,
+  plan, owner, date provisioned and retention date — the retention clock in §7
+  runs off it.
+- The **runbook** documents provisioning, upgrades, custom-domain setup and
+  teardown at retention (§12).
+
+### 16.8 Open decisions and milestones
+
+**Blocked on the operator, not on code:**
+
+1. **Hosting target** — one VPS running Docker Compose with a reverse proxy
+   handling `<slug>.<domain>`, versus one platform service per event.
+2. **Domain, DNS and TLS** — including a wildcard certificate for slug
+   subdomains.
+3. **Sending domain with SPF/DKIM** (§10 #9) — without it invitations land in
+   spam, and invitations are Premium's core promise.
+
+**Milestones**
+
+| | Deliverable | Gate |
+|---|---|---|
+| M1 | The app stops being the founder's app: event title, theme, language, logo and background all come from settings; artwork deleted; first run works; hardcoded guest copy removed | A stranger's event looks like theirs |
+| M2 | Trust fixes: public read leaks closed, admin login off the guest landing, per-deploy secret, `logout()` wired | No guest data exposed |
+| M3 | Provisioning script, registry, runbook, welcome email | One real organizer's event live |
+| M4 | Marketing site and checkout, separate deploy | Money can arrive |
