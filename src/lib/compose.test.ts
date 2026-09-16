@@ -42,7 +42,7 @@ const settings = (over: Partial<EventSettings> = {}): Partial<EventSettings> => 
 describe('buildUniversalInviteMessage (self-serve)', () => {
   it('renders event details, registry and deadline, with no em-dashes', () => {
     const msg = buildUniversalInviteMessage(settings(), 'FR');
-    expect(msg).toContain('BABY SHOWER');
+    expect(msg).toContain('Nous avons hâte de célébrer ce moment avec vous.');
     expect(msg).toContain('Eddy & Nana');
     expect(msg).toContain('7 novembre 2026');
     expect(msg).toContain('La salle St-Gilles, 226 des Alouettes H7G 3W1');
@@ -101,12 +101,12 @@ describe('per-guest invitation shares the universal template', () => {
   });
 
   it('falls back to the shipped default message', () => {
-    expect(buildInviteMessage(guest(), {})).toContain('Une petite fleur est en chemin');
+    expect(buildInviteMessage(guest(), {})).toContain('Nous avons hâte de célébrer ce moment avec vous.');
   });
 
   it('uses the template as the email body', () => {
     const html = renderEmailHtml(composeInvitation(guest(), settings()));
-    expect(html).toContain('Une petite fleur est en chemin');
+    expect(html).toContain('Nous avons hâte de célébrer ce moment avec vous.');
   });
 });
 
@@ -123,7 +123,7 @@ describe('composeInvitation', () => {
   it('falls back gracefully with empty settings', () => {
     const text = buildInviteMessage(guest(), {});
     expect(text).toContain('/rsvp/tok-123');
-    expect(text).toContain('Une petite fleur est en chemin');
+    expect(text).toContain('Nous avons hâte de célébrer ce moment avec vous.');
   });
 });
 

@@ -99,7 +99,7 @@ describe('buildUniversalInviteMessage', () => {
       registryUrl: 'https://www.amazon.ca/list',
       rsvpDeadline: '2026-10-01',
     }, 'FR');
-    expect(msg).toContain('BABY SHOWER');
+    expect(msg).toContain('Nous avons hâte de célébrer ce moment avec vous.');
     expect(msg).toContain('Eddy & Nana');
     expect(msg).toContain('7 novembre 2026');
     expect(msg).toContain('La salle St-Gilles, 226 des Alouettes H7G 3W1');
@@ -113,10 +113,10 @@ describe('buildUniversalInviteMessage', () => {
   it('getUniversalInviteMessage returns the requested language', async () => {
     const en = await getUniversalInviteMessage('EN');
     const fr = await getUniversalInviteMessage('FR');
-    expect(en).toContain('A little flower is on the way');
-    expect(en).not.toContain('petite fleur');
-    expect(fr).toContain('Une petite fleur est en chemin');
-    expect(fr).not.toContain('A little flower');
+    expect(en).toContain("We can't wait to celebrate this moment with you.");
+    expect(en).not.toContain('Nous avons hâte');
+    expect(fr).toContain('Nous avons hâte de célébrer ce moment avec vous.');
+    expect(fr).not.toContain("We can't wait to celebrate this moment");
   });
 
   it('leaves no unreplaced placeholder when the deadline is unset', () => {
