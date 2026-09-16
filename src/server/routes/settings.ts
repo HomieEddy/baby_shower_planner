@@ -7,6 +7,10 @@ import { ReminderSettingsSchema } from '../../lib/validation';
 import { SettingsSchema } from '../../lib/domain';
 import type { EventSettings } from '../../types';
 import { getSettingsOrUndefined, updateSettings } from '../../db/service';
+import { removeUploadFiles } from '../uploadFiles';
+
+// Branding images the settings row points at; a changed value orphans the file.
+const BRANDING_KEYS = ['logoUrl', 'invitationBackgroundUrl'] as const;
 
 const ROUTES: Route[] = [
   {
@@ -45,7 +49,17 @@ const ROUTES: Route[] = [
       if (!reminder.success) {
         return sendError(res, 'INVALID_PAYLOAD', reminder.error.issues[0]?.message);
       }
+      const before = await getSettingsOrUndefined();
       const settings = await updateSettings({ ...body, ...reminder.data });
+      // A replaced or cleared branding image is no longer referenced; reclaim
+      // its file so uploads don't accumulate orphans (same rule as guest photos).
+      const stale = BRANDING_KEYS
+        .map((key) => {
+          const prev = before?.[key];
+          return prev && typeof body[key] === 'string' && body[key] !== prev ? prev : null;
+        })
+        .filter((url): url is string => url !== null);
+      if (stale.length > 0) removeUploadFiles(stale);
       return sendJson(res, 200, { success: true, settings });
     },
   },

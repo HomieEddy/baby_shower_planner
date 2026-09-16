@@ -16,13 +16,17 @@ export const MANIFEST_PATH = '/api/manifest';
 export function buildManifest(settings: EventSettings | undefined) {
   const theme = getThemeById(settings?.themeId, settings?.customTheme);
   const name = eventDisplayName(settings, translations.EN.eventFallbackTitle);
+  // The organizer's logo is the install icon when set; else the neutral mark.
+  const icons = settings?.logoUrl
+    ? [{ src: settings.logoUrl, sizes: 'any' }]
+    : [{ src: '/icon.svg', sizes: 'any', type: 'image/svg+xml', purpose: 'any' }];
   return {
     name,
     start_url: '/',
     display: 'standalone',
     theme_color: theme.accent,
     background_color: theme.bg,
-    icons: [{ src: '/icon.svg', sizes: 'any', type: 'image/svg+xml', purpose: 'any' }],
+    icons,
   };
 }
 

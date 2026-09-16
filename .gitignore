@@ -3,6 +3,8 @@ build/
 dist/
 coverage/
 test-results/
+# Guest photos and host branding uploads — runtime data, never committed.
+public/uploads/
 .DS_Store
 *.log
 .env*

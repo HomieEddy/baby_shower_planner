@@ -126,6 +126,8 @@ export interface Translations {
   backHomeBtn: string;
   bannerVisibleNote: string;
   basicDetailsTitle: string;
+  brandingDesc: string;
+  brandingTitle: string;
   broadcastBtn: string;
   broadcastDesc: string;
   broadcastDispatchedTitle: string;
@@ -531,6 +533,7 @@ export interface Translations {
   inviteGuestsBtn: string;
   inviteLinkForLabel: string;
   inviteMessageLabel: string;
+  invitationBackgroundLabel: string;
   invitationMessageDesc: string;
   editInvitationMessageBtn: string;
   invitationMessageHint: string;
@@ -575,6 +578,7 @@ export interface Translations {
   linkOnlyHint: string;
   liveFeedTab: string;
   livePreviewLabel: string;
+  logoLabel: string;
   loadSampleBtn: string;
   loadingGuestbookMsg: string;
   loadingInviteMsg: string;
@@ -1018,6 +1022,7 @@ export interface Translations {
   allAttendeesSeatedMsg: string;
   remainingToSeatLabel: string;
   chooseGuestOption: string;
+  chooseImageBtn: string;
   selectGuestHint: string;
   venueBadge: string;
   venueIntro: string;
@@ -1187,6 +1192,7 @@ export interface Translations {
   targetPendingGuests: string;
   uploadFailedGeneric: string;
   uploadGenericErrorToast: string;
+  uploadingBtn: string;
   uploadingFromLabel: string;
   uploadingPhotosProgress: string;
   uploadOptimizedCount: string;
@@ -1417,6 +1423,8 @@ export const translations: Record<Language, Translations> = {
     backHomeBtn: "Return to Home",
     bannerVisibleNote: "An urgent banner is now visible on all guest RSVP carousel views.",
     basicDetailsTitle: "Basic Event Details",
+    brandingDesc: "Upload your own logo and invitation background. They replace the default mark and the themed card background.",
+    brandingTitle: "Logo & Invitation Background",
     broadcastBtn: "Broadcast Alert to Guests",
     broadcastDesc: "Send emergency updates (Date change, Venue change, or Cancellation) directly to all invited guests.",
     broadcastDispatchedTitle: "Broadcast Dispatched!",
@@ -1823,6 +1831,7 @@ export const translations: Record<Language, Translations> = {
     inviteGuestsBtn: "Invite Guests",
     inviteLinkForLabel: "Invitation link for",
     inviteMessageLabel: "Invitation Message",
+    invitationBackgroundLabel: "Invitation Background",
     invitationMessageDesc: "Write the message guests receive to sign up. Use placeholders so event details update automatically.",
     editInvitationMessageBtn: "Edit invitation message",
     invitationMessageHint: "Insert an event detail where you want it to appear:",
@@ -1867,6 +1876,7 @@ export const translations: Record<Language, Translations> = {
     linkOnlyHint: "You'll get a ready-to-send message to share yourself (WhatsApp, Messenger…).",
     liveFeedTab: "Live Feed",
     livePreviewLabel: "Live Typography & Color Palette Preview",
+    logoLabel: "Logo",
     loadSampleBtn: "Load Sample Data",
     loadingGuestbookMsg: "Loading guestbook messages...",
     loadingInviteMsg: "Loading invitation details...",
@@ -2316,6 +2326,7 @@ export const translations: Record<Language, Translations> = {
     allAttendeesSeatedMsg: "All seated",
     remainingToSeatLabel: "{{count}} to seat",
     chooseGuestOption: "+ Choose guest / party to seat...",
+    chooseImageBtn: "Choose Image",
     selectGuestHint: "Select a confirmed guest above to view compatible tables and seat their party.",
     venueBadge: "Venue & Schedule",
     venueIntro: "Here are the details for the celebration - we can't wait to see you there!",
@@ -2478,6 +2489,7 @@ export const translations: Record<Language, Translations> = {
     targetPendingGuests: "Pending Guests",
     uploadFailedGeneric: "Upload failed",
     uploadGenericErrorToast: "An error occurred during upload. Please try again.",
+    uploadingBtn: "Uploading…",
     uploadingFromLabel: "Uploading from: {{name}}",
     uploadingPhotosProgress: "Uploading Photos ({{percent}}%)...",
     uploadOptimizedCount: "Upload {{count}} Optimized Photos",
@@ -2705,6 +2717,8 @@ export const translations: Record<Language, Translations> = {
     backHomeBtn: "Retour à l'accueil",
     bannerVisibleNote: "Une bannière urgente est désormais visible sur toutes les pages RSVP des invités.",
     basicDetailsTitle: "Informations de base",
+    brandingDesc: "Téléversez votre logo et le fond de votre invitation. Ils remplacent la marque par défaut et le fond de la carte.",
+    brandingTitle: "Logo et fond d'invitation",
     broadcastBtn: "Diffuser l'alerte aux invités",
     broadcastDesc: "Envoyez des mises à jour urgentes (changement de date, de lieu ou annulation) directement à tous les invités.",
     broadcastDispatchedTitle: "Diffusion effectuée !",
@@ -3111,6 +3125,7 @@ export const translations: Record<Language, Translations> = {
     inviteGuestsBtn: "Inviter des invités",
     inviteLinkForLabel: "Lien d'invitation pour",
     inviteMessageLabel: "Message d'invitation",
+    invitationBackgroundLabel: "Fond d'invitation",
     invitationMessageDesc: "Rédigez le message que les invités reçoivent pour s'inscrire. Utilisez des variables pour que les détails se mettent à jour automatiquement.",
     editInvitationMessageBtn: "Modifier le message d'invitation",
     invitationMessageHint: "Insérez un détail de l'événement à l'endroit voulu :",
@@ -3155,6 +3170,7 @@ export const translations: Record<Language, Translations> = {
     linkOnlyHint: "Vous recevrez un message prêt à envoyer à partager vous-même (WhatsApp, Messenger…).",
     liveFeedTab: "Fil en direct",
     livePreviewLabel: "Aperçu en direct de la typographie & palette",
+    logoLabel: "Logo",
     loadSampleBtn: "Charger un exemple",
     loadingGuestbookMsg: "Chargement des messages du livre d'or...",
     loadingInviteMsg: "Chargement des détails de l'invitation...",
@@ -3604,6 +3620,7 @@ export const translations: Record<Language, Translations> = {
     allAttendeesSeatedMsg: "Tous places",
     remainingToSeatLabel: "{{count}} à placer",
     chooseGuestOption: "+ Choisir un invité / groupe à placer...",
+    chooseImageBtn: "Choisir une image",
     selectGuestHint: "Sélectionnez un invité confirmé ci-dessus pour voir les tables compatibles et placer son groupe.",
     venueBadge: "Lieu & Programme",
     venueIntro: "Voici les détails de la célébration — nous avons hâte de vous y voir !",
@@ -3766,6 +3783,7 @@ export const translations: Record<Language, Translations> = {
     targetPendingGuests: "Invités en attente",
     uploadFailedGeneric: "Échec de l'envoi",
     uploadGenericErrorToast: "Une erreur est survenue lors de l'envoi. Veuillez réessayer.",
+    uploadingBtn: "Téléversement…",
     uploadingFromLabel: "Envoi depuis : {{name}}",
     uploadingPhotosProgress: "Envoi des photos ({{percent}} %)...",
     uploadOptimizedCount: "Envoyer {{count}} photos optimisées",

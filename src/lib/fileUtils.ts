@@ -1,5 +1,7 @@
 // Shared file helpers
 
+import { adminFetch } from './api';
+
 export function fileToDataUrl(file: File): Promise<string> {
   return new Promise((resolve, reject) => {
     const reader = new FileReader();
@@ -10,10 +12,12 @@ export function fileToDataUrl(file: File): Promise<string> {
 }
 
 // Upload a file as base64 JSON to /api/upload; returns the stored photo URL
-// (empty string when the server rejects it).
-export async function uploadPhotoBase64(file: File): Promise<string> {
+// (empty string when the server rejects it). `admin` sends the host token, which
+// the upload route needs for host-side uploads outside the guest content window.
+export async function uploadPhotoBase64(file: File, { admin = false }: { admin?: boolean } = {}): Promise<string> {
   const dataUrl = await fileToDataUrl(file);
-  const res = await fetch('/api/upload', {
+  const send = admin ? adminFetch : fetch;
+  const res = await send('/api/upload', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ photo_base64: dataUrl }),

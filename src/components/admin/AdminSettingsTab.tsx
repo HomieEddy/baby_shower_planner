@@ -15,6 +15,8 @@ import {
   Lock,
   Mail,
   GripVertical,
+  ImagePlus,
+  Upload,
 } from 'lucide-react';
 import {
   DndContext,
@@ -42,6 +44,7 @@ import { THEME_PRESETS, getThemeById, applyThemeToDocument, getContrastTextColor
 import { useToast } from '../shared/ToastContext';
 import { useActionConfirm } from '../shared/ConfirmDialog';
 import { useTf } from '../shared/i18n';
+import { uploadPhotoBase64 } from '../../lib/fileUtils';
 import { InvitationMessageModal } from './InvitationMessageModal';
 
 // ISO timestamp -> <TextInput type="datetime-local"> value (local time)
@@ -135,6 +138,61 @@ const SortableScheduleItem: React.FC<SortableScheduleItemProps> = ({ item, index
   );
 };
 
+interface BrandUploadProps {
+  label: string;
+  value: string;
+  busy: boolean;
+  chooseLabel: string;
+  uploadingLabel: string;
+  removeLabel: string;
+  onPick: (file: File | undefined) => void;
+  onRemove: () => void;
+}
+
+// One branding image slot: a preview plus choose/remove controls. The file is
+// stored by the shared /api/upload path and persisted with the rest of the form.
+const BrandUpload: React.FC<BrandUploadProps> = ({ label, value, busy, chooseLabel, uploadingLabel, removeLabel, onPick, onRemove }) => (
+  <div className="space-y-2">
+    <span className="label-mono block">{label}</span>
+    <div className="flex items-center gap-3">
+      <div className="w-20 h-20 rounded-2xl border-2 border-[#CBAE94] bg-white flex items-center justify-center overflow-hidden shrink-0">
+        {value ? (
+          <img src={value} alt="" className="w-full h-full object-cover" />
+        ) : (
+          <ImagePlus className="w-6 h-6 text-[#CBAE94]" />
+        )}
+      </div>
+      <div className="flex flex-col items-start gap-2">
+        <label className="inline-flex items-center gap-2 min-h-[44px] px-4 rounded-2xl border-2 border-[#CBAE94] text-xs font-bold text-[#5D5449] bg-white hover:bg-[#EFE6DC] transition-colors cursor-pointer">
+          <Upload className="w-4 h-4 text-[#8B735B]" />
+          <span>{busy ? uploadingLabel : chooseLabel}</span>
+          <input
+            type="file"
+            accept="image/*"
+            className="sr-only"
+            disabled={busy}
+            onChange={(e) => {
+              const file = e.target.files?.[0];
+              e.target.value = '';
+              onPick(file);
+            }}
+          />
+        </label>
+        {value ? (
+          <button
+            type="button"
+            onClick={onRemove}
+            className="text-xs font-bold text-rose-600 hover:text-rose-800 bg-rose-50 hover:bg-rose-100 px-2.5 py-1 rounded-xl transition-colors flex items-center gap-1"
+          >
+            <Trash2 className="w-3.5 h-3.5" />
+            <span>{removeLabel}</span>
+          </button>
+        ) : null}
+      </div>
+    </div>
+  </div>
+);
+
 export const AdminSettingsTab: React.FC<AdminSettingsTabProps> = ({ language, t, settings, onSave }) => {
   const { toast } = useToast();
   const confirmAction = useActionConfirm();
@@ -166,6 +224,10 @@ export const AdminSettingsTab: React.FC<AdminSettingsTabProps> = ({ language, t,
     { id: 'sch-4', time: '16:45', titleEn: 'Gift Opening & Thank You Toast', titleFr: 'Ouverture des cadeaux & toast de remerciement', descEn: 'The parents open gifts from the baby registry and share warm words.', descFr: 'Les parents ouvrent les cadeaux du registre et partagent leurs mots doux.' },
   ]);
   const [savingSettings, setSavingSettings] = useState(false);
+  const [logoUrl, setLogoUrl] = useState(settings?.logoUrl ?? '');
+  const [invitationBackgroundUrl, setInvitationBackgroundUrl] = useState(settings?.invitationBackgroundUrl ?? '');
+  const [uploadingLogo, setUploadingLogo] = useState(false);
+  const [uploadingBackground, setUploadingBackground] = useState(false);
 
   const sensors = useSensors(
     useSensor(PointerSensor, { activationConstraint: { distance: 5 } }),
@@ -203,6 +265,27 @@ export const AdminSettingsTab: React.FC<AdminSettingsTabProps> = ({ language, t,
     }
   };
 
+  // Store a branding image via the shared upload path (host-authenticated, since
+  // the upload route is behind the guest content window for guests). Persisting
+  // the URL happens with the rest of the form on save.
+  const handleBrandUpload = async (
+    file: File | undefined,
+    apply: (url: string) => void,
+    setBusy: (busy: boolean) => void
+  ) => {
+    if (!file) return;
+    setBusy(true);
+    try {
+      const url = await uploadPhotoBase64(file, { admin: true });
+      if (!url) throw new Error('upload rejected');
+      apply(url);
+    } catch {
+      toast.error(t.uploadFailedGeneric);
+    } finally {
+      setBusy(false);
+    }
+  };
+
   const handleSaveSettings = async (e: React.FormEvent) => {
     e.preventDefault();
     // Schedule: normalize times, reject duplicate start times, keep chronological.
@@ -236,6 +319,8 @@ export const AdminSettingsTab: React.FC<AdminSettingsTabProps> = ({ language, t,
         contentCloseAt: contentCloseAt ? new Date(contentCloseAt).toISOString() : '',
         invitationTemplateFr,
         invitationTemplateEn,
+        logoUrl,
+        invitationBackgroundUrl,
       });
       toast.love(t.settingsSavedToast);
     } catch (err) {
@@ -547,6 +632,37 @@ export const AdminSettingsTab: React.FC<AdminSettingsTabProps> = ({ language, t,
                 </div>
               );
             })()}
+          </div>
+
+          <div className="pt-6 border-t-2 border-[#CBAE94]/40 space-y-4">
+            <div>
+              <h4 className="font-sans text-xl font-bold text-[#8B735B] flex items-center gap-2">
+                <ImagePlus className="w-5 h-5 text-[#8B735B]" />{t.brandingTitle}
+              </h4>
+              <p className="text-xs text-[#5D5449] mt-0.5">{t.brandingDesc}</p>
+            </div>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
+              <BrandUpload
+                label={t.logoLabel}
+                value={logoUrl}
+                busy={uploadingLogo}
+                chooseLabel={t.chooseImageBtn}
+                uploadingLabel={t.uploadingBtn}
+                removeLabel={t.removeBtn}
+                onPick={(file) => handleBrandUpload(file, setLogoUrl, setUploadingLogo)}
+                onRemove={() => setLogoUrl('')}
+              />
+              <BrandUpload
+                label={t.invitationBackgroundLabel}
+                value={invitationBackgroundUrl}
+                busy={uploadingBackground}
+                chooseLabel={t.chooseImageBtn}
+                uploadingLabel={t.uploadingBtn}
+                removeLabel={t.removeBtn}
+                onPick={(file) => handleBrandUpload(file, setInvitationBackgroundUrl, setUploadingBackground)}
+                onRemove={() => setInvitationBackgroundUrl('')}
+              />
+            </div>
           </div>
 
           <div className="sticky bottom-0 z-10 -mx-6 sm:-mx-8 px-6 sm:px-8 py-4 bg-[#FFFDF9]/95 backdrop-blur border-t border-[#CBAE94]/40 flex justify-end">

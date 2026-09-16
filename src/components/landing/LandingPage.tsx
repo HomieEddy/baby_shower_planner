@@ -1,6 +1,7 @@
 import { motion } from 'motion/react';
 import { useNavigate } from 'react-router-dom';
-import { UserRound, PartyPopper } from 'lucide-react';
+import { UserRound } from 'lucide-react';
+import { AppMark } from '../shared/AppMark';
 import { useSettings } from '../../lib/settingsQuery';
 import { useAppStore } from '../../stores/appStore';
 import { useT } from '../shared/i18n';
@@ -22,7 +23,7 @@ export const LandingPage = () => {
       {/* Brand */}
       <div className="text-center mb-8">
         <div className="w-16 h-16 bg-[#E9E0D2] border-2 border-[#4A3F35] rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-xs">
-          <PartyPopper className="w-8 h-8 text-[#4A3F35]" />
+          <AppMark settings={settings} className="w-8 h-8 text-[#4A3F35]" />
         </div>
         <h1 className="font-newsreader text-3xl font-bold text-[#4A3F35]">{title}</h1>
         <p className="text-sm text-[#A09080] mt-1 font-mono">{t.landingHeroSubtitle}</p>

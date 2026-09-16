@@ -60,4 +60,10 @@ describe('GET /api/manifest', () => {
     expect(res.body.theme_color).toBe('#D99A9A');
     expect(res.body.background_color).toBe('#FBF2F3');
   });
+
+  it('uses the uploaded logo as the install icon', async () => {
+    h.getSettingsOrUndefined.mockResolvedValue({ eventTitle: 'Sophie & Marc', logoUrl: '/uploads/logo-1.png' });
+    const res = await request();
+    expect(res.body.icons[0].src).toBe('/uploads/logo-1.png');
+  });
 });

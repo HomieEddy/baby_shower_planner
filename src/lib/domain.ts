@@ -156,6 +156,10 @@ export const SettingsSchema = z.object({
   // The organizer's own name for the event. Absent until they set one; the
   // surfaces that show it fall back to a neutral label, never the product name.
   eventTitle: z.string().optional(),
+  // Organizer-supplied branding (Premium; not gated in this milestone). Absent
+  // means the neutral mark and the theme-only invitation card.
+  logoUrl: z.string().optional(),
+  invitationBackgroundUrl: z.string().optional(),
   babyName: z.string(),
   parentsNames: z.string(),
   date: z.string(),

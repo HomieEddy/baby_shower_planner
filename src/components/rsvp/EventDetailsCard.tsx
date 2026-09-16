@@ -137,6 +137,26 @@ export const EventDetailsCard = ({
             boxShadow: '0 10px 40px -12px color-mix(in srgb, var(--ink) 28%, transparent)',
           }}
         >
+          {/* Organizer's invitation background — decorative, behind the content. */}
+          {settings.invitationBackgroundUrl ? (
+            <div
+              aria-hidden
+              className="absolute inset-0 rounded-t-[110px] sm:rounded-t-[170px] rounded-b-[24px] overflow-hidden pointer-events-none"
+            >
+              <img
+                src={settings.invitationBackgroundUrl}
+                alt=""
+                draggable={false}
+                className="w-full h-full object-cover"
+              />
+              {/* Scrim: the theme ink must stay legible over an arbitrary photo. */}
+              <div
+                className="absolute inset-0"
+                style={{ background: 'color-mix(in srgb, var(--surface) 62%, transparent)' }}
+              />
+            </div>
+          ) : null}
+
           {/* Sliding content */}
           <div className="relative z-20 flex-1 flex flex-col min-h-0">
             <div

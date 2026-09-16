@@ -3,12 +3,15 @@ import { describe, it, expect, vi, beforeEach } from 'vitest';
 const h = vi.hoisted(() => ({
   updateSettings: vi.fn(async (payload: unknown) => payload),
   getSettingsOrUndefined: vi.fn(async (): Promise<Record<string, unknown> | undefined> => ({ babyName: 'Bébé' })),
+  removeUploadFiles: vi.fn(),
 }));
 
 vi.mock('../../db/service', () => ({
   getSettingsOrUndefined: h.getSettingsOrUndefined,
   updateSettings: h.updateSettings,
 }));
+
+vi.mock('../uploadFiles', () => ({ removeUploadFiles: h.removeUploadFiles }));
 
 vi.mock('../http', async () => {
   const { errorMessage, errorStatus } = await import('../../lib/errors');
@@ -42,7 +45,10 @@ const request = (method: 'GET' | 'POST', { body, admin = false }: { body?: unkno
   return handleSettingsRoutes(ctx).then(() => res);
 };
 
-beforeEach(() => h.updateSettings.mockClear());
+beforeEach(() => {
+  h.updateSettings.mockClear();
+  h.removeUploadFiles.mockClear();
+});
 
 describe('GET /api/settings', () => {
   const row = { eventTitle: 'Sophie & Marc', babyName: 'Lou', hostEmail: 'h@x.com', hostPhone: '555' };
@@ -92,5 +98,23 @@ describe('POST /api/settings', () => {
     const res = await request('POST', { body: { hostEmail: 'not-an-email' } });
     expect(res.statusCode).toBe(400);
     expect(h.updateSettings).not.toHaveBeenCalled();
+  });
+
+  it('reclaims a replaced branding image instead of orphaning it', async () => {
+    h.getSettingsOrUndefined.mockResolvedValueOnce({ logoUrl: '/uploads/old.png' });
+    await request('POST', { body: { logoUrl: '/uploads/new.png' } });
+    expect(h.removeUploadFiles).toHaveBeenCalledWith(['/uploads/old.png']);
+  });
+
+  it('reclaims a cleared branding image', async () => {
+    h.getSettingsOrUndefined.mockResolvedValueOnce({ invitationBackgroundUrl: '/uploads/bg.png' });
+    await request('POST', { body: { invitationBackgroundUrl: '' } });
+    expect(h.removeUploadFiles).toHaveBeenCalledWith(['/uploads/bg.png']);
+  });
+
+  it('leaves a branding image alone when the save does not touch it', async () => {
+    h.getSettingsOrUndefined.mockResolvedValueOnce({ logoUrl: '/uploads/keep.png' });
+    await request('POST', { body: { babyName: 'Lou' } });
+    expect(h.removeUploadFiles).not.toHaveBeenCalled();
   });
 });

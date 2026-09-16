@@ -40,3 +40,19 @@ describe('EventDetailsCard invitation arch', () => {
     expect(archText(container)).toBe('Notre célébration');
   });
 });
+
+describe('EventDetailsCard invitation background', () => {
+  it('uses the uploaded image as decorative decoration', () => {
+    h.settings = { eventTitle: 'Sophie & Marc', invitationBackgroundUrl: '/uploads/bg-1.jpg' };
+    const { container } = renderCard();
+    const img = container.querySelector('img');
+    expect(img).toHaveAttribute('src', '/uploads/bg-1.jpg');
+    expect(img).toHaveAttribute('alt', '');
+  });
+
+  it('renders no image when no background is set', () => {
+    h.settings = { eventTitle: 'Sophie & Marc' };
+    const { container } = renderCard();
+    expect(container.querySelector('img')).toBeNull();
+  });
+});
