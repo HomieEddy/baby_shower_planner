@@ -602,6 +602,7 @@ export interface Translations {
   navPhotoGallery: string;
   navRsvp: string;
   nextSlideBtn: string;
+  signOut: string;
   noAlertsYetMsg: string;
   noDietaryMsg: string;
   noDietaryNote: string;
@@ -1906,6 +1907,7 @@ export const translations: Record<Language, Translations> = {
     navPhotoGallery: "Host Photo Gallery",
     navRsvp: "RSVP & Event Info",
     nextSlideBtn: "Next Slide",
+    signOut: "Sign out",
     noAlertsYetMsg: "No active broadcast alerts dispatched yet.",
     noDietaryMsg: "No dietary restrictions reported yet.",
     noDietaryNote: "No dietary restrictions noted",
@@ -3205,6 +3207,7 @@ export const translations: Record<Language, Translations> = {
     navPhotoGallery: "Galerie Photo Hôte",
     navRsvp: "RSVP & Détails",
     nextSlideBtn: "Diapositive suivante",
+    signOut: "Déconnexion",
     noAlertsYetMsg: "Aucune alerte active diffusée pour l'instant.",
     noDietaryMsg: "Aucune restriction alimentaire signalée pour l'instant.",
     noDietaryNote: "Aucune restriction alimentaire notée",

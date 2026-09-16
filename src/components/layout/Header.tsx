@@ -1,11 +1,11 @@
 import { Link } from 'react-router-dom';
 import { motion } from 'motion/react';
-import { Globe, LayoutDashboard } from 'lucide-react';
+import { Globe, LayoutDashboard, LogOut } from 'lucide-react';
 import { AppMark } from '../shared/AppMark';
 import { useSettings } from '../../lib/settingsQuery';
 import { eventDisplayName } from '../../lib/eventName';
 import { useAppStore } from '../../stores/appStore';
-import { requireAuth } from '../../lib/api';
+import { logout, requireAuth } from '../../lib/api';
 import { useT } from '../shared/i18n';
 
 interface HeaderProps {
@@ -21,6 +21,13 @@ export const Header: React.FC<HeaderProps> = ({ minimal = false, sticky = true }
   const settings = useSettings();
   const t = useT();
   const isAuthed = requireAuth();
+
+  // End the session, then full-reload to /login: the reload clears the
+  // react-query cache for free and no admin route is reachable without the token.
+  const handleSignOut = () => {
+    logout();
+    window.location.assign('/login');
+  };
 
   const headerClass = `${
     sticky ? 'sticky top-0' : 'relative'
@@ -79,6 +86,19 @@ export const Header: React.FC<HeaderProps> = ({ minimal = false, sticky = true }
                 <LayoutDashboard className="w-4 h-4" />
                 <span className="hidden sm:inline">{t.navAdmin}</span>
               </Link>
+            )}
+            {isAuthed && (
+              <motion.button
+                type="button"
+                onClick={handleSignOut}
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                className="inline-flex items-center gap-1.5 px-4 py-3 rounded-full bg-white border border-[#4A3F35]/15 hover:bg-[#E9E0D2]/50 text-[#4A3F35] text-xs font-bold shadow-2xs cursor-pointer"
+                title={t.signOut}
+              >
+                <LogOut className="w-4 h-4" />
+                <span className="hidden sm:inline">{t.signOut}</span>
+              </motion.button>
             )}
             <motion.button
               type="button"
