@@ -162,8 +162,8 @@ export function parseJson(req: http.IncomingMessage): Promise<any> {
 
 // Returns `true` so route handlers can `return sendJson(...)` to signal they
 // handled the request (dispatch stops on a truthy handler result).
-export function sendJson(res: http.ServerResponse, statusCode: number, data: any): true {
-  res.writeHead(statusCode, { 'Content-Type': 'application/json' });
+export function sendJson(res: http.ServerResponse, statusCode: number, data: any, contentType = 'application/json'): true {
+  res.writeHead(statusCode, { 'Content-Type': contentType });
   res.end(JSON.stringify(data));
   return true;
 }

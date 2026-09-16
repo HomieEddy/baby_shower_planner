@@ -28,6 +28,7 @@ vi.mock('../../db/service', async (importOriginal) => {
 vi.mock('../../db/settings', () => ({ getSettingsOrDefaults: vi.fn(async () => ({})) }));
 
 import { handleSystemRoutes } from './system';
+import { handleManifestRoutes } from './manifest';
 import { handleRegisterRoutes } from './register';
 import { handleGuestRoutes } from './guests';
 import { handleRsvpRoutes } from './rsvp';
@@ -42,6 +43,7 @@ import { handleCheckInRoutes } from './checkin';
 
 const HANDLERS = [
   handleSystemRoutes,
+  handleManifestRoutes,
   handleRegisterRoutes,
   handleGuestRoutes,
   handleRsvpRoutes,
@@ -100,8 +102,9 @@ beforeEach(() => {
 });
 
 describe('public routes', () => {
-  it('answers health, capabilities and the register message', async () => {
+  it('answers health, capabilities, the manifest and the register message', async () => {
     expect(await call('GET', '/api/health')).toMatchObject({ statusCode: 200 });
+    expect(await call('GET', '/api/manifest')).toMatchObject({ statusCode: 200 });
     expect(await call('GET', '/api/capabilities')).toMatchObject({ statusCode: 200 });
     expect(await call('GET', '/api/register/message')).toMatchObject({ statusCode: 200 });
   });

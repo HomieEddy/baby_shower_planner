@@ -24,6 +24,7 @@ import {
 import type { RouteCtx } from './src/server/http';
 import { DomainError, domainErrorBody, errorStatus } from './src/lib/errors';
 import { handleSystemRoutes } from './src/server/routes/system';
+import { handleManifestRoutes, MANIFEST_PATH } from './src/server/routes/manifest';
 import { handleGuestRoutes } from './src/server/routes/guests';
 import { handleRegisterRoutes } from './src/server/routes/register';
 import { handleRsvpRoutes } from './src/server/routes/rsvp';
@@ -38,9 +39,15 @@ import { handleCheckInRoutes } from './src/server/routes/checkin';
 
 const PORT = Number(process.env.PORT) || 3025;
 
+// The PWA manifest must answer any browser install fetch, so it dodges both the
+// bot block and the global rate-limit budget. Health dodges the budget only
+// (Coolify's probe), and keeps its bot block.
+const RATE_LIMIT_EXEMPT_PATHS = new Set(['/api/health', MANIFEST_PATH]);
+
 // Ordered per-feature dispatchers; each returns true only when it responded.
 const API_HANDLERS: Array<(ctx: RouteCtx) => Promise<boolean>> = [
   handleSystemRoutes,
+  handleManifestRoutes,
   handleRegisterRoutes,
   handleGuestRoutes,
   handleRsvpRoutes,
@@ -86,14 +93,17 @@ async function requestHandler(req: http.IncomingMessage, res: http.ServerRespons
     return lock.locked ? lock : null;
   };
 
-  // Crawler / AI-scraper user agents get nothing from the API.
-  if (BLOCK_BOTS && pathname.startsWith('/api/') && BOT_UA_RE.test(req.headers['user-agent'] || '')) {
+  // Crawler / AI-scraper user agents get nothing from the API (the manifest is
+  // the exception: a browser's install fetch carries no crawler UA, but the
+  // document must be reachable regardless).
+  if (BLOCK_BOTS && pathname.startsWith('/api/') && pathname !== MANIFEST_PATH && BOT_UA_RE.test(req.headers['user-agent'] || '')) {
     return sendError(res, 'FORBIDDEN');
   }
 
   if (pathname.startsWith('/api/')) {
-    // Per-IP global budget (health checks exempt so Coolify probes keep working).
-    if (pathname !== '/api/health') {
+    // Per-IP global budget (health checks and the manifest are exempt: Coolify
+    // probes and the browser's install fetch must always get through).
+    if (!RATE_LIMIT_EXEMPT_PATHS.has(pathname)) {
       const global = rateLimit(`g:${ip}`, GLOBAL_LIMIT, 60_000);
       if (!global.allowed) return sendError(res, 'RATE_LIMITED');
     }

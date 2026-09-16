@@ -11,21 +11,10 @@ export default defineConfig(() => {
       tailwindcss(),
       VitePWA({
         registerType: 'autoUpdate',
-        includeAssets: ['icon.svg', 'manifest.en.webmanifest'],
-        manifest: {
-          name: 'Bébé — Planificateur de Baby Shower',
-          short_name: 'Bébé Planner',
-          description: "Invitations, RSVP, plan de salle, livre d'or et partage de photos pour votre baby shower.",
-          lang: 'fr',
-          dir: 'ltr',
-          theme_color: '#8B735B',
-          background_color: '#FDFBF7',
-          display: 'standalone',
-          start_url: '/',
-          icons: [
-            { src: '/icon.svg', sizes: 'any', type: 'image/svg+xml', purpose: 'any' },
-          ],
-        },
+        includeAssets: ['icon.svg'],
+        // The manifest is per-event and built at request time by /api/manifest;
+        // the build must not emit a product-branded one (index.html links it).
+        manifest: false,
         workbox: {
           navigateFallback: '/index.html',
           globPatterns: ['**/*.{js,css,html,svg,woff2}'],
