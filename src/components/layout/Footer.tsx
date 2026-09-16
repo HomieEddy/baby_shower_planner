@@ -49,6 +49,11 @@ export const Footer = () => {
       >
         {language === 'EN' ? 'Français (FR)' : 'English (EN)'}
       </button>
+      {/* The product's only appearance inside a customer's event (§16.1):
+          a discreet credit, never the event's own identity. */}
+      <p className="font-mono text-[10px] uppercase tracking-widest text-[#5D5449]/45">
+        {t.productCredit}
+      </p>
     </footer>
   );
 };

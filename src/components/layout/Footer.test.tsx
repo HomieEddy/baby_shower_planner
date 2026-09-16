@@ -27,10 +27,17 @@ describe('Footer credit', () => {
     expect(screen.getByText(/Sophie & Marc/)).toBeInTheDocument();
   });
 
-  it('falls back to a neutral label, and never names the product', () => {
+  it('falls back to a neutral label for the event credit', () => {
     h.settings = {};
     renderFooter();
     expect(screen.getByText(/Notre célébration/)).toBeInTheDocument();
-    expect(screen.queryByText(/Bébé/)).not.toBeInTheDocument();
+  });
+
+  it('names the product exactly once, as a discreet credit', () => {
+    h.settings = {};
+    renderFooter();
+    // §16.1: the product's one allowed appearance inside a customer's event.
+    expect(screen.getAllByText(/Bébé/)).toHaveLength(1);
+    expect(screen.getByText('Bébé — Planificateur de Baby Shower')).toBeInTheDocument();
   });
 });

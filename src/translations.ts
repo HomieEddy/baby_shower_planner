@@ -672,6 +672,7 @@ export interface Translations {
   printReadyBadge: string;
   privateHostGalleryLabel: string;
   processImportBtn: string;
+  productCredit: string;
   progressSentLabel: string;
   promoteLeadLabel: string;
   qrCodeBtn: string;
@@ -1964,6 +1965,7 @@ export const translations: Record<Language, Translations> = {
     printReadyBadge: "Print Ready",
     privateHostGalleryLabel: "Private Host Gallery",
     processImportBtn: "Process Import",
+    productCredit: "Bébé — Baby Shower Planner",
     progressSentLabel: "{{sent}} of {{total}} Sent ({{percent}}%)",
     promoteLeadLabel: "New party lead",
     qrCodeBtn: "View QR Code for Tables",
@@ -3251,6 +3253,7 @@ export const translations: Record<Language, Translations> = {
     printReadyBadge: "Prêt à imprimer",
     privateHostGalleryLabel: "Galerie privée des hôtes",
     processImportBtn: "Importer",
+    productCredit: "Bébé — Planificateur de Baby Shower",
     progressSentLabel: "{{sent}} sur {{total}} envoyés ({{percent}}%)",
     promoteLeadLabel: "Nouvelle personne responsable",
     qrCodeBtn: "Afficher le QR Code pour les tables",
