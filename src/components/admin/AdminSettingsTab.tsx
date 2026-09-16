@@ -140,6 +140,7 @@ export const AdminSettingsTab: React.FC<AdminSettingsTabProps> = ({ language, t,
   const confirmAction = useActionConfirm();
   const tf = useTf();
 
+  const [eventTitle, setEventTitle] = useState(settings?.eventTitle ?? '');
   const [parentsNames, setParentsNames] = useState(settings?.parentsNames ?? '');
   const [babyName, setBabyName] = useState(settings?.babyName ?? '');
   const [datePickerValue, setDatePickerValue] = useState(settings?.date ? parseToYmd(settings.date) : '');
@@ -218,6 +219,7 @@ export const AdminSettingsTab: React.FC<AdminSettingsTabProps> = ({ language, t,
       const formattedDate = formatDateLong(datePickerValue, language);
       const formattedTime = formatTimeRangeString(startTime, endTime, language);
       await onSave({
+        eventTitle,
         parentsNames,
         babyName,
         date: formattedDate,
@@ -266,6 +268,10 @@ export const AdminSettingsTab: React.FC<AdminSettingsTabProps> = ({ language, t,
         </div>
 
         <form onSubmit={handleSaveSettings} className="space-y-6">
+          <div>
+            <label className="label-mono block mb-1">{t.eventTitleLabel}</label>
+            <TextInput type="text" value={eventTitle} onChange={(e) => setEventTitle(e.target.value)} />
+          </div>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div>
               <label className="label-mono block mb-1">{t.parentsNamesLabel2}</label>

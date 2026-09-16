@@ -153,6 +153,9 @@ export const GuestbookSchema = z.object({
 export type GuestbookEntry = z.infer<typeof GuestbookSchema> & { id: string };
 
 export const SettingsSchema = z.object({
+  // The organizer's own name for the event. Absent until they set one; the
+  // surfaces that show it fall back to a neutral label, never the product name.
+  eventTitle: z.string().optional(),
   babyName: z.string(),
   parentsNames: z.string(),
   date: z.string(),

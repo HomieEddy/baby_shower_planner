@@ -6,6 +6,7 @@ import { useNavigate } from 'react-router-dom';
 import { parse, format } from 'date-fns';
 import { enUS, fr } from 'date-fns/locale';
 import { useSettings } from '../../lib/settingsQuery';
+import { eventDisplayName } from '../../lib/eventName';
 import { EmptyState } from '../shared/EmptyState';
 import { useAppStore } from '../../stores/appStore';
 import { useT } from '../shared/i18n';
@@ -210,7 +211,7 @@ export const EventDetailsCard = ({
                   </p>
                 )}
 
-                <CurvedText text="Baby Shower" className="-my-2 sm:-my-3" />
+                <CurvedText text={eventDisplayName(settings, t.eventFallbackTitle)} className="-my-2 sm:-my-3" />
 
                 <p className="text-base sm:text-lg font-bold tracking-wider italic" style={{ ...ink, ...headingFont, opacity: 0.75 }}>
                   {t.celebratingLabel}

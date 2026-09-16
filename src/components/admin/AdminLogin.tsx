@@ -1,11 +1,14 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Baby, Lock, Eye, EyeOff, LogIn } from 'lucide-react';
+import { useSettings } from '../../lib/settingsQuery';
+import { eventDisplayName } from '../../lib/eventName';
 import { useT } from '../shared/i18n';
 import { BackButton } from '../shared/BackButton';
 
 export const AdminLogin = () => {
-    const t = useT();
+  const t = useT();
+  const settings = useSettings();
   const [password, setPassword] = useState('');
   const [showPw, setShowPw] = useState(false);
   const [error, setError] = useState('');
@@ -43,7 +46,7 @@ export const AdminLogin = () => {
           <div className="w-16 h-16 bg-[#E9E0D2] border-2 border-[#4A3F35] rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-xs">
             <Baby className="w-8 h-8 text-[#4A3F35]" />
           </div>
-          <h1 className="font-gaegu text-3xl font-bold text-[#4A3F35]">Bébé Planner</h1>
+          <h1 className="font-gaegu text-3xl font-bold text-[#4A3F35]">{eventDisplayName(settings, t.eventFallbackTitle)}</h1>
           <p className="text-sm text-[#A09080] mt-1 font-mono">{t.adminLoginLabel}</p>
         </div>
 
@@ -90,10 +93,6 @@ export const AdminLogin = () => {
         <div className="text-center mt-6">
           <BackButton />
         </div>
-
-        <p className="text-center text-xs text-[#A09080] mt-4 font-mono">
-          Bébé Baby Shower Planner
-        </p>
       </div>
     </div>
   );

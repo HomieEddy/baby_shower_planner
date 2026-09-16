@@ -2,20 +2,41 @@ import { describe, it, expect, vi } from 'vitest';
 import { render, screen } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 
-// The unseeded case: no settings row exists yet (a fresh deploy, before the host
-// has been through setup). The card must show a neutral state, not fail.
-vi.mock('../../lib/settingsQuery', () => ({ useSettings: () => null }));
+const h = vi.hoisted(() => ({ settings: { eventTitle: 'Sophie & Marc' } as Record<string, unknown> | null }));
+vi.mock('../../lib/settingsQuery', () => ({ useSettings: () => h.settings }));
 
 import { EventDetailsCard } from './EventDetailsCard';
 
+const renderCard = () =>
+  render(
+    <MemoryRouter>
+      <EventDetailsCard />
+    </MemoryRouter>
+  );
+
 describe('EventDetailsCard on an unseeded event', () => {
   it('renders a neutral empty state instead of a broken card', () => {
-    render(
-      <MemoryRouter>
-        <EventDetailsCard />
-      </MemoryRouter>
-    );
+    h.settings = null;
+    renderCard();
     // FR default language, matching EmptyState's own tests.
     expect(screen.getByText("Les détails de l'événement arrivent bientôt")).toBeInTheDocument();
+  });
+});
+
+describe('EventDetailsCard invitation arch', () => {
+  // The arch is the only curved <textPath> on the card; the parents' names also
+  // render as plain headings, so assert on the arch itself, not the page text.
+  const archText = (container: HTMLElement) => container.querySelector('textPath')?.textContent;
+
+  it('arches the event title', () => {
+    h.settings = { eventTitle: 'Sophie & Marc', parentsNames: 'Sophie & Marc' };
+    const { container } = renderCard();
+    expect(archText(container)).toBe('Sophie & Marc');
+  });
+
+  it('falls back to a neutral label, never the old hard-coded arch text', () => {
+    h.settings = {};
+    const { container } = renderCard();
+    expect(archText(container)).toBe('Notre célébration');
   });
 });

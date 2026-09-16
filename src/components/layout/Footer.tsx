@@ -2,6 +2,7 @@ import { motion } from 'motion/react';
 import { useQuery } from '@tanstack/react-query';
 import { Heart, FlaskConical } from 'lucide-react';
 import { useSettings } from '../../lib/settingsQuery';
+import { eventDisplayName } from '../../lib/eventName';
 import { useAppStore } from '../../stores/appStore';
 import { useT, useTf } from '../shared/i18n';
 
@@ -28,7 +29,7 @@ export const Footer = () => {
         </p>
       )}
       <p className="font-mono text-xs uppercase tracking-widest text-[#8B735B] font-bold">
-        {tf('footerCopyright', { year: String(new Date().getFullYear()), parentsNames: settings?.parentsNames?.trim() || 'Bébé Baby Shower' })}
+        {tf('footerCopyright', { year: String(new Date().getFullYear()), eventTitle: eventDisplayName(settings, t.eventFallbackTitle) })}
       </p>
       <p className="flex items-center justify-center gap-1.5 text-xs text-[#5D5449]/70">
         <motion.span

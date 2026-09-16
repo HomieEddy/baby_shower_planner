@@ -101,8 +101,6 @@ export interface Translations {
   alreadySubmittedMsg: string;
   alreadySubmittedTitle: string;
   amazonRegistryLabel: string;
-  appSubtitle: string;
-  appTitle: string;
   applySeatingBtn: string;
   applySeatingBtn_one: string;
   applySeatingBtn_other: string;
@@ -310,6 +308,8 @@ export interface Translations {
   eventDateLabel2: string;
   eventDetailsSoonMsg: string;
   eventDetailsSoonTitle: string;
+  eventFallbackTitle: string;
+  eventTitleLabel: string;
   eventTimeLabel: string;
   eventTimeRangeLabel: string;
   eventVenueLabel: string;
@@ -1391,8 +1391,6 @@ export const translations: Record<Language, Translations> = {
     alreadySubmittedMsg: "You have already responded to this invitation. Would you like to update your response?",
     alreadySubmittedTitle: "RSVP Already Submitted",
     amazonRegistryLabel: "Amazon Registry URL",
-    appSubtitle: "Baby Shower Planner",
-    appTitle: "Bébé",
     applySeatingBtn: "Apply {{count}} Seating Assignments",
     applySeatingBtn_one: "Apply {{count}} Seating Assignment",
     applySeatingBtn_other: "Apply {{count}} Seating Assignments",
@@ -1600,6 +1598,8 @@ export const translations: Record<Language, Translations> = {
     eventDateLabel2: "Event Date",
     eventDetailsSoonMsg: "The hosts are putting the finishing touches on the celebration page. Please check back later.",
     eventDetailsSoonTitle: "Event details coming soon",
+    eventFallbackTitle: "Our Celebration",
+    eventTitleLabel: "Event Title",
     eventTimeLabel: "Time",
     eventTimeRangeLabel: "Event Time Range",
     eventVenueLabel: "Venue",
@@ -1652,7 +1652,7 @@ export const translations: Record<Language, Translations> = {
     floorPlanSubtitleHost: "Arrange tables, drag landmarks, assign guest seats, and share seating passes.",
     floorPlanTitle: "Venue Seating & Floor Canvas",
     foldLineLabel: "Fold Line",
-    footerCopyright: "© {{year}} {{parentsNames}}",
+    footerCopyright: "© {{year}} {{eventTitle}}",
     footerLove: "Made with love for our baby on the way",
     formattedLabel: "Formatted:",
     fpAllSeatedToast: "ℹ All confirmed attending guests are already seated!",
@@ -2678,8 +2678,6 @@ export const translations: Record<Language, Translations> = {
     alreadySubmittedMsg: "Vous avez déjà répondu à cette invitation. Souhaitez-vous modifier votre réponse ?",
     alreadySubmittedTitle: "RSVP Déjà Envoyé",
     amazonRegistryLabel: "Lien Liste de Naissance",
-    appSubtitle: "Planificateur de Baby Shower",
-    appTitle: "Bébé",
     applySeatingBtn: "Appliquer {{count}} placements",
     applySeatingBtn_one: "Appliquer {{count}} placement",
     applySeatingBtn_other: "Appliquer {{count}} placements",
@@ -2887,6 +2885,8 @@ export const translations: Record<Language, Translations> = {
     eventDateLabel2: "Date de l'événement",
     eventDetailsSoonMsg: "Les hôtes finalisent la page de célébration. Revenez plus tard.",
     eventDetailsSoonTitle: "Les détails de l'événement arrivent bientôt",
+    eventFallbackTitle: "Notre célébration",
+    eventTitleLabel: "Titre de l'événement",
     eventTimeLabel: "Heure",
     eventTimeRangeLabel: "Plage horaire de l'événement",
     eventVenueLabel: "Lieu",
@@ -2939,7 +2939,7 @@ export const translations: Record<Language, Translations> = {
     floorPlanSubtitleHost: "Organisez les tables, placez les éléments du lieu, assignez les sièges et partagez les pass.",
     floorPlanTitle: "Plan de Salle & Emplacements",
     foldLineLabel: "Ligne de pli",
-    footerCopyright: "© {{year}} {{parentsNames}}",
+    footerCopyright: "© {{year}} {{eventTitle}}",
     footerLove: "Fait avec amour pour notre bébé à venir",
     formattedLabel: "Formaté :",
     fpAllSeatedToast: "ℹ Tous les invités confirmés sont déjà placés !",

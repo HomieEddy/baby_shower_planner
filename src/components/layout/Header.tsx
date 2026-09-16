@@ -2,6 +2,7 @@ import { Link } from 'react-router-dom';
 import { motion } from 'motion/react';
 import { Globe, Baby, LayoutDashboard } from 'lucide-react';
 import { useSettings } from '../../lib/settingsQuery';
+import { eventDisplayName } from '../../lib/eventName';
 import { useAppStore } from '../../stores/appStore';
 import { requireAuth } from '../../lib/api';
 import { useT } from '../shared/i18n';
@@ -62,11 +63,8 @@ export const Header: React.FC<HeaderProps> = ({ minimal = false, sticky = true }
             </motion.div>
             <div className="min-w-0">
               <h2 className="font-gaegu text-3xl sm:text-4xl font-bold text-[#4A3F35] leading-none truncate">
-                Bébé {settings?.babyName || 'Baby Shower'}
+                {eventDisplayName(settings, t.eventFallbackTitle)}
               </h2>
-              <span className="font-mono text-xs uppercase tracking-widest text-[#4A3F35]/60 block mt-0.5 truncate">
-                {t.appSubtitle}
-              </span>
             </div>
           </Link>
 

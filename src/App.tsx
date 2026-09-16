@@ -5,6 +5,7 @@ import { Footer } from './components/layout/Footer';
 import { ToastProvider } from './components/shared/ToastContext';
 import { ConfirmProvider } from './components/shared/ConfirmDialog';
 import { useSettings } from './lib/settingsQuery';
+import { eventDisplayName } from './lib/eventName';
 import { applyThemeToDocument, getThemeById } from './themePresets';
 import { requireAuth } from './lib/api';
 import { useAppStore } from './stores/appStore';
@@ -112,12 +113,10 @@ function MainAppContent() {
     document.documentElement.lang = language === 'FR' ? 'fr' : 'en';
   }, [language]);
 
-  // Localized document title (brand + event name).
+  // The tab carries the event's own name, never the product's.
   useEffect(() => {
-    document.title = settings?.babyName
-      ? `${t.appTitle} ${settings.babyName}`
-      : `${t.appTitle} ${t.appSubtitle}`;
-  }, [t, settings?.babyName]);
+    document.title = eventDisplayName(settings, t.eventFallbackTitle);
+  }, [t, settings?.eventTitle]);
 
   return (
     <div className="min-h-screen bg-[#FDFBF7] text-[#5D5449] font-sans flex flex-col selection:bg-[#CBAE94] selection:text-white">

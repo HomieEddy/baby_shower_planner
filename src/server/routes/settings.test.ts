@@ -45,7 +45,7 @@ const request = (method: 'GET' | 'POST', { body, admin = false }: { body?: unkno
 beforeEach(() => h.updateSettings.mockClear());
 
 describe('GET /api/settings', () => {
-  const row = { babyName: 'Lou', hostEmail: 'h@x.com', hostPhone: '555' };
+  const row = { eventTitle: 'Sophie & Marc', babyName: 'Lou', hostEmail: 'h@x.com', hostPhone: '555' };
   beforeEach(() => h.getSettingsOrUndefined.mockReset());
 
   it('reports an unseeded event as no settings instead of failing', async () => {
@@ -59,7 +59,7 @@ describe('GET /api/settings', () => {
     h.getSettingsOrUndefined.mockResolvedValue({ ...row });
     const res = await request('GET');
     expect(res.statusCode).toBe(200);
-    expect(res.body.settings).toMatchObject({ babyName: 'Lou' });
+    expect(res.body.settings).toMatchObject({ eventTitle: 'Sophie & Marc', babyName: 'Lou' });
     expect(res.body.settings).not.toHaveProperty('hostEmail');
     expect(res.body.settings).not.toHaveProperty('hostPhone');
   });
@@ -73,9 +73,11 @@ describe('GET /api/settings', () => {
 
 describe('POST /api/settings', () => {
   it('passes host settings through', async () => {
-    const res = await request('POST', { body: { babyName: 'Lou', venueName: 'Salle', schedule: [] } });
+    const res = await request('POST', { body: { eventTitle: 'Sophie & Marc', babyName: 'Lou', venueName: 'Salle', schedule: [] } });
     expect(res.statusCode).toBe(200);
-    expect(h.updateSettings).toHaveBeenCalledWith(expect.objectContaining({ babyName: 'Lou', venueName: 'Salle' }));
+    expect(h.updateSettings).toHaveBeenCalledWith(
+      expect.objectContaining({ eventTitle: 'Sophie & Marc', babyName: 'Lou', venueName: 'Salle' })
+    );
   });
 
   it('rejects a key the domain does not define instead of storing it', async () => {
