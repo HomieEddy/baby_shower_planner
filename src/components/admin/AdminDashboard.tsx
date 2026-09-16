@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
-import { Guest, GuestbookEntry, EventSettings, EventAlert, GiftLog } from '../../types';
+import { Guest, GuestbookEntry, EventSettings, EventAlert, GiftLog, EventPhoto } from '../../types';
 import { CateringSummaryView } from './CateringSummaryView';
 import { EscortCardsGenerator } from './EscortCardsGenerator';
 import { ThankYouTrackerView } from './ThankYouTrackerView';
@@ -133,25 +133,27 @@ export const AdminDashboard = () => {
       case 'settings': return t.tabHostSettings;
       case 'alerts': return t.tabUrgentAlerts;
       case 'guestbook': return `${t.tabGuestbookFeed} (${guestbookEntries.length})`;
-      case 'photos': return t.navPhotoGallery;
+      case 'photos': return `${t.navPhotoGallery} (${photos.length})`;
     }
   };
 
   const overviewQuery = useQuery({
     queryKey: ['admin-overview'],
     queryFn: async () => {
-      const [resGuests, resGb, resAlt, resGifts, resRehearsal] = await Promise.all([
+      const [resGuests, resGb, resAlt, resGifts, resRehearsal, resPhotos] = await Promise.all([
         adminFetch('/api/guests'),
         adminFetch('/api/guestbook'),
         adminFetch('/api/alerts'),
         adminFetch('/api/gifts'),
         fetch('/api/rehearsal'),
+        adminFetch('/api/photos'),
       ]);
       return {
         guests: ((await resGuests.json()).guests ?? []) as Guest[],
         guestbookEntries: ((await resGb.json()).entries ?? []) as GuestbookEntry[],
         alerts: ((await resAlt.json()).alerts ?? []) as EventAlert[],
         gifts: ((await resGifts.json()).gifts ?? []) as GiftLog[],
+        photos: ((await resPhotos.json()).photos ?? []) as EventPhoto[],
         rehearsal: (await resRehearsal.json()) as {
           active: boolean;
           sample?: { name: string; code: string; magic_token: string };
@@ -160,11 +162,12 @@ export const AdminDashboard = () => {
       };
     },
   });
-  const { guests, guestbookEntries, alerts, gifts, rehearsal } = overviewQuery.data ?? {
+  const { guests, guestbookEntries, alerts, gifts, rehearsal, photos } = overviewQuery.data ?? {
     guests: [] as Guest[],
     guestbookEntries: [] as GuestbookEntry[],
     alerts: [] as EventAlert[],
     gifts: [] as GiftLog[],
+    photos: [] as EventPhoto[],
     rehearsal: { active: false } as {
       active: boolean;
       sample?: { name: string; code: string; magic_token: string };
@@ -559,7 +562,7 @@ export const AdminDashboard = () => {
 
       {adminSubTab === 'photos' && (
         <TabPane>
-          <HostPhotoGalleryPage />
+          <HostPhotoGalleryPage onChanged={refreshOverview} />
         </TabPane>
       )}
 

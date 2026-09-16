@@ -31,7 +31,7 @@ import { SearchInput } from '../shared/ui';
 import { Pagination } from '../shared/Pagination';
 import { usePagination } from '../shared/hooks';
 
-export const HostPhotoGalleryPage: React.FC = () => {
+export const HostPhotoGalleryPage: React.FC<{ onChanged?: () => void }> = ({ onChanged }) => {
   const t = useT();
   const tf = useTf();
   const { toast } = useToast();
@@ -93,6 +93,7 @@ export const HostPhotoGalleryPage: React.FC = () => {
       }
       setPhotos((prev) => prev.filter((p) => !selectedPhotoIds.includes(p.id)));
       setSelectedPhotoIds([]);
+      onChanged?.();
       toast.success(tf('galleryDeletedToast', { count }));
     } catch (err) {
       console.error('Failed to delete selected photos:', err);
@@ -237,6 +238,7 @@ export const HostPhotoGalleryPage: React.FC = () => {
         if (selectedPhotoIndex !== null) {
           setSelectedPhotoIndex(null);
         }
+        onChanged?.();
         toast.success(t.galleryPhotoRemovedToast);
       } else {
         toast.error(t.galleryDeleteErrorToast);
