@@ -5,16 +5,28 @@ import type { RouteCtx } from '../http';
 import { handleRoutes, type Route } from '../route';
 import {
   getFloorMap,
+  getGuestIdsForIdentity,
   getSeatingRoster,
+  projectFloorMapForGuest,
   shareFloorPlanEmail,
   updateFloorMap,
 } from '../../db/service';
 
 const ROUTES: Route[] = [
   {
+    // Admins get the stored plan; everyone else a projection that keeps the
+    // venue map and only the requester's own chair identities (ADR 0001).
     method: 'GET',
     path: '/api/floorplan',
-    handler: async (_req, { res }) => sendJson(res, 200, { floorMap: await getFloorMap() }),
+    handler: async ({ query }, { res, adminOnly }) => {
+      const map = await getFloorMap();
+      if (adminOnly()) return sendJson(res, 200, { floorMap: map });
+      const requesterIds = await getGuestIdsForIdentity(
+        query.get('guest') || undefined,
+        query.get('code') || undefined
+      );
+      return sendJson(res, 200, { floorMap: projectFloorMapForGuest(map, requesterIds) });
+    },
   },
 
   {

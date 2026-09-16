@@ -15,6 +15,7 @@ import { adminContainerVariants } from '../shared/motionPresets';
 import { getAttendeeLocations } from '../../lib/tableAssignment';
 import { getPartyMembers, getAttendeeDietary, hasDietaryRestriction, isAttending } from '../../lib/guestAttendees';
 import { csvCell, toCsv, downloadCsv } from '../../lib/csv';
+import { adminFetch } from '../../lib/api';
 import {
   useReactTable,
   getCoreRowModel,
@@ -57,7 +58,7 @@ export const CateringSummaryView: React.FC<CateringSummaryViewProps> = ({ guests
 
   useEffect(() => {
     let cancelled = false;
-    fetch('/api/floorplan')
+    adminFetch('/api/floorplan')
       .then((r) => r.json())
       .then((d) => {
         if (!cancelled) setFloorMap(d.floorMap ?? null);

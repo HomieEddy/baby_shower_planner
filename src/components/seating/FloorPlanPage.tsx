@@ -369,7 +369,7 @@ export const FloorPlanPage = () => {
   const fetchData = async () => {
     try {
       const [mapRes, guestRes] = await Promise.all([
-        fetch('/api/floorplan'),
+        adminFetch('/api/floorplan'),
         adminFetch('/api/guests'),
       ]);
       const mapData = await mapRes.json();

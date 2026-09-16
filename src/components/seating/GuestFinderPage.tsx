@@ -40,11 +40,19 @@ interface FinderData {
   preselected: Guest | null;
 }
 
-const fetchFinderData = async (token: string | undefined): Promise<FinderData> => {
-  const query = token ? `?guest=${encodeURIComponent(token)}` : '';
+const fetchFinderData = async (token: string | undefined, code: string | undefined): Promise<FinderData> => {
+  // The map keeps only the requester's own chair identities (ADR 0001):
+  // identify by the picked party's code when there is one, else the arrival
+  // magic token.
+  const mapQuery = code
+    ? `?code=${encodeURIComponent(code)}`
+    : token
+      ? `?guest=${encodeURIComponent(token)}`
+      : '';
+  const rosterQuery = token ? `?guest=${encodeURIComponent(token)}` : '';
   const [mapRes, rosterRes] = await Promise.all([
-    fetch('/api/floorplan'),
-    fetch(`/api/floorplan/roster${query}`),
+    fetch(`/api/floorplan${mapQuery}`),
+    fetch(`/api/floorplan/roster${rosterQuery}`),
   ]);
   const mapData = await mapRes.json();
   const rosterData = await rosterRes.json();
@@ -82,9 +90,14 @@ export const GuestFinderPage: React.FC = () => {
   const [busy, setBusy] = useState<string | null>(null); // member name or 'all'
   const [venueOpen, setVenueOpen] = useState(false); // full-screen venue modal
 
+  // The party the map highlights: the picked search hit's code, else the
+  // arrival magic token. Part of the key, so a new pick refetches the map.
+  const pickedCode = searchPick?.guest.code;
+  const finderQueryKey = ['guest-finder', initialToken, pickedCode ?? null];
+
   const { data, isLoading } = useQuery({
-    queryKey: ['guest-finder', initialToken],
-    queryFn: () => fetchFinderData(initialToken),
+    queryKey: finderQueryKey,
+    queryFn: () => fetchFinderData(initialToken, pickedCode),
   });
 
   // Code lookup runs server-side: only the matching party is ever returned
@@ -191,7 +204,7 @@ export const GuestFinderPage: React.FC = () => {
       if (updated) {
         // Keep the roster + preselected + current pick live so the party card
         // reflects the new check-in state without a refetch.
-        queryClient.setQueryData<FinderData>(['guest-finder', initialToken], (old) =>
+        queryClient.setQueryData<FinderData>(finderQueryKey, (old) =>
           old
             ? {
                 ...old,

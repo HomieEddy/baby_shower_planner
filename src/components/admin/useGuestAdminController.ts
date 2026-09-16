@@ -474,7 +474,7 @@ export function useGuestAdminController({ language, t, guests, onRefresh }: Gues
     if (!(await confirmAction(t.exportCsvBtn))) return;
     let floorMap: FloorMapData | null = null;
     try {
-      const res = await fetch('/api/floorplan');
+      const res = await adminFetch('/api/floorplan');
       const data = await res.json();
       floorMap = data.floorMap ?? null;
     } catch {

@@ -19,9 +19,14 @@ const h = vi.hoisted(() => ({
 // smoke test by accident of a missing mock.
 vi.mock('../../db/service', async (importOriginal) => {
   const actual = await importOriginal<Record<string, unknown>>();
-  const stubs = Object.fromEntries(Object.keys(actual).map((key) => [key, vi.fn(async () => ({}))]));
-  // The one stub whose shape the handler reads.
+  const stubs: Record<string, unknown> = Object.fromEntries(Object.keys(actual).map((key) => [key, vi.fn(async () => ({}))]));
+  // The stubs whose shape the handler reads.
   stubs.selfCheckIn = vi.fn(async () => ({ ok: true, guest: {} }));
+  stubs.getFloorMap = vi.fn(async () => ({ id: 'm1', canvasWidth: 850, canvasHeight: 520, tables: [], landmarks: [], updatedAt: '' }));
+  stubs.getGuestIdsForIdentity = vi.fn(async () => []);
+  // The floor-plan projection is pure: keep it real so the route assertions
+  // check the actual guest shape, not a stubbed one.
+  stubs.projectFloorMapForGuest = actual.projectFloorMapForGuest;
   return stubs;
 });
 
@@ -209,6 +214,78 @@ describe('admin routes are gated', () => {
     expect(res.body.settings).toMatchObject({ babyName: 'Lou' });
     expect(res.body.settings).not.toHaveProperty('hostEmail');
     expect(res.body.settings).not.toHaveProperty('hostPhone');
+  });
+});
+
+describe('the floor plan read is a projection for guests', () => {
+  const SAMPLE_MAP = {
+    id: 'm1',
+    canvasWidth: 850,
+    canvasHeight: 520,
+    roomShape: 'rectangle',
+    tables: [
+      {
+        id: 't1', name: 'Table 1', shape: 'circle', x: 0, y: 0, width: 100, height: 100, capacity: 4,
+        assignedGuestIds: ['g1', 'g2'],
+        seats: [
+          { guestId: 'g1', attendeeIndex: 0 },
+          { guestId: 'g2', attendeeIndex: 0 },
+          null,
+          null,
+        ],
+      },
+    ],
+    landmarks: [{ id: 'l1', name: 'Bar', type: 'bar', x: 1, y: 2, width: 3, height: 4 }],
+    updatedAt: '2026-01-01T00:00:00Z',
+  };
+  const guest = () => adminGuard(undefined, undefined, '198.51.100.9');
+
+  it('blanks guest identities but keeps geometry, names and occupancy for a non-admin', async () => {
+    const service = await import('../../db/service');
+    vi.mocked(service.getFloorMap).mockResolvedValueOnce(SAMPLE_MAP as never);
+    const res = await call('GET', '/api/floorplan', undefined, guest());
+    const map = res.body.floorMap;
+    expect(map.tables[0].seats).toEqual([
+      { guestId: '', attendeeIndex: 0 },
+      { guestId: '', attendeeIndex: 0 },
+      null,
+      null,
+    ]);
+    expect(map.tables[0]).toMatchObject({ id: 't1', name: 'Table 1', capacity: 4 });
+    expect(map.tables[0].assignedGuestIds).toEqual([]);
+    expect(map.landmarks).toEqual(SAMPLE_MAP.landmarks);
+    expect(map.tables[0].seats.filter(Boolean)).toHaveLength(2);
+  });
+
+  it('keeps the requester party when the read identifies them by code', async () => {
+    const service = await import('../../db/service');
+    vi.mocked(service.getFloorMap).mockResolvedValueOnce(SAMPLE_MAP as never);
+    vi.mocked(service.getGuestIdsForIdentity).mockResolvedValueOnce(['g1'] as never);
+    const res = await call('GET', '/api/floorplan?code=1234', undefined, guest());
+    expect(res.body.floorMap.tables[0].seats[0]).toEqual({ guestId: 'g1', attendeeIndex: 0 });
+    expect(res.body.floorMap.tables[0].seats[1]).toEqual({ guestId: '', attendeeIndex: 0 });
+    expect(res.body.floorMap.tables[0].assignedGuestIds).toEqual(['g1']);
+    expect(vi.mocked(service.getGuestIdsForIdentity)).toHaveBeenCalledWith(undefined, '1234');
+  });
+
+  it('keeps the requester party when the read identifies them by magic token', async () => {
+    const service = await import('../../db/service');
+    vi.mocked(service.getFloorMap).mockResolvedValueOnce(SAMPLE_MAP as never);
+    vi.mocked(service.getGuestIdsForIdentity).mockResolvedValueOnce(['g2'] as never);
+    const res = await call('GET', '/api/floorplan?guest=tok-alice', undefined, guest());
+    expect(res.body.floorMap.tables[0].seats[0]).toEqual({ guestId: '', attendeeIndex: 0 });
+    expect(res.body.floorMap.tables[0].seats[1]).toEqual({ guestId: 'g2', attendeeIndex: 0 });
+    expect(vi.mocked(service.getGuestIdsForIdentity)).toHaveBeenCalledWith('tok-alice', undefined);
+  });
+
+  it('returns the stored plan unchanged to an admin', async () => {
+    const service = await import('../../db/service');
+    vi.mocked(service.getFloorMap).mockResolvedValueOnce(SAMPLE_MAP as never);
+    vi.mocked(service.getGuestIdsForIdentity).mockClear();
+    const admin = adminGuard('correct-token-value', 'correct-token-value', '198.51.100.9');
+    const res = await call('GET', '/api/floorplan', undefined, admin);
+    expect(res.body.floorMap).toEqual(SAMPLE_MAP);
+    expect(vi.mocked(service.getGuestIdsForIdentity)).not.toHaveBeenCalled();
   });
 });
 

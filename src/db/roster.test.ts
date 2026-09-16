@@ -13,7 +13,14 @@ vi.mock('./client', async () => {
   return { pb: h.fake.pb, fromRecord: (r: unknown) => r };
 });
 
-import { getSeatingRoster, scrubForGuestLookup, scrubForRoster } from './roster';
+import type { FloorMapData, TableElement } from '../types';
+import {
+  getGuestIdsForIdentity,
+  getSeatingRoster,
+  projectFloorMapForGuest,
+  scrubForGuestLookup,
+  scrubForRoster,
+} from './roster';
 
 const guestRecord = (over: Record<string, unknown> = {}) => ({
   id: 'g1',
@@ -122,5 +129,80 @@ describe('getSeatingRoster', () => {
     expect(found.guest?.id).toBe('g1');
     expect(found.guest?.magic_token).toBe('');
     expect((await getSeatingRoster('nope')).guest).toBeNull();
+  });
+});
+
+describe('projectFloorMapForGuest', () => {
+  const table: TableElement = {
+    id: 't1',
+    name: 'Table 1',
+    shape: 'circle',
+    x: 0,
+    y: 0,
+    width: 100,
+    height: 100,
+    capacity: 4,
+    assignedGuestIds: ['g1', 'g2'],
+    seats: [
+      { guestId: 'g1', attendeeIndex: 0 },
+      { guestId: 'g1', attendeeIndex: 1 },
+      { guestId: 'g2', attendeeIndex: 0 },
+      null,
+    ],
+  };
+  const map = (tables: TableElement[] = [table]): FloorMapData => ({
+    id: 'm1',
+    canvasWidth: 850,
+    canvasHeight: 520,
+    roomShape: 'rectangle',
+    tables,
+    landmarks: [],
+    updatedAt: '2026-01-01T00:00:00Z',
+  });
+
+  it('blanks every non-requester id but keeps every occupied chair', () => {
+    const out = projectFloorMapForGuest(map(), ['g1']);
+    expect(out.tables[0].seats).toEqual([
+      { guestId: 'g1', attendeeIndex: 0 },
+      { guestId: 'g1', attendeeIndex: 1 },
+      { guestId: '', attendeeIndex: 0 },
+      null,
+    ]);
+    expect(out.tables[0].assignedGuestIds).toEqual(['g1']);
+    expect(out.tables[0].seats!.filter(Boolean)).toHaveLength(3);
+  });
+
+  it('blanks everyone when the requester identifies nobody', () => {
+    const out = projectFloorMapForGuest(map(), []);
+    expect(out.tables[0].seats!.map((s) => s?.guestId ?? null)).toEqual(['', '', '', null]);
+    expect(out.tables[0].assignedGuestIds).toEqual([]);
+  });
+
+  it('preserves geometry, names and landmarks', () => {
+    const landmarks = [{ id: 'l1', name: 'Bar', type: 'bar' as const, x: 1, y: 2, width: 3, height: 4 }];
+    const out = projectFloorMapForGuest({ ...map(), landmarks }, []);
+    expect(out.canvasWidth).toBe(850);
+    expect(out.tables[0]).toMatchObject({ id: 't1', name: 'Table 1', capacity: 4 });
+    expect(out.landmarks).toEqual(landmarks);
+  });
+});
+
+describe('getGuestIdsForIdentity', () => {
+  beforeEach(() => {
+    h.fake.stores.guests.push(
+      guestRecord(),
+      guestRecord({ id: 'g2', name: 'Carol', code: '5678', magic_token: 'tok-carol' }),
+      guestRecord({ id: 'g3', name: 'Dana', code: '1234', magic_token: 'tok-dana' })
+    );
+  });
+
+  it('resolves a magic token to one id and a code to its whole party', async () => {
+    expect(await getGuestIdsForIdentity('tok-alice')).toEqual(['g1']);
+    expect(new Set(await getGuestIdsForIdentity(undefined, '1234'))).toEqual(new Set(['g1', 'g3']));
+  });
+
+  it('resolves nobody for an unknown or malformed identity', async () => {
+    expect(await getGuestIdsForIdentity('nope')).toEqual([]);
+    expect(await getGuestIdsForIdentity(undefined, 'abcd')).toEqual([]);
   });
 });

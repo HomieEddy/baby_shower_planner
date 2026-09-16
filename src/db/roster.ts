@@ -1,6 +1,6 @@
 // Public day-of seating roster with sensitive fields scrubbed.
 
-import type { Guest } from '../types';
+import type { FloorMapData, Guest } from '../types';
 import { fromRecord, pb } from './client';
 import { isValidCode } from '../lib/validation';
 import { isAttending } from '../lib/guestAttendees';
@@ -39,6 +39,41 @@ export function scrubForGuestLookup(g: Guest): Guest {
   };
 }
 
+// The identity predicate the guest surfaces share (ADR 0001): a magic token or
+// a reservation code, matched exactly as the roster matches them, so the map and
+// the roster cannot drift on who "the requester" is.
+const matchesIdentity = (record: any, guestToken?: string, code?: string): boolean =>
+  (!!guestToken && record.magic_token === guestToken) ||
+  (!!code && isValidCode(code) && record.code === code);
+
+// The guest projection of the floor plan (ADR 0001): geometry, capacity, table
+// and landmark names and per-chair occupancy survive; every guest identity is
+// blanked except the requester's own party. Occupancy is kept by blanking
+// `seats[].guestId` rather than dropping `seats` — getTableSeats prefers
+// table.seats, so stripping them would blank the whole map.
+export function projectFloorMapForGuest(map: FloorMapData, requesterGuestIds: readonly string[]): FloorMapData {
+  const keep = new Set(requesterGuestIds);
+  return {
+    ...map,
+    tables: map.tables.map((table) => ({
+      ...table,
+      seats: table.seats?.map((seat) =>
+        seat && !keep.has(seat.guestId) ? { ...seat, guestId: '' } : seat
+      ),
+      assignedGuestIds: (table.assignedGuestIds || []).filter((id) => keep.has(id)),
+    })),
+  };
+}
+
+// The requester's own guest id(s), from the same magic token / reservation code
+// identity the roster accepts. Unknown identity resolves to none — the
+// all-blanked projection.
+export async function getGuestIdsForIdentity(guestToken?: string, code?: string): Promise<string[]> {
+  const records = await pb.collection('guests').getFullList();
+  const ids = records.filter((r: any) => matchesIdentity(r, guestToken, code)).map((r: any) => r.id);
+  return [...new Set<string>(ids)];
+}
+
 export async function getSeatingRoster(guestToken?: string, code?: string): Promise<{ seats: Guest[]; guests: Guest[]; guest: Guest | null }> {
   const records = await pb.collection('guests').getFullList();
 
@@ -70,13 +105,13 @@ export async function getSeatingRoster(guestToken?: string, code?: string): Prom
   let guests: Guest[] = [];
   if (code && isValidCode(code)) {
     guests = records
-      .filter((r: any) => r.code === code)
+      .filter((r: any) => matchesIdentity(r, undefined, code))
       .map((r: any) => scrubForGuestLookup(fromRecord<Guest>(r)));
   }
 
   let guest: Guest | null = null;
   if (guestToken) {
-    const found = records.find((r: any) => r.magic_token === guestToken);
+    const found = records.find((r: any) => matchesIdentity(r, guestToken));
     if (found) guest = scrubForGuestLookup(fromRecord<Guest>(found));
   }
   return { seats, guests, guest };

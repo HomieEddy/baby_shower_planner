@@ -7,6 +7,7 @@ import { Select, TextInput } from '../shared/ui';
 import { getAttendeeLocations } from '../../lib/tableAssignment';
 import { getPartyMembers, isAttending } from '../../lib/guestAttendees';
 import { TableScanQrModal } from './TableScanQrModal';
+import { adminFetch } from '../../lib/api';
 
 interface EscortCardsGeneratorProps {
   guests: Guest[];
@@ -38,7 +39,7 @@ export const EscortCardsGenerator: React.FC<EscortCardsGeneratorProps> = ({ gues
   // Seats live on the floor map; fetch it so split parties get one card per person.
   useEffect(() => {
     let cancelled = false;
-    fetch('/api/floorplan')
+    adminFetch('/api/floorplan')
       .then((r) => r.json())
       .then((d) => {
         if (!cancelled) setFloorMap(d.floorMap ?? null);
