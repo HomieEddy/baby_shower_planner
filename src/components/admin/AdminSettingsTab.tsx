@@ -38,7 +38,7 @@ import {
 import { CSS } from '@dnd-kit/utilities';
 import { EventSettings, ScheduleItem, Language, CustomTheme } from '../../types';
 import { Translations } from '../../translations';
-import { parseToYmd, formatDateLong, formatTime12h, parseTimeRange, formatTimeRangeString } from '../../lib/dateUtils';
+import { parseToYmd, formatDateLong, formatTime12h, parseTimeRange, formatTimeRangeString, toStoredEventDateTime } from '../../lib/dateUtils';
 import { findDuplicateScheduleTimes, normalizeScheduleItems, normalizeScheduleTime } from '../../lib/schedule';
 import { THEME_PRESETS, getThemeById, applyThemeToDocument, getContrastTextColor, getCustomTheme, CUSTOM_THEME_ID, FONT_OPTIONS, DEFAULT_CUSTOM_THEME } from '../../themePresets';
 import { useToast } from '../shared/ToastContext';
@@ -301,15 +301,14 @@ export const AdminSettingsTab: React.FC<AdminSettingsTabProps> = ({ language, t,
     setSchedule(normalizedSchedule);
     try {
       setSavingSettings(true);
-      const formattedDate = formatDateLong(datePickerValue, language);
-      const formattedTime = formatTimeRangeString(startTime, endTime, language);
+      const { date: storedDate, time: storedTime } = toStoredEventDateTime(datePickerValue, startTime, endTime, language);
       await onSave({
         eventTitle,
         defaultLanguage: eventLanguage,
         parentsNames,
         babyName,
-        date: formattedDate,
-        time: formattedTime,
+        date: storedDate,
+        time: storedTime,
         venueName,
         venueAddress,
         registryUrl,

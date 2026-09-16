@@ -97,6 +97,21 @@ export function formatTimeRangeString(startTime24: string, endTime24: string, la
   return startFmt || endFmt || '';
 }
 
+// The stored display shape for settings.date / settings.time. The rest of the
+// app reads both as display strings (emails, the invitation card), so every
+// writer — the settings form and the first-run setup — derives them the same way.
+export function toStoredEventDateTime(
+  ymdOrDisplay: string,
+  startTime24: string,
+  endTime24: string,
+  lang: Lang
+): { date: string; time: string } {
+  return {
+    date: formatDateLong(ymdOrDisplay, lang),
+    time: formatTimeRangeString(startTime24, endTime24, lang),
+  };
+}
+
 // Human-readable window for the guest content lock (ISO timestamps from the server)
 export function formatGuestWindow(opensAt?: string, closesAt?: string, lang: Lang = 'EN'): string {
   const locale = langLocale(lang);

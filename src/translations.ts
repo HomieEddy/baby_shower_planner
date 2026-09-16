@@ -745,6 +745,10 @@ export interface Translations {
   saveAndCloseBtn: string;
   savingChangesBtn: string;
   savingSettingsBtn: string;
+  setupDesc: string;
+  setupRequiredError: string;
+  setupSubmitBtn: string;
+  setupTitle: string;
   scanAtEntrance: string;
   scanTableQr: string;
   scheduleDesc: string;
@@ -2050,6 +2054,10 @@ export const translations: Record<Language, Translations> = {
     eventIntro: "Join us for an afternoon of games, sweet treats, and memories as we prepare to welcome our little angel into the world!",
     savingChangesBtn: "Saving...",
     savingSettingsBtn: "Saving...",
+    setupDesc: "Add the essentials now — you can change everything later in Host Settings.",
+    setupRequiredError: "Please fill in the event title, hosts, date, times and venue.",
+    setupSubmitBtn: "Create My Event",
+    setupTitle: "Set Up Your Event",
     scanAtEntrance: "Scan at entrance",
     scanTableQr: "Scan Table QR",
     scheduleDesc: "Customize timeline items, times, titles, and descriptions shown on invitations.",
@@ -3345,6 +3353,10 @@ export const translations: Record<Language, Translations> = {
     eventIntro: "Rejoignez-nous pour une après-midi de jeux, gourmandises et souvenirs en attendant l'arrivée de notre petit ange !",
     savingChangesBtn: "Enregistrement...",
     savingSettingsBtn: "Enregistrement...",
+    setupDesc: "Ajoutez l'essentiel maintenant — vous pourrez tout modifier plus tard dans les réglages.",
+    setupRequiredError: "Veuillez indiquer le titre de l'événement, les hôtes, la date, les heures et le lieu.",
+    setupSubmitBtn: "Créer mon événement",
+    setupTitle: "Configurez votre événement",
     scanAtEntrance: "À présenter à l'entrée",
     scanTableQr: "Scanner QR Table",
     scheduleDesc: "Personnalisez les moments, heures, titres et descriptions affichés sur les invitations.",

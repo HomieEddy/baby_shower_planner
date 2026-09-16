@@ -15,16 +15,21 @@ async function fetchSettings(): Promise<EventSettings | null> {
   return (data.settings ?? null) as EventSettings | null;
 }
 
-// Read the event settings. Returns null until loaded (matches the old store's
-// initial value), so existing `settings?.x` call sites are unchanged.
-export function useSettings(): EventSettings | null {
-  const { data } = useQuery({
+// The full query, for callers that must tell "loading" from "no settings row"
+// (the host dashboard's first-run setup).
+export function useSettingsQuery() {
+  return useQuery({
     queryKey: settingsQueryKey,
     queryFn: fetchSettings,
     // Settings change only through the admin save, which writes the cache.
     staleTime: Infinity,
   });
-  return data ?? null;
+}
+
+// Read the event settings. Returns null until loaded (matches the old store's
+// initial value), so existing `settings?.x` call sites are unchanged.
+export function useSettings(): EventSettings | null {
+  return useSettingsQuery().data ?? null;
 }
 
 // Push a fresh settings object into the cache without another network call.

@@ -7,6 +7,7 @@ import { ThankYouTrackerView } from './ThankYouTrackerView';
 import { AdminGuestsTab } from './AdminGuestsTab';
 import { GuestCheckIn } from './GuestCheckIn';
 import { AdminSettingsTab } from './AdminSettingsTab';
+import { EventSetup } from './EventSetup';
 import { AdminAlertsTab } from './AdminAlertsTab';
 import { AdminGuestbookFeed } from './AdminGuestbookFeed';
 import { AdminAgendaTab } from './AdminAgendaTab';
@@ -14,7 +15,7 @@ import { HostPhotoGalleryPage } from '../photos/HostPhotoGalleryPage';
 import { useToast } from '../shared/ToastContext';
 import { useConfirm } from '../shared/ConfirmDialog';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { settingsQueryKey, setSettingsCache, useSettings } from '../../lib/settingsQuery';
+import { settingsQueryKey, setSettingsCache, useSettingsQuery } from '../../lib/settingsQuery';
 import { adminFetch } from '../../lib/api';
 import { motion, AnimatePresence } from 'motion/react';
 import { useAppStore } from '../../stores/appStore';
@@ -94,7 +95,8 @@ const SidebarPageLink = ({
 
 export const AdminDashboard = () => {
   const language = useAppStore((s) => s.language);
-  const settings = useSettings();
+  const settingsQuery = useSettingsQuery();
+  const settings = settingsQuery.data ?? null;
   const queryClient = useQueryClient();
   const t = useT();
   const tf = useTf();
@@ -291,6 +293,28 @@ export const AdminDashboard = () => {
       ]
     : [];
 
+
+  // Unseeded events get the setup step instead of a dashboard with no event:
+  // the settings row it writes lands in the cache, so the dashboard takes over.
+  if (settingsQuery.isPending) {
+    return (
+      <div role="status" aria-live="polite" className="text-center py-16 text-[#A09080] font-mono text-xs">
+        {t.loadingLabel}
+      </div>
+    );
+  }
+  // An outage is not "no settings" (see src/db/settings.ts): only a resolved
+  // empty read means first run — a failed read is an error, not a setup prompt.
+  if (settingsQuery.isError) {
+    return (
+      <div role="alert" className="rounded-2xl border-2 border-rose-300 bg-rose-50 text-rose-800 text-xs font-bold p-4 text-center">
+        {t.loadErrorMsg}
+      </div>
+    );
+  }
+  if (!settings) {
+    return <EventSetup language={language} t={t} onSave={handleSaveSettings} />;
+  }
 
   return (
     <motion.div

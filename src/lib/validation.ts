@@ -125,3 +125,23 @@ export const ReminderSettingsSchema = Settings.pick({
 }).extend({
   hostEmail: z.string().email('Invalid email address').optional().or(z.literal('')),
 });
+
+// The first-run setup step: the minimum an event needs to be usable. Derived
+// from the domain schema so the setup's fields can never drift from the stored
+// shape; the optional domain fields become required here, and nothing else is
+// asked for.
+export const EventSetupSchema = Settings.pick({
+  eventTitle: true,
+  parentsNames: true,
+  date: true,
+  time: true,
+  venueName: true,
+  venueAddress: true,
+}).extend({
+  eventTitle: z.string().min(1, 'Event title is required'),
+  parentsNames: z.string().min(1, 'Host names are required'),
+  date: z.string().min(1, 'Event date is required'),
+  time: z.string().min(1, 'Event time is required'),
+  venueName: z.string().min(1, 'Venue name is required'),
+  venueAddress: z.string().min(1, 'Venue address is required'),
+});
