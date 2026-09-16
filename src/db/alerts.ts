@@ -14,6 +14,23 @@ export async function getAlerts(): Promise<EventAlert[]> {
   return records.map(r => fromRecord<EventAlert>(r));
 }
 
+// What a guest page renders of an alert. Explicitly picked, not spread-and-drop,
+// so a field added to AlertSchema cannot leak to guests by default. The delivery
+// counter is host-internal.
+type GuestAlert = Omit<EventAlert, 'notified_guests_count'>;
+
+export function projectAlertForGuest(alert: EventAlert): GuestAlert {
+  return {
+    id: alert.id,
+    type: alert.type,
+    title: alert.title,
+    message: alert.message,
+    active: alert.active,
+    target_audience: alert.target_audience,
+    created_at: alert.created_at,
+  };
+}
+
 export async function createAlert(payload: { type: AlertType; title: string; message: string; target_audience?: 'ALL' | 'PENDING' | 'ATTENDING' }): Promise<{ alert: EventAlert; notified_count: number }> {
   requireProvider(['email', 'text']);
   const r = await pb.collection('alerts').create({

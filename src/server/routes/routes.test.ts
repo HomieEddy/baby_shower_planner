@@ -30,6 +30,13 @@ vi.mock('../../db/service', async (importOriginal) => {
     pendingToken: 'pend-token',
   }));
   stubs.getPublicRehearsalStatus = vi.fn(() => ({ active: true }));
+  stubs.getAlerts = vi.fn(async () => [{
+    id: 'a1', type: 'CUSTOM', title: 'Pool closed', message: 'Back at 4', active: true,
+    target_audience: 'ALL', notified_guests_count: 7, created_at: '2026-01-01T00:00:00Z',
+  }]);
+  // The alert projection is pure: keep it real so the route assertions check the
+  // actual guest shape.
+  stubs.projectAlertForGuest = actual.projectAlertForGuest;
   // The floor-plan projection is pure: keep it real so the route assertions
   // check the actual guest shape, not a stubbed one.
   stubs.projectFloorMapForGuest = actual.projectFloorMapForGuest;
@@ -292,6 +299,32 @@ describe('the floor plan read is a projection for guests', () => {
     const res = await call('GET', '/api/floorplan', undefined, admin);
     expect(res.body.floorMap).toEqual(SAMPLE_MAP);
     expect(vi.mocked(service.getGuestIdsForIdentity)).not.toHaveBeenCalled();
+  });
+});
+
+describe('the alerts read is a projection for guests', () => {
+  const at = (token: string | undefined) => adminGuard(token, token, '198.51.100.9');
+
+  it('drops the host delivery counter for a non-admin but keeps the guest fields', async () => {
+    const res = await call('GET', '/api/alerts', undefined, at(undefined));
+    expect(res.statusCode).toBe(200);
+    const alert = res.body.alerts[0];
+    expect(alert).not.toHaveProperty('notified_guests_count');
+    expect(alert).toMatchObject({
+      id: 'a1',
+      type: 'CUSTOM',
+      title: 'Pool closed',
+      message: 'Back at 4',
+      active: true,
+      target_audience: 'ALL',
+      created_at: '2026-01-01T00:00:00Z',
+    });
+  });
+
+  it('returns the full records to an admin', async () => {
+    const res = await call('GET', '/api/alerts', undefined, at('correct-token-value'));
+    expect(res.statusCode).toBe(200);
+    expect(res.body.alerts[0].notified_guests_count).toBe(7);
   });
 });
 

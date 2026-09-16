@@ -3,13 +3,18 @@
 import { sendError, sendJson } from '../http';
 import type { RouteCtx } from '../http';
 import { handleRoutes, type Route } from '../route';
-import { createAlert, deleteAlert, getAlerts } from '../../db/service';
+import { createAlert, deleteAlert, getAlerts, projectAlertForGuest } from '../../db/service';
 
 const ROUTES: Route[] = [
   {
+    // Admins get the stored records; guests a projection that drops the
+    // host-internal delivery counter.
     method: 'GET',
     path: '/api/alerts',
-    handler: async (_req, { res }) => sendJson(res, 200, { alerts: await getAlerts() }),
+    handler: async (_req, { res, adminOnly }) => {
+      const alerts = await getAlerts();
+      return sendJson(res, 200, { alerts: adminOnly() ? alerts : alerts.map(projectAlertForGuest) });
+    },
   },
 
   {
