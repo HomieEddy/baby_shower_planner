@@ -139,4 +139,4 @@ const ROUTES: Route[] = [
   },
 ];
 
-export const handleGuestbookRoutes = (ctx: RouteCtx): Promise<boolean> => handleRoutes(ROUTES, ctx);
+export const handleGuestbookRoutes = (ctx: RouteCtx): Promise<boolean> => handleRoutes(ROUTES, ctx, 'guestbook');

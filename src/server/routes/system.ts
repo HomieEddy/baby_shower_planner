@@ -37,6 +37,7 @@ const ROUTES: Route[] = [
     path: '/api/send-invitations',
     admin: true,
     body: true,
+    entitlement: 'comms',
     handler: async ({ body }, { res }) => {
       const result = await sendInvitations(Array.isArray(body.guestIds) ? body.guestIds : undefined);
       return sendJson(res, 200, result);
@@ -47,6 +48,7 @@ const ROUTES: Route[] = [
     method: 'POST',
     path: '/api/send-reminders',
     admin: true,
+    entitlement: 'comms',
     handler: async (_req, { res }) => sendJson(res, 200, await sendReminders()),
   },
 

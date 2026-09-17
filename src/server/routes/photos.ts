@@ -157,4 +157,4 @@ const ROUTES: Route[] = [
   },
 ];
 
-export const handlePhotoRoutes = (ctx: RouteCtx): Promise<boolean> => handleRoutes(ROUTES, ctx);
+export const handlePhotoRoutes = (ctx: RouteCtx): Promise<boolean> => handleRoutes(ROUTES, ctx, 'photos');

@@ -86,4 +86,4 @@ const ROUTES: Route[] = [
   },
 ];
 
-export const handleGiftRoutes = (ctx: RouteCtx): Promise<boolean> => handleRoutes(ROUTES, ctx);
+export const handleGiftRoutes = (ctx: RouteCtx): Promise<boolean> => handleRoutes(ROUTES, ctx, 'gifts');

@@ -108,4 +108,4 @@ const ROUTES: Route[] = [
   },
 ];
 
-export const handleAgendaRoutes = (ctx: RouteCtx): Promise<boolean> => handleRoutes(ROUTES, ctx);
+export const handleAgendaRoutes = (ctx: RouteCtx): Promise<boolean> => handleRoutes(ROUTES, ctx, 'agenda');

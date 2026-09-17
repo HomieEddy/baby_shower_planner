@@ -63,4 +63,4 @@ const ROUTES: Route[] = [
   },
 ];
 
-export const handleFloorPlanRoutes = (ctx: RouteCtx): Promise<boolean> => handleRoutes(ROUTES, ctx);
+export const handleFloorPlanRoutes = (ctx: RouteCtx): Promise<boolean> => handleRoutes(ROUTES, ctx, 'seating');

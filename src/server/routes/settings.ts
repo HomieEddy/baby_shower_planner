@@ -3,6 +3,8 @@
 import { sendError, sendJson } from '../http';
 import type { RouteCtx } from '../http';
 import { handleRoutes, type Route } from '../route';
+import { hasEntitlement } from '../../lib/entitlements';
+import { deployPlan } from '../deploy';
 import { ReminderSettingsSchema } from '../../lib/validation';
 import { SettingsSchema } from '../../lib/domain';
 import type { EventSettings } from '../../types';
@@ -44,6 +46,11 @@ const ROUTES: Route[] = [
       const unknown = Object.keys(body || {}).filter((key) => !settingsKeys.has(key));
       if (unknown.length > 0) {
         return sendError(res, 'INVALID_PAYLOAD', `Unknown setting: ${unknown[0]}`);
+      }
+      // Branding is a Premium surface inside an otherwise-Basic write — the one
+      // field-level entitlement check. Clearing the fields is always allowed.
+      if ((body.logoUrl || body.invitationBackgroundUrl) && !hasEntitlement(deployPlan(), 'branding')) {
+        return sendError(res, 'FEATURE_NOT_ENTITLED');
       }
       const reminder = ReminderSettingsSchema.partial().safeParse(body);
       if (!reminder.success) {

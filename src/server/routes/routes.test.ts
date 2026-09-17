@@ -1,4 +1,4 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
 import { EventEmitter } from 'node:events';
 import type http from 'node:http';
 import { adminGuard, HttpError } from '../http';
@@ -118,12 +118,19 @@ const call = async (
 };
 
 beforeEach(() => {
+  // Most of this file exercises handlers, not the tier gate: run as Premium and
+  // let the entitlement tests drop to Basic explicitly.
+  vi.stubEnv('PLAN', 'Premium');
   h.requireAdmin.mockReset();
   h.requireAdmin.mockImplementation(() => {});
   h.guestLock.mockReset();
   h.guestLock.mockResolvedValue(null);
   h.adminOnly.mockReset();
   h.adminOnly.mockReturnValue(false);
+});
+
+afterEach(() => {
+  vi.unstubAllEnvs();
 });
 
 describe('public routes', () => {
@@ -236,14 +243,55 @@ describe('the capabilities read carries the deploy plan', () => {
     const res = await call('GET', '/api/capabilities');
     expect(res.statusCode).toBe(200);
     expect(res.body.plan).toBe('Premium');
-    vi.unstubAllEnvs();
   });
 
   it('falls back to Basic when the deploy names no plan', async () => {
     vi.stubEnv('PLAN', '');
     const res = await call('GET', '/api/capabilities');
     expect(res.body.plan).toBe('Basic');
-    vi.unstubAllEnvs();
+  });
+});
+
+describe('a Basic deploy is refused the Premium surfaces', () => {
+  const at = (token: string | undefined) => adminGuard(token, token, '198.51.100.9');
+
+  it('403s every Premium route with FEATURE_NOT_ENTITLED', async () => {
+    vi.stubEnv('PLAN', 'Basic');
+    const admin = at('correct-token-value');
+    const premium: Array<[string, string]> = [
+      ['GET', '/api/gifts'],
+      ['GET', '/api/agenda'],
+      ['GET', '/api/guestbook'],
+      ['GET', '/api/photos'],
+      ['GET', '/api/floorplan'],
+      ['GET', '/api/floorplan/roster?code=1234'],
+      ['POST', '/api/check-in/self'],
+      ['POST', '/api/send-invitations'],
+    ];
+    for (const [method, path] of premium) {
+      const res = await call(method, path, {}, admin);
+      expect(`${method} ${path} → ${res.statusCode}:${res.body?.error}`).toBe(
+        `${method} ${path} → 403:FEATURE_NOT_ENTITLED`,
+      );
+    }
+  });
+
+  it('leaves the Basic routes alone', async () => {
+    vi.stubEnv('PLAN', 'Basic');
+    expect((await call('GET', '/api/register/message')).statusCode).toBe(200);
+    expect((await call('GET', '/api/settings')).statusCode).toBe(200);
+    expect((await call('GET', '/api/guests', undefined, at('correct-token-value'))).statusCode).toBe(200);
+  });
+
+  it('refuses a branding field inside the settings write on Basic', async () => {
+    vi.stubEnv('PLAN', 'Basic');
+    const refused = await call('POST', '/api/settings', { logoUrl: '/uploads/logo.png' });
+    expect(refused.statusCode).toBe(403);
+    expect(refused.body.error).toBe('FEATURE_NOT_ENTITLED');
+
+    vi.stubEnv('PLAN', 'Premium');
+    expect((await call('POST', '/api/settings', { logoUrl: '/uploads/logo.png' })).statusCode).toBe(200);
+    expect((await call('POST', '/api/settings', { eventTitle: 'Still Basic' })).statusCode).toBe(200);
   });
 });
 

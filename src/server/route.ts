@@ -7,6 +7,8 @@ import type http from 'node:http';
 import type { z } from 'zod';
 import { parseJson, sendError, sendGuestLocked } from './http';
 import type { RouteCtx } from './http';
+import { hasEntitlement, type Feature } from '../lib/entitlements';
+import { deployPlan } from './deploy';
 
 export interface RouteRequest {
   // Parsed JSON body (`{}` when the handler declares no body).
@@ -24,6 +26,9 @@ export interface Route {
   admin?: boolean;
   // Guest content window applies (admins bypass it inside ctx.guestLock).
   lock?: boolean;
+  // This surface is Premium: refuse it unless the deploy's plan includes it.
+  // Files that are one feature set it on every route via the handleRoutes arg.
+  entitlement?: Feature;
   // Parse the JSON body before the handler runs.
   body?: boolean;
   handler: (req: RouteRequest, ctx: RouteCtx) => Promise<boolean> | boolean;
@@ -31,8 +36,9 @@ export interface Route {
 
 // Routes in order; the first matching description wins (same precedence the
 // hand-written path ladders had). Returns false when nothing matched, which
-// server.ts turns into ENDPOINT_NOT_FOUND.
-export async function handleRoutes(routes: Route[], ctx: RouteCtx): Promise<boolean> {
+// server.ts turns into ENDPOINT_NOT_FOUND. `entitlement` is the file's feature,
+// used when a route does not name its own.
+export async function handleRoutes(routes: Route[], ctx: RouteCtx, entitlement?: Feature): Promise<boolean> {
   const method = ctx.req.method || 'GET';
   const pathname = ctx.url.pathname;
 
@@ -49,6 +55,10 @@ export async function handleRoutes(routes: Route[], ctx: RouteCtx): Promise<bool
     }
 
     if (route.admin) ctx.requireAdmin();
+    const feature = route.entitlement ?? entitlement;
+    if (feature && !hasEntitlement(deployPlan(), feature)) {
+      return sendError(ctx.res, 'FEATURE_NOT_ENTITLED');
+    }
     if (route.lock) {
       const locked = await ctx.guestLock();
       if (locked) return sendGuestLocked(ctx.res, locked);

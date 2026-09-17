@@ -58,6 +58,8 @@ export const ERROR_REGISTRY = {
   INVALID_PHOTO_URL: { status: 400, message: 'Invalid photo URL' },
   PROVIDER_NOT_CONFIGURED: { status: 503, message: 'No email or SMS provider is configured' },
   FORBIDDEN: { status: 403, message: 'Forbidden' },
+  // The deploy's plan does not include this surface (§5.5).
+  FEATURE_NOT_ENTITLED: { status: 403, message: 'This feature is not included in this event' },
   PAYLOAD_TOO_LARGE: { status: 413, message: 'Payload too large' },
   ENDPOINT_NOT_FOUND: { status: 404, message: 'Endpoint not found' },
 

@@ -41,4 +41,4 @@ const ROUTES: Route[] = [
   },
 ];
 
-export const handleAlertRoutes = (ctx: RouteCtx): Promise<boolean> => handleRoutes(ROUTES, ctx);
+export const handleAlertRoutes = (ctx: RouteCtx): Promise<boolean> => handleRoutes(ROUTES, ctx, 'alerts');

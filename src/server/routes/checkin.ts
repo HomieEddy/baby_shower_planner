@@ -63,4 +63,4 @@ const ROUTES: Route[] = [
   },
 ];
 
-export const handleCheckInRoutes = (ctx: RouteCtx): Promise<boolean> => handleRoutes(ROUTES, ctx);
+export const handleCheckInRoutes = (ctx: RouteCtx): Promise<boolean> => handleRoutes(ROUTES, ctx, 'dayOf');
