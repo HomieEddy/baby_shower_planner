@@ -1,9 +1,11 @@
 import { useQuery } from '@tanstack/react-query';
 import { Translations } from '../translations';
+import { resolvePlan, type Plan } from './entitlements';
 
 export interface Capabilities {
   email: boolean;
   sms: boolean;
+  plan: Plan;
 }
 
 // Which delivery providers are configured server-side. Options that can't
@@ -23,6 +25,10 @@ export const useCapabilities = () => {
 // actions should be disabled. Fails closed while capabilities load.
 export const noProviders = (caps: Capabilities | undefined): boolean =>
   !caps?.email && !caps?.sms;
+
+// The deploy's tier for gating. Fails closed to Basic while capabilities load,
+// so a slow response never flashes a Premium surface.
+export const planOf = (caps: Capabilities | undefined): Plan => resolvePlan(caps?.plan);
 
 // Channel options (None / Email / SMS / Both) filtered by what can send.
 export function availableChannels(caps: Capabilities | undefined): ('none' | 'email' | 'text' | 'both')[] {

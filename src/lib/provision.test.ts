@@ -43,6 +43,11 @@ describe('provisionEvent', () => {
     expect(envValue(env, 'PB_ADMIN_PASSWORD')).toBe('stub-secret');
   });
 
+  it('records the plan the event was sold as', () => {
+    expect(envValue(provisionEvent(input, options()).env, 'PLAN')).toBe('Basic');
+    expect(envValue(provisionEvent({ ...input, plan: 'Premium' }, options()).env, 'PLAN')).toBe('Premium');
+  });
+
   it('passes the email provider keys through when configured', () => {
     const { env } = provisionEvent(input, options({ email: { apiKey: 'rk-test', from: 'Hi <hi@example.com>' } }));
 

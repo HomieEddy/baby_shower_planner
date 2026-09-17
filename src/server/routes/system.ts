@@ -4,6 +4,7 @@
 import { sendJson } from '../http';
 import type { RouteCtx } from '../http';
 import { handleRoutes, type Route } from '../route';
+import { deployPlan } from '../deploy';
 import {
   getPublicRehearsalStatus,
   getRehearsalStatus,
@@ -24,10 +25,11 @@ const ROUTES: Route[] = [
   },
 
   // Delivery provider availability — the UI hides channels that can't send.
+  // The deploy's plan rides along: same question, "what does this deploy do?".
   {
     method: 'GET',
     path: '/api/capabilities',
-    handler: (_req, { res }) => sendJson(res, 200, providerAvailability()),
+    handler: (_req, { res }) => sendJson(res, 200, { ...providerAvailability(), plan: deployPlan() }),
   },
 
   {

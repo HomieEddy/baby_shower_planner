@@ -143,6 +143,8 @@ export function provisionEvent(input: ProvisionInput, options: ProvisionOptions)
   const lines = [
     `# Provisioned event: ${slug}`,
     'NODE_ENV=production',
+    // The tier the event was sold as. Deploy configuration, never customer data.
+    `PLAN=${plan}`,
     // The reverse proxy labels read these: SLUG names the router, PUBLIC_DOMAIN
     // is the base the Host rule is built from. `-p <slug>` already scopes the
     // compose project.

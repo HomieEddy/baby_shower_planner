@@ -11,6 +11,7 @@ services:
     environment:
       - CHOKIDAR_USEPOLLING=1
       - NODE_ENV=development
+      - PLAN=${PLAN:-Basic}
       - POCKETBASE_URL=http://pocketbase:8090
       - VITE_POCKETBASE_URL=http://pocketbase:8090
       - PB_ADMIN_EMAIL=${PB_ADMIN_EMAIL:-admin@babyshower.com}

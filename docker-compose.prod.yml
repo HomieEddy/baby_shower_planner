@@ -21,6 +21,7 @@ services:
     restart: unless-stopped
     environment:
       - NODE_ENV=production
+      - PLAN=${PLAN}
       - POCKETBASE_URL=http://pocketbase:8090
       - PB_ADMIN_EMAIL=${PB_ADMIN_EMAIL}
       - PB_ADMIN_PASSWORD=${PB_ADMIN_PASSWORD}

@@ -230,6 +230,23 @@ describe('admin routes are gated', () => {
   });
 });
 
+describe('the capabilities read carries the deploy plan', () => {
+  it('reports the plan the deploy was provisioned as', async () => {
+    vi.stubEnv('PLAN', 'Premium');
+    const res = await call('GET', '/api/capabilities');
+    expect(res.statusCode).toBe(200);
+    expect(res.body.plan).toBe('Premium');
+    vi.unstubAllEnvs();
+  });
+
+  it('falls back to Basic when the deploy names no plan', async () => {
+    vi.stubEnv('PLAN', '');
+    const res = await call('GET', '/api/capabilities');
+    expect(res.body.plan).toBe('Basic');
+    vi.unstubAllEnvs();
+  });
+});
+
 describe('the floor plan read is a projection for guests', () => {
   const SAMPLE_MAP = {
     id: 'm1',
