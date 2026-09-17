@@ -11,6 +11,7 @@ import { requireAuth } from './lib/api';
 import { useAppStore } from './stores/appStore';
 import { useT } from './components/shared/i18n';
 import { PlanGate } from './components/shared/PlanGate';
+import { DemoBanner } from './components/shared/DemoBanner';
 
 // Route-level code splitting: each page (and the heavy admin/seating/photo
 // stacks it drags in) loads on demand instead of one ~2 MB entry bundle.
@@ -136,6 +137,7 @@ function MainAppContent() {
       </a>
       {showHeader && <Header sticky={!isAdminSurface} />}
       {showFinderLangBar && <Header minimal />}
+      {!isAdminSurface && <DemoBanner />}
       <main
         id="main-content"
         className={

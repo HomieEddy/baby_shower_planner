@@ -236,6 +236,29 @@ async function seedMisc(): Promise<void> {
   }
 }
 
+// The demo rows themselves. Shared by a timed rehearsal and the permanent demo
+// deploy, so there is one set of demo content (§11).
+async function seedDemoRows(): Promise<{
+  sample: { name: string; code: string; magic_token: string };
+  pendingToken: string;
+  counts: { guests: number; tables: number };
+}> {
+  const guestsBySlug: Record<string, Guest> = {};
+  for (const spec of DEMO_GUESTS) {
+    guestsBySlug[spec.slug] = await createDemoGuest(spec);
+  }
+  const tables = await seedFloorMap(guestsBySlug);
+  await seedGuestbookAndGifts(guestsBySlug);
+  await seedMisc();
+
+  const sample = guestsBySlug.amelia;
+  return {
+    sample: { name: sample.name, code: sample.code, magic_token: sample.magic_token },
+    pendingToken: guestsBySlug.jules.magic_token,
+    counts: { guests: DEMO_GUESTS.length, tables },
+  };
+}
+
 export async function startRehearsal(): Promise<{
   active: true;
   startedAt: string;
@@ -248,25 +271,24 @@ export async function startRehearsal(): Promise<{
   startedAt = new Date().toISOString();
   active = true;
 
-  const guestsBySlug: Record<string, Guest> = {};
-  for (const spec of DEMO_GUESTS) {
-    guestsBySlug[spec.slug] = await createDemoGuest(spec);
-  }
-  const tables = await seedFloorMap(guestsBySlug);
-  await seedGuestbookAndGifts(guestsBySlug);
-  await seedMisc();
+  const seed = await seedDemoRows();
+  lastSeed = { sample: seed.sample, pendingToken: seed.pendingToken };
+  return { active: true, startedAt, ...lastSeed, counts: seed.counts };
+}
 
-  const sample = guestsBySlug.amelia;
-  lastSeed = {
-    sample: { name: sample.name, code: sample.code, magic_token: sample.magic_token },
-    pendingToken: guestsBySlug.jules.magic_token,
-  };
-  return {
-    active: true,
-    startedAt,
-    ...lastSeed,
-    counts: { guests: DEMO_GUESTS.length, tables },
-  };
+// The public demo deploy (§11): seed once, then stay open. `active` keeps the
+// guest content window bypassed so the guestbook and photos are viewable, and
+// the demo is never stopped, so its rows persist in the deploy's own database.
+export async function seedDemoData(): Promise<{ seeded: boolean }> {
+  active = true;
+  // The demo deploy is its own database, so any guest means it is already seeded.
+  const existing = await pb.collection('guests').getList(1, 1);
+  if (existing.totalItems > 0) return { seeded: false };
+
+  startedAt = new Date().toISOString();
+  const seed = await seedDemoRows();
+  lastSeed = { sample: seed.sample, pendingToken: seed.pendingToken };
+  return { seeded: true };
 }
 
 async function runStopCleanup(): Promise<number> {

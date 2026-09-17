@@ -8,7 +8,7 @@ import type { z } from 'zod';
 import { parseJson, sendError, sendGuestLocked } from './http';
 import type { RouteCtx } from './http';
 import { hasEntitlement, type Feature } from '../lib/entitlements';
-import { deployPlan } from './deploy';
+import { deployPlan, isDemo } from './deploy';
 
 export interface RouteRequest {
   // Parsed JSON body (`{}` when the handler declares no body).
@@ -55,6 +55,11 @@ export async function handleRoutes(routes: Route[], ctx: RouteCtx, entitlement?:
     }
 
     if (route.admin) ctx.requireAdmin();
+    // The public demo is read-only for guests; the operator's admin routes are
+    // how it is managed, so they stay open.
+    if (isDemo() && !route.admin && method !== 'GET') {
+      return sendError(ctx.res, 'DEMO_READ_ONLY');
+    }
     const feature = route.entitlement ?? entitlement;
     if (feature && !hasEntitlement(deployPlan(), feature)) {
       return sendError(ctx.res, 'FEATURE_NOT_ENTITLED');

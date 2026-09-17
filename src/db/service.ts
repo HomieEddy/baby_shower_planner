@@ -61,4 +61,4 @@ export type { SelfCheckInResult } from './checkin';
 export { sendInvitations, sendReminders } from './notify';
 export { providerAvailability, requireProvider } from './providers';
 export { getGuestIdsForIdentity, getSeatingRoster, projectFloorMapForGuest } from './roster';
-export { getPublicRehearsalStatus, getRehearsalStatus, isRehearsalActive, startRehearsal, stopRehearsal } from './rehearsal';
+export { getPublicRehearsalStatus, getRehearsalStatus, isRehearsalActive, seedDemoData, startRehearsal, stopRehearsal } from './rehearsal';

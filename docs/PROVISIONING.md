@@ -176,6 +176,24 @@ Rules:
 - A per-event record or certificate is only needed if you did not set the
   wildcard.
 
+## The public demo
+
+The demo is one ordinary deploy with two switches, stood up once (§11):
+
+```bash
+npx tsx scripts/provision.ts \
+  --slug demo --plan Premium --demo \
+  --owner you@example.com --date 2027-01-01 --language EN --domain events.example
+```
+
+`--demo` renders `DEMO=true` into the event env. On boot the app seeds rehearsal's
+demo content into that deploy's own database (idempotently — a restart does not
+duplicate it) and refuses every guest mutation with `DEMO_READ_ONLY`, while reads
+and the operator's admin routes stay open. Guest surfaces carry a demo banner.
+
+It is a Premium deploy, so every surface renders; the demo flag — not the tier —
+is what makes it a demo. Guests reach it at `https://demo.<domain>`.
+
 ## Teardown at retention
 
 §7: destroy the deployment ~90 days after the event unless the organizer pays to

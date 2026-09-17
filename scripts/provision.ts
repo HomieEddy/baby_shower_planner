@@ -38,6 +38,7 @@ interface CommandArgs {
   apiUrl?: string;
   compose: string;
   noUp: boolean;
+  demo: boolean;
   dryRun: boolean;
 }
 
@@ -51,6 +52,7 @@ Options:
   --compose <file>    Compose file to bring up (default docker-compose.prod.yml;
                       pass docker-compose.yml for a local/dev stack)
   --no-up             Write the artifacts, do not touch Docker
+  --demo              Provision the public read-only demo event
   --dry-run           Print the artifacts and change nothing
 
 --domain may also come from PROVISION_DOMAIN.`;
@@ -58,11 +60,14 @@ Options:
 function parseArgs(argv: string[]): CommandArgs {
   const flags = new Map<string, string>();
   let noUp = false;
+  let demo = false;
   let dryRun = false;
   for (let i = 0; i < argv.length; i += 1) {
     const token = argv[i];
     if (token === '--no-up') {
       noUp = true;
+    } else if (token === '--demo') {
+      demo = true;
     } else if (token === '--dry-run') {
       dryRun = true;
     } else if (token.startsWith('--')) {
@@ -94,6 +99,7 @@ function parseArgs(argv: string[]): CommandArgs {
     apiUrl: flags.get('api-url'),
     compose: flags.get('compose') || 'docker-compose.prod.yml',
     noUp,
+    demo,
     dryRun,
   };
 }
@@ -169,6 +175,7 @@ async function main(): Promise<void> {
     randomHex: (bytes) => randomBytes(bytes).toString('hex'),
     domain: args.domain,
     email: { apiKey: process.env.RESEND_API_KEY, from: process.env.EMAIL_FROM },
+    demo: args.demo,
   });
 
   // Refuse a duplicate slug before any write.

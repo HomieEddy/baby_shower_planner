@@ -97,6 +97,8 @@ Guest CRUD, RSVP (token-based), guestbook, photo upload/gallery, floor plan edit
 | `MAX_BODY_BYTES` | No | Max JSON body size (default 25 MB) |
 | `UPLOAD_DIR` | No | Persistent volume path for guest photo uploads |
 | `PROVISION_DOMAIN` | No | Fleet domain for the provisioner (`--domain`); operator-only, never read by the app |
+| `PLAN` | No | Deploy tier (`Basic`/`Premium`); absent means `Basic`. Deploy config, never a settings field |
+| `DEMO` | No | `true` makes the deploy the public read-only demo: seeds demo content at boot, refuses guest mutations |
 
 `ADMIN_TOKEN`: the admin login page validates against this value. An absent or empty token **denies** admin rather than disabling protection — admin routes answer 401, so a deploy missing the var is locked. Production refuses to boot without a strong token (`validateSecrets`).
 

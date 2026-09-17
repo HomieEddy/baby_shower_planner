@@ -52,6 +52,9 @@ export interface ProvisionOptions {
   randomHex: (bytes: number) => string;
   domain: string;
   email?: { apiKey?: string; from?: string };
+  // The public read-only demo deploy (§11): seeds its content and refuses guest
+  // mutations. A normal event leaves this unset.
+  demo?: boolean;
 }
 
 export interface ProvisionedEvent {
@@ -157,6 +160,7 @@ export function provisionEvent(input: ProvisionInput, options: ProvisionOptions)
     `APP_URL=${appUrl}`,
     `UPLOAD_DIR=${UPLOAD_DIR}`,
   ];
+  if (options.demo) lines.push('DEMO=true');
   if (options.email?.apiKey) lines.push(`RESEND_API_KEY=${options.email.apiKey}`);
   if (options.email?.from) lines.push(`EMAIL_FROM=${options.email.from}`);
 

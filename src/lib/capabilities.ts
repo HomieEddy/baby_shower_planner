@@ -6,6 +6,7 @@ export interface Capabilities {
   email: boolean;
   sms: boolean;
   plan: Plan;
+  demo: boolean;
 }
 
 // Which delivery providers are configured server-side. Options that can't

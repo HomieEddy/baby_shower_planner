@@ -60,6 +60,8 @@ export const ERROR_REGISTRY = {
   FORBIDDEN: { status: 403, message: 'Forbidden' },
   // The deploy's plan does not include this surface (§5.5).
   FEATURE_NOT_ENTITLED: { status: 403, message: 'This feature is not included in this event' },
+  // The public demo is read-only: guests may look, never touch (§11).
+  DEMO_READ_ONLY: { status: 403, message: 'This is a demo event — it is read-only' },
   PAYLOAD_TOO_LARGE: { status: 413, message: 'Payload too large' },
   ENDPOINT_NOT_FOUND: { status: 404, message: 'Endpoint not found' },
 

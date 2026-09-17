@@ -4,7 +4,7 @@
 import { sendJson } from '../http';
 import type { RouteCtx } from '../http';
 import { handleRoutes, type Route } from '../route';
-import { deployPlan } from '../deploy';
+import { deployPlan, isDemo } from '../deploy';
 import {
   getPublicRehearsalStatus,
   getRehearsalStatus,
@@ -29,7 +29,7 @@ const ROUTES: Route[] = [
   {
     method: 'GET',
     path: '/api/capabilities',
-    handler: (_req, { res }) => sendJson(res, 200, { ...providerAvailability(), plan: deployPlan() }),
+    handler: (_req, { res }) => sendJson(res, 200, { ...providerAvailability(), plan: deployPlan(), demo: isDemo() }),
   },
 
   {

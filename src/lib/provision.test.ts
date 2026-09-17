@@ -48,6 +48,11 @@ describe('provisionEvent', () => {
     expect(envValue(provisionEvent({ ...input, plan: 'Premium' }, options()).env, 'PLAN')).toBe('Premium');
   });
 
+  it('marks a demo deploy and leaves a real event unmarked', () => {
+    expect(envValue(provisionEvent(input, options({ demo: true })).env, 'DEMO')).toBe('true');
+    expect(envValue(provisionEvent(input, options()).env, 'DEMO')).toBeUndefined();
+  });
+
   it('passes the email provider keys through when configured', () => {
     const { env } = provisionEvent(input, options({ email: { apiKey: 'rk-test', from: 'Hi <hi@example.com>' } }));
 

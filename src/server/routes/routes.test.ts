@@ -295,6 +295,27 @@ describe('a Basic deploy is refused the Premium surfaces', () => {
   });
 });
 
+describe('the public demo is read-only for guests', () => {
+  const at = (token: string | undefined) => adminGuard(token, token, '198.51.100.9');
+
+  it('refuses a guest mutation and still serves reads', async () => {
+    vi.stubEnv('DEMO', 'true');
+
+    const write = await call('POST', '/api/guestbook', { message: 'hi', guest_name: 'A' });
+    expect(write.statusCode).toBe(403);
+    expect(write.body.error).toBe('DEMO_READ_ONLY');
+
+    expect((await call('GET', '/api/guestbook')).statusCode).toBe(200);
+  });
+
+  it('leaves the operator admin routes usable', async () => {
+    vi.stubEnv('DEMO', 'true');
+
+    const res = await call('POST', '/api/rehearsal/start', {}, at('correct-token-value'));
+    expect(res.statusCode).not.toBe(403);
+  });
+});
+
 describe('the floor plan read is a projection for guests', () => {
   const SAMPLE_MAP = {
     id: 'm1',

@@ -2,7 +2,7 @@ import http from 'node:http';
 import path from 'node:path';
 import fs from 'node:fs';
 import { createServer as createViteServer } from 'vite';
-import { getGuestContentLock, initPocketBase, runAgendaReminderSweep } from './src/db/service';
+import { getGuestContentLock, initPocketBase, runAgendaReminderSweep, seedDemoData } from './src/db/service';
 import {
   applySecurityHeaders,
   BLOCK_BOTS,
@@ -155,6 +155,12 @@ async function requestHandler(req: http.IncomingMessage, res: http.ServerRespons
 async function startServer() {
   validateSecrets();
   await initPocketBase();
+
+  // The public demo seeds its content once, then serves it read-only (§11).
+  if (process.env.DEMO === 'true') {
+    const demo = await seedDemoData();
+    console.log(demo.seeded ? '[DEMO] Seeded the demo event' : '[DEMO] Demo content already present');
+  }
 
   // Agenda reminder sweep: fires every 5 minutes for tasks inside their
   // reminder window. Single-process assumption (dev and prod both run one

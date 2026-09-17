@@ -8,6 +8,8 @@ vi.mock('./lib/settingsQuery', () => ({ useSettings: () => h.settings }));
 vi.mock('./components/layout/Header', () => ({ Header: () => null }));
 vi.mock('./components/layout/Footer', () => ({ Footer: () => null }));
 vi.mock('./components/landing/LandingPage', () => ({ LandingPage: () => null }));
+// The demo banner reads capabilities; this file has no query client.
+vi.mock('./components/shared/DemoBanner', () => ({ DemoBanner: () => null }));
 
 import App from './App';
 
