@@ -837,6 +837,13 @@ export interface Translations {
   tabGuestbookFeed: string;
   tabHostSettings: string;
   tabUrgentAlerts: string;
+  demoBannerText: string;
+  featureUnavailableDesc: string;
+  featureUnavailableTitle: string;
+  upgradeCta: string;
+  upgradeLockedBadge: string;
+  upgradeLockedDesc: string;
+  upgradeLockedTitle: string;
   tableIdCol: string;
   groupCol: string;
   reservationCodeCol: string;
@@ -2147,6 +2154,13 @@ export const translations: Record<Language, Translations> = {
     tabGuestbookFeed: "Guestbook Feed",
     tabHostSettings: "Host Event Settings",
     tabUrgentAlerts: "Broadcast Alerts",
+    demoBannerText: "This is a demo event. Everything is read-only.",
+    featureUnavailableDesc: "Your host's event does not include this part of the planner.",
+    featureUnavailableTitle: "Not available for this event",
+    upgradeCta: "Upgrade to Premium",
+    upgradeLockedBadge: "Premium",
+    upgradeLockedDesc: "{{feature}} is part of Premium. Upgrade this event for {{price}} to unlock it.",
+    upgradeLockedTitle: "Premium feature",
     tableIdCol: "Table ID",
     groupCol: "Group / Party",
     reservationCodeCol: "Reservation Code",
@@ -3447,6 +3461,13 @@ export const translations: Record<Language, Translations> = {
     tabGuestbookFeed: "Flux Livre d'or",
     tabHostSettings: "Configuration Hôte",
     tabUrgentAlerts: "Alertes Flash",
+    demoBannerText: "Ceci est un événement de démonstration. Tout est en lecture seule.",
+    featureUnavailableDesc: "L'événement de votre hôte n'inclut pas cette partie du planificateur.",
+    featureUnavailableTitle: "Non disponible pour cet événement",
+    upgradeCta: "Passer à Premium",
+    upgradeLockedBadge: "Premium",
+    upgradeLockedDesc: "{{feature}} fait partie de Premium. Mettez cet événement à niveau pour {{price}} afin de le débloquer.",
+    upgradeLockedTitle: "Fonctionnalité Premium",
     tableIdCol: "ID de table",
     groupCol: "Groupe / Partie",
     reservationCodeCol: "Code de réservation",

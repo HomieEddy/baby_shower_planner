@@ -68,3 +68,44 @@ describe('first-run gating', () => {
     expect(screen.queryByText(t.setupTitle)).not.toBeInTheDocument();
   });
 });
+
+describe('premium surfaces lock on a Basic deploy', () => {
+  const stubApi = (plan: string) =>
+    vi.stubGlobal('fetch', vi.fn(async (input: unknown, init?: RequestInit) => {
+      const url = String(input);
+      const method = init?.method || 'GET';
+      if (url.startsWith('/api/capabilities')) return json({ email: false, sms: false, plan });
+      if (url.startsWith('/api/settings')) {
+        if (method === 'POST') return json({ success: true, settings: JSON.parse(String(init?.body)) });
+        return json({ settings: { eventTitle: 'Shower', parentsNames: 'Sophie', date: '2026-11-07' } });
+      }
+      if (url.startsWith('/api/guests')) return json({ guests: [] });
+      if (url.startsWith('/api/guestbook')) return json({ entries: [] });
+      if (url.startsWith('/api/alerts')) return json({ alerts: [] });
+      if (url.startsWith('/api/gifts')) return json({ gifts: [] });
+      if (url.startsWith('/api/photos')) return json({ photos: [] });
+      if (url.startsWith('/api/rehearsal')) return json({ active: false });
+      return json({});
+    }));
+
+  const openGuestbookTab = async () => {
+    renderWithProviders(<AdminDashboard />, { route: '/admin' });
+    await screen.findAllByText(t.adminTitle);
+    fireEvent.click(screen.getByRole('button', { name: new RegExp(t.tabGuestbookFeed) }));
+  };
+
+  it('shows the upgrade panel in place of the feature', async () => {
+    stubApi('Basic');
+    await openGuestbookTab();
+
+    expect(await screen.findByText(t.upgradeLockedTitle)).toBeInTheDocument();
+    expect(screen.getByText(t.upgradeCta)).toBeInTheDocument();
+  });
+
+  it('renders the feature on Premium', async () => {
+    stubApi('Premium');
+    await openGuestbookTab();
+
+    expect(screen.queryByText(t.upgradeLockedTitle)).not.toBeInTheDocument();
+  });
+});

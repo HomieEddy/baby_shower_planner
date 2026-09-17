@@ -21,6 +21,9 @@ import { motion, AnimatePresence } from 'motion/react';
 import { useAppStore } from '../../stores/appStore';
 import { useT, useTf } from '../shared/i18n';
 import { adminContainerVariants, adminCardVariants } from '../shared/motionPresets';
+import { useCapabilities, planOf } from '../../lib/capabilities';
+import { hasEntitlement, type Feature } from '../../lib/entitlements';
+import { UpgradePanel } from './UpgradePanel';
 import {
   Users,
   Utensils,
@@ -33,6 +36,7 @@ import {
   Image as ImageIcon,
   Trash2,
   UserCheck,
+  Lock,
   Menu,
   X,
   ChevronRight,
@@ -59,6 +63,18 @@ const TABS = [
 ] as const;
 
 type TabId = (typeof TABS)[number]['id'];
+
+// Which tab belongs to which Premium surface (§6). Tabs absent here are Basic.
+const PREMIUM_TABS: Partial<Record<TabId, Feature>> = {
+  catering: 'catering',
+  escort: 'escort',
+  gifts: 'gifts',
+  agenda: 'agenda',
+  checkin: 'dayOf',
+  alerts: 'alerts',
+  guestbook: 'guestbook',
+  photos: 'photos',
+};
 
 const TabPane = ({ children }: { children: React.ReactNode }) => (
   <motion.div
@@ -102,6 +118,12 @@ export const AdminDashboard = () => {
   const tf = useTf();
   const { toast } = useToast();
 
+  // The deploy's tier gates the Premium surfaces: visible in the sidebar, but
+  // locked in place rather than hidden (§5.5).
+  const caps = useCapabilities();
+  const entitled = (feature: Feature) => hasEntitlement(planOf(caps.data), feature);
+  const [showLockedSeating, setShowLockedSeating] = useState(false);
+
   // The active tab lives in the URL (?tab=guests) so the browser Back button
   // closes a tab switch, deep links work, and returning to /admin keeps place.
   const [searchParams, setSearchParams] = useSearchParams();
@@ -117,6 +139,13 @@ export const AdminDashboard = () => {
       return next;
     });
   const [sidebarOpen, setSidebarOpen] = useState(false);
+
+  // The Premium surface behind the active tab, or the floor-map link, when this
+  // deploy is not entitled to it: the pane renders the upgrade panel instead.
+  const activePremiumTab = PREMIUM_TABS[adminSubTab];
+  const lockedFeature: Feature | undefined =
+    (activePremiumTab && !entitled(activePremiumTab) ? activePremiumTab : undefined) ??
+    (showLockedSeating && !entitled('seating') ? 'seating' : undefined);
 
   // Re-fetch with the admin token: the app-level fetch may have run before
   // login and cached the scrubbed public shape (no host contact).
@@ -488,6 +517,7 @@ export const AdminDashboard = () => {
                   type="button"
                   onClick={() => {
                     setAdminSubTab(tab.id);
+                    setShowLockedSeating(false);
                     setSidebarOpen(false);
                   }}
                   className={`w-full flex items-center gap-2.5 px-3 py-3 rounded-xl text-xs font-bold font-mono text-left transition-colors cursor-pointer ${
@@ -498,6 +528,9 @@ export const AdminDashboard = () => {
                 >
                   <Icon className={`w-4 h-4 shrink-0 ${tab.id === 'alerts' && !isActive ? 'text-amber-500' : ''}`} />
                   <span className="truncate flex-1">{tabLabel(tab.id)}</span>
+                  {PREMIUM_TABS[tab.id] && !entitled(PREMIUM_TABS[tab.id] as Feature) ? (
+                    <Lock className="w-3 h-3 shrink-0 opacity-70" />
+                  ) : null}
                   {tab.id === 'alerts' && alerts.length > 0 ? (
                     <span className="px-1.5 py-0.5 rounded-full bg-amber-500 text-white text-xs font-bold shrink-0">
                       {alerts.length}
@@ -510,12 +543,27 @@ export const AdminDashboard = () => {
             {/* Page links — the dashboard is the single admin nav. Floor Map
                 opens as its own page from the same list. */}
             <div className="pt-3 mt-2 border-t border-[#CBAE94]/30 space-y-1">
-              <SidebarPageLink
-                to="/seating"
-                icon={MapPin}
-                label={t.navFloorplan}
-                onNavigate={() => setSidebarOpen(false)}
-              />
+              {entitled('seating') ? (
+                <SidebarPageLink
+                  to="/seating"
+                  icon={MapPin}
+                  label={t.navFloorplan}
+                  onNavigate={() => setSidebarOpen(false)}
+                />
+              ) : (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setShowLockedSeating(true);
+                    setSidebarOpen(false);
+                  }}
+                  className="w-full flex items-center gap-2.5 px-3 py-3 rounded-xl text-xs font-bold font-mono text-left text-[#5D5449] hover:bg-[#EFE6DC] transition-colors cursor-pointer"
+                >
+                  <MapPin className="w-4 h-4 shrink-0" />
+                  <span className="truncate flex-1">{t.navFloorplan}</span>
+                  <Lock className="w-3 h-3 shrink-0 opacity-70" />
+                </button>
+              )}
             </div>
           </div>
         </aside>
@@ -523,6 +571,10 @@ export const AdminDashboard = () => {
         {/* Content column */}
         <div className="flex-1 min-w-0 space-y-6">
 
+      {lockedFeature ? (
+        <UpgradePanel feature={lockedFeature} />
+      ) : (
+        <>
       {adminSubTab === 'guests' && (
         <AdminGuestsTab
           language={language}
@@ -623,6 +675,8 @@ export const AdminDashboard = () => {
             onSaveSettings={handleSaveSettings}
           />
         </TabPane>
+      )}
+        </>
       )}
 
         </div>
