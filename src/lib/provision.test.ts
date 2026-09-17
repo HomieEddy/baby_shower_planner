@@ -36,6 +36,8 @@ describe('provisionEvent', () => {
     expect(appUrl).toBe('https://smith-shower.bebe.example');
     expect(adminToken).toBe('stub-secret');
     expect(envValue(env, 'NODE_ENV')).toBe('production');
+    expect(envValue(env, 'SLUG')).toBe('smith-shower');
+    expect(envValue(env, 'PUBLIC_DOMAIN')).toBe('bebe.example');
     expect(envValue(env, 'APP_URL')).toBe('https://smith-shower.bebe.example');
     expect(envValue(env, 'ADMIN_TOKEN')).toBe('stub-secret');
     expect(envValue(env, 'PB_ADMIN_PASSWORD')).toBe('stub-secret');

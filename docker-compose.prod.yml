@@ -1,0 +1,78 @@
+# Production stack for ONE event, on a shared Docker host.
+#
+# The provisioner writes the event's env and runs:
+#   docker compose -f docker-compose.prod.yml -p <slug> --env-file deploys/<slug>.env up -d --build
+#
+# Every secret and the public host come from that env file. The reverse proxy
+# (Traefik, on the shared `edge` network) discovers this event from the labels
+# below — there is no per-event proxy config. Nothing is published on a host
+# port: the proxy is the only way in.
+#
+# Host prerequisites (see docs/PROVISIONING.md):
+#   docker network create edge          # once, shared with the proxy
+#
+# The dev stack is docker-compose.yml; this file is the live-event stack.
+
+services:
+  app:
+    build:
+      context: .
+      target: prod
+    restart: unless-stopped
+    environment:
+      - NODE_ENV=production
+      - POCKETBASE_URL=http://pocketbase:8090
+      - PB_ADMIN_EMAIL=${PB_ADMIN_EMAIL}
+      - PB_ADMIN_PASSWORD=${PB_ADMIN_PASSWORD}
+      - ADMIN_TOKEN=${ADMIN_TOKEN}
+      - APP_URL=${APP_URL}
+      - UPLOAD_DIR=/data
+      # Behind Traefik: rate limiting trusts the proxy's X-Forwarded-For.
+      - TRUST_PROXY=true
+      - RESEND_API_KEY=${RESEND_API_KEY:-}
+      - EMAIL_FROM=${EMAIL_FROM:-}
+      - TWILIO_ACCOUNT_SID=${TWILIO_ACCOUNT_SID:-}
+      - TWILIO_AUTH_TOKEN=${TWILIO_AUTH_TOKEN:-}
+      - TWILIO_PHONE_NUMBER=${TWILIO_PHONE_NUMBER:-}
+      - THANKYOU_AI_API_KEY=${THANKYOU_AI_API_KEY:-}
+      - THANKYOU_AI_BASE_URL=${THANKYOU_AI_BASE_URL:-https://opencode.ai/zen/go/v1}
+      - THANKYOU_MODEL=${THANKYOU_MODEL:-deepseek-v4-flash}
+    volumes:
+      - uploads:/data
+    depends_on:
+      - pocketbase
+    networks:
+      - default
+      - edge
+    labels:
+      - traefik.enable=true
+      - traefik.docker.network=edge
+      - traefik.http.routers.${SLUG}.rule=Host(`${SLUG}.${PUBLIC_DOMAIN}`)
+      - traefik.http.routers.${SLUG}.entrypoints=websecure
+      - traefik.http.routers.${SLUG}.tls.certresolver=cloudflare
+      - traefik.http.routers.${SLUG}.tls.domains[0].main=${SLUG}.${PUBLIC_DOMAIN}
+      - traefik.http.routers.${SLUG}.tls.domains[0].sans=*.${PUBLIC_DOMAIN}
+      - traefik.http.services.${SLUG}.loadbalancer.server.port=3025
+
+  pocketbase:
+    image: ghcr.io/muchobien/pocketbase:latest
+    restart: unless-stopped
+    environment:
+      - PB_ADMIN_EMAIL=${PB_ADMIN_EMAIL}
+      - PB_ADMIN_PASSWORD=${PB_ADMIN_PASSWORD}
+    volumes:
+      - pb_data:/pb_data
+    networks:
+      - default
+
+volumes:
+  pb_data:
+  uploads:
+
+networks:
+  # Project-scoped: app talks to this event's PocketBase only.
+  default:
+  # Shared with the reverse proxy. External, created once on the host.
+  edge:
+    external: true
+    name: edge

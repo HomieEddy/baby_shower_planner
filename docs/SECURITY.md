@@ -6,9 +6,10 @@ internet-wide scanners, crawlers, and spammers.
 
 ## Deployment (Vercel + Railway)
 
-For standing up, upgrading and retiring a *customer's* event (per-deploy secrets,
-the deployment registry, retention teardown), see `PROVISIONING.md`. This section
-is the app's own deploy contract.
+For standing up, upgrading and retiring a *customer's* event — one VPS, one
+Compose project per event, a Traefik edge — see `PROVISIONING.md` and the
+per-event `docker-compose.prod.yml`. This section is the app's own deploy
+contract (targets, env vars, secret rules, headers); the two must stay in sync.
 
 The app is split across two platforms:
 

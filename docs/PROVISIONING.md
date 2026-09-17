@@ -7,56 +7,81 @@ procedure around it. `docs/SAAS-TRANSFORMATION.md` §16.7 is the design record.
 Each event is one deploy: one slug, one PocketBase database, one admin secret.
 There is no tenant identifier anywhere — the slug *is* the deployment identity.
 
-## Before the first event
+## The host
 
-These are operator decisions, not code, and they are prerequisites for a real
-event (§16.8):
+**One VPS running Docker Compose.** Every event is a slug-scoped Compose project
+(`-p <slug>`) on that host: its own containers, its own `pb_data` and `uploads`
+volumes. Nothing is published on a host port — a single Traefik reverse proxy is
+the only way in and discovers each event from labels.
 
-1. **Host** — one VPS running Docker Compose behind a reverse proxy, or one
-   platform service per event. The commands below assume Docker Compose on a
-   host you control.
-2. **Domain and DNS** — a wildcard record `*.<domain>` pointing at the host, so
-   `<slug>.<domain>` resolves without a per-event DNS step.
-3. **TLS** — a wildcard certificate for `*.<domain>`. With Let's Encrypt, issue
-   it via DNS-01 (HTTP-01 cannot issue wildcards).
-4. **Sending domain** — a verified Resend domain with SPF/DKIM. Without it the
+### One-time host setup
+
+1. **Docker + Compose** on the VPS.
+2. **The edge network**, shared by the proxy and every event:
+   ```bash
+   docker network create edge
+   ```
+3. **Traefik**, once, joined to `edge`, with Cloudflare DNS-01 for the wildcard
+   certificate:
+   ```yaml
+   # deploy/traefik/docker-compose.yml (host-level, not per event)
+   services:
+     traefik:
+       image: traefik:v3
+       restart: unless-stopped
+       ports: ["80:80", "443:443"]
+       environment:
+         - CF_DNS_API_TOKEN=${CF_DNS_API_TOKEN}
+       volumes:
+         - /var/run/docker.sock:/var/run/docker.sock:ro
+         - letsencrypt:/letsencrypt
+         - ./traefik.yml:/etc/traefik/traefik.yml:ro
+       networks: [edge]
+   networks:
+     edge: { external: true }
+   volumes:
+     letsencrypt:
+   ```
+   ```yaml
+   # deploy/traefik/traefik.yml
+   entryPoints:
+     web:
+       address: ":80"
+       http: { redirections: { entryPoint: { to: websecure, scheme: https } } }
+     websecure:
+       address: ":443"
+   providers:
+     docker:
+       exposedByDefault: false
+       network: edge
+   certificatesResolvers:
+     cloudflare:
+       acme:
+         email: you@example.com
+         storage: /letsencrypt/acme.json
+         dnsChallenge: { provider: cloudflare }
+   ```
+   `CF_DNS_API_TOKEN` is a Cloudflare token with `Zone:DNS:Edit` on the event
+   domain. Bring it up with `docker compose -f deploy/traefik/docker-compose.yml up -d`.
+4. **DNS** — a wildcard `*.<domain>` A record to the VPS, so `<slug>.<domain>`
+   resolves without a per-event step.
+5. **Sending domain** — a verified Resend domain with SPF/DKIM. Without it the
    welcome email and every invitation land in spam.
 
 `PROVISION_DOMAIN` is the domain those events live under. Pass it as `--domain`,
 or set the env var. An empty or malformed domain is refused before anything is
 written.
 
-## Host, ports and the reverse proxy
+### How an event reaches the proxy
 
-The compose file publishes fixed host ports (`3025` for the app, `3026` for
-PocketBase), which two events on one host cannot both bind. Resolve it one of two
-ways, and write the choice down for the host you use:
+`docker-compose.prod.yml` joins `edge` and carries Traefik labels built from the
+event env (`SLUG`, `PUBLIC_DOMAIN`): a router for `Host(<slug>.<domain>)`, TLS
+from the `cloudflare` resolver, and the wildcard `*.<domain>` in the cert's SANs.
+Traefik picks it up the moment the stack comes up — **no per-event proxy config**.
 
-- **Shared host, one port per event.** Keep a per-event compose override that
-  maps a unique host port, and pass it with `--compose`:
-
-  ```bash
-  npx tsx scripts/provision.ts ... --compose deploys/smith-shower.compose.yml
-  ```
-
-  The override only needs the port mapping (the base file keeps the rest), and
-  the reverse proxy targets `127.0.0.1:<port>`. `-p <slug>` keeps the containers
-  and the `pb_data` volume separate per event.
-
-- **One event per host (or one platform service per event).** No override is
-  needed; the default compose file's ports are fine. Use `--no-up` if the host
-  starts the stack itself.
-
-The reverse proxy terminates TLS and routes `<slug>.<domain>` to the event's app
-port. Only the proxy publishes `80`/`443` — the app's own port stays on the host
-loopback.
-
-**The repo's `docker-compose.yml` is the development stack** — `NODE_ENV=development`,
-a bind mount and the Vite dev server. A live event must run the production image
-instead: the `Dockerfile`'s `prod` target, `NODE_ENV=production`, so the production
-secret checks and the CSP/HSTS security headers apply. Keep the production compose
-(and its port arrangement) for your chosen host and pass it with `--compose`; the
-event's env file applies to it the same way.
+The repo also ships `docker-compose.yml`, the **development** stack
+(`NODE_ENV=development`, a bind mount, the Vite dev server). A live event never
+uses it; the provisioner defaults to `docker-compose.prod.yml`.
 
 ## Provision one event
 
@@ -79,14 +104,15 @@ The command, in order:
 2. **Writes** `deploys/<slug>.env` (gitignored — it holds secrets).
 3. **Appends** a record to `deployments.json` (gitignored — it holds owner PII).
    A slug already in the registry is refused before anything is written.
-4. **Brings up** the stack: `docker compose -f <compose> -p <slug> --env-file deploys/<slug>.env up -d --build`.
+4. **Brings up** the stack: `docker compose -f docker-compose.prod.yml -p <slug> --env-file deploys/<slug>.env up -d --build`.
    The slug is the compose project name, so per-event containers and the
-   `pb_data` volume do not collide on a shared host. The event's env supplies
-   every secret the stack reads — including `PB_ADMIN_EMAIL`/`PB_ADMIN_PASSWORD`,
-   which `docker-compose.yml` interpolates from it.
+   `pb_data`/`uploads` volumes do not collide on a shared host. The event's env
+   supplies every secret the stack reads (`PB_ADMIN_EMAIL`/`PB_ADMIN_PASSWORD`
+   included), and the stack joins `edge`, where Traefik finds it from its labels.
 5. **Seeds settings** through the admin API: the event title (derived from the
    slug), the date, the default language and the host email. It waits for
-   `GET <api-url>/api/health` first.
+   `GET <api-url>/api/health` first — so the wildcard DNS and the proxy must
+   already be up.
 6. **Delivers the welcome email** to the owner through Resend, or prints it when
    no provider is configured.
 
@@ -95,18 +121,18 @@ Useful flags:
 | Flag | Why |
 |---|---|
 | `--dry-run` | Print the env, registry record and welcome message; touch nothing. Use this to review before a real run. |
-| `--api-url <url>` | Seed through `http://localhost:<port>` when DNS/proxy is not wired yet (default: the event's own URL). |
+| `--api-url <url>` | Seed through a different base URL (default: the event's own URL). |
 | `--no-up` | Write the artifacts without touching Docker (a host where you start the stack yourself). |
-| `--compose <file>` | Bring up your production compose instead of the repo's dev `docker-compose.yml`. |
+| `--compose <file>` | Use another compose file (default `docker-compose.prod.yml`; pass `docker-compose.yml` for a local dev stack). |
 | `--registry <file>` | Keep the registry somewhere other than `deployments.json`. |
 
 ### After it returns
 
 - Confirm the deploy answers: `curl https://<slug>.<domain>/api/health`.
 - Confirm the event renders with its name and language at `https://<slug>.<domain>/`.
+- Confirm Traefik registered the event and issued (or reused) the wildcard cert:
+  its log or dashboard should show a router for `<slug>.<domain>`.
 - Check the organizer received the welcome email (or send the printed one).
-- Route `<slug>.<domain>` through the reverse proxy if the proxy is configured
-  per host rather than by wildcard.
 
 ## Where secrets live
 
@@ -128,7 +154,7 @@ replaces the image without touching the volume or the env:
 
 ```bash
 git pull
-docker compose -p <slug> --env-file deploys/<slug>.env up -d --build
+docker compose -f docker-compose.prod.yml -p <slug> --env-file deploys/<slug>.env up -d --build
 ```
 
 Rules:
@@ -142,13 +168,13 @@ Rules:
 
 ## Custom domain
 
-- DNS: covered by the wildcard `*.<domain>` record. A per-event record is only
-  needed if you did not set the wildcard.
-- Reverse proxy: terminate TLS and proxy `<slug>.<domain>` to the app container's
-  port. The app trusts `X-Forwarded-For` when `TRUST_PROXY=true` (the default),
-  and its CSRF check accepts `APP_URL` as the origin — both assume the proxy
-  fronts it.
-- TLS: the wildcard certificate covers every slug; no per-event certificate.
+- DNS and TLS: covered by the wildcard `*.<domain>` record and the proxy's
+  wildcard certificate — a new event needs nothing.
+- Reverse proxy: the event registers itself through its Traefik labels. No
+  per-event config; the app trusts `X-Forwarded-For` (`TRUST_PROXY=true`) and its
+  CSRF check accepts `APP_URL` as the origin, both assuming the proxy fronts it.
+- A per-event record or certificate is only needed if you did not set the
+  wildcard.
 
 ## Teardown at retention
 
@@ -159,10 +185,10 @@ from `deployments.json` to know when an event is due.
 Destroying the deploy is the deletion mechanism (§8). Do all four:
 
 ```bash
-docker compose -p <slug> down -v        # containers + the pb_data volume
-rm deploys/<slug>.env                   # the event's secrets
+docker compose -f docker-compose.prod.yml -p <slug> down -v   # containers + volumes
+rm deploys/<slug>.env                                         # the event's secrets
 # remove the <slug> entry from deployments.json
-# remove the <slug> mapping from the reverse proxy (if not wildcard)
+# (no proxy config to remove — Traefik drops the router with the container)
 ```
 
 The `-v` is what deletes the data: the `pb_data` volume holds every guest

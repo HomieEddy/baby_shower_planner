@@ -48,7 +48,8 @@ Options:
   --registry <file>   Deployment registry (default deployments.json)
   --env-out <file>    Where the event's env is written (default deploys/<slug>.env)
   --api-url <url>     Where to seed settings when DNS is not up yet
-  --compose <file>    Compose file to bring up (default docker-compose.yml)
+  --compose <file>    Compose file to bring up (default docker-compose.prod.yml;
+                      pass docker-compose.yml for a local/dev stack)
   --no-up             Write the artifacts, do not touch Docker
   --dry-run           Print the artifacts and change nothing
 
@@ -91,7 +92,7 @@ function parseArgs(argv: string[]): CommandArgs {
     registry: flags.get('registry') || 'deployments.json',
     envOut: flags.get('env-out') || path.join('deploys', `${slug}.env`),
     apiUrl: flags.get('api-url'),
-    compose: flags.get('compose') || 'docker-compose.yml',
+    compose: flags.get('compose') || 'docker-compose.prod.yml',
     noUp,
     dryRun,
   };

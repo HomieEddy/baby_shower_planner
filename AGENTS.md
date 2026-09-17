@@ -45,7 +45,7 @@
   - `src/server/uploadFiles.ts`: uploads-dir resolution/cleanup shared by routes + services
 - **DB**: **PocketBase** (`src/db/service.ts` is the barrel re-export; feature modules in `src/db/`: `client`, `schema`, `collectionDefs`, `guests`, `rsvp`, `guestbook`, `settings`, `alerts`, `floorMap`, `photos`, `gifts`, `thankyou`, `agenda`, `checkin`, `roster`, `notify`)
 - **Seeder**: removed; no demo data. `initPocketBase()` auto-creates collections on first run; the database starts empty
-- **Provisioning**: `src/lib/provision.ts` (pure core: secrets, env, registry record, welcome message) + `scripts/provision.ts` (the operator command). Its output — per-event env and the deployment registry — lives outside tracked content. See `docs/PROVISIONING.md`
+- **Provisioning**: `src/lib/provision.ts` (pure core: secrets, env, registry record, welcome message) + `scripts/provision.ts` (the operator command). Per-event production stack is `docker-compose.prod.yml` (Traefik edge); `docker-compose.yml` is dev. Its output — per-event env and the deployment registry — lives outside tracked content. See `docs/PROVISIONING.md`
 - **Validation**: Zod schemas in `src/lib/domain.ts` (collection shapes, single source) + `src/lib/validation.ts` (forms/payloads derived from them); PB field defs derive from the domain schemas in `src/db/collectionDefs.ts`
 - **Theming**: CSS custom properties applied via JS (`themePresets.ts`)
 - **Uploads**: saved to `public/uploads/` via base64 POST to `/api/upload`

@@ -132,13 +132,19 @@ export function provisionEvent(input: ProvisionInput, options: ProvisionOptions)
   }
 
   const { slug, plan, ownerEmail, eventDate, language } = parsed.data;
-  const appUrl = `https://${slug}.${domain.data}`;
+  const publicHost = `${slug}.${domain.data}`;
+  const appUrl = `https://${publicHost}`;
   const adminToken = options.randomHex(32);
   const pbPassword = options.randomHex(24);
 
   const lines = [
     `# Provisioned event: ${slug}`,
     'NODE_ENV=production',
+    // The reverse proxy labels read these: SLUG names the router, PUBLIC_DOMAIN
+    // is the base the Host rule is built from. `-p <slug>` already scopes the
+    // compose project.
+    `SLUG=${slug}`,
+    `PUBLIC_DOMAIN=${domain.data}`,
     `POCKETBASE_URL=${POCKETBASE_URL}`,
     `PB_ADMIN_EMAIL=admin@${domain.data}`,
     `PB_ADMIN_PASSWORD=${pbPassword}`,
