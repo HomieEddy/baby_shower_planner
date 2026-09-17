@@ -51,6 +51,13 @@ The reverse proxy terminates TLS and routes `<slug>.<domain>` to the event's app
 port. Only the proxy publishes `80`/`443` — the app's own port stays on the host
 loopback.
 
+**The repo's `docker-compose.yml` is the development stack** — `NODE_ENV=development`,
+a bind mount and the Vite dev server. A live event must run the production image
+instead: the `Dockerfile`'s `prod` target, `NODE_ENV=production`, so the production
+secret checks and the CSP/HSTS security headers apply. Keep the production compose
+(and its port arrangement) for your chosen host and pass it with `--compose`; the
+event's env file applies to it the same way.
+
 ## Provision one event
 
 From the repo root, with checkout data (slug, plan, owner email, event date,
@@ -72,9 +79,11 @@ The command, in order:
 2. **Writes** `deploys/<slug>.env` (gitignored — it holds secrets).
 3. **Appends** a record to `deployments.json` (gitignored — it holds owner PII).
    A slug already in the registry is refused before anything is written.
-4. **Brings up** the stack: `docker compose -p <slug> --env-file deploys/<slug>.env up -d --build`.
+4. **Brings up** the stack: `docker compose -f <compose> -p <slug> --env-file deploys/<slug>.env up -d --build`.
    The slug is the compose project name, so per-event containers and the
-   `pb_data` volume do not collide on a shared host.
+   `pb_data` volume do not collide on a shared host. The event's env supplies
+   every secret the stack reads — including `PB_ADMIN_EMAIL`/`PB_ADMIN_PASSWORD`,
+   which `docker-compose.yml` interpolates from it.
 5. **Seeds settings** through the admin API: the event title (derived from the
    slug), the date, the default language and the host email. It waits for
    `GET <api-url>/api/health` first.
@@ -88,6 +97,7 @@ Useful flags:
 | `--dry-run` | Print the env, registry record and welcome message; touch nothing. Use this to review before a real run. |
 | `--api-url <url>` | Seed through `http://localhost:<port>` when DNS/proxy is not wired yet (default: the event's own URL). |
 | `--no-up` | Write the artifacts without touching Docker (a host where you start the stack yourself). |
+| `--compose <file>` | Bring up your production compose instead of the repo's dev `docker-compose.yml`. |
 | `--registry <file>` | Keep the registry somewhere other than `deployments.json`. |
 
 ### After it returns
