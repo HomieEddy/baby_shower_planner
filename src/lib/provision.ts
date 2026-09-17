@@ -6,6 +6,11 @@
 import { z } from 'zod';
 import { LanguageEnum, type Language } from './domain';
 import { composeWelcome, type MessageContent } from './compose';
+import type { Plan } from './entitlements';
+
+// One definition of the plan vocabulary (src/lib/entitlements.ts); re-exported
+// here so operator tooling can keep importing it from the provisioning core.
+export type { Plan };
 
 // §7: destroy the deployment ~90 days after the event.
 const RETENTION_DAYS = 90;
@@ -18,8 +23,6 @@ export const REGISTRY_VERSION = 1;
 // on 8090; production mounts the uploads volume at /data).
 const POCKETBASE_URL = 'http://pocketbase:8090';
 const UPLOAD_DIR = '/data';
-
-export type Plan = 'Basic' | 'Premium';
 
 export interface ProvisionInput {
   slug: string;
