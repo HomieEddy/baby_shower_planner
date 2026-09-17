@@ -10,6 +10,7 @@ import { applyThemeToDocument, getThemeById } from './themePresets';
 import { requireAuth } from './lib/api';
 import { useAppStore } from './stores/appStore';
 import { useT } from './components/shared/i18n';
+import { PlanGate } from './components/shared/PlanGate';
 
 // Route-level code splitting: each page (and the heavy admin/seating/photo
 // stacks it drags in) loads on demand instead of one ~2 MB entry bundle.
@@ -150,18 +151,18 @@ function MainAppContent() {
             <Route path="/portal" element={<GuestPortalPage />} />
             <Route path="/register" element={<RegisterPage />} />
             <Route path="/event" element={<EventDetailsPage />} />
-            <Route path="/scan" element={<TableScanPage />} />
+            <Route path="/scan" element={<PlanGate feature="seating"><TableScanPage /></PlanGate>} />
             <Route path="/rsvp" element={<Navigate to="/" replace />} />
             <Route path="/rsvp/:token" element={<RsvpPage />} />
             <Route path="/admin" element={<RequireAdmin><AdminDashboard /></RequireAdmin>} />
             <Route path="/photo-gallery" element={<Navigate to="/admin?tab=photos" replace />} />
-            <Route path="/guestbook" element={<GuestbookPage />} />
+            <Route path="/guestbook" element={<PlanGate feature="guestbook"><GuestbookPage /></PlanGate>} />
             {/* One merged day-of page: check in + find your seat.
                 /check-in is an alias so old links and QRs keep working. */}
-            <Route path="/find-my-table" element={<GuestFinderPage />} />
-            <Route path="/check-in" element={<GuestFinderPage />} />
-            <Route path="/seating" element={<RequireAdmin><FloorPlanPage /></RequireAdmin>} />
-            <Route path="/upload-photos" element={<GuestPhotoUploadPage />} />
+            <Route path="/find-my-table" element={<PlanGate feature="dayOf"><GuestFinderPage /></PlanGate>} />
+            <Route path="/check-in" element={<PlanGate feature="dayOf"><GuestFinderPage /></PlanGate>} />
+            <Route path="/seating" element={<RequireAdmin><PlanGate feature="seating"><FloorPlanPage /></PlanGate></RequireAdmin>} />
+            <Route path="/upload-photos" element={<PlanGate feature="photos"><GuestPhotoUploadPage /></PlanGate>} />
             <Route path="*" element={<NotFoundPage />} />
           </Routes>
         </Suspense>
