@@ -10,6 +10,12 @@ public/uploads/
 .env*
 !.env.example
 .impeccable/
-scripts/
+# Operator scripts: the provisioner (scripts/provision.ts) is real tooling and
+# tracked; the demo seeder stays local.
+scripts/*
+!scripts/provision.ts
+# Provisioning output: per-event env holds secrets, the registry holds owner PII.
+deploys/
+deployments.json
 # Local file issue tracker (see docs/SAAS-TRANSFORMATION.md §16); working files only.
 .scratch/

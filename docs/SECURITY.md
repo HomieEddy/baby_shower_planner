@@ -6,6 +6,10 @@ internet-wide scanners, crawlers, and spammers.
 
 ## Deployment (Vercel + Railway)
 
+For standing up, upgrading and retiring a *customer's* event (per-deploy secrets,
+the deployment registry, retention teardown), see `PROVISIONING.md`. This section
+is the app's own deploy contract.
+
 The app is split across two platforms:
 
 - **Vercel**: static frontend (this repo, `npm run build:web` → `dist`).

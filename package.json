@@ -15,7 +15,8 @@
     "lint:all": "npm run lint && npm run lint:eslint",
     "test": "vitest run",
     "test:watch": "vitest",
-    "test:e2e": "playwright test"
+    "test:e2e": "playwright test",
+    "provision": "tsx scripts/provision.ts"
   },
   "dependencies": {
     "@dnd-kit/core": "^6.3.1",

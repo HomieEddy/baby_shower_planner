@@ -11,7 +11,7 @@ import { z } from 'zod';
 export type Language = 'EN' | 'FR';
 export type DeliveryChannel = 'email' | 'text' | 'both' | 'none';
 
-const LanguageEnum = z.enum(['EN', 'FR']);
+export const LanguageEnum = z.enum(['EN', 'FR']);
 const DeliveryChannelEnum = z.enum(['email', 'text', 'both', 'none']);
 
 // ─── Nested shapes ─────────────────────────────────────────────────

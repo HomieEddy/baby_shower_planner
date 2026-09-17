@@ -29,6 +29,7 @@
 |`npm run lint:all`|Both tsc + ESLint|
 |`npm test`|Vitest unit/component tests (`src/**/*.test.ts(x)`)|
 |`npm run test:e2e`|Playwright e2e (`e2e/`): needs the app on `:3025`|
+|`npx tsx scripts/provision.ts`|Stand up one event's deploy — `docs/PROVISIONING.md`|
 |`docker compose up`|Start dev (app + PocketBase) with hot reload|
 
 ## Testing
@@ -44,6 +45,7 @@
   - `src/server/uploadFiles.ts`: uploads-dir resolution/cleanup shared by routes + services
 - **DB**: **PocketBase** (`src/db/service.ts` is the barrel re-export; feature modules in `src/db/`: `client`, `schema`, `collectionDefs`, `guests`, `rsvp`, `guestbook`, `settings`, `alerts`, `floorMap`, `photos`, `gifts`, `thankyou`, `agenda`, `checkin`, `roster`, `notify`)
 - **Seeder**: removed; no demo data. `initPocketBase()` auto-creates collections on first run; the database starts empty
+- **Provisioning**: `src/lib/provision.ts` (pure core: secrets, env, registry record, welcome message) + `scripts/provision.ts` (the operator command). Its output — per-event env and the deployment registry — lives outside tracked content. See `docs/PROVISIONING.md`
 - **Validation**: Zod schemas in `src/lib/domain.ts` (collection shapes, single source) + `src/lib/validation.ts` (forms/payloads derived from them); PB field defs derive from the domain schemas in `src/db/collectionDefs.ts`
 - **Theming**: CSS custom properties applied via JS (`themePresets.ts`)
 - **Uploads**: saved to `public/uploads/` via base64 POST to `/api/upload`
@@ -94,6 +96,7 @@ Guest CRUD, RSVP (token-based), guestbook, photo upload/gallery, floor plan edit
 | `BLOCK_BOTS` | No | Reject known crawler/AI-scraper UAs on the API (default `true`) |
 | `MAX_BODY_BYTES` | No | Max JSON body size (default 25 MB) |
 | `UPLOAD_DIR` | No | Persistent volume path for guest photo uploads |
+| `PROVISION_DOMAIN` | No | Fleet domain for the provisioner (`--domain`); operator-only, never read by the app |
 
 `ADMIN_TOKEN`: the admin login page validates against this value. An absent or empty token **denies** admin rather than disabling protection — admin routes answer 401, so a deploy missing the var is locked. Production refuses to boot without a strong token (`validateSecrets`).
 

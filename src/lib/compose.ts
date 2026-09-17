@@ -13,7 +13,7 @@ import {
   resolveInvitationTemplate,
 } from './invitationTemplate';
 
-export type MessageKind = 'invitation' | 'reminder' | 'alert' | 'floorplan' | 'thankyou' | 'agenda';
+export type MessageKind = 'invitation' | 'reminder' | 'alert' | 'floorplan' | 'thankyou' | 'agenda' | 'welcome';
 
 export interface MessageRow {
   label: string;
@@ -259,6 +259,39 @@ export function composeAgenda(settings: EventSettings, task: AgendaTask): Messag
     intro: isEN(lang) ? 'Hi, just a quick reminder:' : 'Bonjour, juste un petit rappel :',
     rows: when ? [{ label: '', value: when }] : [],
     paragraphs: task.description ? [task.description] : [],
+  };
+}
+
+// Operator-to-organizer welcome, sent once when an event is provisioned. The
+// password is the event's admin secret and this message is the only place it is
+// ever sent.
+export function composeWelcome(details: {
+  title: string;
+  eventUrl: string;
+  adminUrl: string;
+  password: string;
+  language?: Language;
+}): MessageContent {
+  const lang = details.language ?? 'EN';
+  const fr = !isEN(lang);
+  return {
+    kind: 'welcome',
+    language: lang,
+    subject: fr ? `${details.title} est prêt` : `${details.title} is ready`,
+    heading: details.title,
+    intro: fr
+      ? 'Votre événement est en ligne. Connectez-vous avec les informations ci-dessous pour terminer la configuration.'
+      : 'Your event is live. Sign in with the details below to finish setting it up.',
+    rows: [
+      { label: fr ? 'Événement' : 'Event', value: details.eventUrl },
+      { label: 'Admin', value: details.adminUrl },
+      { label: fr ? 'Mot de passe' : 'Password', value: details.password },
+    ],
+    paragraphs: [
+      fr
+        ? "Ce mot de passe n'est envoyé qu'une seule fois — conservez-le en lieu sûr."
+        : 'This password is sent only once — keep it somewhere safe.',
+    ],
   };
 }
 
