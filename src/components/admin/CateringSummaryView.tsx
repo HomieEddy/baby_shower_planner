@@ -13,7 +13,7 @@ import { ActionsMenu } from '../shared/ActionsMenu';
 import { AdminToolbar } from './AdminToolbar';
 import { adminContainerVariants } from '../shared/motionPresets';
 import { getAttendeeLocations } from '../../lib/tableAssignment';
-import { getPartyMembers, getAttendeeDietary, hasDietaryRestriction, isAttending } from '../../lib/guestAttendees';
+import { getPartyMembers, getAttendeeDietary, hasDietaryRestriction, isAttending, dietaryCategoriesOf, type DietaryCategory } from '../../lib/guestAttendees';
 import { csvCell, toCsv, downloadCsv } from '../../lib/csv';
 import {
   useReactTable,
@@ -26,7 +26,7 @@ import {
 } from '@tanstack/react-table';
 import { Pagination } from '../shared/Pagination';
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts';
-import { AdminPageHeader } from './AdminPageHeader';
+import { AdminPageHeader, AdminSectionTitle } from './AdminPageHeader';
 
 interface CateringSummaryViewProps {
   guests: Guest[];
@@ -121,33 +121,18 @@ export const CateringSummaryView: React.FC<CateringSummaryViewProps> = ({ guests
     dietaryCategories[category].guests.push(`${row.name} (${row.dietary})`);
   };
 
-  individualsWithDietary.forEach((row) => {
-    const text = row.dietary.toLowerCase();
-    let categorized = false;
+  const CATEGORY_KEYS: Record<DietaryCategory, string> = {
+    vegetarian: 'Vegetarian / Vegan',
+    glutenFree: 'Gluten-Free',
+    nut: 'Nut / Peanut Allergy',
+    dairy: 'Dairy-Free / Lactose',
+    halal: 'Halal / Kosher',
+  };
 
-    if (text.includes('veg') || text.includes('vegan')) {
-      addToCategory('Vegetarian / Vegan', row);
-      categorized = true;
-    }
-    if (text.includes('gluten') || text.includes('gf') || text.includes('celiac')) {
-      addToCategory('Gluten-Free', row);
-      categorized = true;
-    }
-    if (text.includes('nut') || text.includes('peanut')) {
-      addToCategory('Nut / Peanut Allergy', row);
-      categorized = true;
-    }
-    if (text.includes('dairy') || text.includes('lactose')) {
-      addToCategory('Dairy-Free / Lactose', row);
-      categorized = true;
-    }
-    if (text.includes('halal') || text.includes('kosher')) {
-      addToCategory('Halal / Kosher', row);
-      categorized = true;
-    }
-    if (!categorized) {
-      addToCategory('Other / Custom Notes', row);
-    }
+  individualsWithDietary.forEach((row) => {
+    const cats = dietaryCategoriesOf(row.dietary);
+    if (cats.length === 0) addToCategory('Other / Custom Notes', row);
+    cats.forEach((cat) => addToCategory(CATEGORY_KEYS[cat], row));
   });
 
   const dietaryCategoryLabels: Record<string, string> = {
@@ -292,58 +277,45 @@ export const CateringSummaryView: React.FC<CateringSummaryViewProps> = ({ guests
       />
 
       {/* Metrics Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
         <MetricCard
           label={t.totalAttendingLabel}
-          value={attendingGuests.length}
-          icon={<Users className="w-5 h-5" />}
-          iconClass="text-amber-700"
-          footer={`${totalHeadcount} ${t.mealsWord}`}
+          value={totalHeadcount}
+          icon={<Users />}
+          footer={tf('cateringInvitationsFooter', { count: String(attendingGuests.length) })}
         />
         <MetricCard
           label={t.specialDietaryLabel}
           value={individualsWithDietary.length}
-          icon={<AlertTriangle className="w-5 h-5" />}
-          iconClass="text-rose-600"
+          icon={<AlertTriangle />}
+          iconClass="text-amber-700"
           footer={t.guestsWord2}
         />
         <MetricCard
           label={t.standardMealsLabel}
           value={standardMeals}
-          icon={<CheckCircle2 className="w-5 h-5" />}
-          iconClass="text-emerald-600"
+          icon={<CheckCircle2 />}
+          iconClass="text-ok"
           footer={t.mealsWord}
         />
       </div>
 
       {/* Categorized Dietary Manifest */}
-      <div className="card-soft p-6 space-y-4">
-        <h3 className="font-sans text-lg font-bold text-[#4A3F35] flex items-center gap-2">
-          <Utensils className="w-5 h-5 text-[#8B735B]" />
-          <span>{t.allergyBreakdownLabel}</span>
-        </h3>
+      <div className="card-soft p-5 sm:p-6 space-y-4">
+        <AdminSectionTitle icon={Utensils} title={t.allergyBreakdownLabel} />
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
-          {Object.entries(dietaryCategories).map(([cat, info]) => (
-            <div
-              key={cat}
-              className={`p-4 rounded-2xl border transition-all ${
-                info.count > 0 ? 'bg-amber-50/60 border-amber-200' : 'bg-[#FAF6F0]/50 border-[#CBAE94]/30'
-              }`}
-            >
-              <div className="flex items-center justify-between gap-2 mb-2">
-                <span className="text-xs font-bold font-mono text-[#4A3F35] min-w-0">{dietaryCategoryLabel(cat)}</span>
-                <span
-                  className={`shrink-0 whitespace-nowrap px-2.5 py-0.5 rounded-full text-xs font-bold font-mono ${
-                    info.count > 0 ? 'bg-amber-200 text-amber-900' : 'bg-[#EFE6DC] text-[#8B735B]'
-                  }`}
-                >
-                  {info.count} {t.mealsWord}
-                </span>
-              </div>
-
-              {info.guests.length > 0 ? (
-                <ul className="space-y-1 text-xs text-[#5D5449] font-sans">
+        {/* Categories with guests get a tile; empty ones collapse into chips. */}
+        {Object.values(dietaryCategories).some((info) => info.count > 0) && (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+            {Object.entries(dietaryCategories).filter(([, info]) => info.count > 0).map(([cat, info]) => (
+              <div key={cat} className="p-4 rounded-2xl border border-amber-200 bg-amber-50/60">
+                <div className="flex items-center justify-between gap-2 mb-2">
+                  <span className="text-sm font-semibold text-[#4A3F35] min-w-0">{dietaryCategoryLabel(cat)}</span>
+                  <span className="shrink-0 whitespace-nowrap px-2.5 py-0.5 rounded-full text-xs font-semibold bg-amber-100 text-amber-900 border border-amber-200">
+                    {info.count} {t.mealsWord}
+                  </span>
+                </div>
+                <ul className="space-y-1 text-xs text-[#5D5449]">
                   {info.guests.map((gStr, idx) => (
                     <li key={idx} className="flex items-center gap-1.5">
                       <span className="w-1.5 h-1.5 rounded-full bg-amber-500 shrink-0" />
@@ -351,24 +323,28 @@ export const CateringSummaryView: React.FC<CateringSummaryViewProps> = ({ guests
                     </li>
                   ))}
                 </ul>
-              ) : (
-                <p className="text-xs text-[#8B735B] italic font-sans">{t.noGuestsInCategory}</p>
-              )}
-            </div>
-          ))}
-        </div>
+              </div>
+            ))}
+          </div>
+        )}
+
+        {Object.values(dietaryCategories).some((info) => info.count === 0) && (
+          <div className="flex flex-wrap items-center gap-2">
+            <span className="text-xs text-[#5D5449]">{t.cateringEmptyCategoriesLabel}:</span>
+            {Object.entries(dietaryCategories).filter(([, info]) => info.count === 0).map(([cat]) => (
+              <span key={cat} className="px-2.5 py-1 rounded-full bg-[#EFE6DC]/60 border border-[#CBAE94]/50 text-xs text-[#5D5449]">
+                {dietaryCategoryLabel(cat)}
+              </span>
+            ))}
+          </div>
+        )}
       </div>
 
-      {/* Dietary Breakdown Chart */}
-      <div className="card-soft p-6 space-y-4">
-        <h3 className="font-sans text-lg font-bold text-[#4A3F35] flex items-center gap-2">
-          <BarChart3 className="w-5 h-5 text-[#8B735B]" />
-          <span>{t.allergyBreakdownLabel} — Top 6</span>
-        </h3>
-        {dietaryChartData.length === 0 ? (
-          <p className="text-xs text-[#8B735B] italic font-sans">{t.noGuestsInCategory}</p>
-        ) : (
-          <div className="h-64">
+      {/* Dietary Breakdown Chart (only once there is something to chart) */}
+      {dietaryChartData.length > 0 && (
+      <div className="card-soft p-5 sm:p-6 space-y-4">
+        <AdminSectionTitle icon={BarChart3} title={`${t.allergyBreakdownLabel} — Top 6`} />
+          <div style={{ height: 40 + dietaryChartData.length * 44 }}>
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={dietaryChartData} layout="vertical" margin={{ top: 0, right: 24, bottom: 0, left: 8 }}>
                 <XAxis type="number" allowDecimals={false} tick={{ fontSize: 11, fill: 'var(--ink-soft)' }} stroke="var(--border)" />
@@ -378,12 +354,12 @@ export const CateringSummaryView: React.FC<CateringSummaryViewProps> = ({ guests
               </BarChart>
             </ResponsiveContainer>
           </div>
-        )}
       </div>
+      )}
 
       {/* Guest Dietary Table */}
-      <div className="card-soft p-6 space-y-4">
-        <h3 className="font-sans text-lg font-bold text-[#4A3F35]">{tf('cateringManifestTitle', { count: String(filteredList.length) })}</h3>
+      <div className="card-soft p-5 sm:p-6 space-y-4">
+        <AdminSectionTitle icon={Users} title={tf('cateringManifestTitle', { count: String(filteredList.length) })} />
 
         <AdminToolbar
           primary={
@@ -400,7 +376,7 @@ export const CateringSummaryView: React.FC<CateringSummaryViewProps> = ({ guests
               <ActionsMenu
                 label={t.actionsLabel}
                 items={[
-                  { label: t.exportCateringBtn, icon: <FileSpreadsheet className="w-3.5 h-3.5 shrink-0 text-emerald-600" />, onClick: handleExportCsv },
+                  { label: t.exportCateringBtn, icon: <FileSpreadsheet className="w-3.5 h-3.5 shrink-0" />, onClick: handleExportCsv },
                   { label: t.printManifestBtn, icon: <Printer className="w-3.5 h-3.5 shrink-0" />, onClick: () => printManifest(t.cateringPrintToast, 300) },
                 ]}
               />

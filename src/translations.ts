@@ -21,6 +21,8 @@ export interface Translations {
   guestsHeaderSubtitle: string;
   checkinHeaderEyebrow: string;
   checkinHeaderSubtitle: string;
+  cateringInvitationsFooter: string;
+  cateringEmptyCategoriesLabel: string;
   agendaAddTaskBtn: string;
   agendaAdvance1d: string;
   agendaAdvance1h: string;
@@ -1330,6 +1332,8 @@ export const translations: Record<Language, Translations> = {
     addTimelineEventBtn: "Add Timeline Event",
     addVenueFeatureBtn: "Add Venue Feature",
     agendaAddTaskBtn: "Add Task",
+    cateringInvitationsFooter: "across {{count}} invitations",
+    cateringEmptyCategoriesLabel: "No guests yet",
     agendaHeaderEyebrow: "Planning",
     agendaHeaderSubtitle: "Keep track of what is left to do before the big day.",
     guestsHeaderEyebrow: "Guests & RSVPs",
@@ -2641,6 +2645,8 @@ export const translations: Record<Language, Translations> = {
     addTimelineEventBtn: "Ajouter un horaire",
     addVenueFeatureBtn: "Ajouter un élément du lieu",
     agendaAddTaskBtn: "Ajouter une tâche",
+    cateringInvitationsFooter: "répartis sur {{count}} invitations",
+    cateringEmptyCategoriesLabel: "Aucun invité pour l'instant",
     agendaHeaderEyebrow: "Organisation",
     agendaHeaderSubtitle: "Suivez ce qu'il reste à faire avant le grand jour.",
     guestsHeaderEyebrow: "Invités et réponses",

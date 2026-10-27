@@ -201,46 +201,88 @@ select option {
   color: var(--ink) !important;
 }
 
-.dark [class*="bg-white"],
-.dark [class*="bg-[#FFFDF9]"],
-.dark [class*="bg-[#FAF6F0]"],
-.dark [class*="bg-[#F8F5F0]"] {
+.dark [class*="bg-white"]:not([class*="hover:bg-white"]),
+.dark [class*="bg-[#FFFDF9]"]:not([class*="hover:bg-[#FFFDF9]"]),
+.dark [class*="bg-[#FAF6F0]"]:not([class*="hover:bg-[#FAF6F0]"]),
+.dark [class*="bg-[#F8F5F0]"]:not([class*="hover:bg-[#F8F5F0]"]) {
+  background-color: var(--surface) !important;
+  color: var(--ink) !important;
+}
+
+.dark [class*="hover:bg-white"]:hover,
+.dark [class*="hover:bg-[#FFFDF9]"]:hover,
+.dark [class*="hover:bg-[#FAF6F0]"]:hover,
+.dark [class*="hover:bg-[#F8F5F0]"]:hover {
   background-color: var(--surface) !important;
   color: var(--ink) !important;
 }
 
 /* Page shells (app root, login) use #FDFBF7: keep them on the page background. */
-.dark [class*="bg-[#FDFBF7]"] {
+.dark [class*="bg-[#FDFBF7]"]:not([class*="hover:bg-[#FDFBF7]"]) {
   background-color: var(--bg) !important;
   color: var(--ink) !important;
 }
 
-.dark [class*="bg-[#EFE6DC]"],
-.dark [class*="bg-[#F4EBE1]"] {
+.dark [class*="hover:bg-[#FDFBF7]"]:hover {
+  background-color: var(--bg) !important;
+  color: var(--ink) !important;
+}
+
+.dark [class*="bg-[#EFE6DC]"]:not([class*="hover:bg-[#EFE6DC]"]),
+.dark [class*="bg-[#F4EBE1]"]:not([class*="hover:bg-[#F4EBE1]"]) {
   background-color: rgba(255, 255, 255, 0.08) !important;
   color: var(--ink) !important;
 }
 
-.dark [class*="text-[#4A3F35]"],
-.dark [class*="text-[#33281E]"],
-.dark [class*="text-[#3D3126]"] {
+.dark [class*="hover:bg-[#EFE6DC]"]:hover,
+.dark [class*="hover:bg-[#F4EBE1]"]:hover {
+  background-color: rgba(255, 255, 255, 0.08) !important;
   color: var(--ink) !important;
 }
 
-.dark [class*="text-[#8B735B]"],
-.dark [class*="text-[#5D5449]"] {
+.dark [class*="text-[#4A3F35]"]:not([class*="hover:text-[#4A3F35]"]),
+.dark [class*="text-[#33281E]"]:not([class*="hover:text-[#33281E]"]),
+.dark [class*="text-[#3D3126]"]:not([class*="hover:text-[#3D3126]"]) {
+  color: var(--ink) !important;
+}
+
+.dark [class*="hover:text-[#4A3F35]"]:hover,
+.dark [class*="hover:text-[#33281E]"]:hover,
+.dark [class*="hover:text-[#3D3126]"]:hover {
+  color: var(--ink) !important;
+}
+
+.dark [class*="text-[#8B735B]"]:not([class*="hover:text-[#8B735B]"]),
+.dark [class*="text-[#5D5449]"]:not([class*="hover:text-[#5D5449]"]) {
   color: var(--ink) !important;
   opacity: 0.85;
 }
 
-.dark [class*="bg-[#4A3F35]"],
-.dark [class*="bg-[#382F27]"] {
+.dark [class*="hover:text-[#8B735B]"]:hover,
+.dark [class*="hover:text-[#5D5449]"]:hover {
+  color: var(--ink) !important;
+  opacity: 0.85;
+}
+
+.dark [class*="bg-[#4A3F35]"]:not([class*="hover:bg-[#4A3F35]"]),
+.dark [class*="bg-[#382F27]"]:not([class*="hover:bg-[#382F27]"]) {
   background-color: var(--accent) !important;
   color: #0F172A !important;
 }
 
-.dark [class*="border-[#CBAE94]"],
-.dark [class*="border-[#4A3F35]"] {
+.dark [class*="hover:bg-[#4A3F35]"]:hover,
+.dark [class*="hover:bg-[#382F27]"]:hover {
+  background-color: var(--accent) !important;
+  color: #0F172A !important;
+}
+
+.dark [class*="border-[#CBAE94]"]:not([class*="hover:border-[#CBAE94]"]),
+.dark [class*="border-[#4A3F35]"]:not([class*="hover:border-[#4A3F35]"]) {
+  border-color: var(--accent) !important;
+}
+
+.dark [class*="hover:border-[#CBAE94]"]:hover,
+.dark [class*="hover:border-[#4A3F35]"]:hover {
   border-color: var(--accent) !important;
 }
 
@@ -259,46 +301,89 @@ select option {
 
 /* Light mode: route the hardcoded palette through the theme vars so presets
    actually restyle the UI instead of leaving every surface tan. */
-:root:not(.dark) [class*="text-[#4A3F35]"],
-:root:not(.dark) [class*="text-[#33281E]"],
-:root:not(.dark) [class*="text-[#3D3126]"] {
+:root:not(.dark) [class*="text-[#4A3F35]"]:not([class*="hover:text-[#4A3F35]"]),
+:root:not(.dark) [class*="text-[#33281E]"]:not([class*="hover:text-[#33281E]"]),
+:root:not(.dark) [class*="text-[#3D3126]"]:not([class*="hover:text-[#3D3126]"]) {
   color: var(--ink);
 }
 
-:root:not(.dark) [class*="text-[#8B735B]"],
-:root:not(.dark) [class*="text-[#5D5449]"] {
+:root:not(.dark) [class*="hover:text-[#4A3F35]"]:hover,
+:root:not(.dark) [class*="hover:text-[#33281E]"]:hover,
+:root:not(.dark) [class*="hover:text-[#3D3126]"]:hover {
+  color: var(--ink);
+}
+
+:root:not(.dark) [class*="text-[#8B735B]"]:not([class*="hover:text-[#8B735B]"]),
+:root:not(.dark) [class*="text-[#5D5449]"]:not([class*="hover:text-[#5D5449]"]) {
   color: var(--ink-soft);
 }
 
-:root:not(.dark) [class*="text-[#A09080]"] {
+:root:not(.dark) [class*="hover:text-[#8B735B]"]:hover,
+:root:not(.dark) [class*="hover:text-[#5D5449]"]:hover {
+  color: var(--ink-soft);
+}
+
+:root:not(.dark) [class*="text-[#A09080]"]:not([class*="hover:text-[#A09080]"]) {
   color: var(--muted);
 }
 
-:root:not(.dark) [class*="bg-[#4A3F35]"],
-:root:not(.dark) [class*="bg-[#382F27]"] {
+:root:not(.dark) [class*="hover:text-[#A09080]"]:hover {
+  color: var(--muted);
+}
+
+:root:not(.dark) [class*="bg-[#4A3F35]"]:not([class*="hover:bg-[#4A3F35]"]),
+:root:not(.dark) [class*="bg-[#382F27]"]:not([class*="hover:bg-[#382F27]"]) {
   background-color: var(--ink);
   color: var(--bg);
 }
 
-:root:not(.dark) [class*="bg-[#8B735B]"] {
+:root:not(.dark) [class*="hover:bg-[#4A3F35]"]:hover,
+:root:not(.dark) [class*="hover:bg-[#382F27]"]:hover {
   background-color: var(--ink);
   color: var(--bg);
 }
 
-:root:not(.dark) [class*="bg-[#D4A373]"],
-:root:not(.dark) [class*="bg-[#C08D5C]"] {
+:root:not(.dark) [class*="bg-[#8B735B]"]:not([class*="hover:bg-[#8B735B]"]) {
+  background-color: var(--ink);
+  color: var(--bg);
+}
+
+:root:not(.dark) [class*="hover:bg-[#8B735B]"]:hover {
+  background-color: var(--ink);
+  color: var(--bg);
+}
+
+:root:not(.dark) [class*="bg-[#D4A373]"]:not([class*="hover:bg-[#D4A373]"]),
+:root:not(.dark) [class*="bg-[#C08D5C]"]:not([class*="hover:bg-[#C08D5C]"]) {
   background-color: var(--accent);
   color: #ffffff;
 }
 
-:root:not(.dark) [class*="bg-[#EFE6DC]"],
-:root:not(.dark) [class*="bg-[#E9E0D2]"] {
+:root:not(.dark) [class*="hover:bg-[#D4A373]"]:hover,
+:root:not(.dark) [class*="hover:bg-[#C08D5C]"]:hover {
+  background-color: var(--accent);
+  color: #ffffff;
+}
+
+:root:not(.dark) [class*="bg-[#EFE6DC]"]:not([class*="hover:bg-[#EFE6DC]"]),
+:root:not(.dark) [class*="bg-[#E9E0D2]"]:not([class*="hover:bg-[#E9E0D2]"]) {
   background-color: var(--surface-2);
 }
 
-:root:not(.dark) [class*="bg-[#FAF6F0]"],
-:root:not(.dark) [class*="bg-[#F8F5F0]"],
-:root:not(.dark) [class*="bg-[#FDFBF7]"] {
+:root:not(.dark) [class*="hover:bg-[#EFE6DC]"]:hover,
+:root:not(.dark) [class*="hover:bg-[#E9E0D2]"]:hover {
+  background-color: var(--surface-2);
+}
+
+:root:not(.dark) [class*="bg-[#FAF6F0]"]:not([class*="hover:bg-[#FAF6F0]"]),
+:root:not(.dark) [class*="bg-[#F8F5F0]"]:not([class*="hover:bg-[#F8F5F0]"]),
+:root:not(.dark) [class*="bg-[#FDFBF7]"]:not([class*="hover:bg-[#FDFBF7]"]) {
+  background-color: var(--bg-2);
+}
+
+:root:not(.dark) [class*="hover:bg-[#FAF6F0]"]:hover,
+:root:not(.dark) [class*="hover:bg-[#F8F5F0]"]:hover,
+:root:not(.dark) [class*="hover:bg-[#FDFBF7]"]:hover {
   background-color: var(--bg-2);
 }
 
@@ -307,12 +392,21 @@ select option {
   background-color: var(--surface);
 }
 
-:root:not(.dark) [class*="border-[#CBAE94]"],
-:root:not(.dark) [class*="border-[#4A3F35]"] {
+:root:not(.dark) [class*="border-[#CBAE94]"]:not([class*="hover:border-[#CBAE94]"]),
+:root:not(.dark) [class*="border-[#4A3F35]"]:not([class*="hover:border-[#4A3F35]"]) {
   border-color: var(--border);
 }
 
-:root:not(.dark) [class*="text-[#CBAE94]"] {
+:root:not(.dark) [class*="hover:border-[#CBAE94]"]:hover,
+:root:not(.dark) [class*="hover:border-[#4A3F35]"]:hover {
+  border-color: var(--border);
+}
+
+:root:not(.dark) [class*="text-[#CBAE94]"]:not([class*="hover:text-[#CBAE94]"]) {
+  color: var(--accent);
+}
+
+:root:not(.dark) [class*="hover:text-[#CBAE94]"]:hover {
   color: var(--accent);
 }
 
