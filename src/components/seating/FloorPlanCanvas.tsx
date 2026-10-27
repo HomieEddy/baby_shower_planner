@@ -16,6 +16,7 @@ import {
 } from '../../lib/tableAssignment';
 import { clampPointToRoom, findNearestSeat } from './floorPlanHelpers';
 import { seatVisual, tableOutline } from './tableVisuals';
+import { useCanvasPalette } from './canvasPalette';
 import { SeatRing, renderLandmark, renderRoomBoundary } from './venueShapes';
 import { useT, useTf } from '../shared/i18n';
 
@@ -156,6 +157,7 @@ export const FloorPlanCanvas = ({
 }: FloorPlanCanvasProps) => {
   const t = useT();
   const tf = useTf();
+  const canvasPalette = useCanvasPalette();
   const [dropTarget, setDropTarget] = useState<{ tableId: string; seatIndex: number } | null>(null);
 
   const eventToSeat = (e: ReactDragEvent | MouseEvent) => {
@@ -299,6 +301,7 @@ export const FloorPlanCanvas = ({
                         occupant.guestId === selection.attendee.guestId &&
                         occupant.attendeeIndex === selection.attendee.attendeeIndex,
                       pickMode: !!selection.attendee,
+                      palette: canvasPalette,
                     });
 
                     return (
