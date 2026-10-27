@@ -4,7 +4,7 @@
 //
 // Note: the 3D view is a separate component; the parent picks between them.
 
-import { useRef, useState, type DragEvent as ReactDragEvent, type MouseEvent, type ReactNode, type RefObject } from 'react';
+import { useEffect, useRef, useState, type DragEvent as ReactDragEvent, type MouseEvent, type ReactNode, type RefObject } from 'react';
 import { Stage, Layer, Group, Circle, Rect, Text, Transformer, Line } from 'react-konva';
 import { useCanvasWheelZoom } from './useCanvasWheelZoom';
 import type { FloorMapData, Guest, LandmarkElement, SeatOccupant, TableElement } from '../../types';
@@ -116,6 +116,48 @@ export interface FloorPlanSelection {
   /** Party picked for seating (highlights every table that can take it). */
   party: Guest | null;
 }
+
+// Selection ring fade, in Konva's own tween (Konva nodes aren't DOM, so motion/react can't drive them).
+const SELECTION_FADE_SECONDS = 0.18;
+
+interface FadeRingProps {
+  visible: boolean;
+  color: string;
+  table: TableElement;
+}
+
+const FadeRing = ({ visible, color, table }: FadeRingProps) => {
+  const ref = useRef<any>(null);
+  useEffect(() => {
+    ref.current?.to({ opacity: visible ? 1 : 0, duration: SELECTION_FADE_SECONDS });
+  }, [visible]);
+  const pad = 5;
+  return table.shape === 'circle' ? (
+    <Circle
+      ref={ref}
+      x={table.width / 2}
+      y={table.height / 2}
+      radius={table.width / 2 + pad}
+      stroke={color}
+      strokeWidth={2}
+      opacity={0}
+      listening={false}
+    />
+  ) : (
+    <Rect
+      ref={ref}
+      x={-pad}
+      y={-pad}
+      width={table.width + pad * 2}
+      height={table.height + pad * 2}
+      cornerRadius={14 + pad}
+      stroke={color}
+      strokeWidth={2}
+      opacity={0}
+      listening={false}
+    />
+  );
+};
 
 // A table within this many map units of another centre (or the room centre) shows a guide.
 const SNAP_TOLERANCE = 4;
@@ -377,6 +419,8 @@ export const FloorPlanCanvas = ({
                     );
                   }}
                 />
+
+                <FadeRing visible={isSelected} color={outline.stroke} table={table} />
 
                 {/* Table Base Shape */}
                 {table.shape === 'circle' ? (
