@@ -1,18 +1,20 @@
 import { ReactNode, ReactElement, InputHTMLAttributes, SelectHTMLAttributes, TextareaHTMLAttributes, useId, cloneElement, isValidElement } from 'react';
 import { Search } from 'lucide-react';
 
-// Small, theme-consistent form primitives. Two visual variants:
+// Small, theme-consistent form primitives. Three visual variants:
 //   solid — bold 2px border (settings / guest edit forms)
 //   soft  — thin border, compact (tracker / check-in forms)
+//   guest — the guest-page field style (.guest-input in index.css)
 
 const SOLID =
   'w-full px-3.5 py-2.5 rounded-2xl border-2 border-[#CBAE94] text-sm font-bold focus:outline-none focus:ring-2 focus:ring-[#8B735B] bg-white text-[#5D5449]';
 const SOFT =
   'w-full px-3.5 py-2 rounded-xl border border-[#CBAE94] text-xs font-bold focus:outline-none focus:ring-2 focus:ring-[#8B735B] bg-white text-[#4A3F35]';
 
-type Variant = 'solid' | 'soft';
+type Variant = 'solid' | 'soft' | 'guest';
 
-const variantClass = (variant: Variant) => (variant === 'solid' ? SOLID : SOFT);
+const variantClass = (variant: Variant) =>
+  variant === 'solid' ? SOLID : variant === 'guest' ? 'guest-input' : SOFT;
 
 interface FieldProps {
   label: ReactNode;

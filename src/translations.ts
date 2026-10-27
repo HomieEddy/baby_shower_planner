@@ -721,6 +721,9 @@ export interface Translations {
   roundShape: string;
   rsvpConfirmedLabel: string;
   rsvpConfirmedMsgAttending: string;
+  rsvpConfirmedMsgAttendingOn: string;
+  attendingGuestsCountLabel: string;
+  mainGuestFallback: string;
   rsvpConfirmedMsgDeclined: string;
   rsvpConfirmedTitle: string;
   rsvpConfirmedToast: string;
@@ -2029,7 +2032,10 @@ export const translations: Record<Language, Translations> = {
     roundShape: "Round",
     roundTableBtn: "Round Table",
     rsvpConfirmedLabel: "RSVP Confirmed:",
-    rsvpConfirmedMsgAttending: "We can't wait to celebrate with you on September 12th!",
+    rsvpConfirmedMsgAttending: "We can't wait to celebrate with you!",
+    rsvpConfirmedMsgAttendingOn: "We can't wait to celebrate with you on {{date}}!",
+    attendingGuestsCountLabel: "Attending guests ({{count}}):",
+    mainGuestFallback: "the main guest",
     rsvpConfirmedMsgDeclined: "We're so sorry you can't make it, but we appreciate you letting us know!",
     rsvpConfirmedTitle: "RSVP Confirmed!",
     rsvpConfirmedToast: "RSVP Confirmed! We cannot wait to celebrate with you!",
@@ -3331,7 +3337,10 @@ export const translations: Record<Language, Translations> = {
     roundShape: "Ronde",
     roundTableBtn: "Table Ronde",
     rsvpConfirmedLabel: "RSVP confirmé :",
-    rsvpConfirmedMsgAttending: "Nous avons hâte de célébrer avec vous le 12 septembre !",
+    rsvpConfirmedMsgAttending: "Nous avons hâte de célébrer avec vous !",
+    rsvpConfirmedMsgAttendingOn: "Nous avons hâte de célébrer avec vous le {{date}} !",
+    attendingGuestsCountLabel: "Invités présents ({{count}}) :",
+    mainGuestFallback: "l'invité principal",
     rsvpConfirmedMsgDeclined: "Nous sommes désolés que vous ne puissiez pas venir, merci de nous avoir prévenus !",
     rsvpConfirmedTitle: "RSVP Confirmé !",
     rsvpConfirmedToast: "RSVP confirmé ! Nous avons hâte de célébrer avec vous !",

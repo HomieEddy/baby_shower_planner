@@ -541,7 +541,6 @@ export const RsvpPage = () => {
               >
                 {/* Greeting Header */}
                 <div className="text-center space-y-2 border-b border-dashed border-[#4A3F35]/20 pb-6">
-                  <div className="label-mono">{t.rsvpResponseTitle}</div>
                   <h3 className="font-newsreader text-2xl sm:text-3xl font-bold text-[#4A3F35]">
                     {tf('rsvpGreeting', { name: guest.name })}
                   </h3>
@@ -563,9 +562,9 @@ export const RsvpPage = () => {
 
                       {/* Option: Attending */}
                       <label
-                        className={`p-4 rounded-2xl border-2 cursor-pointer transition-all flex items-start space-x-3 ${
+                        className={`p-4 rounded-xl border cursor-pointer transition-all flex items-start gap-3 ${
                           rsvpStatus === 'Attending'
-                            ? 'border-[#4A3F35] bg-[#E9E0D2]/50 shadow-2xs'
+                            ? 'border-[#4A3F35] shadow-[0_0_0_1px_var(--ink)] bg-[#E9E0D2]/50'
                             : 'border-[#4A3F35]/20 bg-white hover:border-[#4A3F35]/40'
                         }`}
                       >
@@ -573,7 +572,8 @@ export const RsvpPage = () => {
                           type="radio"
                           value="Attending"
                           {...register('rsvpStatus')}
-                          className="mt-1 text-[#4A3F35] focus:ring-[#4A3F35]"
+                          className="mt-1 w-4 h-4 shrink-0"
+                          style={{ accentColor: 'var(--ink)' }}
                         />
                         <div>
                           <span className="font-bold text-[#4A3F35] text-sm block">
@@ -587,9 +587,9 @@ export const RsvpPage = () => {
 
                       {/* Option: Declined */}
                       <label
-                        className={`p-4 rounded-2xl border-2 cursor-pointer transition-all flex items-start space-x-3 ${
+                        className={`p-4 rounded-xl border cursor-pointer transition-all flex items-start gap-3 ${
                           rsvpStatus === 'Declined'
-                            ? 'border-[#4A3F35] bg-[#E9E0D2]/50 shadow-2xs'
+                            ? 'border-[#4A3F35] shadow-[0_0_0_1px_var(--ink)] bg-[#E9E0D2]/50'
                             : 'border-[#4A3F35]/20 bg-white hover:border-[#4A3F35]/40'
                         }`}
                       >
@@ -597,7 +597,8 @@ export const RsvpPage = () => {
                           type="radio"
                           value="Declined"
                           {...register('rsvpStatus')}
-                          className="mt-1 text-[#4A3F35] focus:ring-[#4A3F35]"
+                          className="mt-1 w-4 h-4 shrink-0"
+                          style={{ accentColor: 'var(--ink)' }}
                         />
                         <div>
                           <span className="font-bold text-[#4A3F35] text-sm block">
@@ -616,7 +617,7 @@ export const RsvpPage = () => {
                   {rsvpStatus === 'Attending' && (
                     <div className="space-y-4 bg-[#E9E0D2]/40 p-5 rounded-2xl border border-[#4A3F35]/20 animate-in fade-in duration-200">
                       <div>
-                        <label className="label-mono block mb-1">
+                        <label className="guest-label">
                           {t.attendeeSectionTitle}
                         </label>
                         <p className="text-xs text-[#4A3F35]/70 mb-1 font-sans">
@@ -633,16 +634,17 @@ export const RsvpPage = () => {
                       </div>
 
                       <div className="p-3.5 bg-white/90 rounded-xl border border-[#4A3F35]/20 space-y-2.5">
-                        <span className="text-xs font-mono font-bold text-[#8B735B] uppercase tracking-wider">
+                        <span className="block text-xs font-mono font-bold text-[#8B735B] uppercase tracking-wider">
                           {t.finderPartyLead}
                         </span>
+                        <span className="block text-sm font-bold text-[#4A3F35]">{guest.name}</span>
                         <div className="grid grid-cols-1 gap-2">
                           <input
                             type="text"
                             {...register('dietary')}
                             aria-label={tf('dietaryForMember', { name: guest.name })}
                             placeholder={t.dietaryPlaceholder}
-                            className="w-full px-3 py-2 rounded-lg border border-[#4A3F35]/20 bg-white font-medium text-xs text-[#4A3F35] focus:outline-none focus:ring-2 focus:ring-[#4A3F35]"
+                            className="guest-input py-2.5"
                           />
                         </div>
                       </div>
@@ -657,7 +659,7 @@ export const RsvpPage = () => {
                               <button
                                 type="button"
                                 onClick={() => remove(index)}
-                                className="p-1 text-rose-600 hover:text-rose-800 hover:bg-rose-50 rounded-lg transition-colors"
+                                className="min-w-[44px] min-h-[44px] -m-2 flex items-center justify-center text-rose-700 hover:text-rose-900 rounded-lg transition-colors"
                                 aria-label={t.removeGuestBtn}
                                 title={t.removeGuestBtn}
                               >
@@ -673,7 +675,7 @@ export const RsvpPage = () => {
                                   {...register(`attendees.${index}.name`)}
                                   aria-label={`${t.fullNamePlaceholder} ${index + 1}`}
                                   placeholder={t.fullNamePlaceholder}
-                                  className="w-full px-3 py-2 rounded-lg border border-[#4A3F35]/20 bg-white font-bold text-xs text-[#4A3F35] focus:outline-none focus:ring-2 focus:ring-[#4A3F35]"
+                                  className="guest-input py-2.5 font-bold"
                                 />
                               </div>
                               <div>
@@ -682,7 +684,7 @@ export const RsvpPage = () => {
                                   {...register(`attendees.${index}.contact`)}
                                   aria-label={t.attendeeContactLabel}
                                   placeholder={t.attendeeContactPlaceholder}
-                                  className="w-full px-3 py-2 rounded-lg border border-[#4A3F35]/20 bg-white font-medium text-xs text-[#4A3F35] focus:outline-none focus:ring-2 focus:ring-[#4A3F35]"
+                                  className="guest-input py-2.5"
                                 />
                               </div>
                               <div className="sm:col-span-2">
@@ -691,7 +693,7 @@ export const RsvpPage = () => {
                                   {...register(`attendees.${index}.dietary`)}
                                   aria-label={t.colDietary}
                                   placeholder={t.dietaryPlaceholder}
-                                  className="w-full px-3 py-2 rounded-lg border border-[#4A3F35]/20 bg-white font-medium text-xs text-[#4A3F35] focus:outline-none focus:ring-2 focus:ring-[#4A3F35]"
+                                  className="guest-input py-2.5"
                                 />
                               </div>
                             </div>
@@ -702,7 +704,7 @@ export const RsvpPage = () => {
                       <button
                         type="button"
                         onClick={() => append({ name: '', contact: '', dietary: '' })}
-                        className="mt-2 w-full py-2.5 rounded-xl border border-dashed border-[#4A3F35]/30 bg-white/80 hover:bg-white text-xs font-bold text-[#4A3F35] transition-colors flex items-center justify-center gap-1.5"
+                        className="mt-2 w-full min-h-[44px] py-2.5 px-3 rounded-xl border border-dashed border-[#4A3F35]/40 bg-white text-xs sm:text-sm font-bold text-[#4A3F35] transition-transform hover:-translate-y-0.5 flex items-center justify-center gap-1.5"
                       >
                         <Users className="w-4 h-4 text-[#8B735B]" />
                         <span>{t.addAnotherGuestBtn}</span>
@@ -738,7 +740,7 @@ export const RsvpPage = () => {
         contentClassName="space-y-4"
       >
         {/* Invite a guest */}
-        <div className="card-paper p-5 sm:p-6 space-y-4">
+        <div className="card-guest p-5 sm:p-6 space-y-4">
           <div className="flex items-center gap-2.5">
             <div className="p-2 bg-[#EFE6DC] text-[#8B735B] rounded-xl border border-[#CBAE94]">
               <Users className="w-4 h-4" />
@@ -750,25 +752,25 @@ export const RsvpPage = () => {
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
-              <label htmlFor="invite-name" className="label-mono block mb-1">{t.inviteeNameLabel} *</label>
+              <label htmlFor="invite-name" className="guest-label">{t.inviteeNameLabel} *</label>
               <input
                 id="invite-name"
                 type="text"
                 value={inviteName}
                 onChange={(e) => setInviteName(e.target.value)}
                 placeholder={t.inviteeNamePh}
-                className="w-full px-3 py-2 rounded-lg border border-[#4A3F35]/20 bg-white text-xs text-[#4A3F35] focus:outline-none focus:ring-2 focus:ring-[#4A3F35]"
+                className="guest-input py-2.5"
               />
             </div>
             <div>
-              <label htmlFor="invite-contact" className="label-mono block mb-1">{t.inviteeContactLabel}</label>
+              <label htmlFor="invite-contact" className="guest-label">{t.inviteeContactLabel}</label>
               <input
                 id="invite-contact"
                 type="text"
                 value={inviteContact}
                 onChange={(e) => setInviteContact(e.target.value)}
                 placeholder={t.inviteeContactPh}
-                className="w-full px-3 py-2 rounded-lg border border-[#4A3F35]/20 bg-white text-xs text-[#4A3F35] focus:outline-none focus:ring-2 focus:ring-[#4A3F35]"
+                className="guest-input py-2.5"
               />
             </div>
           </div>
@@ -777,14 +779,14 @@ export const RsvpPage = () => {
             {t.linkOnlyHint}
           </p>
           <div>
-            <label htmlFor="invite-note" className="label-mono block mb-1">{t.inviteeNoteLabel}</label>
+            <label htmlFor="invite-note" className="guest-label">{t.inviteeNoteLabel}</label>
             <input
               id="invite-note"
               type="text"
               value={inviteNote}
               onChange={(e) => setInviteNote(e.target.value)}
               placeholder={t.inviteeNotePh}
-              className="w-full px-3 py-2 rounded-lg border border-[#4A3F35]/20 bg-white text-xs text-[#4A3F35] focus:outline-none focus:ring-2 focus:ring-[#4A3F35]"
+              className="guest-input py-2.5"
             />
           </div>
           <button
@@ -798,7 +800,7 @@ export const RsvpPage = () => {
         </div>
 
         {/* Your invitations */}
-        <div className="card-paper p-5 sm:p-6 space-y-3">
+        <div className="card-guest p-5 sm:p-6 space-y-3">
           <div className="label-mono">{t.yourInvitesTitle}</div>
           {myInvites.length === 0 ? (
             <p className="text-xs text-[#5D5449]/70 italic py-2">{t.noInvitesYet}</p>
@@ -886,31 +888,31 @@ export const RsvpPage = () => {
           </div>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
-              <label className="label-mono block mb-1">{t.fieldEmail}</label>
+              <label className="guest-label">{t.fieldEmail}</label>
               <input
                 type="email"
                 value={contactEmail}
                 onChange={(e) => setContactEmail(e.target.value)}
-                className="w-full px-3 py-2 rounded-lg border border-[#4A3F35]/20 bg-white text-xs text-[#4A3F35] focus:outline-none focus:ring-2 focus:ring-[#4A3F35]"
+                className="guest-input py-2.5"
               />
             </div>
             <div>
-              <label className="label-mono block mb-1">{t.fieldPhone}</label>
+              <label className="guest-label">{t.fieldPhone}</label>
               <input
                 type="tel"
                 value={contactPhone}
                 onChange={(e) => setContactPhone(e.target.value)}
-                className="w-full px-3 py-2 rounded-lg border border-[#4A3F35]/20 bg-white text-xs text-[#4A3F35] focus:outline-none focus:ring-2 focus:ring-[#4A3F35]"
+                className="guest-input py-2.5"
               />
             </div>
           </div>
           <div className="flex flex-wrap items-end gap-3">
             <div className="flex-1 min-w-[200px]">
-              <label className="label-mono block mb-1">{t.notificationChoiceLabel}</label>
+              <label className="guest-label">{t.notificationChoiceLabel}</label>
               <select
                 value={contactChannel}
                 onChange={(e) => setContactChannel(e.target.value as 'none' | 'email' | 'text' | 'both')}
-                className="w-full px-3 py-2 rounded-lg border border-[#4A3F35]/20 bg-white text-xs font-bold text-[#4A3F35] focus:outline-none focus:ring-2 focus:ring-[#4A3F35]"
+                className="guest-input py-2.5 font-bold"
               >
                 {contactChannels.map((c) => (
                   <option key={c} value={c}>{channelLabel(t, c)}</option>
