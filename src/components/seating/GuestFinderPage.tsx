@@ -366,7 +366,7 @@ export const GuestFinderPage: React.FC = () => {
                     initial={{ opacity: 0, y: 10 }}
                     animate={{ opacity: 1, y: 0 }}
                     role="status"
-                    className="flex items-center gap-3 p-4 rounded-xl bg-green-50 border border-green-300 text-green-800"
+                    className="status-ok flex items-center gap-3 p-4 rounded-xl border"
                   >
                     <motion.span
                       animate={{ rotate: [0, -10, 10, 0] }}
@@ -391,7 +391,7 @@ export const GuestFinderPage: React.FC = () => {
                         transition={{ type: 'spring', stiffness: 280, damping: 22 }}
                         className={`flex flex-wrap items-center justify-between gap-3 p-3.5 rounded-xl border transition-colors ${
                           checked
-                            ? 'bg-green-50 border-green-200'
+                            ? 'status-ok'
                             : isSelf
                               ? 'bg-[#EFE6DC]/60 border-[#CBAE94]'
                               : 'bg-white border-[#CBAE94]/40'
@@ -401,7 +401,7 @@ export const GuestFinderPage: React.FC = () => {
                           <span
                             className={`w-9 h-9 rounded-full flex items-center justify-center text-xs font-bold shrink-0 ${
                               checked
-                                ? 'bg-green-600 text-white'
+                                ? 'bg-green-800 text-white'
                                 : 'bg-[#EFE6DC] text-[#8B735B]'
                             }`}
                           >
@@ -421,7 +421,7 @@ export const GuestFinderPage: React.FC = () => {
                                 </span>
                               )}
                             </p>
-                            <p className={`text-xs font-mono font-bold ${checked ? 'text-green-700' : 'text-[#A09080]'}`}>
+                            <p className={`text-xs font-mono font-bold ${checked ? 'text-ok' : 'text-[#5D5449]'}`}>
                               {checked ? t.checkedInLabel : t.notYetLabel}
                             </p>
                           </div>
@@ -431,7 +431,7 @@ export const GuestFinderPage: React.FC = () => {
                           <button
                             onClick={() => void act(member, false, true, t.undoCheckinBtn)}
                             disabled={isBusy || !canAct}
-                            className="min-w-[44px] min-h-[44px] flex items-center justify-center gap-1 text-xs font-bold text-green-700 hover:text-green-900 disabled:opacity-40 transition-colors ml-auto"
+                            className="min-w-[44px] min-h-[44px] flex items-center justify-center gap-1 text-xs font-bold text-ok hover:opacity-80 disabled:opacity-40 transition-colors ml-auto"
                             title={t.undoCheckinBtn}
                             aria-label={t.undoCheckinBtn}
                           >
@@ -448,7 +448,7 @@ export const GuestFinderPage: React.FC = () => {
                             {isSelf ? t.checkinMeBtn : t.checkInBtn}
                           </button>
                         ) : (
-                          <span className="text-xs font-mono text-[#A09080] italic">
+                          <span className="text-xs font-mono text-[#5D5449] italic">
                             {t.notYetLabel}
                           </span>
                         )}
