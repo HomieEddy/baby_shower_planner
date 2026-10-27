@@ -14,7 +14,7 @@ export const NotFoundPage = () => {
       animate="show"
       className="w-full max-w-sm mx-auto pt-12 sm:pt-20 text-center"
     >
-      <p className="font-mono text-6xl font-bold text-[#CBAE94]">404</p>
+      <p className="font-mono text-6xl font-bold text-[#8B735B]">404</p>
       <h1 className="font-gaegu text-3xl font-bold text-[#4A3F35] mt-3">{t.pageNotFoundTitle}</h1>
       <p className="text-sm text-[#5D5449] mt-1">{t.pageNotFoundMsg}</p>
       <Link
