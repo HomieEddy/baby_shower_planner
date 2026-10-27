@@ -21,6 +21,7 @@ import { compressImage, formatFileSize } from '../../lib/imageCompressor';
 import { useToast } from '../shared/ToastContext';
 import { useActionConfirm } from '../shared/ConfirmDialog';
 import { BackButton } from '../shared/BackButton';
+import { GuestPageHeader } from '../shared/GuestPageHeader';
 import { LockedNotice } from '../shared/LockedNotice';
 import { uploadPhotoBase64 } from '../../lib/fileUtils';
 import { useAppStore } from '../../stores/appStore';
@@ -308,7 +309,7 @@ export const GuestPhotoUploadPage = () => {
   // Locked state: photo uploads only open during the event window
   if (locked) {
     return (
-      <div className="min-h-screen bg-[#FAF6F0] py-8 px-4 sm:px-6 lg:px-8 font-sans">
+      <div className="py-6 sm:py-10 px-4 sm:px-6 lg:px-8 font-sans">
         <div className="max-w-2xl mx-auto">
           <LockedNotice
             title={t.photosLockedTitle}
@@ -322,83 +323,96 @@ export const GuestPhotoUploadPage = () => {
   }
 
   return (
-    <div className="min-h-screen bg-[#FAF6F0] py-8 px-4 sm:px-6 lg:px-8 font-sans">
-      <div className="max-w-3xl mx-auto space-y-6">
+    <div className="py-6 sm:py-10 px-4 sm:px-6 lg:px-8 font-sans">
+      <div className="max-w-2xl mx-auto space-y-6">
         <BackButton />
-        {/* Header Hero Banner */}
-        <div className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-[#8B735B] via-[#705C47] to-[#4A3F35] text-white p-6 sm:p-8 shadow-xl border border-[#CBAE94]/40">
-          <div className="absolute -right-8 -bottom-8 opacity-10 pointer-events-none">
-            <Camera className="w-64 h-64 text-white" />
-          </div>
 
-          <div className="relative z-10 space-y-3">
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/20 backdrop-blur-md text-amber-200 text-xs font-bold tracking-wide uppercase border border-white/20">
-              <Camera className="w-3.5 h-3.5" />
-              <span>{t.photoQrTitle}</span>
-            </div>
+        <GuestPageHeader
+          icon={Camera}
+          eyebrow={t.photoQrTitle}
+          title={t.uploadHeroTitle}
+          subtitle={t.uploadHeroDesc}
+        >
+          {selectedTableObj && (
+            <span className="inline-flex items-center gap-1.5 mt-1 px-3 py-1 rounded-full bg-[#EFE6DC] text-[#8B735B] text-xs font-bold">
+              <Building2 className="w-3.5 h-3.5" />
+              {tf('uploadingFromLabel', { name: selectedTableObj.name })}
+            </span>
+          )}
+        </GuestPageHeader>
 
-            <h1 className="font-gaegu text-3xl sm:text-4xl font-bold tracking-tight text-white leading-tight">
-              {t.uploadHeroTitle}
-            </h1>
-
-            <p className="text-sm sm:text-base text-amber-100/90 max-w-xl leading-relaxed">
-              {t.uploadHeroDesc}
-            </p>
-
-            {selectedTableObj && (
-              <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-xl bg-amber-400/20 border border-amber-300/40 text-amber-100 text-xs font-bold mt-2">
-                <Building2 className="w-4 h-4 text-amber-200" />
-                <span>{tf('uploadingFromLabel', { name: selectedTableObj.name })}</span>
-              </div>
-            )}
-          </div>
-        </div>
-
-        {/* Private Host Notice */}
-        <div className="flex items-center gap-3 p-4 rounded-2xl bg-amber-500/10 border border-amber-500/30 text-amber-900 text-xs font-medium">
-          <ShieldCheck className="w-5 h-5 text-amber-700 shrink-0" />
-          <span>
-            <strong>{t.hostConfidentialityLabel}</strong> {t.hostConfidentialityText}
-          </span>
-        </div>
+        <p className="text-xs text-[#5D5449] text-center max-w-md mx-auto leading-relaxed">
+          <ShieldCheck className="inline w-4 h-4 mr-1 -mt-0.5 text-[#8B735B]" aria-hidden />
+          <strong>{t.hostConfidentialityLabel}</strong> {t.hostConfidentialityText}
+        </p>
 
         {/* Upload Form or Success Card */}
         {!uploadSuccess ? (
           <form
             onSubmit={handleBatchUpload}
-            className="bg-[#FFFDF9] rounded-3xl p-6 sm:p-8 shadow-lg border border-[#CBAE94]/50 space-y-6"
+            className="card-guest p-6 sm:p-8 space-y-5"
           >
             {fileError && (
-              <div className="p-4 rounded-2xl bg-rose-50 border border-rose-200 text-rose-800 text-xs font-semibold flex items-start gap-2.5 animate-shake">
-                <AlertCircle className="w-4 h-4 text-rose-600 shrink-0 mt-0.5" />
+              <div role="alert" className="notice-error animate-shake">
+                <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" />
                 <span>{fileError}</span>
               </div>
             )}
 
             {lockedIdentity && (
-              <div className="p-4 rounded-2xl bg-[#EFE6DC]/60 border border-[#CBAE94]/50 text-[#5D5449] text-xs font-medium flex items-start gap-2.5">
+              <div className="p-3.5 rounded-xl bg-[#EFE6DC]/60 border border-[#CBAE94]/50 text-[#5D5449] text-xs font-medium flex items-start gap-2.5">
                 <ShieldCheck className="w-4 h-4 text-[#8B735B] shrink-0 mt-0.5" />
                 <span>{t.uploadLockedIdentityNote}</span>
               </div>
             )}
 
-            {/* Table & Guest Identity Selection */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              {/* Select Table */}
+            {/* Reservation code first: the photo quota is per reservation */}
+            <div>
+              <label htmlFor="up-code" className="guest-label">
+                <KeyRound aria-hidden />
+                {t.uploadCodeLabel} *
+              </label>
+              <input
+                id="up-code"
+                type="text"
+                inputMode="numeric"
+                maxLength={4}
+                required
+                disabled={lockedIdentity}
+                value={reservationCode}
+                onChange={(e) => setReservationCode(e.target.value.replace(/[^0-9]/g, ''))}
+                placeholder={t.uploadCodePlaceholder}
+                className="guest-input font-mono font-bold tracking-[0.3em] placeholder:tracking-normal placeholder:font-sans placeholder:font-normal"
+              />
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-5 sm:gap-4">
               <div>
-                <label className="block text-xs font-bold text-[#4A3F35] uppercase tracking-wider mb-2 flex items-center gap-1.5">
-                  <Building2 className="w-3.5 h-3.5 text-[#8B735B]" />
+                <label htmlFor="up-name" className="guest-label">
+                  <User aria-hidden />
+                  {t.yourNameOptional}
+                </label>
+                <input
+                  id="up-name"
+                  type="text"
+                  value={uploaderName}
+                  onChange={(e) => setUploaderName(e.target.value)}
+                  placeholder={t.nameExamplePlaceholder}
+                  className="guest-input"
+                />
+              </div>
+
+              <div>
+                <label htmlFor="up-table" className="guest-label">
+                  <Building2 aria-hidden />
                   {t.yourTableLabel}
                 </label>
                 <select
+                  id="up-table"
                   value={selectedTableId}
                   onChange={(e) => setSelectedTableId(e.target.value)}
                   disabled={lockedIdentity}
-                  className={`w-full px-4 py-3 rounded-2xl border text-xs font-bold text-[#4A3F35] focus:outline-none focus:ring-2 focus:ring-[#8B735B] ${
-                    lockedIdentity
-                      ? 'bg-[#EFE6DC]/60 border-[#CBAE94]/40 cursor-not-allowed'
-                      : 'bg-[#FAF6F0] border-[#CBAE94]/60'
-                  }`}
+                  className="guest-input"
                 >
                   <option value="">{t.selectTablePlaceholder}</option>
                   {tables.map((t) => (
@@ -408,73 +422,30 @@ export const GuestPhotoUploadPage = () => {
                   ))}
                 </select>
               </div>
-
-              {/* Guest Name */}
-              <div>
-                <label className="block text-xs font-bold text-[#4A3F35] uppercase tracking-wider mb-2 flex items-center gap-1.5">
-                  <User className="w-3.5 h-3.5 text-[#8B735B]" />
-                  {t.yourNameOptional}
-                </label>
-                <input
-                  type="text"
-                  value={uploaderName}
-                  onChange={(e) => setUploaderName(e.target.value)}
-                  placeholder={t.nameExamplePlaceholder}
-                  className="w-full px-4 py-3 rounded-2xl bg-[#FAF6F0] border border-[#CBAE94]/60 text-xs font-medium text-[#4A3F35] placeholder-[#8B735B]/60 focus:outline-none focus:ring-2 focus:ring-[#8B735B]"
-                />
-              </div>
-            </div>
-
-            {/* Reservation Code — photo quota is per reservation */}
-            <div>
-              <label className="block text-xs font-bold text-[#4A3F35] uppercase tracking-wider mb-2 flex items-center gap-1.5">
-                <KeyRound className="w-3.5 h-3.5 text-[#8B735B]" />
-                {t.uploadCodeLabel} *
-              </label>
-              <input
-                type="text"
-                inputMode="numeric"
-                maxLength={4}
-                required
-                disabled={lockedIdentity}
-                value={reservationCode}
-                onChange={(e) => setReservationCode(e.target.value.replace(/[^0-9]/g, ''))}
-                placeholder={t.uploadCodePlaceholder}
-                className={`w-full max-w-xs px-4 py-3 rounded-2xl border text-sm font-bold tracking-[0.3em] text-[#4A3F35] placeholder-[#8B735B]/60 placeholder:tracking-normal focus:outline-none focus:ring-2 focus:ring-[#8B735B] ${
-                  lockedIdentity
-                    ? 'bg-[#EFE6DC]/60 border-[#CBAE94]/40 cursor-not-allowed'
-                    : 'bg-[#FAF6F0] border-[#CBAE94]/60'
-                }`}
-              />
             </div>
 
             {/* Photo Caption */}
             <div>
-              <label className="block text-xs font-bold text-[#4A3F35] uppercase tracking-wider mb-2 flex items-center gap-1.5">
-                <MessageSquare className="w-3.5 h-3.5 text-[#8B735B]" />
+              <label htmlFor="up-caption" className="guest-label">
+                <MessageSquare aria-hidden />
                 {t.photoCaptionLabel}
               </label>
               <input
+                id="up-caption"
                 type="text"
                 value={caption}
                 onChange={(e) => setCaption(e.target.value)}
                 placeholder={t.captionExamplePlaceholder}
-                className="w-full px-4 py-3 rounded-2xl bg-[#FAF6F0] border border-[#CBAE94]/60 text-xs font-medium text-[#4A3F35] placeholder-[#8B735B]/60 focus:outline-none focus:ring-2 focus:ring-[#8B735B]"
+                className="guest-input"
               />
             </div>
 
             {/* Drag and Drop Multi-Photo Picker Zone */}
             <div>
-              <label className="block text-xs font-bold text-[#4A3F35] uppercase tracking-wider mb-2 flex items-center justify-between">
-                <span className="flex items-center gap-1.5">
-                  <ImageIcon className="w-3.5 h-3.5 text-[#8B735B]" />
-                  {t.selectPhotosLabel}
-                </span>
-                <span className="inline-flex items-center gap-1 text-xs font-bold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-md border border-emerald-200">
-                  <Zap className="w-3 h-3 text-emerald-600 fill-emerald-500" />
-                  {t.autoResizedLabel}
-                </span>
-              </label>
+              <p className="guest-label">
+                <ImageIcon aria-hidden />
+                {t.selectPhotosLabel}
+              </p>
 
               <PhotoDropzone
                 fileInputRef={fileInputRef}
@@ -486,18 +457,18 @@ export const GuestPhotoUploadPage = () => {
 
             {/* Compression Processing Bar */}
             {isCompressing && (
-              <div className="p-4 rounded-2xl bg-amber-50 border border-amber-200 text-[#4A3F35] space-y-2 animate-pulse">
-                <div className="flex items-center justify-between text-xs font-bold text-amber-900">
+              <div role="status" className="p-4 rounded-xl bg-[#EFE6DC]/60 border border-[#CBAE94]/50 text-[#4A3F35] space-y-2">
+                <div className="flex items-center justify-between text-xs font-bold text-[#4A3F35]">
                   <span className="flex items-center gap-1.5">
-                    <Zap className="w-4 h-4 text-amber-600 animate-bounce" />
+                    <Zap className="w-4 h-4 text-[#8B735B]" />
                     {t.optimizingPhotosMsg}
                   </span>
-                  <span>{compressionProgress}%</span>
+                  <span className="font-mono">{compressionProgress}%</span>
                 </div>
-                <div className="w-full bg-amber-200/60 h-2 rounded-full overflow-hidden">
+                <div className="w-full h-2 rounded-full overflow-hidden" style={{ backgroundColor: 'color-mix(in srgb, var(--accent) 25%, transparent)' }}>
                   <div
-                    className="bg-amber-600 h-full rounded-full transition-all duration-200"
-                    style={{ width: `${compressionProgress}%` }}
+                    className="h-full rounded-full transition-all duration-200"
+                    style={{ width: `${compressionProgress}%`, backgroundColor: 'var(--accent)' }}
                   />
                 </div>
               </div>
@@ -523,14 +494,14 @@ export const GuestPhotoUploadPage = () => {
 
                 {/* Optimization Savings Banner */}
                 {totalSavedBytes > 0 && (
-                  <div className="p-3 rounded-2xl bg-gradient-to-r from-emerald-50 via-teal-50 to-emerald-50 border border-emerald-200 text-emerald-900 text-xs font-bold flex items-center justify-between shadow-xs">
+                  <div className="p-3 rounded-xl bg-[#EFE6DC]/60 border border-[#CBAE94]/50 text-[#4A3F35] text-xs font-bold flex items-center justify-between">
                     <div className="flex items-center gap-2">
-                      <Zap className="w-4 h-4 text-emerald-600 fill-emerald-500 shrink-0" />
+                      <Zap className="w-4 h-4 text-[#8B735B] shrink-0" />
                       <span>
                         {tf('optimizationSavedMsg', { size: formatFileSize(totalSavedBytes), percent: totalSavedPercent })}
                       </span>
                     </div>
-                    <span className="text-xs text-emerald-700 font-mono hidden sm:inline flex items-center gap-1">
+                    <span className="text-xs text-[#8B735B] font-mono hidden sm:inline-flex items-center gap-1">
                       {formatFileSize(totalOriginalBytes)}
                       <ArrowRight className="w-3 h-3" />
                       {formatFileSize(totalCompressedBytes)}
@@ -551,16 +522,16 @@ export const GuestPhotoUploadPage = () => {
               <button
                 type="submit"
                 disabled={isUploading || isCompressing || fileItems.length === 0}
-                className="w-full py-4 rounded-2xl bg-gradient-to-r from-[#8B735B] via-[#705C47] to-[#4A3F35] hover:brightness-110 text-white text-sm font-bold shadow-lg transition-all flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed transform active:scale-98"
+                className="btn-accent w-full py-3.5 min-h-[52px] text-sm font-bold gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {isUploading ? (
                   <>
-                    <div className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                    <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin" />
                     <span>{tf('uploadingPhotosProgress', { percent: uploadProgress })}</span>
                   </>
                 ) : (
                   <>
-                    <UploadCloud className="w-5 h-5 text-amber-200" />
+                    <UploadCloud className="w-4 h-4" />
                     <span>
                       {fileItems.length > 0 ? tf('uploadOptimizedCount', { count: fileItems.length }) : t.uploadPhotosBtn}
                     </span>

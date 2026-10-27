@@ -32,10 +32,10 @@ export const PhotoDropzone = ({
       onDrop={(e) => { setDragActive(false); onDrop(e); }}
       onDragOver={(e) => { setDragActive(true); onDragOver(e); }}
       onDragLeave={(e) => { if (e.currentTarget === e.target) setDragActive(false); }}
-      className={`block border-2 border-dashed rounded-3xl p-6 sm:p-8 text-center cursor-pointer transition-all space-y-3 group ${
+      className={`block border-2 border-dashed rounded-2xl p-6 sm:p-8 text-center cursor-pointer transition-all space-y-3 group ${
         dragActive
           ? 'border-[#8B735B] bg-[#EFE6DC]/60 ring-2 ring-[#8B735B]/30'
-          : 'border-[#CBAE94] hover:border-[#8B735B] bg-[#FAF6F0]/60 hover:bg-[#EFE6DC]/40'
+          : 'border-[#CBAE94] hover:border-[#8B735B] bg-[#EFE6DC]/30'
       }`}
     >
       <input
@@ -47,21 +47,21 @@ export const PhotoDropzone = ({
         className="sr-only"
       />
 
-      <div className="w-14 h-14 mx-auto rounded-2xl bg-[#EFE6DC] group-hover:bg-[#8B735B] text-[#8B735B] group-hover:text-white flex items-center justify-center transition-colors shadow-sm">
-        <UploadCloud className="w-7 h-7" />
+      <div className="w-12 h-12 mx-auto rounded-2xl bg-white border border-[#CBAE94]/60 flex items-center justify-center transition-transform group-hover:-translate-y-0.5">
+        <UploadCloud className="w-6 h-6 text-[#8B735B]" />
       </div>
 
       <div>
         <p className="text-xs font-bold text-[#4A3F35]">
           {t.tapToChoosePhotos}
         </p>
-        <p className="text-xs text-[#8B735B] mt-1">
+        <p className="text-xs text-[#5D5449] mt-1">
           {t.uploadManyHint}
         </p>
       </div>
 
-      <div className="pt-1 flex items-center justify-center gap-1.5 text-xs text-emerald-800 font-medium">
-        <Zap className="w-3 h-3 text-amber-600 shrink-0" />
+      <div className="pt-1 flex items-center justify-center gap-1.5 text-xs text-[#5D5449]">
+        <Zap className="w-3 h-3 text-[#8B735B] shrink-0" />
         <span>{t.photoCompressedHint}</span>
       </div>
     </label>
@@ -112,7 +112,7 @@ export const PhotoFileCard = ({
         </span>
 
         {savedPct > 5 && (
-          <span className="absolute top-1.5 left-1.5 px-1.5 py-0.5 rounded-full bg-emerald-600/90 text-white text-xs font-bold shadow-sm flex items-center gap-0.5">
+          <span className="absolute top-1.5 left-1.5 px-1.5 py-0.5 rounded-full bg-black/60 text-white text-xs font-bold flex items-center gap-0.5">
             <Zap className="w-2.5 h-2.5 fill-current" />-{savedPct}%
           </span>
         )}
@@ -123,8 +123,8 @@ export const PhotoFileCard = ({
         <span className="truncate font-mono text-[#8B735B]">
           {formatFileSize(item.compressedSize)}
         </span>
-        <span className="text-xs text-emerald-700 font-bold flex items-center gap-0.5">
-          <Check className="w-3 h-3 text-emerald-600" />
+        <span className="text-xs text-[#4A3F35] font-bold flex items-center gap-0.5">
+          <Check className="w-3 h-3 text-[#8B735B]" />
           {t.readyLabel}
         </span>
       </div>
@@ -143,7 +143,7 @@ export const UploadSuccessScreen = ({
   const tf = useTf();
   return (
     <motion.div
-      className="bg-[#FFFDF9] rounded-3xl p-8 shadow-xl border border-[#CBAE94] text-center space-y-6"
+      className="card-guest p-6 sm:p-8 text-center space-y-6"
       initial={{ opacity: 0, y: 16 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.4 }}
@@ -152,7 +152,7 @@ export const UploadSuccessScreen = ({
         variants={popIn}
         initial="hidden"
         animate="show"
-        className="w-16 h-16 mx-auto rounded-full bg-emerald-100 text-emerald-600 flex items-center justify-center shadow-inner"
+        className="w-16 h-16 mx-auto rounded-full bg-[#EFE6DC] text-[#8B735B] border border-[#CBAE94]/60 flex items-center justify-center"
       >
         <motion.span
           animate={{ rotate: [0, -10, 10, 0] }}
@@ -166,7 +166,7 @@ export const UploadSuccessScreen = ({
         <h2 className="font-gaegu text-3xl font-bold text-[#4A3F35]">
           {t.thankYouSharingTitle}
         </h2>
-        <p className="text-xs sm:text-sm text-[#8B735B] mt-2 max-w-md mx-auto">
+        <p className="text-sm text-[#5D5449] mt-2 max-w-md mx-auto">
           {tf('uploadSuccessMsg', { count: uploadedPhotos.length })}
         </p>
       </div>
@@ -195,7 +195,7 @@ export const UploadSuccessScreen = ({
         <button
           type="button"
           onClick={onUploadMore}
-          className="w-full sm:w-auto px-6 py-3 rounded-2xl bg-[#8B735B] hover:bg-[#705C47] text-white text-xs font-bold shadow-md transition-all flex items-center justify-center gap-2"
+          className="btn-accent w-full sm:w-auto px-6 py-3 text-sm font-bold gap-2"
         >
           <Camera className="w-4 h-4" />
           <span>{t.uploadMoreBtn}</span>
