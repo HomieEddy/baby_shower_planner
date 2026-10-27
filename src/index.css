@@ -172,6 +172,93 @@
 
 .dark .text-ok { color: #86EFAC; }
 
+/* Dark mode: light status tints (amber-50, rose-100...) become translucent
+   washes with light text, so warnings and chips stay readable. Exact class
+   tokens only, so solid fills like bg-amber-500 keep their color. */
+.dark [class~="bg-amber-100"],
+.dark [class~="bg-amber-100/30"],
+.dark [class~="bg-amber-50"],
+.dark [class~="bg-amber-50/20"],
+.dark [class~="bg-amber-50/60"] {
+  background-color: rgba(245, 158, 11, 0.14) !important;
+}
+.dark [class~="border-amber-200"],
+.dark [class~="border-amber-300"],
+.dark [class~="border-amber-300/60"] {
+  border-color: rgba(245, 158, 11, 0.4) !important;
+}
+.dark [class~="text-amber-700"],
+.dark [class~="text-amber-800"],
+.dark [class~="text-amber-800/90"],
+.dark [class~="text-amber-900"] {
+  color: #FCD34D !important;
+}
+.dark [class~="bg-rose-100"],
+.dark [class~="bg-rose-50"],
+.dark [class~="bg-rose-50/60"] {
+  background-color: rgba(244, 63, 94, 0.14) !important;
+}
+.dark [class~="border-rose-200"],
+.dark [class~="border-rose-300"] {
+  border-color: rgba(244, 63, 94, 0.4) !important;
+}
+.dark [class~="text-rose-700"],
+.dark [class~="text-rose-800"],
+.dark [class~="text-rose-900"],
+.dark [class~="text-rose-900/70"],
+.dark [class~="text-rose-900/80"] {
+  color: #FDA4AF !important;
+}
+.dark [class~="bg-red-100"],
+.dark [class~="bg-red-50/40"] {
+  background-color: rgba(239, 68, 68, 0.14) !important;
+}
+.dark [class~="border-red-200"] {
+  border-color: rgba(239, 68, 68, 0.4) !important;
+}
+.dark [class~="text-red-700"] {
+  color: #FCA5A5 !important;
+}
+.dark [class~="border-green-200"],
+.dark [class~="border-green-300"] {
+  border-color: rgba(34, 197, 94, 0.4) !important;
+}
+.dark [class~="bg-emerald-100"],
+.dark [class~="bg-emerald-100/70"],
+.dark [class~="bg-emerald-50"],
+.dark [class~="bg-emerald-50/40"],
+.dark [class~="bg-emerald-50/80"] {
+  background-color: rgba(16, 185, 129, 0.14) !important;
+}
+.dark [class~="border-emerald-200"],
+.dark [class~="border-emerald-300"] {
+  border-color: rgba(16, 185, 129, 0.4) !important;
+}
+.dark [class~="text-emerald-700"],
+.dark [class~="text-emerald-800"],
+.dark [class~="text-emerald-900"] {
+  color: #6EE7B7 !important;
+}
+.dark [class~="bg-sky-100"] {
+  background-color: rgba(14, 165, 233, 0.14) !important;
+}
+.dark [class~="border-sky-200"] {
+  border-color: rgba(14, 165, 233, 0.4) !important;
+}
+.dark [class~="text-sky-800"],
+.dark [class~="text-sky-900"] {
+  color: #7DD3FC !important;
+}
+.dark [class~="bg-pink-100"] {
+  background-color: rgba(236, 72, 153, 0.14) !important;
+}
+.dark [class~="border-pink-200"] {
+  border-color: rgba(236, 72, 153, 0.4) !important;
+}
+.dark [class~="text-pink-900"] {
+  color: #F9A8D4 !important;
+}
+
 /* Form input, select, textarea styling */
 input, select, textarea {
   background-color: var(--input-bg) !important;

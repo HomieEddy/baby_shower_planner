@@ -221,13 +221,26 @@ export function getContrastTextColor(hexColor: string): string {
   return isColorDark(hexColor) ? '#F8FAFC' : '#0F172A';
 }
 
+/** Blends two #RRGGBB colors: amount 0 returns `from`, 1 returns `to`. */
+export function mixHex(from: string, to: string, amount: number): string {
+  const parse = (hex: string) => {
+    const h = hex.replace('#', '');
+    return h.length === 6 ? [0, 2, 4].map((i) => parseInt(h.substring(i, i + 2), 16)) : null;
+  };
+  const a = parse(from);
+  const b = parse(to);
+  if (!a || !b) return from;
+  return '#' + a.map((v, i) => Math.round(v + (b[i] - v) * amount).toString(16).padStart(2, '0')).join('').toUpperCase();
+}
+
 export function applyThemeToDocument(theme: ThemePreset) {
   if (typeof document === 'undefined') return;
 
   const root = document.documentElement;
   const dark = theme.isDark || isColorDark(theme.bg);
-  const surface = theme.surface || (dark ? '#1E293B' : '#FFFFFF');
-  const inputBg = dark ? '#0F172A' : '#FFFFFF';
+  // Dark surfaces are tinted from the theme's own background so cards match it.
+  const surface = theme.surface || (dark ? mixHex(theme.bg, theme.ink, 0.08) : '#FFFFFF');
+  const inputBg = dark ? mixHex(theme.bg, '#000000', 0.2) : '#FFFFFF';
 
   root.style.setProperty('--bg', theme.bg);
   root.style.setProperty('--ink', theme.ink);
