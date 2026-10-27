@@ -972,6 +972,7 @@ export interface Translations {
   fpZoomOut: string;
   fpZoomReset: string;
   fpAddToPlanLabel: string;
+  fpTopDownView: string;
   unseatedWord: string;
   editorTitle: string;
   unsavedChangesBadge: string;
@@ -2282,6 +2283,7 @@ export const translations: Record<Language, Translations> = {
     fpZoomOut: "Zoom out",
     fpZoomReset: "Reset zoom",
     fpAddToPlanLabel: "Add to plan",
+    fpTopDownView: "Top view",
     unseatedWord: "unseated",
     editorTitle: "Full-Screen Floor Plan Editor",
     unsavedChangesBadge: "Unsaved Changes",
@@ -3582,6 +3584,7 @@ export const translations: Record<Language, Translations> = {
     fpZoomOut: "Zoom arrière",
     fpZoomReset: "Réinitialiser le zoom",
     fpAddToPlanLabel: "Ajouter au plan",
+    fpTopDownView: "Vue du dessus",
     unseatedWord: "non placé(s)",
     editorTitle: "Éditeur de plan de salle plein écran",
     unsavedChangesBadge: "Modifications non enregistrées",

@@ -1,7 +1,18 @@
-import { Component, ReactNode, useRef, useState } from 'react';
-import { Canvas, ThreeEvent, useFrame } from '@react-three/fiber';
-import { OrbitControls, Grid, Html, useCursor } from '@react-three/drei';
-import { DoubleSide, type Mesh, type MeshBasicMaterial } from 'three';
+import { Component, ReactNode, useEffect, useMemo, useRef, useState } from 'react';
+import { Canvas, ThreeEvent, useFrame, useThree } from '@react-three/fiber';
+import { ContactShadows, Grid, Html, OrbitControls, RoundedBox, useCursor } from '@react-three/drei';
+import {
+  ACESFilmicToneMapping,
+  CanvasTexture,
+  DoubleSide,
+  MeshStandardMaterial,
+  PMREMGenerator,
+  RepeatWrapping,
+  SRGBColorSpace,
+  type Mesh,
+  type MeshBasicMaterial,
+} from 'three';
+import { RoomEnvironment } from 'three/examples/jsm/environments/RoomEnvironment.js';
 import { Guest, FloorMapData, LandmarkElement, TableElement } from '../../types';
 import {
   WORLD_SCALE,
@@ -157,18 +168,33 @@ const Chair3D = ({ table, seatIndex, fill, dimmed = false, onSeatHover, onLeave 
   });
   return (
     <group position={[pos.x, 0, pos.z]} rotation={[0, pos.yaw, 0]} {...events}>
-      <mesh position={[0, CHAIR_SEAT_H, 0]} castShadow>
-        <boxGeometry args={[CHAIR_W, 0.07, CHAIR_W]} />
-        <meshStandardMaterial color={fill} transparent={dimmed} opacity={dimmed ? 0.2 : 1} />
-      </mesh>
-      <mesh position={[0, CHAIR_SEAT_H + BACKREST_H / 2, CHAIR_W / 2 - 0.02]} castShadow>
-        <boxGeometry args={[CHAIR_W, BACKREST_H, 0.05]} />
-        <meshStandardMaterial color={fill} transparent={dimmed} opacity={dimmed ? 0.2 : 1} />
-      </mesh>
-      <mesh position={[0, CHAIR_SEAT_H / 2, 0]} castShadow>
-        <cylinderGeometry args={[0.02, 0.02, CHAIR_SEAT_H, 8]} />
-        <meshStandardMaterial color={C.leg} transparent={dimmed} opacity={dimmed ? 0.2 : 1} />
-      </mesh>
+      <RoundedBox args={[CHAIR_W, 0.07, CHAIR_W]} radius={0.02} smoothness={3} position={[0, CHAIR_SEAT_H, 0]} castShadow>
+        <meshStandardMaterial color={fill} roughness={0.85} transparent={dimmed} opacity={dimmed ? 0.2 : 1} />
+      </RoundedBox>
+      <RoundedBox
+        args={[CHAIR_W, BACKREST_H, 0.05]}
+        radius={0.02}
+        smoothness={3}
+        position={[0, CHAIR_SEAT_H + BACKREST_H / 2, CHAIR_W / 2 - 0.02]}
+        castShadow
+      >
+        <meshStandardMaterial color={fill} roughness={0.85} transparent={dimmed} opacity={dimmed ? 0.2 : 1} />
+      </RoundedBox>
+      {[
+        [-1, -1],
+        [1, -1],
+        [-1, 1],
+        [1, 1],
+      ].map(([sx, sz], i) => (
+        <mesh
+          key={i}
+          position={[sx * (CHAIR_W / 2 - 0.03), CHAIR_SEAT_H / 2, sz * (CHAIR_W / 2 - 0.03)]}
+          castShadow
+        >
+          <cylinderGeometry args={[0.014, 0.012, CHAIR_SEAT_H, 10]} />
+          <meshStandardMaterial color={C.leg} roughness={0.55} transparent={dimmed} opacity={dimmed ? 0.2 : 1} />
+        </mesh>
+      ))}
     </group>
   );
 };
@@ -262,9 +288,10 @@ const Table3D = ({
         {/* Tabletop */}
         {isRound ? (
           <mesh position={[0, TABLE_TOP_H - TABLE_TOP_THICK / 2, 0]} castShadow receiveShadow>
-            <cylinderGeometry args={[r, r, TABLE_TOP_THICK, 40]} />
+            <cylinderGeometry args={[r, r, TABLE_TOP_THICK, 48]} />
             <meshStandardMaterial
               color={topColor}
+              roughness={0.42}
               emissive={glow || '#000000'}
               emissiveIntensity={glow ? 0.35 : 0}
               transparent={dimmed}
@@ -272,16 +299,23 @@ const Table3D = ({
             />
           </mesh>
         ) : (
-          <mesh position={[0, TABLE_TOP_H - TABLE_TOP_THICK / 2, 0]} castShadow receiveShadow>
-            <boxGeometry args={[w, TABLE_TOP_THICK, d]} />
+          <RoundedBox
+            args={[w, TABLE_TOP_THICK, d]}
+            radius={0.02}
+            smoothness={3}
+            position={[0, TABLE_TOP_H - TABLE_TOP_THICK / 2, 0]}
+            castShadow
+            receiveShadow
+          >
             <meshStandardMaterial
               color={topColor}
+              roughness={0.42}
               emissive={glow || '#000000'}
               emissiveIntensity={glow ? 0.35 : 0}
               transparent={dimmed}
               opacity={dimmed ? 0.18 : 1}
             />
-          </mesh>
+          </RoundedBox>
         )}
 
         {/* Base */}
@@ -528,17 +562,103 @@ const Landmark3D = ({ floorMap, landmark, onLandmarkHover, onLeave }: LandmarkPr
 
 // ─── Scene ────────────────────────────────────────────────────────
 
-const Scene = (props: FloorPlan3DProps) => {
+// Soft image-based lighting from three's built-in room (no download), so wood and
+// fabric pick up believable reflections instead of flat shading.
+const useRoomEnvironmentTexture = () => {
+  const gl = useThree((state) => state.gl);
+  const envTexture = useMemo(() => {
+    const pmrem = new PMREMGenerator(gl);
+    const texture = pmrem.fromScene(new RoomEnvironment(), 0.04).texture;
+    pmrem.dispose();
+    return texture;
+  }, [gl]);
+  useEffect(() => () => envTexture.dispose(), [envTexture]);
+  return envTexture;
+};
+
+// Moves the camera straight above the room when `signal` changes (skips the initial mount).
+const TopDownCamera = ({ signal, roomW, roomH }: { signal: number; roomW: number; roomH: number }) => {
+  const camera = useThree((state) => state.camera);
+  const controls = useThree((state) => state.controls) as unknown as {
+    target: { set: (x: number, y: number, z: number) => void };
+    update: () => void;
+  } | null;
+  useEffect(() => {
+    if (signal === 0) return;
+    camera.position.set(0, Math.max(roomW, roomH) * 1.6, 0.001);
+    camera.lookAt(0, 0, 0);
+    if (controls) {
+      controls.target.set(0, 0, 0);
+      controls.update();
+    }
+  }, [signal, camera, controls, roomW, roomH]);
+  return null;
+};
+
+// Warm wood-plank floor drawn to a canvas, so there are no image assets to load.
+const useWoodFloorTexture = (roomW: number, roomH: number) =>
+  useMemo(() => {
+    const canvas = document.createElement('canvas');
+    canvas.width = 512;
+    canvas.height = 512;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return null;
+    const planks = 4;
+    const plankH = canvas.height / planks;
+    for (let i = 0; i < planks; i++) {
+      const shade = 226 + ((i * 37) % 18) - 9;
+      ctx.fillStyle = `rgb(${shade}, ${shade - 26}, ${shade - 58})`;
+      ctx.fillRect(0, i * plankH, canvas.width, plankH);
+      ctx.strokeStyle = 'rgba(90, 65, 40, 0.35)';
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.moveTo(0, i * plankH);
+      ctx.lineTo(canvas.width, i * plankH);
+      ctx.stroke();
+      for (let g = 0; g < 6; g++) {
+        const y = i * plankH + ((g * 53 + i * 17) % plankH);
+        ctx.strokeStyle = 'rgba(120, 90, 55, 0.12)';
+        ctx.beginPath();
+        ctx.moveTo(0, y);
+        ctx.bezierCurveTo(canvas.width * 0.3, y + 4, canvas.width * 0.6, y - 4, canvas.width, y);
+        ctx.stroke();
+      }
+    }
+    const texture = new CanvasTexture(canvas);
+    texture.colorSpace = SRGBColorSpace;
+    texture.wrapS = RepeatWrapping;
+    texture.wrapT = RepeatWrapping;
+    // One 512px tile covers about two world units (two metres in the room).
+    texture.repeat.set(Math.max(1, roomW / 2), Math.max(1, roomH / 2));
+    return texture;
+  }, [roomW, roomH]);
+
+const Scene = (props: FloorPlan3DProps & { topDownSignal: number }) => {
   const { floorMap, guests } = props;
   const { width: roomW, height: roomH } = roomWorldSize(floorMap);
   const scale = Math.max(roomW, roomH);
+  const environmentTexture = useRoomEnvironmentTexture();
+  const floorTexture = useWoodFloorTexture(roomW, roomH);
+  const floorMaterial = useMemo(
+    () =>
+      new MeshStandardMaterial({
+        map: floorTexture ?? undefined,
+        color: floorTexture ? '#ffffff' : C.floor,
+        roughness: 0.8,
+      }),
+    [floorTexture]
+  );
+  // Shadow only moves when tables move, so key the contact shadows on table positions.
+  const shadowKey = floorMap.tables.map((tbl) => `${tbl.id}:${tbl.x},${tbl.y}`).join('|');
 
   return (
     <>
-      <ambientLight intensity={0.65} />
+      <primitive attach="environment" object={environmentTexture} />
+      <TopDownCamera signal={props.topDownSignal} roomW={roomW} roomH={roomH} />
+      <ambientLight intensity={0.3} />
       <directionalLight
         position={[scale, scale * 1.5, scale * 0.8]}
-        intensity={1.3}
+        intensity={1.1}
         castShadow
         shadow-mapSize={[2048, 2048]}
         shadow-camera-left={-roomW}
@@ -554,7 +674,7 @@ const Scene = (props: FloorPlan3DProps) => {
       {isRoomCircle(floorMap) ? (
         <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -0.02, 0]} receiveShadow>
           <circleGeometry args={[roomRadiusWorld(floorMap), 64]} />
-          <meshStandardMaterial color={C.floor} />
+          <primitive object={floorMaterial} attach="material" />
         </mesh>
       ) : isRoomEllipse(floorMap) ? (
         <mesh
@@ -564,12 +684,12 @@ const Scene = (props: FloorPlan3DProps) => {
           receiveShadow
         >
           <circleGeometry args={[1, 64]} />
-          <meshStandardMaterial color={C.floor} />
+          <primitive object={floorMaterial} attach="material" />
         </mesh>
       ) : (
         <mesh rotation={[-Math.PI / 2, 0, 0]} position={[0, -0.02, 0]} receiveShadow>
           <planeGeometry args={[roomW, roomH]} />
-          <meshStandardMaterial color={C.floor} />
+          <primitive object={floorMaterial} attach="material" />
         </mesh>
       )}
       <Grid
@@ -582,6 +702,16 @@ const Scene = (props: FloorPlan3DProps) => {
         sectionThickness={1}
         sectionColor="#C9A9B4"
         fadeDistance={scale * 5}
+      />
+
+      <ContactShadows
+        key={shadowKey}
+        position={[0, -0.015, 0]}
+        width={scale * 2}
+        height={scale * 2}
+        opacity={0.4}
+        blur={2.2}
+        far={2}
       />
 
       {floorMap.landmarks.map((lm) => (
@@ -612,7 +742,7 @@ const Scene = (props: FloorPlan3DProps) => {
         />
       ))}
 
-      <OrbitControls
+      <OrbitControls makeDefault
         target={[0, 0, 0]}
         maxPolarAngle={Math.PI / 2 - 0.06}
         minDistance={scale * 0.3}
@@ -627,6 +757,7 @@ const Scene = (props: FloorPlan3DProps) => {
 export const FloorPlan3D = (props: FloorPlan3DProps) => {
   const t = useT();
   const [webglOk] = useState(checkWebGL);
+  const [topDownSignal, setTopDownSignal] = useState(0);
   const { width: roomW, height: roomH } = roomWorldSize(props.floorMap);
 
   const fallback = (
@@ -654,10 +785,18 @@ export const FloorPlan3D = (props: FloorPlan3DProps) => {
 
   return (
     <div className={props.className} style={{ position: 'relative' }}>
+      <button
+        type="button"
+        onClick={() => setTopDownSignal((n) => n + 1)}
+        className="absolute top-2 right-2 z-10 px-2.5 py-1.5 rounded-xl bg-white/90 border border-[#CBAE94] text-xs font-bold text-[#4A3F35] shadow-sm hover:bg-[#EFE6DC]"
+      >
+        {t.fpTopDownView}
+      </button>
       <CanvasBoundary fallback={fallback}>
         <Canvas
           shadows
           dpr={[1, 2]}
+          gl={{ antialias: true, toneMapping: ACESFilmicToneMapping }}
           camera={{
             position: [roomW * 0.75, roomH * 1.15, roomW * 0.8],
             fov: 45,
@@ -667,7 +806,7 @@ export const FloorPlan3D = (props: FloorPlan3DProps) => {
           onPointerMissed={props.onLeave ? () => props.onLeave?.() : undefined}
           style={{ width: '100%', height: '100%' }}
         >
-          <Scene {...props} />
+          <Scene {...props} topDownSignal={topDownSignal} />
         </Canvas>
       </CanvasBoundary>
     </div>
