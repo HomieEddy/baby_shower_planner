@@ -80,3 +80,17 @@ describe('seatVisual', () => {
     });
   });
 });
+
+describe('seatVisual palette', () => {
+  it('uses the theme surface and accent for empty chairs', () => {
+    const v = seatVisual({
+      occupied: false,
+      isDropTarget: false,
+      isPicked: false,
+      pickMode: false,
+      palette: { surface: '#1E293B', accent: '#334155' },
+    });
+    expect(v.fill).toBe('#1E293B');
+    expect(v.stroke).toBe('#334155');
+  });
+});
