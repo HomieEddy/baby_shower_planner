@@ -13,7 +13,7 @@ interface MetricCardProps {
 
 // Compact stat card. Clickable when it drives a filter/scroll, otherwise static.
 export const MetricCard = ({ label, value, icon, footer, iconClass = 'text-[#8B735B]', onClick }: MetricCardProps) => {
-  const cardClass = `card-paper-sm p-4 min-w-0 overflow-hidden text-left ${
+  const cardClass = `card-paper-sm p-3 sm:p-4 min-w-0 overflow-hidden text-left ${
     onClick ? 'cursor-pointer hover:-translate-y-0.5 transition-transform w-full' : ''
   }`;
   const inner = (

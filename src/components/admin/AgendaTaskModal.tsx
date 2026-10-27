@@ -53,7 +53,7 @@ export const AgendaTaskModal: React.FC<AgendaTaskModalProps> = ({ open, task, pr
     }
   }, [open, task, preseedDate, reset]);
 
-  const inputCls = 'w-full px-4 py-2.5 rounded-2xl border-2 border-[#CBAE94] text-xs font-bold text-[#5D5449] focus:outline-none focus:ring-2 focus:ring-[#8B735B] bg-white';
+  const inputCls = 'w-full px-3.5 py-2.5 rounded-xl border border-[#CBAE94] text-base sm:text-sm font-medium text-[#4A3F35] focus:outline-none focus:ring-2 focus:ring-[#8B735B] bg-white';
   const labelCls = 'label-mono block mb-1';
 
   return (
@@ -75,7 +75,7 @@ export const AgendaTaskModal: React.FC<AgendaTaskModalProps> = ({ open, task, pr
             <button
               type="button"
               onClick={() => onDelete(task)}
-              className="px-4 py-2.5 rounded-2xl border-2 border-rose-300 text-rose-700 text-xs font-bold hover:bg-rose-50 transition-colors cursor-pointer"
+              className="px-4 py-2.5 rounded-full border border-rose-300 bg-white text-rose-700 text-xs font-semibold hover:bg-rose-50 transition-colors cursor-pointer"
             >
               {t.agendaDeleteBtn}
             </button>
@@ -84,7 +84,7 @@ export const AgendaTaskModal: React.FC<AgendaTaskModalProps> = ({ open, task, pr
             <button
               type="button"
               onClick={onClose}
-              className="px-4 py-2.5 rounded-2xl border-2 border-[#CBAE94] text-[#5D5449] text-xs font-bold hover:bg-[#EFE6DC] transition-colors cursor-pointer"
+              className="btn-outline-accent px-4 py-2.5 text-xs cursor-pointer"
             >
               {t.cancelBtn}
             </button>
