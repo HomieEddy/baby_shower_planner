@@ -580,6 +580,12 @@ export const FloorPlanEditor = ({
             )}
           </div>
 
+          {/* Add to plan: the table and venue-feature tools share one labeled group */}
+          <section className="space-y-3" aria-labelledby="editor-add-to-plan">
+            <h3 id="editor-add-to-plan" className="label-mono font-bold text-[#8B735B] px-1">
+              {t.fpAddToPlanLabel}
+            </h3>
+
           {/* Add Table Controls */}
           <div className="bg-[#FFFDF9] rounded-3xl p-4 shadow-md border-2 border-[#CBAE94] space-y-3">
             <h3 className="label-mono font-bold text-[#8B735B] flex items-center gap-1">
@@ -671,6 +677,8 @@ export const FloorPlanEditor = ({
               </button>
             </div>
           </div>
+
+          </section>
 
           {/* Instructions Tip Box */}
           <div className="bg-[#EFE6DC]/50 rounded-2xl p-3 border border-[#CBAE94] text-xs text-[#5D5449] space-y-1">
