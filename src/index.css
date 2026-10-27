@@ -70,6 +70,9 @@
   border-radius: 20px;
 }
 
+/* Guest page pieces live in the components layer so utilities (padding,
+   fonts, spacing) can still adjust them per use. */
+@layer components {
 /* Lighter card for guest pages: 1px theme border and a soft shadow. */
 .card-guest {
   background-color: var(--surface) !important;
@@ -77,25 +80,6 @@
   border: 1px solid color-mix(in srgb, var(--accent) 55%, var(--surface));
   border-radius: 24px;
   box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04), 0 8px 24px rgba(0, 0, 0, 0.05);
-}
-
-/* One error notice style for guest forms. */
-.notice-error {
-  display: flex;
-  align-items: flex-start;
-  gap: 0.5rem;
-  padding: 0.75rem;
-  border-radius: 0.75rem;
-  font-size: 0.75rem;
-  color: #9F1239;
-  background-color: #FFF1F2;
-  border: 1px solid #FDA4AF;
-}
-
-.dark .notice-error {
-  color: #FECDD3;
-  background-color: rgba(244, 63, 94, 0.12);
-  border-color: rgba(244, 63, 94, 0.4);
 }
 
 /* Guest form fields: one label style and one input style on every guest form. */
@@ -148,6 +132,27 @@
 .guest-input:disabled {
   cursor: not-allowed;
   background-color: var(--surface-2) !important;
+}
+
+}
+
+/* One error notice style for guest forms. */
+.notice-error {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.5rem;
+  padding: 0.75rem;
+  border-radius: 0.75rem;
+  font-size: 0.75rem;
+  color: #9F1239;
+  background-color: #FFF1F2;
+  border: 1px solid #FDA4AF;
+}
+
+.dark .notice-error {
+  color: #FECDD3;
+  background-color: rgba(244, 63, 94, 0.12);
+  border-color: rgba(244, 63, 94, 0.4);
 }
 
 /* Form input, select, textarea styling */

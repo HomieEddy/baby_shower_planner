@@ -21,6 +21,7 @@ import { getGuestPartySize } from '../../lib/tableAssignment';
 import { decodeApiError } from '../../lib/errors';
 import { isValidCode } from '../../lib/validation';
 import { VenueModal } from './VenueModal';
+import { GuestPageHeader } from '../shared/GuestPageHeader';
 
 // A searchable person: the primary guest or one of their party attendees.
 export interface AttendeeHit {
@@ -214,65 +215,37 @@ export const GuestFinderPage: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-[#F3EBE1] via-[#FAF6F0] to-[#F3EBE1] py-8 sm:py-14 px-4">
-      <div className="max-w-4xl mx-auto space-y-6 relative">
+    <div className="py-8 sm:py-14 px-4">
+      <div className="max-w-2xl mx-auto space-y-6 relative">
         {/* Hero — staggered entrance */}
         <motion.div
           variants={container}
           initial="hidden"
           animate="show"
-          className="relative rounded-3xl bg-[#FFFDF9] shadow-xl border-2 border-[#CBAE94] px-6 py-10 sm:px-10 text-center"
+          className="card-guest relative px-6 py-8 sm:px-10 sm:py-10"
         >
-          {/* drifting decorative orbs — clipped to the card without clipping the dropdown */}
-          <div aria-hidden className="absolute inset-0 overflow-hidden rounded-3xl pointer-events-none">
-            <motion.div
-              className="absolute -top-16 -left-16 w-48 h-48 rounded-full bg-[#EFE6DC] blur-3xl opacity-70"
-              animate={{ x: [0, 18, 0], y: [0, 10, 0] }}
-              transition={{ duration: 9, repeat: Infinity, ease: 'easeInOut' }}
+          <motion.div variants={item}>
+            <GuestPageHeader
+              icon={MapPin}
+              eyebrow={t.dayOfBadge}
+              title={t.dayOfTitle}
+              subtitle={t.dayOfSubtitle}
             />
-            <motion.div
-              className="absolute -bottom-20 -right-14 w-56 h-56 rounded-full bg-[#E7D5BE] blur-3xl opacity-50"
-              animate={{ x: [0, -16, 0], y: [0, -12, 0] }}
-              transition={{ duration: 11, repeat: Infinity, ease: 'easeInOut' }}
-            />
-          </div>
-
-          <motion.div variants={item} className="relative">
-            <span className="inline-flex items-center gap-1.5 px-4 py-1.5 rounded-full bg-[#EFE6DC] text-[#8B735B] text-xs font-mono font-bold uppercase tracking-wider">
-              <motion.span
-                animate={{ rotate: [0, -10, 10, 0] }}
-                transition={{ duration: 2.4, repeat: Infinity, ease: 'easeInOut' }}
-              >
-                <MapPin className="w-3.5 h-3.5" />
-              </motion.span>
-              {t.dayOfBadge}
-            </span>
           </motion.div>
 
-          <motion.h1
-            variants={item}
-            className="relative mt-4 font-gaegu text-4xl sm:text-5xl font-bold text-[#4A3F35]"
-          >
-            {t.dayOfTitle}
-          </motion.h1>
-
-          <motion.p
-            variants={item}
-            className="relative mt-3 text-sm text-[#5D5449] font-medium max-w-lg mx-auto"
-          >
-            {t.dayOfSubtitle}
-          </motion.p>
-
           {/* Search — the only thing guests need */}
-          <motion.div variants={item} className="relative max-w-md mx-auto mt-7">
-            <Search className="w-5 h-5 text-[#CBAE94] absolute left-4 top-3.5 pointer-events-none" />
+          <motion.div variants={item} className="relative max-w-sm mx-auto mt-6">
+            <Search className="w-5 h-5 text-[#8B735B] absolute left-4 top-1/2 -translate-y-1/2 pointer-events-none" aria-hidden />
             <input
               type="text"
+              inputMode="numeric"
+              maxLength={4}
+              autoComplete="off"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               placeholder={t.checkinSearchPh}
               aria-label={t.checkinSearchPh}
-              className="w-full pl-12 pr-4 py-3 rounded-2xl border-2 border-[#CBAE94] text-sm font-bold text-[#5D5449] focus:outline-none focus:ring-2 focus:ring-[#8B735B] bg-white shadow-inner transition-all focus:scale-[1.01]"
+              className="guest-input pl-12 font-mono font-bold tracking-[0.3em] placeholder:tracking-normal placeholder:font-sans placeholder:font-normal"
             />
 
             {/* Animated dropdown results */}
@@ -283,16 +256,16 @@ export const GuestFinderPage: React.FC = () => {
                   animate={{ opacity: 1, y: 0, scale: 1 }}
                   exit={{ opacity: 0, y: -8, scale: 0.98 }}
                   transition={{ duration: 0.18 }}
-                  className="absolute z-20 left-0 right-0 mt-2 bg-white rounded-2xl border-2 border-[#CBAE94] shadow-xl overflow-hidden"
+                  className="absolute z-20 left-0 right-0 mt-2 bg-white rounded-xl border border-[#CBAE94] shadow-lg overflow-hidden text-left"
                 >
                   {searching ? (
-                    <div className="p-4 flex items-center gap-2 text-xs text-[#5D5449]/70 italic">
-                      <Info className="w-4 h-4 shrink-0 text-[#CBAE94]" />
+                    <div className="p-4 flex items-center gap-2 text-xs text-[#5D5449]">
+                      <Info className="w-4 h-4 shrink-0 text-[#8B735B]" />
                       {t.finderSearching}
                     </div>
                   ) : hits.length === 0 ? (
-                    <div className="p-4 flex items-center gap-2 text-xs text-[#5D5449]/70 italic">
-                      <Info className="w-4 h-4 shrink-0 text-[#CBAE94]" />
+                    <div className="p-4 flex items-center gap-2 text-xs text-[#5D5449]">
+                      <Info className="w-4 h-4 shrink-0 text-[#8B735B]" />
                       {t.finderNoMatch}
                     </div>
                   ) : (
@@ -303,24 +276,14 @@ export const GuestFinderPage: React.FC = () => {
                         animate={{ opacity: 1, x: 0 }}
                         transition={{ delay: idx * 0.04 }}
                         onClick={() => pickPerson(hit)}
-                        className="w-full p-3 text-left hover:bg-[#EFE6DC]/50 transition-colors flex items-center justify-between border-b border-[#EFE6DC] last:border-b-0"
+                        className="w-full min-h-[52px] px-4 py-3 text-left hover:bg-[#EFE6DC]/50 transition-colors flex items-center justify-between gap-3 border-b border-[#CBAE94]/30 last:border-b-0"
                       >
                         <div className="min-w-0">
-                          <p className="text-xs font-bold text-[#4A3F35] truncate">
-                            {hit.displayName}
-                            {hit.attendeeName === null && (
-                              <span className="ml-1.5 text-xs font-mono uppercase text-[#8B735B]">
-                                {t.finderPartyLead}
-                              </span>
-                            )}
-                          </p>
-                          <span className="text-xs text-[#8B735B] font-mono">
-                            {hit.guest.code}
-                            {hit.attendeeName !== null && (
-                              <span className="ml-1.5 text-[#CBAE94]">
-                                • {hit.guest.name}'s party
-                              </span>
-                            )}
+                          <p className="text-sm font-bold text-[#4A3F35] break-words">{hit.displayName}</p>
+                          <span className="text-xs text-[#5D5449]">
+                            {hit.attendeeName === null
+                              ? t.finderPartyLead
+                              : tf('finderPartyOf', { name: hit.guest.name })}
                           </span>
                         </div>
                         <ChevronRight className="w-4 h-4 text-[#8B735B] shrink-0" />
@@ -337,7 +300,7 @@ export const GuestFinderPage: React.FC = () => {
               initial={{ opacity: 0 }}
               animate={{ opacity: [0.4, 1, 0.4] }}
               transition={{ duration: 1.4, repeat: Infinity }}
-              className="relative mt-6 text-xs font-mono text-[#8B735B]"
+              className="relative mt-6 text-xs font-mono text-[#8B735B] text-center"
             >
               {t.finderSearching}
             </motion.p>
@@ -353,28 +316,28 @@ export const GuestFinderPage: React.FC = () => {
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.95, y: -12 }}
               transition={{ type: 'spring', stiffness: 240, damping: 22 }}
-              className="bg-[#FFFDF9] rounded-3xl p-6 sm:p-8 shadow-xl border-2 border-[#CBAE94] space-y-6"
+              className="card-guest p-6 sm:p-8 space-y-6"
             >
               {/* Welcome header */}
               <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 border-b border-[#CBAE94]/40 pb-5">
                 <motion.div
-                  className="flex items-center gap-3"
+                  className="flex items-center gap-3 min-w-0"
                   initial={{ opacity: 0, x: -16 }}
                   animate={{ opacity: 1, x: 0 }}
                   transition={{ delay: 0.1, type: 'spring', stiffness: 300, damping: 20 }}
                 >
                   <motion.div
-                    className="w-12 h-12 rounded-2xl bg-[#8B735B] text-white flex items-center justify-center shadow-md"
+                    className="w-12 h-12 shrink-0 rounded-2xl bg-[#EFE6DC] border border-[#CBAE94]/60 text-[#8B735B] flex items-center justify-center"
                     animate={{ rotate: [0, -6, 6, 0] }}
                     transition={{ duration: 0.8, delay: 0.45 }}
                   >
                     <MapPin className="w-6 h-6" />
                   </motion.div>
-                  <div>
-                    <h3 className="font-gaegu text-3xl font-bold text-[#4A3F35]">
+                  <div className="min-w-0">
+                    <h2 className="font-gaegu text-3xl font-bold text-[#4A3F35] leading-tight break-words">
                       {tf('finderWelcome', { name: selected.displayName })}
-                    </h3>
-                    <p className="text-xs text-[#8B735B] font-bold font-mono">
+                    </h2>
+                    <p className="text-xs text-[#5D5449] font-bold font-mono mt-0.5">
                       {tf('finderCodeParty', { code: selected.guest.code, count: String(getGuestPartySize(selected.guest)) })}
                     </p>
                   </div>
@@ -385,7 +348,7 @@ export const GuestFinderPage: React.FC = () => {
                     setDismissedId(selected.id);
                     setSearchPick(null);
                   }}
-                  className="text-xs font-bold text-[#8B735B] hover:text-[#4A3F35] bg-[#EFE6DC] px-3 py-2 rounded-xl transition-colors active:scale-95"
+                  className="min-h-[44px] text-xs font-bold text-[#4A3F35] border border-[#CBAE94] px-4 rounded-full transition-transform hover:-translate-y-0.5 active:scale-95 shrink-0"
                 >
                   {t.clearSelectionBtn}
                 </button>
@@ -393,8 +356,8 @@ export const GuestFinderPage: React.FC = () => {
 
               {/* Check-in — each guest checks in themselves; the lead can check in the whole party */}
               <div className="space-y-2">
-                <p className="text-xs font-mono uppercase tracking-wider font-bold text-[#8B735B] flex items-center gap-1.5">
-                  <UserCheck className="w-3.5 h-3.5" />
+                <p className="guest-label">
+                  <UserCheck aria-hidden />
                   {t.checkinPartyLabel}
                 </p>
 
@@ -402,7 +365,8 @@ export const GuestFinderPage: React.FC = () => {
                   <motion.div
                     initial={{ opacity: 0, y: 10 }}
                     animate={{ opacity: 1, y: 0 }}
-                    className="flex items-center gap-3 p-4 rounded-2xl bg-green-50 border-2 border-green-300 text-green-800"
+                    role="status"
+                    className="flex items-center gap-3 p-4 rounded-xl bg-green-50 border border-green-300 text-green-800"
                   >
                     <motion.span
                       animate={{ rotate: [0, -10, 10, 0] }}
@@ -425,15 +389,15 @@ export const GuestFinderPage: React.FC = () => {
                         initial={{ opacity: 0, x: -14 }}
                         animate={{ opacity: 1, x: 0 }}
                         transition={{ type: 'spring', stiffness: 280, damping: 22 }}
-                        className={`flex items-center justify-between gap-3 p-3.5 rounded-2xl border-2 transition-colors ${
+                        className={`flex flex-wrap items-center justify-between gap-3 p-3.5 rounded-xl border transition-colors ${
                           checked
                             ? 'bg-green-50 border-green-200'
                             : isSelf
-                              ? 'bg-amber-50/70 border-amber-200'
-                              : 'bg-white border-[#CBAE94]/30'
+                              ? 'bg-[#EFE6DC]/60 border-[#CBAE94]'
+                              : 'bg-white border-[#CBAE94]/40'
                         }`}
                       >
-                        <div className="flex items-center gap-3 min-w-0">
+                        <div className="flex items-center gap-3 min-w-0 flex-1 basis-44">
                           <span
                             className={`w-9 h-9 rounded-full flex items-center justify-center text-xs font-bold shrink-0 ${
                               checked
@@ -444,7 +408,7 @@ export const GuestFinderPage: React.FC = () => {
                             {member.split(' ').map((w) => w[0]).filter(Boolean).slice(0, 2).join('').toUpperCase()}
                           </span>
                           <div className="min-w-0">
-                            <p className="text-sm font-bold text-[#4A3F35] truncate">
+                            <p className="text-sm font-bold text-[#4A3F35] break-words">
                               {member}
                               {isSelf && (
                                 <span className="ml-1.5 text-xs font-mono uppercase text-[#8B735B]">
@@ -467,8 +431,9 @@ export const GuestFinderPage: React.FC = () => {
                           <button
                             onClick={() => void act(member, false, true, t.undoCheckinBtn)}
                             disabled={isBusy || !canAct}
-                            className="flex items-center gap-1 text-xs font-bold text-green-700 hover:text-green-900 disabled:opacity-40 transition-colors"
+                            className="min-w-[44px] min-h-[44px] flex items-center justify-center gap-1 text-xs font-bold text-green-700 hover:text-green-900 disabled:opacity-40 transition-colors ml-auto"
                             title={t.undoCheckinBtn}
+                            aria-label={t.undoCheckinBtn}
                           >
                             <CheckCircle2 className="w-4 h-4" />
                             <RotateCcw className="w-3 h-3" />
@@ -477,7 +442,7 @@ export const GuestFinderPage: React.FC = () => {
                           <button
                             onClick={() => void act(member, false, false, isSelf ? t.checkinMeBtn : t.checkInBtn)}
                             disabled={isBusy}
-                            className="px-4 py-2 rounded-full text-xs font-bold bg-[#8B735B] text-white hover:bg-[#4A3F35] transition-colors flex items-center gap-1.5 disabled:opacity-50 active:scale-95"
+                            className="btn-accent min-h-[44px] px-4 py-2 text-xs font-bold gap-1.5 disabled:opacity-50 active:scale-95 ml-auto"
                           >
                             <CheckCircle2 className="w-3.5 h-3.5" />
                             {isSelf ? t.checkinMeBtn : t.checkInBtn}
@@ -499,7 +464,7 @@ export const GuestFinderPage: React.FC = () => {
                     transition={{ delay: 0.15 }}
                     onClick={() => void act(undefined, true, false, t.checkinAllBtn)}
                     disabled={busy === 'all'}
-                    className="w-full py-3.5 rounded-2xl text-sm font-bold bg-[#C9A227] text-white hover:bg-[#A8861C] transition-colors flex items-center justify-center gap-2 disabled:opacity-50 active:scale-[0.99] shadow-md"
+                    className="btn-accent w-full py-3.5 min-h-[52px] text-sm font-bold gap-2 disabled:opacity-50"
                   >
                     <UserCheck className="w-4 h-4" />
                     {t.checkinAllBtn}
@@ -523,7 +488,7 @@ export const GuestFinderPage: React.FC = () => {
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: 0.15 }}
                   onClick={() => setVenueOpen(true)}
-                  className="w-full py-3.5 rounded-2xl text-sm font-bold bg-[#8B735B] text-white hover:bg-[#4A3F35] transition-colors flex items-center justify-center gap-2 active:scale-[0.99] shadow-md"
+                  className={`${isLead && !allChecked && members.length > 1 ? 'btn-outline-accent' : 'btn-accent'} w-full py-3.5 min-h-[52px] text-sm font-bold gap-2`}
                 >
                   <MapPin className="w-4 h-4" />
                   {t.venueBtn}

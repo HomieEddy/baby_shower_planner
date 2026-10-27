@@ -350,6 +350,7 @@ export interface Translations {
   finderOpenSeatingMsg: string;
   finderOpenSeatingTitle: string;
   finderPartyLead: string;
+  finderPartyOf: string;
   finderSearching: string;
   finderSeatedWithParty: string;
   finderSeatedWithParty_one: string;
@@ -1482,7 +1483,7 @@ export const translations: Record<Language, Translations> = {
     checkinDoneToast: "{{name}} is checked in!",
     checkinMeBtn: "Check Me In",
     checkinPartyLabel: "Your Party",
-    checkinSearchPh: "Enter your 4-digit reservation code...",
+    checkinSearchPh: "Your 4-digit code",
     checkinYouLabel: "You",
     checkingLabel: "Checking...",
     clearAllBtn: "Clear All",
@@ -1654,6 +1655,7 @@ export const translations: Record<Language, Translations> = {
     finderOpenSeatingMsg: "Your name is confirmed on the guest list! Please feel free to choose any available seat in the main dining pavilion.",
     finderOpenSeatingTitle: "Open Seating / Unassigned Table",
     finderPartyLead: "Party Lead",
+    finderPartyOf: "{{name}}'s party",
     finderSearching: "Searching…",
     finderSeatedWithParty: "Seated with your party ({{count}} seats reserved)",
     finderSeatedWithParty_one: "Seated with your party ({{count}} seat reserved)",
@@ -2783,7 +2785,7 @@ export const translations: Record<Language, Translations> = {
     checkinDoneToast: "{{name}} est enregistré(e) !",
     checkinMeBtn: "M'enregistrer",
     checkinPartyLabel: "Votre groupe",
-    checkinSearchPh: "Entrez votre code de réservation à 4 chiffres...",
+    checkinSearchPh: "Votre code à 4 chiffres",
     checkinYouLabel: "Vous",
     checkingLabel: "Vérification...",
     clearAllBtn: "Tout effacer",
@@ -2955,6 +2957,7 @@ export const translations: Record<Language, Translations> = {
     finderOpenSeatingMsg: "Votre nom est confirmé sur la liste des invités ! Choisissez librement une place dans le pavillon principal.",
     finderOpenSeatingTitle: "Placement libre / table non attribuée",
     finderPartyLead: "Responsable du groupe",
+    finderPartyOf: "Groupe de {{name}}",
     finderSearching: "Recherche…",
     finderSeatedWithParty: "Placé avec votre groupe ({{count}} places réservées)",
     finderSeatedWithParty_one: "Placé avec votre groupe ({{count}} place réservée)",
