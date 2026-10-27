@@ -4,8 +4,9 @@
 //
 // Note: the 3D view is a separate component; the parent picks between them.
 
-import { useState, type DragEvent as ReactDragEvent, type MouseEvent, type ReactNode, type RefObject } from 'react';
-import { Stage, Layer, Group, Circle, Rect, Text, Transformer } from 'react-konva';
+import { useEffect, useRef, useState, type DragEvent as ReactDragEvent, type MouseEvent, type ReactNode, type RefObject } from 'react';
+import { Stage, Layer, Group, Circle, Rect, Text, Transformer, Line } from 'react-konva';
+import { useCanvasWheelZoom } from './useCanvasWheelZoom';
 import type { FloorMapData, Guest, LandmarkElement, SeatOccupant, TableElement } from '../../types';
 import {
   getAvailableSeats,
@@ -16,6 +17,7 @@ import {
 } from '../../lib/tableAssignment';
 import { clampPointToRoom, findNearestSeat } from './floorPlanHelpers';
 import { seatVisual, tableOutline } from './tableVisuals';
+import { useCanvasPalette } from './canvasPalette';
 import { SeatRing, renderLandmark, renderRoomBoundary } from './venueShapes';
 import { useT, useTf } from '../shared/i18n';
 
@@ -115,6 +117,70 @@ export interface FloorPlanSelection {
   party: Guest | null;
 }
 
+// Selection ring fade, in Konva's own tween (Konva nodes aren't DOM, so motion/react can't drive them).
+const SELECTION_FADE_SECONDS = 0.18;
+
+interface FadeRingProps {
+  visible: boolean;
+  color: string;
+  table: TableElement;
+}
+
+const FadeRing = ({ visible, color, table }: FadeRingProps) => {
+  const ref = useRef<any>(null);
+  useEffect(() => {
+    ref.current?.to({ opacity: visible ? 1 : 0, duration: SELECTION_FADE_SECONDS });
+  }, [visible]);
+  const pad = 5;
+  return table.shape === 'circle' ? (
+    <Circle
+      ref={ref}
+      x={table.width / 2}
+      y={table.height / 2}
+      radius={table.width / 2 + pad}
+      stroke={color}
+      strokeWidth={2}
+      opacity={0}
+      listening={false}
+    />
+  ) : (
+    <Rect
+      ref={ref}
+      x={-pad}
+      y={-pad}
+      width={table.width + pad * 2}
+      height={table.height + pad * 2}
+      cornerRadius={14 + pad}
+      stroke={color}
+      strokeWidth={2}
+      opacity={0}
+      listening={false}
+    />
+  );
+};
+
+// A table within this many map units of another centre (or the room centre) shows a guide.
+const SNAP_TOLERANCE = 4;
+
+interface SnapGuides {
+  /** Vertical guide at this map x, or null. */
+  x: number | null;
+  /** Horizontal guide at this map y, or null. */
+  y: number | null;
+}
+
+const snapGuidesFor = (map: FloorMapData, tableId: string, cx: number, cy: number): SnapGuides => {
+  const centres = [
+    { x: map.canvasWidth / 2, y: map.canvasHeight / 2 },
+    ...map.tables
+      .filter((t) => t.id !== tableId)
+      .map((t) => ({ x: t.x + t.width / 2, y: t.y + t.height / 2 })),
+  ];
+  const x = centres.find((c) => Math.abs(c.x - cx) <= SNAP_TOLERANCE)?.x ?? null;
+  const y = centres.find((c) => Math.abs(c.y - cy) <= SNAP_TOLERANCE)?.y ?? null;
+  return { x, y };
+};
+
 export interface FloorPlanCanvasCallbacks {
   onSelect: (id: string | null, type: 'table' | 'landmark' | null) => void;
   onPickAttendee: (attendee: SeatOccupant | null) => void;
@@ -136,6 +202,8 @@ export interface FloorPlanCanvasProps {
   /** The member currently being dragged from the palette, if any. */
   dragging: SeatOccupant | null;
   scale: number;
+  /** Ctrl/Cmd + wheel zoom step (multiplier). The canvas keeps the point under the cursor fixed. */
+  onZoomStep?: (factor: number) => void;
   /** Draw the X/Y rulers around the stage. */
   showAxes: boolean;
   stageRef: RefObject<any>;
@@ -149,6 +217,7 @@ export const FloorPlanCanvas = ({
   selection,
   dragging,
   scale,
+  onZoomStep,
   showAxes,
   stageRef,
   transformerRef,
@@ -156,7 +225,17 @@ export const FloorPlanCanvas = ({
 }: FloorPlanCanvasProps) => {
   const t = useT();
   const tf = useTf();
+  const canvasPalette = useCanvasPalette();
   const [dropTarget, setDropTarget] = useState<{ tableId: string; seatIndex: number } | null>(null);
+  const scrollRef = useRef<HTMLDivElement>(null);
+  const [snapGuides, setSnapGuides] = useState<SnapGuides>({ x: null, y: null });
+  useCanvasWheelZoom({ scrollRef, stageRef, scale, onZoomStep });
+
+  // Faint guide lines while a table's centre lines up with another table or the room centre.
+  const updateSnapGuides = (tableId: string, cx: number, cy: number) => {
+    const next = snapGuidesFor(map, tableId, cx, cy);
+    setSnapGuides((prev) => (prev.x === next.x && prev.y === next.y ? prev : next));
+  };
 
   const eventToSeat = (e: ReactDragEvent | MouseEvent) => {
     const stage = stageRef.current;
@@ -203,6 +282,7 @@ export const FloorPlanCanvas = ({
 
   return (
     <div
+      ref={scrollRef}
       className={`flex-1 w-full overflow-auto flex bg-[#FAF6F0] p-3 rounded-2xl border-2 transition-colors ${
         dragging ? 'border-emerald-500 bg-emerald-50/40' : 'border-[#CBAE94]/40'
       }`}
@@ -222,7 +302,7 @@ export const FloorPlanCanvas = ({
           }}
         >
         {/* Layer 1: Grid + Room Boundary */}
-        <Layer>{renderRoomBoundary(map)}</Layer>
+        <Layer listening={false}>{renderRoomBoundary(map)}</Layer>
 
         {/* Layer 2: Landmarks */}
         <Layer>
@@ -280,7 +360,11 @@ export const FloorPlanCanvas = ({
                 rotation={table.rotation || 0}
                 draggable
                 dragBoundFunc={(pos: any) => clampPointToRoom(pos.x, pos.y, map)}
-                onDragEnd={(e) => callbacks.onTableDragEnd(table.id, e)}
+                onDragMove={(e) => updateSnapGuides(table.id, e.target.x(), e.target.y())}
+                onDragEnd={(e) => {
+                  setSnapGuides({ x: null, y: null });
+                  callbacks.onTableDragEnd(table.id, e);
+                }}
                 onClick={() => handleTableClick(table)}
                 onMouseEnter={(e) => callbacks.onHoverTable(table, e.evt.clientX, e.evt.clientY)}
                 onMouseMove={(e) => callbacks.onHoverTable(table, e.evt.clientX, e.evt.clientY)}
@@ -299,6 +383,7 @@ export const FloorPlanCanvas = ({
                         occupant.guestId === selection.attendee.guestId &&
                         occupant.attendeeIndex === selection.attendee.attendeeIndex,
                       pickMode: !!selection.attendee,
+                      palette: canvasPalette,
                     });
 
                     return (
@@ -335,6 +420,8 @@ export const FloorPlanCanvas = ({
                   }}
                 />
 
+                <FadeRing visible={isSelected} color={outline.stroke} table={table} />
+
                 {/* Table Base Shape */}
                 {table.shape === 'circle' ? (
                   <Circle
@@ -348,6 +435,7 @@ export const FloorPlanCanvas = ({
                     shadowBlur={outline.shadowBlur}
                     shadowColor={outline.shadowColor}
                     shadowOpacity={0.4}
+                    perfectDrawEnabled={false}
                   />
                 ) : (
                   <Rect
@@ -361,6 +449,7 @@ export const FloorPlanCanvas = ({
                     shadowBlur={outline.shadowBlur}
                     shadowColor={outline.shadowColor}
                     shadowOpacity={0.4}
+                    perfectDrawEnabled={false}
                   />
                 )}
 
@@ -403,6 +492,28 @@ export const FloorPlanCanvas = ({
             boundBoxFunc={(oldBox, newBox) => (newBox.width < 40 || newBox.height < 30 ? oldBox : newBox)}
             onTransformEnd={callbacks.onTransformEnd}
           />
+        </Layer>
+
+        {/* Layer 4: Snap guides, drawn above the tables and never interactive */}
+        <Layer listening={false}>
+          {snapGuides.x !== null && (
+            <Line
+              points={[snapGuides.x, 0, snapGuides.x, map.canvasHeight]}
+              stroke="#10B981"
+              strokeWidth={1}
+              dash={[6, 4]}
+              opacity={0.7}
+            />
+          )}
+          {snapGuides.y !== null && (
+            <Line
+              points={[0, snapGuides.y, map.canvasWidth, snapGuides.y]}
+              stroke="#10B981"
+              strokeWidth={1}
+              dash={[6, 4]}
+              opacity={0.7}
+            />
+          )}
         </Layer>
         </Stage>
       </CanvasAxes>

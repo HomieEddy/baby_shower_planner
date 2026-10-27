@@ -17,6 +17,8 @@ interface SegmentedProps<T extends string> {
   onChange: (value: T) => void;
   ariaLabel?: string;
   className?: string;
+  /** Let options wrap onto several lines instead of scrolling (long labels on phones). */
+  wrap?: boolean;
 }
 
 // The app's one pill/segmented control: filters, view toggles, mode switches.
@@ -27,11 +29,14 @@ export const Segmented = <T extends string,>({
   onChange,
   ariaLabel,
   className = '',
+  wrap = false,
 }: SegmentedProps<T>) => (
   <div
     role="group"
     aria-label={ariaLabel}
-    className={`no-scrollbar inline-flex max-w-full items-center overflow-x-auto rounded-full bg-white p-1 border border-[#CBAE94] text-xs font-bold font-mono shrink-0 ${className}`}
+    className={`inline-flex max-w-full items-center bg-white p-1 border border-[#CBAE94] text-xs font-bold font-mono shrink-0 ${
+      wrap ? 'flex-wrap gap-y-1 rounded-2xl' : 'no-scrollbar overflow-x-auto rounded-full'
+    } ${className}`}
   >
     {options.map((opt) => {
       const active = opt.value === value;

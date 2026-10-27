@@ -53,20 +53,38 @@ export interface SeatVisual {
 
 // Precedence: a live drop target, then the picked chair, then every free chair
 // while a member is picked, then occupied/empty at rest.
+// Empty-chair colors come from the active theme; the defaults match the stock palette.
+export interface SeatPalette {
+  surface: string;
+  accent: string;
+}
+
+const DEFAULT_SEAT_PALETTE: SeatPalette = { surface: '#FFFDF9', accent: '#CBAE94' };
+
 export function seatVisual(opts: {
   occupied: boolean;
   isDropTarget: boolean;
   isPicked: boolean;
   pickMode: boolean;
+  palette?: SeatPalette;
 }): SeatVisual {
-  const { occupied, isDropTarget, isPicked, pickMode } = opts;
+  const { occupied, isDropTarget, isPicked, pickMode, palette = DEFAULT_SEAT_PALETTE } = opts;
 
   if (isDropTarget) return { fill: '#A7F3D0', stroke: '#059669', radius: 10 };
   if (isPicked) return { fill: '#FDE68A', stroke: '#D97706', radius: 8 };
   if (pickMode && !occupied) return { fill: '#D1FAE5', stroke: '#059669', radius: 8 };
   return {
-    fill: occupied ? '#8B735B' : '#FFFDF9',
-    stroke: '#CBAE94',
+    fill: occupied ? '#8B735B' : palette.surface,
+    stroke: palette.accent,
     radius: 8,
   };
+}
+
+// Up to two letters for a chair label: "Marie-Claire Tremblay" -> "MT", "Alice" -> "AL".
+export function guestInitials(name: string): string {
+  const parts = name.trim().split(/[\s-]+/).filter(Boolean);
+  if (parts.length === 0) return '';
+  const first = Array.from(parts[0])[0] ?? '';
+  const last = parts.length > 1 ? Array.from(parts[parts.length - 1])[0] : Array.from(parts[0])[1] ?? '';
+  return (first + last).toUpperCase();
 }

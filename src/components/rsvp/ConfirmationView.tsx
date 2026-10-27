@@ -4,6 +4,9 @@ import { Guest } from '../../types';
 import { getPartyDietary, hasDietaryRestriction, isAttending } from '../../lib/guestAttendees';
 import { cardStagger, popIn, fadeUp } from '../shared/motionPresets';
 import { useT, useTf } from '../shared/i18n';
+import { useSettings } from '../../lib/settingsQuery';
+import { useAppStore } from '../../stores/appStore';
+import { formatDateLong, parseToYmd } from '../../lib/dateUtils';
 
 export const ConfirmationView = ({
   guest,
@@ -14,6 +17,20 @@ export const ConfirmationView = ({
 }) => {
   const t = useT();
   const tf = useTf();
+  const settings = useSettings();
+  const language = useAppStore((s) => s.language);
+  // The event date from settings (the message used to hardcode a date).
+  const eventYmd = settings?.date ? parseToYmd(settings.date) : '';
+  const longDate = eventYmd ? formatDateLong(eventYmd, language) : '';
+  // Mid-sentence in French the weekday stays lowercase: "le samedi 21 novembre".
+  const eventDate = language === 'FR' ? longDate.charAt(0).toLowerCase() + longDate.slice(1) : longDate;
+  const mainGuest = guest.confirmed_by_guest_name || t.mainGuestFallback;
+  const statusWord =
+    guest.rsvp_status === 'Attending'
+      ? t.statusAttendingWord
+      : guest.rsvp_status === 'Declined'
+        ? t.statusDeclinedWord
+        : t.statusPendingWord;
   return (
     <motion.div
       key="confirmation"
@@ -24,7 +41,7 @@ export const ConfirmationView = ({
     >
       <motion.div
         variants={popIn}
-        className="w-16 h-16 bg-[#E9E0D2] text-[#4A3F35] rounded-full flex items-center justify-center mx-auto border-2 border-[#4A3F35] shadow-xs"
+        className="w-16 h-16 bg-[#E9E0D2] text-[#4A3F35] rounded-full flex items-center justify-center mx-auto border border-[#CBAE94]/60"
       >
         <motion.span
           animate={{ rotate: [0, -8, 8, 0] }}
@@ -45,14 +62,16 @@ export const ConfirmationView = ({
           <Sparkles className="w-3.5 h-3.5 text-[#8B735B]" />
           <span>{t.rsvpConfirmedTitle}</span>
         </span>
-        <h3 className="font-newsreader text-2xl sm:text-3xl font-bold text-[#4A3F35]">
+        <h3 className="font-gaegu text-2xl sm:text-3xl font-bold text-[#4A3F35] leading-tight">
           {isAttending(guest)
-            ? t.rsvpConfirmedMsgAttending
+            ? eventDate
+              ? tf('rsvpConfirmedMsgAttendingOn', { date: eventDate })
+              : t.rsvpConfirmedMsgAttending
             : t.rsvpConfirmedMsgDeclined}
         </h3>
         {guest.is_read_only && (
           <p className="text-xs text-[#5D5449] font-medium pt-1 max-w-md mx-auto">
-            {tf('readOnlyNotice', { name: guest.confirmed_by_guest_name || 'the main guest' })}
+            {tf('readOnlyNotice', { name: mainGuest })}
           </p>
         )}
       </motion.div>
@@ -61,7 +80,7 @@ export const ConfirmationView = ({
       <motion.div
         variants={popIn}
         transition={{ delay: 0.2 }}
-        className="bg-[#EFE6DC] rounded-2xl p-4 border-2 border-[#CBAE94] text-center space-y-1 shadow-sm"
+        className="bg-[#EFE6DC] rounded-xl p-4 border border-[#CBAE94]/60 text-center space-y-1"
       >
         <p className="text-xs font-mono font-bold uppercase tracking-wider text-[#8B735B]">
           {t.seatingCodeTitle}
@@ -92,7 +111,7 @@ export const ConfirmationView = ({
       {/* Summary Box */}
       <motion.div
         variants={fadeUp}
-        className="bg-white rounded-2xl p-6 border border-[#4A3F35]/20 text-left space-y-2 text-xs sm:text-sm shadow-xs"
+        className="bg-white rounded-xl p-5 border border-[#CBAE94]/60 text-left space-y-2 text-sm"
       >
         <p className="text-[#4A3F35]">
           <strong>{t.invitedGuestLabel}</strong> {guest.name}
@@ -102,14 +121,14 @@ export const ConfirmationView = ({
         </p>
         <p className="text-[#4A3F35]">
           <strong>{t.statusLabel}</strong>{' '}
-          <span className={isAttending(guest) ? 'text-emerald-700 font-bold' : 'text-rose-600 font-bold'}>
-            {guest.rsvp_status}
+          <span className={isAttending(guest) ? 'text-emerald-700 font-bold' : 'text-rose-700 font-bold'}>
+            {statusWord}
           </span>
         </p>
         {isAttending(guest) && (
           <>
             <p className="text-[#4A3F35]">
-              <strong>Attending Guests ({guest.attending_party_size || 1}):</strong>{' '}
+              <strong>{tf('attendingGuestsCountLabel', { count: guest.attending_party_size || 1 })}</strong>{' '}
               {guest.attendee_names && guest.attendee_names.length > 0
                 ? guest.attendee_names.join(', ')
                 : guest.name}
@@ -129,14 +148,14 @@ export const ConfirmationView = ({
           {!guest.is_read_only ? (
             <button
               onClick={onEdit}
-              className="inline-flex items-center space-x-1.5 text-[#4A3F35] hover:text-[#D4A373] text-xs font-mono font-bold underline transition-colors"
+              className="btn-outline-accent min-h-[44px] px-5 text-xs font-bold gap-1.5"
             >
               <Edit3 className="w-3.5 h-3.5" />
-              <span>{t.editRsvpBtn}</span>
+              {t.editRsvpBtn}
             </button>
           ) : (
             <p className="text-xs font-mono text-[#5D5449]">
-              {tf('readOnlyContactHostNote', { name: guest.confirmed_by_guest_name || 'the main guest' })}
+              {tf('readOnlyContactHostNote', { name: mainGuest })}
             </p>
           )}
         </div>
@@ -153,7 +172,7 @@ export const ConfirmationView = ({
             </>
           ) : (
             <>
-              <XCircle className="w-4 h-4 text-rose-600" />
+              <XCircle className="w-4 h-4 text-rose-700" />
               <span>{t.rsvpConfirmedLabel} <strong>{t.statusDeclinedWord}</strong></span>
             </>
           )}

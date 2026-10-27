@@ -26,9 +26,9 @@ interface AgendaCalendarProps {
 }
 
 const STATUS_DOT: Record<AgendaStatus, string> = {
-  todo: 'bg-sky-400',
-  in_progress: 'bg-amber-400',
-  done: 'bg-emerald-400',
+  todo: 'bg-[#CBAE94]',
+  in_progress: 'bg-amber-500',
+  done: 'bg-green-600',
 };
 
 const localeFor = (lang: Language) => (lang === 'FR' ? fr : enUS);
@@ -65,19 +65,19 @@ export const AgendaCalendar: React.FC<AgendaCalendarProps> = ({ tasks, t, langua
         <button
           type="button"
           onClick={() => setMonth(subMonths(month, 1))}
-          className="inline-flex min-w-[44px] min-h-[44px] items-center justify-center rounded-xl border-2 border-[#CBAE94]/60 text-[#5D5449] hover:bg-[#EFE6DC] transition-colors cursor-pointer"
+          className="inline-flex min-w-[44px] min-h-[44px] items-center justify-center rounded-full border border-[#CBAE94]/60 text-[#5D5449] hover:bg-[#EFE6DC] transition-colors cursor-pointer"
           aria-label={t.previousMonthLabel}
         >
           <ChevronLeft className="w-4 h-4" />
         </button>
         <div className="flex items-center gap-3">
-          <h4 className="font-sans text-lg font-bold text-[#8B735B] capitalize">
+          <h4 className="font-sans text-lg font-bold text-[#4A3F35] capitalize">
             {format(month, 'MMMM yyyy', { locale: localeFor(language) })}
           </h4>
           <button
             type="button"
             onClick={() => setMonth(startOfMonth(new Date()))}
-            className="px-3 py-1.5 rounded-xl border-2 border-[#CBAE94]/60 text-[#8B735B] text-xs font-mono font-bold hover:bg-[#EFE6DC] transition-colors cursor-pointer"
+            className="px-3 py-1.5 rounded-full border border-[#CBAE94]/60 text-[#5D5449] text-xs font-semibold hover:bg-[#EFE6DC] transition-colors cursor-pointer"
           >
             {t.agendaTodayBtn}
           </button>
@@ -85,7 +85,7 @@ export const AgendaCalendar: React.FC<AgendaCalendarProps> = ({ tasks, t, langua
         <button
           type="button"
           onClick={() => setMonth(addMonths(month, 1))}
-          className="inline-flex min-w-[44px] min-h-[44px] items-center justify-center rounded-xl border-2 border-[#CBAE94]/60 text-[#5D5449] hover:bg-[#EFE6DC] transition-colors cursor-pointer"
+          className="inline-flex min-w-[44px] min-h-[44px] items-center justify-center rounded-full border border-[#CBAE94]/60 text-[#5D5449] hover:bg-[#EFE6DC] transition-colors cursor-pointer"
           aria-label={t.nextMonthLabel}
         >
           <ChevronRight className="w-4 h-4" />
@@ -107,7 +107,7 @@ export const AgendaCalendar: React.FC<AgendaCalendarProps> = ({ tasks, t, langua
           return (
             <div
               key={ymd}
-              className={`relative min-h-20 sm:min-h-24 rounded-2xl border-2 p-1.5 text-left transition-colors flex flex-col gap-1 ${
+              className={`relative min-h-20 sm:min-h-24 rounded-xl border p-1.5 text-left transition-colors flex flex-col gap-1 ${
                 today
                   ? 'border-[#8B735B] bg-[#EFE6DC]/70'
                   : inMonth

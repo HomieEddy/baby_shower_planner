@@ -15,6 +15,21 @@ export interface Translations {
   addTableBtn: string;
   addTimelineEventBtn: string;
   addVenueFeatureBtn: string;
+  agendaHeaderEyebrow: string;
+  agendaHeaderSubtitle: string;
+  guestsHeaderEyebrow: string;
+  guestsHeaderSubtitle: string;
+  checkinHeaderEyebrow: string;
+  checkinHeaderSubtitle: string;
+  cateringInvitationsFooter: string;
+  cateringEmptyCategoriesLabel: string;
+  sampleGiftGuestName: string;
+  sampleGiftDescription: string;
+  checkinExpectedLabel: string;
+  checkinExpectedFooter: string;
+  alertReminderTitleGeneric: string;
+  activeThemeLabel: string;
+  themePreviewSampleTitle: string;
   agendaAddTaskBtn: string;
   agendaAdvance1d: string;
   agendaAdvance1h: string;
@@ -353,6 +368,7 @@ export interface Translations {
   finderOpenSeatingMsg: string;
   finderOpenSeatingTitle: string;
   finderPartyLead: string;
+  finderPartyOf: string;
   finderSearching: string;
   finderSeatedWithParty: string;
   finderSeatedWithParty_one: string;
@@ -727,6 +743,9 @@ export interface Translations {
   roundShape: string;
   rsvpConfirmedLabel: string;
   rsvpConfirmedMsgAttending: string;
+  rsvpConfirmedMsgAttendingOn: string;
+  attendingGuestsCountLabel: string;
+  mainGuestFallback: string;
   rsvpConfirmedMsgDeclined: string;
   rsvpConfirmedTitle: string;
   rsvpConfirmedToast: string;
@@ -977,6 +996,20 @@ export interface Translations {
   partialTablesFilterLabel: string;
   fullTablesFilterLabel: string;
   fullySeatedBadge: string;
+  fpStatusFull: string;
+  fpStatusPartial: string;
+  fpStatusEmpty: string;
+  fpNoRoomLabel: string;
+  fpRoomSmall: string;
+  fpRoomStandard: string;
+  fpRoomLarge: string;
+  fpRoomGrand: string;
+  fpShareMenuLabel: string;
+  fpZoomIn: string;
+  fpZoomOut: string;
+  fpZoomReset: string;
+  fpAddToPlanLabel: string;
+  fpTopDownView: string;
   unseatedWord: string;
   editorTitle: string;
   unsavedChangesBadge: string;
@@ -1326,6 +1359,21 @@ export const translations: Record<Language, Translations> = {
     addTimelineEventBtn: "Add Timeline Event",
     addVenueFeatureBtn: "Add Venue Feature",
     agendaAddTaskBtn: "Add Task",
+    activeThemeLabel: "Active theme",
+    themePreviewSampleTitle: "Baby shower celebration",
+    alertReminderTitleGeneric: "RSVP reminder: baby shower",
+    checkinExpectedLabel: "Expected guests",
+    checkinExpectedFooter: "people who said yes",
+    sampleGiftGuestName: "Grandma Ellen",
+    sampleGiftDescription: "Handcrafted baby shoes and quilt",
+    cateringInvitationsFooter: "across {{count}} invitations",
+    cateringEmptyCategoriesLabel: "No guests yet",
+    agendaHeaderEyebrow: "Planning",
+    agendaHeaderSubtitle: "Keep track of what is left to do before the big day.",
+    guestsHeaderEyebrow: "Guests & RSVPs",
+    guestsHeaderSubtitle: "Invite guests, follow their answers and approve sign-ups.",
+    checkinHeaderEyebrow: "Day of",
+    checkinHeaderSubtitle: "Check guests in as they arrive and see who is still on the way.",
     agendaAdvance1d: "1 day before",
     agendaAdvance1h: "1 hour before",
     agendaAdvance1w: "1 week before",
@@ -1488,7 +1536,7 @@ export const translations: Record<Language, Translations> = {
     checkinDoneToast: "{{name}} is checked in!",
     checkinMeBtn: "Check Me In",
     checkinPartyLabel: "Your Party",
-    checkinSearchPh: "Enter your 4-digit reservation code...",
+    checkinSearchPh: "Your 4-digit code",
     checkinYouLabel: "You",
     checkingLabel: "Checking...",
     clearAllBtn: "Clear All",
@@ -1663,6 +1711,7 @@ export const translations: Record<Language, Translations> = {
     finderOpenSeatingMsg: "Your name is confirmed on the guest list! Please feel free to choose any available seat in the main dining pavilion.",
     finderOpenSeatingTitle: "Open Seating / Unassigned Table",
     finderPartyLead: "Party Lead",
+    finderPartyOf: "{{name}}'s party",
     finderSearching: "Searching…",
     finderSeatedWithParty: "Seated with your party ({{count}} seats reserved)",
     finderSeatedWithParty_one: "Seated with your party ({{count}} seat reserved)",
@@ -2041,6 +2090,9 @@ export const translations: Record<Language, Translations> = {
     roundTableBtn: "Round Table",
     rsvpConfirmedLabel: "RSVP Confirmed:",
     rsvpConfirmedMsgAttending: "We can't wait to celebrate with you!",
+    rsvpConfirmedMsgAttendingOn: "We can't wait to celebrate with you on {{date}}!",
+    attendingGuestsCountLabel: "Attending guests ({{count}}):",
+    mainGuestFallback: "the main guest",
     rsvpConfirmedMsgDeclined: "We're so sorry you can't make it, but we appreciate you letting us know!",
     rsvpConfirmedTitle: "RSVP Confirmed!",
     rsvpConfirmedToast: "RSVP Confirmed! We cannot wait to celebrate with you!",
@@ -2048,7 +2100,7 @@ export const translations: Record<Language, Translations> = {
     rsvpGreeting: "Hello {{name}}!",
     rsvpPageTitle: "You're Invited!",
     rsvpPrompt: "Will you be joining us for the celebration?",
-    rsvpReminderTemplate: "⏰ RSVP Reminder",
+    rsvpReminderTemplate: "RSVP Reminder",
     rsvpReminderTemplateDesc: "Target pending guests",
     rsvpResetErrorToast: "Failed to update RSVP status.",
     rsvpClosedToast: "RSVPs are closed — the event has already passed.",
@@ -2294,6 +2346,20 @@ export const translations: Record<Language, Translations> = {
     partialTablesFilterLabel: "Partial ({{count}})",
     fullTablesFilterLabel: "Full ({{count}})",
     fullySeatedBadge: "Fully Seated!",
+    fpStatusFull: "Full",
+    fpStatusPartial: "Partial",
+    fpStatusEmpty: "Empty",
+    fpNoRoomLabel: "No room",
+    fpRoomSmall: "Small",
+    fpRoomStandard: "Standard",
+    fpRoomLarge: "Large",
+    fpRoomGrand: "Grand",
+    fpShareMenuLabel: "Share & export",
+    fpZoomIn: "Zoom in",
+    fpZoomOut: "Zoom out",
+    fpZoomReset: "Reset zoom",
+    fpAddToPlanLabel: "Add to plan",
+    fpTopDownView: "Top view",
     unseatedWord: "unseated",
     editorTitle: "Full-Screen Floor Plan Editor",
     unsavedChangesBadge: "Unsaved Changes",
@@ -2633,6 +2699,21 @@ export const translations: Record<Language, Translations> = {
     addTimelineEventBtn: "Ajouter un horaire",
     addVenueFeatureBtn: "Ajouter un élément du lieu",
     agendaAddTaskBtn: "Ajouter une tâche",
+    activeThemeLabel: "Thème actif",
+    themePreviewSampleTitle: "Célébration baby shower",
+    alertReminderTitleGeneric: "Rappel RSVP : baby shower",
+    checkinExpectedLabel: "Invités attendus",
+    checkinExpectedFooter: "personnes ayant répondu oui",
+    sampleGiftGuestName: "Grand-maman Hélène",
+    sampleGiftDescription: "Chaussons et courtepointe faits main",
+    cateringInvitationsFooter: "répartis sur {{count}} invitations",
+    cateringEmptyCategoriesLabel: "Aucun invité pour l'instant",
+    agendaHeaderEyebrow: "Organisation",
+    agendaHeaderSubtitle: "Suivez ce qu'il reste à faire avant le grand jour.",
+    guestsHeaderEyebrow: "Invités et réponses",
+    guestsHeaderSubtitle: "Invitez vos proches, suivez leurs réponses et approuvez les inscriptions.",
+    checkinHeaderEyebrow: "Jour J",
+    checkinHeaderSubtitle: "Pointez les invités à leur arrivée et voyez qui est encore en route.",
     agendaAdvance1d: "1 jour avant",
     agendaAdvance1h: "1 heure avant",
     agendaAdvance1w: "1 semaine avant",
@@ -2795,7 +2876,7 @@ export const translations: Record<Language, Translations> = {
     checkinDoneToast: "{{name}} est enregistré(e) !",
     checkinMeBtn: "M'enregistrer",
     checkinPartyLabel: "Votre groupe",
-    checkinSearchPh: "Entrez votre code de réservation à 4 chiffres...",
+    checkinSearchPh: "Votre code à 4 chiffres",
     checkinYouLabel: "Vous",
     checkingLabel: "Vérification...",
     clearAllBtn: "Tout effacer",
@@ -2970,6 +3051,7 @@ export const translations: Record<Language, Translations> = {
     finderOpenSeatingMsg: "Votre nom est confirmé sur la liste des invités ! Choisissez librement une place dans le pavillon principal.",
     finderOpenSeatingTitle: "Placement libre / table non attribuée",
     finderPartyLead: "Responsable du groupe",
+    finderPartyOf: "Groupe de {{name}}",
     finderSearching: "Recherche…",
     finderSeatedWithParty: "Placé avec votre groupe ({{count}} places réservées)",
     finderSeatedWithParty_one: "Placé avec votre groupe ({{count}} place réservée)",
@@ -3348,6 +3430,9 @@ export const translations: Record<Language, Translations> = {
     roundTableBtn: "Table Ronde",
     rsvpConfirmedLabel: "RSVP confirmé :",
     rsvpConfirmedMsgAttending: "Nous avons hâte de célébrer avec vous !",
+    rsvpConfirmedMsgAttendingOn: "Nous avons hâte de célébrer avec vous le {{date}} !",
+    attendingGuestsCountLabel: "Invités présents ({{count}}) :",
+    mainGuestFallback: "l'invité principal",
     rsvpConfirmedMsgDeclined: "Nous sommes désolés que vous ne puissiez pas venir, merci de nous avoir prévenus !",
     rsvpConfirmedTitle: "RSVP Confirmé !",
     rsvpConfirmedToast: "RSVP confirmé ! Nous avons hâte de célébrer avec vous !",
@@ -3355,7 +3440,7 @@ export const translations: Record<Language, Translations> = {
     rsvpGreeting: "Bonjour {{name}} !",
     rsvpPageTitle: "Vous êtes invité(e) !",
     rsvpPrompt: "Serez-vous des nôtres pour la célébration ?",
-    rsvpReminderTemplate: "⏰ Rappel RSVP",
+    rsvpReminderTemplate: "Rappel RSVP",
     rsvpReminderTemplateDesc: "Cibler les invités en attente",
     rsvpResetErrorToast: "Échec de la mise à jour du statut RSVP.",
     rsvpClosedToast: "Les RSVP sont fermés — l'événement est déjà passé.",
@@ -3601,6 +3686,20 @@ export const translations: Record<Language, Translations> = {
     partialTablesFilterLabel: "Partielles ({{count}})",
     fullTablesFilterLabel: "Pleines ({{count}})",
     fullySeatedBadge: "Tous placés !",
+    fpStatusFull: "Complète",
+    fpStatusPartial: "Partielle",
+    fpStatusEmpty: "Vide",
+    fpNoRoomLabel: "Pas de place",
+    fpRoomSmall: "Petite",
+    fpRoomStandard: "Standard",
+    fpRoomLarge: "Grande",
+    fpRoomGrand: "Très grande",
+    fpShareMenuLabel: "Partager et exporter",
+    fpZoomIn: "Zoom avant",
+    fpZoomOut: "Zoom arrière",
+    fpZoomReset: "Réinitialiser le zoom",
+    fpAddToPlanLabel: "Ajouter au plan",
+    fpTopDownView: "Vue du dessus",
     unseatedWord: "non placé(s)",
     editorTitle: "Éditeur de plan de salle plein écran",
     unsavedChangesBadge: "Modifications non enregistrées",

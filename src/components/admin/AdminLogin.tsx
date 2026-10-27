@@ -1,11 +1,12 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Lock, Eye, EyeOff, LogIn } from 'lucide-react';
+import { Lock, Eye, EyeOff, LogIn, AlertCircle } from 'lucide-react';
 import { AppMark } from '../shared/AppMark';
 import { useSettings } from '../../lib/settingsQuery';
 import { eventDisplayName } from '../../lib/eventName';
 import { useT } from '../shared/i18n';
 import { BackButton } from '../shared/BackButton';
+import { GuestPageHeader } from '../shared/GuestPageHeader';
 
 export const AdminLogin = () => {
   const t = useT();
@@ -40,60 +41,60 @@ export const AdminLogin = () => {
   };
 
   return (
-    <div className="min-h-screen bg-[#FDFBF7] flex items-center justify-center px-4">
-      <div className="w-full max-w-sm">
-        {/* Brand */}
-        <div className="text-center mb-8">
-          <div className="w-16 h-16 bg-[#E9E0D2] border-2 border-[#4A3F35] rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-xs">
-            <AppMark settings={settings} className="w-8 h-8 text-[#4A3F35]" />
-          </div>
-          <h1 className="font-gaegu text-3xl font-bold text-[#4A3F35]">{eventDisplayName(settings, t.eventFallbackTitle)}</h1>
-          <p className="text-sm text-[#A09080] mt-1 font-mono">{t.adminLoginLabel}</p>
-        </div>
+    <div className="w-full max-w-md mx-auto space-y-4">
+      <BackButton label={t.backHomeBtn} />
 
-        {/* Card */}
-        <div className="bg-white rounded-2xl border border-[#CBAE94]/40 p-8 shadow-sm">
-          <form onSubmit={handleSubmit} className="space-y-5">
-            <div>
-              <label htmlFor="admin-password" className="block text-xs font-bold text-[#5D5449] font-mono mb-1.5">{t.passwordLabel}</label>
-              <div className="relative">
-                <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#A09080]" />
-                <input
-                  id="admin-password"
-                  type={showPw ? 'text' : 'password'}
-                  value={password}
-                  onChange={e => setPassword(e.target.value)}
-                  placeholder={t.passwordPh}
-                  className="w-full pl-10 pr-10 py-2.5 rounded-xl border-2 border-[#CBAE94] bg-white text-sm focus:outline-none focus:ring-2 focus:ring-[#8B735B]"
-                  autoFocus
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowPw(!showPw)}
-                  aria-label={showPw ? t.hidePasswordLabel : t.showPasswordLabel}
-                  aria-pressed={showPw}
-                  className="absolute right-3 top-1/2 -translate-y-1/2 text-[#A09080] hover:text-[#4A3F35]"
-                >
-                  {showPw ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                </button>
-              </div>
-              {error && <p role="alert" className="text-red-600 text-xs mt-1.5 font-medium">{error}</p>}
+      <div className="card-soft p-6 sm:p-8 space-y-6">
+        <GuestPageHeader
+          mark={<AppMark settings={settings} className="w-6 h-6 text-[#8B735B]" />}
+          eyebrow={t.adminLoginLabel}
+          title={eventDisplayName(settings, t.eventFallbackTitle)}
+        />
+
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div>
+            <label htmlFor="admin-password" className="label-mono block mb-2">{t.passwordLabel}</label>
+            <div className="relative">
+              <Lock className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-[#A09080]" aria-hidden />
+              <input
+                id="admin-password"
+                type={showPw ? 'text' : 'password'}
+                value={password}
+                onChange={e => setPassword(e.target.value)}
+                placeholder={t.passwordPh}
+                aria-invalid={!!error}
+                aria-describedby={error ? 'admin-password-error' : undefined}
+                className="guest-input pl-10 pr-11"
+                autoFocus
+              />
+              <button
+                type="button"
+                onClick={() => setShowPw(!showPw)}
+                aria-label={showPw ? t.hidePasswordLabel : t.showPasswordLabel}
+                aria-pressed={showPw}
+                className="absolute right-2 top-1/2 -translate-y-1/2 p-1.5 rounded-lg text-[#A09080] hover:text-[#4A3F35] cursor-pointer"
+              >
+                {showPw ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+              </button>
             </div>
+          </div>
 
-            <button
-              type="submit"
-              disabled={loading}
-              className="w-full py-2.5 rounded-xl bg-[#8B735B] text-white font-bold text-sm hover:bg-[#4A3F35] transition-colors flex items-center justify-center space-x-2 disabled:opacity-50"
-            >
-              <LogIn className="w-4 h-4" />
-              <span>{loading ? t.checkingLabel : t.enterAdminBtn}</span>
-            </button>
-          </form>
-        </div>
+          {error && (
+            <p id="admin-password-error" role="alert" className="notice-error">
+              <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" />
+              {error}
+            </p>
+          )}
 
-        <div className="text-center mt-6">
-          <BackButton />
-        </div>
+          <button
+            type="submit"
+            disabled={loading}
+            className="btn-accent w-full py-3.5 text-sm font-bold gap-2 cursor-pointer disabled:opacity-50"
+          >
+            <LogIn className="w-4 h-4" />
+            <span>{loading ? t.checkingLabel : t.enterAdminBtn}</span>
+          </button>
+        </form>
       </div>
     </div>
   );

@@ -149,7 +149,7 @@ export const GuestTableView = ({
               }}
               className="cursor-pointer hover:bg-[#EFE6DC]/40 transition-colors text-[#5D5449] focus:outline-none focus:ring-2 focus:ring-inset focus:ring-[#8B735B]">
               <td className="px-3 py-2 font-bold">{g.name}</td>
-              <td className="px-3 py-2 font-mono text-xs text-[#5D5449]/70">
+              <td className="px-3 py-2 text-xs text-[#5D5449]">
                 {[g.email, g.phone].filter(Boolean).join(' · ') || '\u2014'}
               </td>
               <td className="px-3 py-2 text-right font-bold">{getGuestPartySize(g)}</td>
@@ -185,7 +185,7 @@ export const BulkActionsBar = ({
   const sendsBlocked = noProviders(caps);
   return (
     <motion.div initial={{ opacity: 0, y: -6 }} animate={{ opacity: 1, y: 0 }}
-      className="sticky top-2 z-20 flex flex-wrap items-center gap-2 bg-[#EFE6DC] border-2 border-[#8B735B] rounded-2xl px-4 py-2.5 mb-3 shadow-md">
+      className="sticky top-2 z-20 flex flex-wrap items-center gap-2 bg-[#EFE6DC] border border-[#CBAE94] rounded-2xl px-4 py-2.5 mb-3 shadow-md">
       <span className="text-xs font-bold font-mono text-[#8B735B] mr-1">{tf('bulkSelectedLabel', { count: String(count) })}</span>
       <button onClick={onToggleSelectAll} title={allSelected ? t.deselectAllBtn : t.selectAllBtn}
         className="px-3 py-1.5 rounded-full bg-white border border-[#CBAE94] text-[#8B735B] font-bold text-xs hover:bg-white/70 transition-all flex items-center gap-1">

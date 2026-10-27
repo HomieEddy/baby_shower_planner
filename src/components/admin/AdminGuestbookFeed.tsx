@@ -14,9 +14,13 @@ import { usePagination, useFloorMapTables } from '../shared/hooks';
 import { AdminToolbar } from './AdminToolbar';
 import { TableScanQrModal } from './TableScanQrModal';
 import { adminFetch } from '../../lib/api';
+import { AdminPageHeader } from './AdminPageHeader';
+import { useAppStore } from '../../stores/appStore';
+import { formatClockTime } from '../../lib/dateUtils';
 
 export const AdminGuestbookFeed = ({ entries, onRefresh }: { entries: GuestbookEntry[]; onRefresh: () => Promise<void> }) => {
   const t = useT();
+  const language = useAppStore((s) => s.language);
   const tf = useTf();
   const { toast } = useToast();
   const confirm = useConfirm();
@@ -79,27 +83,26 @@ export const AdminGuestbookFeed = ({ entries, onRefresh }: { entries: GuestbookE
 
   return (
     <motion.div variants={adminContainerVariants} initial="hidden" animate="show" className="space-y-8">
-      <motion.div variants={adminCardVariants} className="card-paper p-6 sm:p-8 space-y-6">
-        <div className="flex items-start justify-between gap-3">
-          <div>
-            <div className="label-mono">{t.dayOfGuestbookTab}</div>
-            <h3 className="font-sans text-2xl font-bold text-[#8B735B]">
-              {t.guestbookFeedTitle}
-            </h3>
-            <p className="text-xs text-[#5D5449]">
-              {t.guestbookFeedSubtitle}
-            </p>
-          </div>
-          <button
-            type="button"
-            onClick={() => setQrOpen(true)}
-            className="shrink-0 px-4 py-2.5 rounded-2xl bg-[#8B735B] text-white text-xs font-bold hover:bg-[#705C47] transition-colors flex items-center gap-2 cursor-pointer"
-          >
-            <QrCode className="w-4 h-4" />
-            <span>{t.tableQrPrintTitle}</span>
-          </button>
-        </div>
+      <motion.div variants={adminCardVariants}>
+        <AdminPageHeader
+          icon={MessageSquare}
+          eyebrow={t.tabGuestbookFeed}
+          title={t.guestbookFeedTitle}
+          subtitle={t.guestbookFeedSubtitle}
+          actions={
+            <button
+              type="button"
+              onClick={() => setQrOpen(true)}
+              className="btn-accent text-xs sm:text-sm py-2.5 px-4 gap-2 cursor-pointer"
+            >
+              <QrCode className="w-4 h-4" />
+              <span>{t.tableQrPrintTitle}</span>
+            </button>
+          }
+        />
+      </motion.div>
 
+      <motion.div variants={adminCardVariants} className="card-soft p-6 sm:p-8 space-y-6">
         {entries.length > 0 && (
           <AdminToolbar
             primary={
@@ -128,21 +131,21 @@ export const AdminGuestbookFeed = ({ entries, onRefresh }: { entries: GuestbookE
         )}
 
         {entries.length === 0 ? (
-          <div className="text-center py-12 bg-[#EFE6DC]/30 rounded-3xl border-2 border-dashed border-[#CBAE94]">
+          <div className="text-center py-12 bg-[#EFE6DC]/30 rounded-2xl border border-dashed border-[#CBAE94]">
             <MessageSquare className="w-10 h-10 text-[#CBAE94] mx-auto mb-2" />
-            <p className="text-sm font-bold text-[#8B735B]">
+            <p className="text-sm font-medium text-[#5D5449]">
               {t.noEntriesYet}
             </p>
           </div>
         ) : filteredEntries.length === 0 ? (
-          <p className="text-center py-10 text-[#A09080] font-mono text-xs">{t.noSearchMatch}</p>
+          <p className="text-center py-10 text-[#5D5449] text-sm">{t.noSearchMatch}</p>
         ) : (
-          <motion.div variants={adminContainerVariants} className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <motion.div variants={adminContainerVariants} className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
             {entriesPager.pageItems.map((entry) => (
               <motion.div
                 key={entry.id}
                 variants={adminCardVariants}
-                className={`bg-[#FAF4EF] rounded-3xl p-5 border-2 border-[#CBAE94] shadow-xs flex flex-col justify-between space-y-4 hover:shadow-md transition-shadow ${
+                className={`bg-[#FFFDF9] rounded-2xl p-4 border border-[#CBAE94]/60 flex flex-col justify-between space-y-3 hover:shadow-sm transition-shadow ${
                   entry.visible === false ? 'opacity-60 border-dashed' : ''
                 }`}
               >
@@ -157,7 +160,7 @@ export const AdminGuestbookFeed = ({ entries, onRefresh }: { entries: GuestbookE
                       }}
                     />
                     {entry.visible === false && (
-                      <span className="absolute top-2 left-2 px-2 py-0.5 rounded-full bg-rose-600 text-white text-xs font-bold font-mono uppercase">
+                      <span className="absolute top-2 left-2 px-2 py-0.5 rounded-full bg-[#4A3F35] text-white text-xs font-semibold">
                         {t.moderationHiddenBadge}
                       </span>
                     )}
@@ -165,21 +168,16 @@ export const AdminGuestbookFeed = ({ entries, onRefresh }: { entries: GuestbookE
                 )}
 
                 <div className="space-y-2">
-                  <p className="text-[#5D5449] text-xs sm:text-sm italic leading-relaxed font-sans">
+                  <p className="text-[#4A3F35] text-sm leading-relaxed">
                     "{entry.message}"
                   </p>
                 </div>
 
-                <div className="pt-3 border-t border-dashed border-[#CBAE94] flex items-center justify-between text-xs text-[#5D5449]">
-                  <span className="font-bold text-[#8B735B]">
+                <div className="pt-3 border-t border-[#CBAE94]/40 flex items-center justify-between gap-2 text-xs text-[#5D5449]">
+                  <span className="font-semibold text-[#5D5449]">
                     <Heart className="w-3.5 h-3.5 inline" /> {entry.guest_name}
                   </span>
-                  <span className="font-mono">
-                    {new Date(entry.created_at).toLocaleTimeString([], {
-                      hour: '2-digit',
-                      minute: '2-digit',
-                    })}
-                  </span>
+                  <span className="shrink-0">{formatClockTime(entry.created_at, language)}</span>
                 </div>
 
                 {/* Moderation */}

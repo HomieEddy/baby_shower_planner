@@ -36,10 +36,11 @@ interface AgendaKanbanProps {
   onReorder: (items: Array<{ id: string; status: AgendaStatus; position: number }>) => void;
 }
 
+// Status colors match /seating: tan to do, amber in progress, green done.
 const COLUMNS: Array<{ id: AgendaStatus; headerCls: string; chipCls: string }> = [
-  { id: 'todo', headerCls: 'text-sky-800 bg-sky-50 border-sky-200', chipCls: 'border-l-sky-400' },
-  { id: 'in_progress', headerCls: 'text-amber-800 bg-amber-50 border-amber-200', chipCls: 'border-l-amber-400' },
-  { id: 'done', headerCls: 'text-emerald-800 bg-emerald-50 border-emerald-200', chipCls: 'border-l-emerald-400' },
+  { id: 'todo', headerCls: 'bg-[#CBAE94]', chipCls: 'border-l-[#CBAE94]' },
+  { id: 'in_progress', headerCls: 'bg-amber-500', chipCls: 'border-l-amber-400' },
+  { id: 'done', headerCls: 'bg-green-600', chipCls: 'border-l-green-500' },
 ];
 
 const statusLabel = (t: Translations, status: AgendaStatus): string => {
@@ -59,12 +60,12 @@ function shortDueDate(ymd: string, lang: Language): string {
 const TaskCard: React.FC<{ task: AgendaTask; language: Language; onOpenTask: (task: AgendaTask) => void }> = ({ task, language, onOpenTask }) => {
   const t = useT();
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({ id: task.id });
-  const chipCls = COLUMNS.find(c => c.id === task.status)?.chipCls ?? 'border-l-sky-400';
+  const chipCls = COLUMNS.find(c => c.id === task.status)?.chipCls ?? 'border-l-[#CBAE94]';
   return (
     <div
       ref={setNodeRef}
       style={{ transform: CSS.Transform.toString(transform), transition }}
-      className={`group bg-white rounded-xl border-2 border-[#CBAE94]/60 border-l-4 ${chipCls} p-3 shadow-xs hover:border-[#8B735B] transition-colors ${isDragging ? 'opacity-40' : ''}`}
+      className={`group bg-white rounded-xl border border-[#CBAE94]/60 border-l-4 ${chipCls} p-2 shadow-xs hover:shadow-sm transition-shadow ${isDragging ? 'opacity-40' : ''}`}
     >
       <div className="flex items-start gap-2">
         <button
@@ -81,15 +82,12 @@ const TaskCard: React.FC<{ task: AgendaTask; language: Language; onOpenTask: (ta
           onClick={() => onOpenTask(task)}
           className="min-w-0 flex-1 text-left space-y-1 cursor-pointer"
         >
-          <p className="text-xs font-bold text-[#4A3F35] leading-snug break-words">{task.title}</p>
-          <span className="inline-block text-[10px] font-mono font-bold uppercase tracking-wide text-[#8B735B]">
-            {statusLabel(t, task.status)}
-          </span>
+          <p className="text-sm font-semibold text-[#4A3F35] leading-snug break-words">{task.title}</p>
           {task.description && (
-            <p className="text-xs text-[#A09080] line-clamp-2 break-words">{task.description}</p>
+            <p className="text-xs text-[#5D5449] line-clamp-2 break-words">{task.description}</p>
           )}
           {task.due_date && (
-            <p className="text-xs font-mono font-bold text-[#8B735B] flex items-center gap-1">
+            <p className="text-xs font-medium text-[#5D5449] flex items-center gap-1">
               <Clock className="w-3 h-3" />
               {shortDueDate(task.due_date, language)}
               {task.due_time ? ` · ${formatTime12h(task.due_time, language)}` : ''}
@@ -115,11 +113,14 @@ const KanbanColumn: React.FC<{
   return (
     <div
       ref={setNodeRef}
-      className={`rounded-2xl border-2 p-3 space-y-2 transition-colors ${headerCls} ${isOver ? 'ring-2 ring-[#8B735B]/50' : ''}`}
+      className={`rounded-2xl bg-[#FAF6F0] border border-[#CBAE94]/40 p-3 space-y-2 transition-colors ${isOver ? 'ring-2 ring-[#8B735B]/50' : ''}`}
     >
       <div className="flex items-center justify-between px-1">
-        <span className="text-xs font-bold font-mono uppercase tracking-wide">{statusLabel(t, id)}</span>
-        <span className="px-2 py-0.5 rounded-full bg-white/70 border border-current text-xs font-mono font-bold">
+        <span className="flex items-center gap-2 text-sm font-semibold text-[#4A3F35]">
+          <span className={`w-2 h-2 rounded-full ${headerCls}`} aria-hidden />
+          {statusLabel(t, id)}
+        </span>
+        <span className="px-2 py-0.5 rounded-full bg-white border border-[#CBAE94]/60 text-xs font-semibold text-[#5D5449]">
           {tasks.length}
         </span>
       </div>
@@ -131,7 +132,7 @@ const KanbanColumn: React.FC<{
         </div>
       </SortableContext>
       {tasks.length === 0 && (
-        <p className="text-xs text-[#A09080] italic text-center py-4">{t.agendaEmptyColumnMsg}</p>
+        <p className="text-xs text-[#5D5449] text-center py-4">{t.agendaEmptyColumnMsg}</p>
       )}
     </div>
   );
@@ -215,8 +216,8 @@ export const AgendaKanban: React.FC<AgendaKanbanProps> = ({ tasks, t, language, 
       </div>
       <DragOverlay>
         {activeTask ? (
-          <div className="bg-white rounded-xl border-2 border-[#8B735B] p-3 shadow-lg opacity-90">
-            <p className="text-xs font-bold text-[#4A3F35]">{activeTask.title}</p>
+          <div className="bg-white rounded-xl border border-[#8B735B] p-3 shadow-lg opacity-90">
+            <p className="text-sm font-semibold text-[#4A3F35]">{activeTask.title}</p>
           </div>
         ) : null}
       </DragOverlay>

@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { parseToYmd, formatDateLong, parseTimeRange, formatTime12h, formatTimeRangeString, formatGuestWindow, taskDueAt, isInReminderWindow, formatTaskDue } from './dateUtils';
+import { parseToYmd, formatDateLong, parseTimeRange, formatTime12h, formatTimeRangeString, formatGuestWindow, taskDueAt, isInReminderWindow, formatTaskDue, formatClockTime, formatDateTimeShort } from './dateUtils';
 
 describe('parseToYmd', () => {
   it('passes through YYYY-MM-DD', () => {
@@ -151,5 +151,19 @@ describe('formatTaskDue', () => {
 
   it('returns empty for empty date', () => {
     expect(formatTaskDue('', '09:00', 'EN')).toBe('');
+  });
+});
+
+describe('formatClockTime / formatDateTimeShort', () => {
+  const iso = new Date(2026, 9, 27, 14, 5).toISOString();
+  it('follows the app language', () => {
+    expect(formatClockTime(iso, 'FR')).toBe('14:05');
+    expect(formatClockTime(iso, 'EN')).toBe('2:05 PM');
+    expect(formatDateTimeShort(iso, 'FR')).toBe('27 oct. 2026, 14:05');
+    expect(formatDateTimeShort(iso, 'EN')).toBe('Oct 27, 2026, 2:05 PM');
+  });
+  it('returns empty for bad input', () => {
+    expect(formatClockTime('', 'FR')).toBe('');
+    expect(formatDateTimeShort('nope', 'EN')).toBe('');
   });
 });

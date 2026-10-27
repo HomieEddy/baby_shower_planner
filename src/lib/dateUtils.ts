@@ -88,6 +88,20 @@ export function formatTime12h(time24: string, lang: Lang = 'EN'): string {
   return `${h}:${m} ${ampm}`;
 }
 
+// Clock time of an ISO timestamp in the app language ("14:05" / "2:05 PM").
+export function formatClockTime(iso: string, lang: Lang = 'EN'): string {
+  const d = new Date(iso);
+  if (!iso || Number.isNaN(d.getTime())) return '';
+  return format(d, lang === 'FR' ? 'HH:mm' : 'h:mm a', { locale: langLocale(lang) });
+}
+
+// Short date and time of an ISO timestamp ("27 oct. 2026, 14:05" / "Oct 27, 2026, 2:05 PM").
+export function formatDateTimeShort(iso: string, lang: Lang = 'EN'): string {
+  const d = new Date(iso);
+  if (!iso || Number.isNaN(d.getTime())) return '';
+  return format(d, lang === 'FR' ? 'd MMM yyyy, HH:mm' : 'MMM d, yyyy, h:mm a', { locale: langLocale(lang) });
+}
+
 export function formatTimeRangeString(startTime24: string, endTime24: string, lang: Lang = 'EN'): string {
   const startFmt = formatTime12h(startTime24, lang);
   const endFmt = formatTime12h(endTime24, lang);

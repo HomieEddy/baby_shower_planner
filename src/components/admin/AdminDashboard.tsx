@@ -101,10 +101,10 @@ const SidebarPageLink = ({
   <Link
     to={to}
     onClick={onNavigate}
-    className="w-full flex items-center gap-2.5 px-3 py-3 rounded-xl text-xs font-bold font-mono text-left text-[#5D5449] hover:bg-[#EFE6DC] transition-colors"
+    className="w-full flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-sm font-semibold leading-snug text-left text-[#5D5449] hover:bg-[#EFE6DC] transition-colors"
   >
     <Icon className="w-4 h-4 shrink-0" />
-    <span className="truncate flex-1">{label}</span>
+    <span className="flex-1 min-w-0">{label}</span>
     <ExternalLink className="w-3 h-3 shrink-0 opacity-60" />
   </Link>
 );
@@ -356,7 +356,7 @@ export const AdminDashboard = () => {
       {rehearsalActive && (
         <motion.div
           variants={adminCardVariants}
-          className="rounded-2xl border-2 border-amber-400 bg-amber-50 p-4 sm:p-5 space-y-3"
+          className="rounded-3xl border border-amber-300 bg-amber-50 p-4 sm:p-5 space-y-3"
         >
           <div className="flex flex-col sm:flex-row sm:items-start gap-3">
             <FlaskConical className="w-5 h-5 text-amber-600 shrink-0 mt-0.5" />
@@ -395,57 +395,56 @@ export const AdminDashboard = () => {
         </motion.div>
       )}
 
-      <motion.div variants={adminCardVariants} className="card-paper p-6 sm:p-8 flex flex-col md:flex-row md:items-center justify-between gap-4">
-        <div>
-          <div className="label-mono mb-1">
-            {t.adminCoHostControl}
-          </div>
-          <h2 className="font-sans text-2xl sm:text-3xl font-bold text-[#8B735B]">
+      {/* Dashboard header: plain on the page background so each tab's own
+          header card stays the first card. Compact on phones. */}
+      <motion.div variants={adminCardVariants} className="flex flex-col md:flex-row md:items-end justify-between gap-3 sm:gap-4">
+        <div className="min-w-0 md:flex-1">
+          <div className="label-mono mb-1">{t.adminCoHostControl}</div>
+          <h1 className="font-gaegu text-3xl sm:text-4xl font-bold text-[#4A3F35] leading-tight">
             {t.adminTitle}
-          </h2>
-          <p className="text-[#5D5449] text-xs sm:text-sm mt-1">
+          </h1>
+          <p className="hidden sm:block text-[#5D5449] text-sm mt-1 max-w-xl">
             {t.adminSubtitle}
           </p>
         </div>
 
-        <div className="flex flex-wrap items-center gap-3">
-          <motion.button
-            whileHover={{ scale: 1.03 }}
-            whileTap={{ scale: 0.97 }}
+        <div className="flex flex-wrap md:flex-nowrap items-center gap-2 md:shrink-0">
+          <button
+            type="button"
             onClick={handleCopyUniversalMessage}
-            className="btn-accent text-xs sm:text-sm py-2.5 px-3.5 cursor-pointer inline-flex items-center"
+            className="btn-accent text-xs sm:text-sm py-2 px-3.5 gap-1.5 cursor-pointer"
             title={t.copyMessageBtn}
           >
-            {copiedKey === 'universal-msg' ? <Check className="w-3.5 h-3.5 mr-1" /> : <Copy className="w-3.5 h-3.5 mr-1" />}
+            {copiedKey === 'universal-msg' ? <Check className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5" />}
             <span>{t.copyMessageBtn} ({language})</span>
-          </motion.button>
-          <motion.button
-            whileHover={{ scale: 1.03 }}
-            whileTap={{ scale: 0.97 }}
+          </button>
+          <button
+            type="button"
             onClick={handleCopyUniversalUrl}
-            className="btn-outline-accent text-xs sm:text-sm py-2.5 px-3.5 cursor-pointer inline-flex items-center"
+            className="btn-outline-accent text-xs sm:text-sm py-2 px-3.5 gap-1.5 cursor-pointer"
             title={t.copyLink}
+            aria-label={t.copyLink}
           >
-            {copiedKey === 'universal-url' ? <Check className="w-3.5 h-3.5 mr-1" /> : <Link2 className="w-3.5 h-3.5 mr-1" />}
-            <span>{t.copyLink}</span>
-          </motion.button>
+            {copiedKey === 'universal-url' ? <Check className="w-3.5 h-3.5" /> : <Link2 className="w-3.5 h-3.5" />}
+            <span className="hidden sm:inline">{t.copyLink}</span>
+          </button>
           {!rehearsalActive && (
-            <motion.button
-              whileHover={{ scale: 1.03 }}
-              whileTap={{ scale: 0.97 }}
+            <button
+              type="button"
               onClick={handleStartRehearsal}
-              className="btn-outline-accent text-xs sm:text-sm py-2.5 px-3.5 cursor-pointer inline-flex items-center"
+              className="btn-outline-accent text-xs sm:text-sm py-2 px-3.5 gap-1.5 cursor-pointer"
               title={t.rehearsalStartTitle}
+              aria-label={t.rehearsalBtn}
             >
-              <FlaskConical className="w-3.5 h-3.5 mr-1" />
-              <span>{t.rehearsalBtn}</span>
-            </motion.button>
+              <FlaskConical className="w-3.5 h-3.5" />
+              <span className="hidden sm:inline">{t.rehearsalBtn}</span>
+            </button>
           )}
         </div>
       </motion.div>
 
       {/* Breadcrumbs */}
-      <nav className="flex items-center gap-1.5 text-xs font-mono font-bold text-[#8B735B]" aria-label={t.breadcrumbLabel}>
+      <nav className="hidden md:flex items-center gap-1.5 text-xs font-mono font-bold text-[#8B735B]" aria-label={t.breadcrumbLabel}>
         <span className="text-[#A09080]">{t.adminTitle}</span>
         <ChevronRight className="w-3.5 h-3.5 text-[#CBAE94]" />
         <span className="text-[#4A3F35]">{tabLabel(adminSubTab)}</span>
@@ -457,24 +456,22 @@ export const AdminDashboard = () => {
         </div>
       )}
       {overviewQuery.isError && (
-        <div role="alert" className="rounded-2xl border-2 border-rose-300 bg-rose-50 text-rose-800 text-xs font-bold p-4 text-center">
+        <div role="alert" className="notice-error justify-center font-bold">
           {t.loadErrorMsg}
         </div>
       )}
 
       {/* Mobile sticky bar */}
-      <div className="md:hidden sticky top-0 z-30 bg-[#FDFBF7]/95 backdrop-blur-sm border border-[#CBAE94]/40 rounded-2xl px-3 py-2 flex items-center justify-between shadow-2xs">
-        <button
-          type="button"
-          onClick={() => setSidebarOpen(true)}
-          className="p-2 rounded-xl hover:bg-[#EFE6DC] text-[#4A3F35] transition-colors cursor-pointer"
-          aria-label={t.openNavLabel}
-        >
-          <Menu className="w-5 h-5" />
-        </button>
-        <span className="text-xs font-bold font-mono text-[#4A3F35] truncate px-2">{tabLabel(adminSubTab)}</span>
-        <span className="w-9" />
-      </div>
+      <button
+        type="button"
+        onClick={() => setSidebarOpen(true)}
+        aria-label={t.openNavLabel}
+        className="md:hidden sticky top-2 z-30 w-full card-soft px-4 py-3 flex items-center gap-3 text-left cursor-pointer"
+      >
+        <Menu className="w-5 h-5 shrink-0 text-[#5D5449]" aria-hidden />
+        <span className="flex-1 min-w-0 text-sm font-semibold text-[#4A3F35] truncate">{tabLabel(adminSubTab)}</span>
+        <ChevronRight className="w-4 h-4 shrink-0 text-[#A09080]" aria-hidden />
+      </button>
 
       <div className="flex flex-col md:flex-row gap-6">
         {/* Sidebar backdrop (mobile) */}
@@ -496,7 +493,7 @@ export const AdminDashboard = () => {
             sidebarOpen ? 'translate-x-0 block' : '-translate-x-full hidden md:block'
           }`}
         >
-          <div className="h-full md:h-auto bg-[#FFFDF9] border-r border-[#CBAE94]/40 md:border md:rounded-2xl md:shadow-xs p-3 space-y-1 overflow-y-auto">
+          <div className="h-full md:h-auto bg-[#FFFDF9] border-r border-[#CBAE94]/40 md:border md:border-[#CBAE94]/50 md:rounded-3xl md:shadow-xs p-3 space-y-0.5 overflow-y-auto">
             <div className="md:hidden flex items-center justify-between px-2 pb-2 mb-2 border-b border-[#CBAE94]/30">
               <span className="label-mono">{t.adminTitle}</span>
               <button
@@ -520,16 +517,16 @@ export const AdminDashboard = () => {
                     setShowLockedSeating(false);
                     setSidebarOpen(false);
                   }}
-                  className={`w-full flex items-center gap-2.5 px-3 py-3 rounded-xl text-xs font-bold font-mono text-left transition-colors cursor-pointer ${
+                  className={`w-full flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-sm font-semibold leading-snug text-left transition-colors cursor-pointer ${
                     isActive
                       ? 'bg-[#8B735B] text-white shadow-xs'
                       : 'text-[#5D5449] hover:bg-[#EFE6DC]'
                   }`}
                 >
-                  <Icon className={`w-4 h-4 shrink-0 ${tab.id === 'alerts' && !isActive ? 'text-amber-500' : ''}`} />
-                  <span className="truncate flex-1">{tabLabel(tab.id)}</span>
+                  <Icon className="w-4 h-4 shrink-0" aria-hidden />
+                  <span className="flex-1 min-w-0">{tabLabel(tab.id)}</span>
                   {PREMIUM_TABS[tab.id] && !entitled(PREMIUM_TABS[tab.id] as Feature) ? (
-                    <Lock className="w-3 h-3 shrink-0 opacity-70" />
+                    <Lock className="w-3 h-3 shrink-0 opacity-70" aria-hidden />
                   ) : null}
                   {tab.id === 'alerts' && alerts.length > 0 ? (
                     <span className="px-1.5 py-0.5 rounded-full bg-amber-500 text-white text-xs font-bold shrink-0">
@@ -599,18 +596,18 @@ export const AdminDashboard = () => {
       {adminSubTab === 'settings' && (
         <motion.div
           variants={adminCardVariants}
-          className="rounded-2xl border-2 border-rose-300 bg-rose-50/60 p-5 sm:p-6 space-y-3"
+          className="rounded-3xl border border-rose-300 bg-rose-50/60 p-5 sm:p-6 space-y-3"
         >
           <div className="flex items-center gap-2">
             <AlertTriangle className="w-5 h-5 text-rose-600" />
-            <h2 className="font-sans text-lg font-bold text-rose-900">{t.dangerZoneTitle}</h2>
+            <h2 className="font-gaegu text-xl font-bold text-rose-900">{t.dangerZoneTitle}</h2>
           </div>
           <p className="text-sm text-rose-900/80 max-w-2xl">{t.dangerZoneDesc}</p>
           <div className="flex flex-col sm:flex-row sm:items-center gap-3">
             <button
               type="button"
               onClick={handleWipeData}
-              className="inline-flex items-center justify-center gap-2 px-5 min-h-[44px] rounded-xl border-2 border-rose-400 bg-white text-rose-700 text-sm font-bold hover:bg-rose-100 transition-colors cursor-pointer"
+              className="inline-flex items-center justify-center gap-2 px-5 min-h-[44px] rounded-full border border-rose-400 bg-white text-rose-700 text-sm font-bold hover:bg-rose-100 transition-colors cursor-pointer"
             >
               <Trash2 className="w-4 h-4" />
               <span>{t.wipeDbBtn}</span>
