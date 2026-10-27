@@ -21,6 +21,7 @@ import { Segmented } from '../shared/Segmented';
 import { AgendaCalendar } from './AgendaCalendar';
 import { AgendaKanban } from './AgendaKanban';
 import { AgendaTaskModal } from './AgendaTaskModal';
+import { AdminPageHeader } from './AdminPageHeader';
 
 interface AdminAgendaTabProps {
   language: Language;
@@ -207,34 +208,34 @@ export const AdminAgendaTab: React.FC<AdminAgendaTabProps> = ({ language, t, set
   return (
     <motion.div key="agenda" variants={adminContainerVariants} initial="hidden" animate="show" className="space-y-8">
       {/* Header + view switcher */}
-      <motion.div variants={adminCardVariants} className="card-paper p-6 sm:p-8 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div>
-          <div className="label-mono mb-1">{t.tabAgenda}</div>
-          <h3 className="font-sans text-2xl font-bold text-[#8B735B] flex items-center gap-2">
-            <CalendarDays className="w-6 h-6" />
-            {t.tabAgenda}
-          </h3>
-          <p className="text-xs text-[#5D5449] mt-1">{t.agendaReminderPanelDesc}</p>
-        </div>
-        <div className="flex flex-wrap items-center gap-3">
-          <Segmented
-            ariaLabel={t.tabAgenda}
-            value={view}
-            onChange={setView}
-            options={[
-              { value: 'kanban', icon: <SquareKanban className="w-3.5 h-3.5" />, label: t.agendaKanbanView },
-              { value: 'calendar', icon: <CalendarDays className="w-3.5 h-3.5" />, label: t.agendaCalendarView },
-            ]}
-          />
-          <button
-            type="button"
-            onClick={() => setModal({ mode: 'create' })}
-            className="btn-accent px-5 py-2.5 text-xs flex items-center gap-1.5"
-          >
-            <Plus className="w-4 h-4" />
-            {t.agendaAddTaskBtn}
-          </button>
-        </div>
+      <motion.div variants={adminCardVariants}>
+        <AdminPageHeader
+          icon={CalendarDays}
+          eyebrow={t.agendaHeaderEyebrow}
+          title={t.tabAgenda}
+          subtitle={t.agendaHeaderSubtitle}
+          actions={
+            <>
+              <Segmented
+                ariaLabel={t.tabAgenda}
+                value={view}
+                onChange={setView}
+                options={[
+                  { value: 'kanban', icon: <SquareKanban className="w-3.5 h-3.5" />, label: t.agendaKanbanView },
+                  { value: 'calendar', icon: <CalendarDays className="w-3.5 h-3.5" />, label: t.agendaCalendarView },
+                ]}
+              />
+              <button
+                type="button"
+                onClick={() => setModal({ mode: 'create' })}
+                className="btn-accent px-4 py-2.5 text-xs sm:text-sm gap-1.5 cursor-pointer"
+              >
+                <Plus className="w-4 h-4" />
+                {t.agendaAddTaskBtn}
+              </button>
+            </>
+          }
+        />
       </motion.div>
 
       {tasksQuery.isLoading && (
@@ -243,13 +244,13 @@ export const AdminAgendaTab: React.FC<AdminAgendaTabProps> = ({ language, t, set
         </div>
       )}
       {tasksQuery.isError && (
-        <div role="alert" className="rounded-2xl border-2 border-rose-300 bg-rose-50 text-rose-800 text-xs font-bold p-4 text-center">
+        <div role="alert" className="notice-error justify-center font-bold">
           {t.loadErrorMsg}
         </div>
       )}
 
       {/* Board / calendar */}
-      <motion.div variants={adminCardVariants} className="card-paper p-4 sm:p-6">
+      <motion.div variants={adminCardVariants} className="card-soft p-4 sm:p-6">
         {view === 'kanban' ? (
           <AgendaKanban tasks={tasks} t={t} language={language} onOpenTask={(task) => setModal({ mode: 'edit', task })} onReorder={handleReorder} />
         ) : (
@@ -264,7 +265,7 @@ export const AdminAgendaTab: React.FC<AdminAgendaTabProps> = ({ language, t, set
       </motion.div>
 
       {/* Reminder settings */}
-      <motion.div variants={adminCardVariants} className="card-paper p-6 sm:p-8 space-y-5">
+      <motion.div variants={adminCardVariants} className="card-soft p-6 sm:p-8 space-y-5">
         <div className="flex items-center gap-3 border-b border-[#CBAE94]/40 pb-4">
           <div className="p-3 bg-[#EFE6DC] text-[#8B735B] rounded-2xl border border-[#CBAE94]/50">
             <Bell className="w-6 h-6" />

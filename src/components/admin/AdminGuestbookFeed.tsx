@@ -14,6 +14,7 @@ import { usePagination, useFloorMapTables } from '../shared/hooks';
 import { AdminToolbar } from './AdminToolbar';
 import { TableScanQrModal } from './TableScanQrModal';
 import { adminFetch } from '../../lib/api';
+import { AdminPageHeader } from './AdminPageHeader';
 
 export const AdminGuestbookFeed = ({ entries, onRefresh }: { entries: GuestbookEntry[]; onRefresh: () => Promise<void> }) => {
   const t = useT();
@@ -79,27 +80,26 @@ export const AdminGuestbookFeed = ({ entries, onRefresh }: { entries: GuestbookE
 
   return (
     <motion.div variants={adminContainerVariants} initial="hidden" animate="show" className="space-y-8">
-      <motion.div variants={adminCardVariants} className="card-paper p-6 sm:p-8 space-y-6">
-        <div className="flex items-start justify-between gap-3">
-          <div>
-            <div className="label-mono">{t.dayOfGuestbookTab}</div>
-            <h3 className="font-sans text-2xl font-bold text-[#8B735B]">
-              {t.guestbookFeedTitle}
-            </h3>
-            <p className="text-xs text-[#5D5449]">
-              {t.guestbookFeedSubtitle}
-            </p>
-          </div>
-          <button
-            type="button"
-            onClick={() => setQrOpen(true)}
-            className="shrink-0 px-4 py-2.5 rounded-2xl bg-[#8B735B] text-white text-xs font-bold hover:bg-[#705C47] transition-colors flex items-center gap-2 cursor-pointer"
-          >
-            <QrCode className="w-4 h-4" />
-            <span>{t.tableQrPrintTitle}</span>
-          </button>
-        </div>
+      <motion.div variants={adminCardVariants}>
+        <AdminPageHeader
+          icon={MessageSquare}
+          eyebrow={t.tabGuestbookFeed}
+          title={t.guestbookFeedTitle}
+          subtitle={t.guestbookFeedSubtitle}
+          actions={
+            <button
+              type="button"
+              onClick={() => setQrOpen(true)}
+              className="btn-accent text-xs sm:text-sm py-2.5 px-4 gap-2 cursor-pointer"
+            >
+              <QrCode className="w-4 h-4" />
+              <span>{t.tableQrPrintTitle}</span>
+            </button>
+          }
+        />
+      </motion.div>
 
+      <motion.div variants={adminCardVariants} className="card-soft p-6 sm:p-8 space-y-6">
         {entries.length > 0 && (
           <AdminToolbar
             primary={

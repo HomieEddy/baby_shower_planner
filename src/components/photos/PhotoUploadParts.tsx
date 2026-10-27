@@ -143,7 +143,7 @@ export const UploadSuccessScreen = ({
   const tf = useTf();
   return (
     <motion.div
-      className="card-guest p-6 sm:p-8 text-center space-y-6"
+      className="card-soft p-6 sm:p-8 text-center space-y-6"
       initial={{ opacity: 0, y: 16 }}
       animate={{ opacity: 1, y: 0 }}
       transition={{ duration: 0.4 }}

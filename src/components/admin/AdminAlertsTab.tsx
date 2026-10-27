@@ -22,6 +22,7 @@ import { useToast } from '../shared/ToastContext';
 import { useActionConfirm } from '../shared/ConfirmDialog';
 import { useTf } from '../shared/i18n';
 import { useCapabilities, noProviders } from '../../lib/capabilities';
+import { AdminPageHeader } from './AdminPageHeader';
 
 interface AdminAlertsTabProps {
   language: Language;
@@ -120,16 +121,16 @@ export const AdminAlertsTab: React.FC<AdminAlertsTabProps> = ({ language, t, gue
       className="space-y-8"
     >
       {/* Dispatch Alert Form Card */}
-      <motion.div variants={adminCardVariants} className="card-paper p-6 sm:p-8 space-y-6">
-        <div className="flex items-center space-x-3 border-b border-[#CBAE94]/40 pb-4">
-          <div className="p-3 bg-amber-100 text-amber-800 rounded-2xl border border-amber-300">
-            <ShieldAlert className="w-6 h-6" />
-          </div>
-          <div>
-            <h3 className="font-sans text-2xl font-bold text-[#8B735B]">{t.broadcastTitle}</h3>
-            <p className="text-xs text-[#5D5449]">{t.broadcastDesc}</p>
-          </div>
-        </div>
+      <motion.div variants={adminCardVariants}>
+        <AdminPageHeader
+          icon={ShieldAlert}
+          eyebrow={t.tabUrgentAlerts}
+          title={t.broadcastTitle}
+          subtitle={t.broadcastDesc}
+        />
+      </motion.div>
+
+      <motion.div variants={adminCardVariants} className="card-soft p-6 sm:p-8 space-y-6">
 
         <div className="space-y-2">
           <label className="label-mono block">{t.quickTemplatesLabel}</label>
@@ -204,7 +205,7 @@ export const AdminAlertsTab: React.FC<AdminAlertsTabProps> = ({ language, t, gue
       </motion.div>
 
       {/* Broadcast History */}
-      <motion.div variants={adminCardVariants} className="card-paper p-6 sm:p-8 space-y-4">
+      <motion.div variants={adminCardVariants} className="card-soft p-6 sm:p-8 space-y-4">
         <h4 className="font-sans text-lg font-bold text-[#8B735B] flex items-center space-x-2">
           <Bell className="w-5 h-5 text-[#8B735B]" /><span>{tf('alertsHistoryCount', { count: alerts.length })}</span>
         </h4>

@@ -30,6 +30,7 @@ import { Segmented } from '../shared/Segmented';
 import { SearchInput } from '../shared/ui';
 import { Pagination } from '../shared/Pagination';
 import { usePagination } from '../shared/hooks';
+import { AdminPageHeader } from '../admin/AdminPageHeader';
 
 export const HostPhotoGalleryPage: React.FC<{ onChanged?: () => void }> = ({ onChanged }) => {
   const t = useT();
@@ -293,28 +294,19 @@ export const HostPhotoGalleryPage: React.FC<{ onChanged?: () => void }> = ({ onC
   return (
     <div className="font-sans">
       <div className="space-y-6">
-        {/* Top Header Banner */}
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-[#FFFDF9] p-6 sm:p-8 rounded-3xl border border-[#CBAE94]/60 shadow-lg">
-          <div className="space-y-1">
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-amber-100 text-amber-900 text-xs font-bold uppercase tracking-wider border border-amber-300">
-              <Camera className="w-3.5 h-3.5 text-amber-700" />
-              <span>{t.privateHostGalleryLabel}</span>
-            </div>
-            <h1 className="font-gaegu text-3xl sm:text-4xl font-bold text-[#4A3F35]">
-              {settings?.parentsNames ? tf('photoMemoryLibraryOwn', { name: settings.parentsNames }) : t.photoMemoryLibraryHosts}
-            </h1>
-            <p className="text-xs sm:text-sm text-[#8B735B]">
-              {t.photoGallerySubtitle}
-            </p>
-          </div>
-
-          <div className="flex flex-wrap items-center gap-2.5">
+        <AdminPageHeader
+          icon={Camera}
+          eyebrow={t.privateHostGalleryLabel}
+          title={settings?.parentsNames ? tf('photoMemoryLibraryOwn', { name: settings.parentsNames }) : t.photoMemoryLibraryHosts}
+          subtitle={t.photoGallerySubtitle}
+          actions={
+            <>
             {photos.length > 0 && (
               <button
                 type="button"
                 onClick={() => handleDownloadZip(photos, 'all_baby_shower_photos')}
                 disabled={isZipping}
-                className="px-4 py-2.5 rounded-2xl bg-[#8B735B] hover:bg-[#705C47] text-white text-xs font-bold shadow-md transition-all flex items-center gap-2"
+                className="btn-accent text-xs sm:text-sm py-2.5 px-4 gap-2 cursor-pointer disabled:opacity-50"
               >
                 <DownloadCloud className="w-4 h-4" />
                 <span>{t.downloadZipBtn}</span>
@@ -329,9 +321,9 @@ export const HostPhotoGalleryPage: React.FC<{ onChanged?: () => void }> = ({ onC
                   setIsSlideshowPlaying(true);
                   setIsSlideshowActive(true);
                 }}
-                className="px-4 py-2.5 rounded-2xl bg-gradient-to-r from-emerald-700 to-teal-800 hover:brightness-110 text-white text-xs font-bold shadow-md transition-all flex items-center gap-2"
+                className="btn-outline-accent text-xs sm:text-sm py-2.5 px-4 gap-2 cursor-pointer"
               >
-                <Play className="w-4 h-4 fill-white" />
+                <Play className="w-4 h-4" />
                 <span>{t.venueSlideshowBtn}</span>
               </button>
             )}
@@ -339,13 +331,15 @@ export const HostPhotoGalleryPage: React.FC<{ onChanged?: () => void }> = ({ onC
             <button
               type="button"
               onClick={fetchPhotos}
-              className="p-2.5 rounded-2xl bg-[#EFE6DC] hover:bg-[#CBAE94]/40 text-[#4A3F35] transition-colors"
+              className="p-2.5 rounded-full bg-[#EFE6DC] hover:bg-[#CBAE94]/40 text-[#4A3F35] transition-colors cursor-pointer"
               title={t.refreshGalleryBtn}
+              aria-label={t.refreshGalleryBtn}
             >
               <RefreshCw className={`w-4 h-4 ${isLoading ? 'animate-spin' : ''}`} />
             </button>
-          </div>
-        </div>
+            </>
+          }
+        />
 
         {/* Gallery Stats Row */}
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">

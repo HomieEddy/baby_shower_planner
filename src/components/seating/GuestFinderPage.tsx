@@ -222,7 +222,7 @@ export const GuestFinderPage: React.FC = () => {
           variants={container}
           initial="hidden"
           animate="show"
-          className="card-guest relative px-6 py-8 sm:px-10 sm:py-10"
+          className="card-soft relative px-6 py-8 sm:px-10 sm:py-10"
         >
           <motion.div variants={item}>
             <GuestPageHeader
@@ -316,7 +316,7 @@ export const GuestFinderPage: React.FC = () => {
               animate={{ opacity: 1, scale: 1, y: 0 }}
               exit={{ opacity: 0, scale: 0.95, y: -12 }}
               transition={{ type: 'spring', stiffness: 240, damping: 22 }}
-              className="card-guest p-6 sm:p-8 space-y-6"
+              className="card-soft p-6 sm:p-8 space-y-6"
             >
               {/* Welcome header */}
               <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 border-b border-[#CBAE94]/40 pb-5">

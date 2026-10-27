@@ -740,7 +740,7 @@ export const RsvpPage = () => {
         contentClassName="space-y-4"
       >
         {/* Invite a guest */}
-        <div className="card-guest p-5 sm:p-6 space-y-4">
+        <div className="card-soft p-5 sm:p-6 space-y-4">
           <div className="flex items-center gap-2.5">
             <div className="p-2 bg-[#EFE6DC] text-[#8B735B] rounded-xl border border-[#CBAE94]">
               <Users className="w-4 h-4" />
@@ -800,7 +800,7 @@ export const RsvpPage = () => {
         </div>
 
         {/* Your invitations */}
-        <div className="card-guest p-5 sm:p-6 space-y-3">
+        <div className="card-soft p-5 sm:p-6 space-y-3">
           <div className="label-mono">{t.yourInvitesTitle}</div>
           {myInvites.length === 0 ? (
             <p className="text-xs text-[#5D5449]/70 italic py-2">{t.noInvitesYet}</p>
