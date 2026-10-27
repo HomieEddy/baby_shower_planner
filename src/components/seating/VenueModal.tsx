@@ -2,7 +2,8 @@ import { lazy, Suspense, useEffect, useMemo, useRef, useState } from 'react';
 import { createPortal } from 'react-dom';
 import { motion, AnimatePresence } from 'motion/react';
 import { Stage, Layer, Group, Circle } from 'react-konva';
-import { renderTableBody, renderLandmark, SeatRing, TableLabel } from './venueShapes';
+import { renderTableBody, renderLandmark, SeatRing, TableLabel, renderRoomBoundary } from './venueShapes';
+import { useCanvasPalette } from './canvasPalette';
 import { MapPin, Users, Utensils, Info, DoorOpen, Sparkles, CheckCircle2, X } from 'lucide-react';
 import { Guest, FloorMapData } from '../../types';
 import { useT, useTf } from '../shared/i18n';
@@ -12,6 +13,10 @@ import { getGuestPartySize, getTableOccupiedSeats, getTableSeats, getAttendeeSea
 import { getSeatLocalPosition } from './floorPlanHelpers';
 import { getPartyMembers, getPartyDietarySummary } from '../../lib/guestAttendees';
 import { FinderSelection } from './GuestFinderPage';
+
+// The guest's own seat: the same emerald the host page uses for "fits here".
+const MY_SEAT = '#059669';
+const MY_SEAT_STROKE = '#047857';
 
 const FloorPlan3D = lazy(() => import('./FloorPlan3D').then((m) => ({ default: m.FloorPlan3D })));
 
@@ -26,6 +31,7 @@ interface VenueModalProps {
 export const VenueModal = ({ open, selected, floorMap, roster, onClose }: VenueModalProps) => {
   const t = useT();
   const tf = useTf();
+  const palette = useCanvasPalette();
   const [viewMode, setViewMode] = useState<ViewMode>('2d');
   const [mapWidth, setMapWidth] = useState(440);
   const mapWrapRef = useRef<HTMLDivElement>(null);
@@ -114,23 +120,23 @@ export const VenueModal = ({ open, selected, floorMap, roster, onClose }: VenueM
             exit={{ opacity: 0, scale: 0.95, y: -12 }}
             transition={{ type: 'spring', stiffness: 240, damping: 22 }}
             onClick={(e) => e.stopPropagation()}
-            className="relative w-full max-w-4xl bg-[#FFFDF9] rounded-3xl shadow-2xl border-2 border-[#CBAE94] p-5 sm:p-8 max-h-[92vh] overflow-y-auto"
+            className="card-guest relative w-full max-w-4xl p-5 sm:p-8 max-h-[92vh] overflow-y-auto"
           >
             {/* Header */}
-            <div className="flex items-center justify-between gap-3 border-b border-[#CBAE94]/40 pb-4 mb-5">
+            <div className="flex items-start justify-between gap-3 border-b border-[#CBAE94]/40 pb-4 mb-5">
               <div className="flex items-center gap-3 min-w-0">
                 <motion.div
-                  className="w-11 h-11 rounded-2xl bg-[#8B735B] text-white flex items-center justify-center shadow-md shrink-0"
+                  className="w-11 h-11 rounded-2xl bg-[#EFE6DC] border border-[#CBAE94]/60 text-[#8B735B] flex items-center justify-center shrink-0"
                   animate={{ rotate: [0, -6, 6, 0] }}
                   transition={{ duration: 0.8, delay: 0.3 }}
                 >
                   <MapPin className="w-5 h-5" />
                 </motion.div>
                 <div className="min-w-0">
-                  <h3 className="font-gaegu text-2xl font-bold text-[#4A3F35] truncate">
+                  <h2 className="font-gaegu text-2xl font-bold text-[#4A3F35] leading-tight">
                     {t.venueTitle}
-                  </h3>
-                  <p className="text-xs font-mono font-bold text-[#8B735B] truncate">
+                  </h2>
+                  <p className="text-xs font-mono font-bold text-[#5D5449] break-words">
                     {selected.displayName} · {tf('finderCodeParty', { code: selected.guest.code, count: String(getGuestPartySize(selected.guest)) })}
                   </p>
                 </div>
@@ -138,7 +144,7 @@ export const VenueModal = ({ open, selected, floorMap, roster, onClose }: VenueM
               <button
                 type="button"
                 onClick={onClose}
-                className="p-2 rounded-full hover:bg-[#EFE6DC] text-[#5D5449] transition-colors shrink-0"
+                className="min-w-[44px] min-h-[44px] flex items-center justify-center rounded-full border border-[#CBAE94]/60 text-[#4A3F35] transition-transform hover:-translate-y-0.5 shrink-0"
                 aria-label={t.closeModal}
                 title={t.closeModal}
               >
@@ -153,12 +159,12 @@ export const VenueModal = ({ open, selected, floorMap, roster, onClose }: VenueM
                   initial={{ opacity: 0, x: -18 }}
                   animate={{ opacity: 1, x: 0 }}
                   transition={{ delay: 0.15, type: 'spring', stiffness: 260, damping: 22 }}
-                  className="p-5 rounded-2xl bg-[#EFE6DC]/60 border-2 border-[#CBAE94]"
+                  className="p-5 rounded-xl bg-[#EFE6DC]/60 border border-[#CBAE94]/60"
                 >
                   <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
                     <div className="flex items-center gap-4">
                       <motion.span
-                        className="shrink-0 inline-block px-3 py-1 rounded-full bg-[#8B735B] text-white text-xs font-mono font-bold uppercase"
+                        className="shrink-0 inline-block px-3 py-1 rounded-full bg-[#4A3F35] text-xs font-mono font-bold uppercase"
                         initial={{ opacity: 0, y: -6 }}
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ delay: 0.25 }}
@@ -219,15 +225,15 @@ export const VenueModal = ({ open, selected, floorMap, roster, onClose }: VenueM
                   initial={{ opacity: 0, scale: 0.94, y: 18 }}
                   animate={{ opacity: 1, scale: 1, y: 0 }}
                   transition={{ delay: 0.2, type: 'spring', stiffness: 220, damping: 24 }}
-                  className="bg-[#FAF6F0] p-4 rounded-2xl border-2 border-[#CBAE94]"
+                  className="bg-[#FAF6F0] p-3 sm:p-4 rounded-xl border border-[#CBAE94]/60"
                 >
                   <div className="flex items-center justify-between mb-2 gap-2">
-                    <p className="text-xs font-bold text-[#8B735B]">
+                    <p className="text-xs font-bold text-[#4A3F35]">
                       {t.finderTableHighlight}
                     </p>
                     <ViewModeToggle value={viewMode} onChange={setViewMode} />
                   </div>
-                  <p className="text-xs font-mono text-[#CBAE94] text-center mb-2">
+                  <p className="text-xs text-[#5D5449] text-center mb-2">
                     {viewMode === '3d' ? t.finderMap3dHint : t.finderMapHint}
                   </p>
 
@@ -256,6 +262,7 @@ export const VenueModal = ({ open, selected, floorMap, roster, onClose }: VenueM
                         style={{ width: mapWidth, height: mapHeight }}
                       >
                         <Stage width={mapWidth} height={mapHeight} scaleX={scale} scaleY={scale}>
+                          <Layer listening={false}>{renderRoomBoundary(floorMap)}</Layer>
                           <Layer>
                             {/* Landmarks — same premium rendering as the host editor */}
                             {floorMap.landmarks.map((l) => (
@@ -283,8 +290,8 @@ export const VenueModal = ({ open, selected, floorMap, roster, onClose }: VenueM
                                           x={pos.x}
                                           y={pos.y}
                                           radius={8}
-                                          fill={isMine ? '#2E9E5B' : seatLayout[i] ? '#8B735B' : '#FFFDF9'}
-                                          stroke={isMine ? '#1B7A43' : '#CBAE94'}
+                                          fill={isMine ? MY_SEAT : seatLayout[i] ? '#8B735B' : palette.surface}
+                                          stroke={isMine ? MY_SEAT_STROKE : palette.accent}
                                           strokeWidth={2}
                                         />
                                       );
@@ -309,14 +316,22 @@ export const VenueModal = ({ open, selected, floorMap, roster, onClose }: VenueM
                             style={{
                               left: targetTableCenter.x,
                               top: targetTableCenter.y,
+                              // The wrapper needs a size: the ring spans the table plus its chairs.
+                              width: (guestAssignedTable.width + 36) * scale,
+                              height: (guestAssignedTable.height + 36) * scale,
                               transform: 'translate(-50%, -50%)',
                             }}
                           >
                             <span
                               aria-hidden
-                              className="absolute inset-0 rounded-full border-[3px] border-[#C9A227]"
+                              className={`absolute inset-0 border-[3px] ${guestAssignedTable.shape === 'circle' ? 'rounded-full' : 'rounded-2xl'}`}
+                              style={{ borderColor: 'var(--ink)' }}
                             />
-                            <span className="absolute inset-0 rounded-full bg-[#C9A227]/20 blur-[2px]" />
+                            <span
+                              aria-hidden
+                              className={`absolute inset-0 blur-[2px] ${guestAssignedTable.shape === 'circle' ? 'rounded-full' : 'rounded-2xl'}`}
+                              style={{ backgroundColor: 'color-mix(in srgb, var(--ink) 12%, transparent)' }}
+                            />
                           </div>
                         )}
 
@@ -327,17 +342,20 @@ export const VenueModal = ({ open, selected, floorMap, roster, onClose }: VenueM
                             style={{
                               left: seatCenter.x,
                               top: seatCenter.y,
+                              width: Math.max(20 * scale, 14),
+                              height: Math.max(20 * scale, 14),
                               transform: 'translate(-50%, -50%)',
                             }}
                           >
                             <motion.span
                               aria-hidden
-                              className="absolute inset-0 rounded-full border-[3px] border-[#2E9E5B]"
+                              className="absolute inset-0 rounded-full border-[3px]"
+                              style={{ borderColor: MY_SEAT }}
                               initial={{ scale: 0.5, opacity: 0.9 }}
                               animate={{ scale: [0.6, 2.2], opacity: [0.9, 0] }}
                               transition={{ duration: 1.2, repeat: Infinity, ease: 'easeOut' }}
                             />
-                            <span className="absolute inset-0 rounded-full bg-[#2E9E5B]/30 blur-[1px]" />
+                            <span className="absolute inset-0 rounded-full blur-[1px]" style={{ backgroundColor: `${MY_SEAT}4D` }} />
                           </div>
                         )}
 
@@ -353,12 +371,14 @@ export const VenueModal = ({ open, selected, floorMap, roster, onClose }: VenueM
                           >
                             <motion.span
                               aria-hidden
-                              className="absolute inset-0 rounded-full bg-[#C53030]/30"
+                              className="absolute inset-0 rounded-full"
+                              style={{ backgroundColor: 'color-mix(in srgb, var(--ink) 25%, transparent)' }}
                               animate={{ scale: [1, 2], opacity: [0.6, 0] }}
                               transition={{ duration: 1.8, repeat: Infinity, ease: 'easeOut' }}
                             />
                             <motion.div
-                              className="relative w-8 h-8 rounded-full bg-[#C53030] text-white flex items-center justify-center shadow-lg"
+                              className="relative w-8 h-8 rounded-full flex items-center justify-center shadow-lg"
+                              style={{ backgroundColor: 'var(--ink)', color: 'var(--bg)' }}
                               animate={{ y: [0, -5, 0] }}
                               transition={{ duration: 1.8, repeat: Infinity, ease: 'easeInOut' }}
                             >
@@ -372,15 +392,16 @@ export const VenueModal = ({ open, selected, floorMap, roster, onClose }: VenueM
                   </div>
 
                   {/* Legend */}
-                  <div className="flex flex-wrap items-center justify-center gap-4 mt-3 text-xs font-mono font-bold text-[#5D5449]">
+                  <div className="flex flex-wrap items-center justify-center gap-x-4 gap-y-2 mt-3 text-xs font-mono font-bold text-[#5D5449]">
                     <span className="flex items-center gap-1.5">
-                      <span className="w-2.5 h-2.5 rounded-full bg-[#C9A227]" />
+                      <span className="w-2.5 h-2.5 rounded-full border-2" style={{ borderColor: 'var(--ink)' }} />
                       {t.finderLegendYourTable}
                     </span>
                     {seatCenter && (
                       <span className="flex items-center gap-1.5">
                         <motion.span
-                          className="w-2.5 h-2.5 rounded-full bg-[#2E9E5B]"
+                          className="w-2.5 h-2.5 rounded-full"
+                          style={{ backgroundColor: MY_SEAT }}
                           animate={{ scale: [1, 1.6, 1], opacity: [1, 0.4, 1] }}
                           transition={{ duration: 1.2, repeat: Infinity }}
                         />
@@ -389,11 +410,11 @@ export const VenueModal = ({ open, selected, floorMap, roster, onClose }: VenueM
                     )}
                     {entrance && (
                       <span className="flex items-center gap-1.5">
-                        <span className="w-2.5 h-2.5 rounded-full bg-[#C53030]" />
+                        <span className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: 'var(--ink)' }} />
                         {t.finderLegendEntrance}
                       </span>
                     )}
-                    <span className="flex items-center gap-1.5 text-[#CBAE94]">
+                    <span className="flex items-center gap-1.5 text-[#8B735B]">
                       <Sparkles className="w-3 h-3" />
                       {t.finderMapLive}
                     </span>
@@ -405,19 +426,19 @@ export const VenueModal = ({ open, selected, floorMap, roster, onClose }: VenueM
                 initial={{ opacity: 0, y: 14 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.15 }}
-                className="p-6 rounded-2xl bg-amber-50 border-2 border-amber-200 text-center space-y-2"
+                className="p-6 rounded-xl bg-[#EFE6DC]/60 border border-[#CBAE94]/60 text-center space-y-2"
               >
                 <motion.div
                   animate={{ y: [0, -5, 0] }}
                   transition={{ duration: 1.6, repeat: Infinity, ease: 'easeInOut' }}
                   className="w-fit mx-auto"
                 >
-                  <Info className="w-6 h-6 text-amber-600" />
+                  <Info className="w-6 h-6 text-[#8B735B]" />
                 </motion.div>
-                <p className="font-bold text-sm text-amber-900">
+                <p className="font-bold text-sm text-[#4A3F35]">
                   {t.finderOpenSeatingTitle}
                 </p>
-                <p className="text-xs text-amber-700">{t.finderOpenSeatingMsg}</p>
+                <p className="text-xs text-[#5D5449]">{t.finderOpenSeatingMsg}</p>
               </motion.div>
             )}
           </motion.div>
