@@ -27,6 +27,9 @@ export interface Translations {
   sampleGiftDescription: string;
   checkinExpectedLabel: string;
   checkinExpectedFooter: string;
+  alertReminderTitleGeneric: string;
+  activeThemeLabel: string;
+  themePreviewSampleTitle: string;
   agendaAddTaskBtn: string;
   agendaAdvance1d: string;
   agendaAdvance1h: string;
@@ -1336,6 +1339,9 @@ export const translations: Record<Language, Translations> = {
     addTimelineEventBtn: "Add Timeline Event",
     addVenueFeatureBtn: "Add Venue Feature",
     agendaAddTaskBtn: "Add Task",
+    activeThemeLabel: "Active theme",
+    themePreviewSampleTitle: "Baby shower celebration",
+    alertReminderTitleGeneric: "RSVP reminder: baby shower",
     checkinExpectedLabel: "Expected guests",
     checkinExpectedFooter: "people who said yes",
     sampleGiftGuestName: "Grandma Ellen",
@@ -2067,7 +2073,7 @@ export const translations: Record<Language, Translations> = {
     rsvpGreeting: "Hello {{name}}!",
     rsvpPageTitle: "You're Invited!",
     rsvpPrompt: "Will you be joining us for the celebration?",
-    rsvpReminderTemplate: "⏰ RSVP Reminder",
+    rsvpReminderTemplate: "RSVP Reminder",
     rsvpReminderTemplateDesc: "Target pending guests",
     rsvpResetErrorToast: "Failed to update RSVP status.",
     rsvpClosedToast: "RSVPs are closed — the event has already passed.",
@@ -2653,6 +2659,9 @@ export const translations: Record<Language, Translations> = {
     addTimelineEventBtn: "Ajouter un horaire",
     addVenueFeatureBtn: "Ajouter un élément du lieu",
     agendaAddTaskBtn: "Ajouter une tâche",
+    activeThemeLabel: "Thème actif",
+    themePreviewSampleTitle: "Célébration baby shower",
+    alertReminderTitleGeneric: "Rappel RSVP : baby shower",
     checkinExpectedLabel: "Invités attendus",
     checkinExpectedFooter: "personnes ayant répondu oui",
     sampleGiftGuestName: "Grand-maman Hélène",
@@ -3384,7 +3393,7 @@ export const translations: Record<Language, Translations> = {
     rsvpGreeting: "Bonjour {{name}} !",
     rsvpPageTitle: "Vous êtes invité(e) !",
     rsvpPrompt: "Serez-vous des nôtres pour la célébration ?",
-    rsvpReminderTemplate: "⏰ Rappel RSVP",
+    rsvpReminderTemplate: "Rappel RSVP",
     rsvpReminderTemplateDesc: "Cibler les invités en attente",
     rsvpResetErrorToast: "Échec de la mise à jour du statut RSVP.",
     rsvpClosedToast: "Les RSVP sont fermés — l'événement est déjà passé.",

@@ -524,7 +524,7 @@ export const AdminDashboard = () => {
         >
           <div className="flex items-center gap-2">
             <AlertTriangle className="w-5 h-5 text-rose-600" />
-            <h2 className="font-sans text-lg font-bold text-rose-900">{t.dangerZoneTitle}</h2>
+            <h2 className="font-gaegu text-xl font-bold text-rose-900">{t.dangerZoneTitle}</h2>
           </div>
           <p className="text-sm text-rose-900/80 max-w-2xl">{t.dangerZoneDesc}</p>
           <div className="flex flex-col sm:flex-row sm:items-center gap-3">

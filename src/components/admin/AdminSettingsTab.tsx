@@ -76,7 +76,7 @@ const SortableScheduleItem: React.FC<SortableScheduleItemProps> = ({ item, index
     <div
       ref={setNodeRef}
       style={{ transform: CSS.Transform.toString(transform), transition }}
-      className={`p-4 rounded-2xl bg-[#FFFDF9] border-2 border-[#CBAE94] shadow-xs space-y-3 relative group ${isDragging ? 'z-10 shadow-lg opacity-90' : ''}`}
+      className={`p-4 rounded-2xl bg-[#FFFDF9] border border-[#CBAE94]/60 space-y-3 relative group ${isDragging ? 'z-10 shadow-lg opacity-90' : ''}`}
     >
       <div className="flex items-center justify-between border-b border-[#CBAE94]/40 pb-2">
         <div className="flex items-center gap-1.5">
@@ -90,10 +90,10 @@ const SortableScheduleItem: React.FC<SortableScheduleItemProps> = ({ item, index
           >
             <GripVertical className="w-4 h-4" />
           </button>
-          <span className="text-xs font-bold font-mono text-[#8B735B]">{tf('scheduleItemLabel', { n: index + 1 })}</span>
+          <span className="text-xs font-semibold text-[#5D5449]">{tf('scheduleItemLabel', { n: index + 1 })}</span>
         </div>
         <button type="button" onClick={() => onRemove(index)}
-          className="text-xs font-bold text-rose-600 hover:text-rose-800 bg-rose-50 hover:bg-rose-100 px-2.5 py-1 rounded-xl transition-colors flex items-center gap-1">
+          className="text-xs font-semibold text-rose-700 hover:bg-rose-50 px-2.5 py-1 rounded-full transition-colors flex items-center gap-1 cursor-pointer">
           <Trash2 className="w-3.5 h-3.5" /><span>{t.removeBtn}</span>
         </button>
       </div>
@@ -280,49 +280,49 @@ export const AdminSettingsTab: React.FC<AdminSettingsTabProps> = ({ language, t,
             <div className="space-y-1">
               <label className="label-mono block mb-1">{t.eventDateLabel2}</label>
               <div className="relative">
-                <CalendarIcon className="w-4 h-4 text-[#CBAE94] absolute left-3.5 top-3.5 pointer-events-none" />
+                <CalendarIcon className="w-4 h-4 text-[#CBAE94] absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
                 <TextInput type="date" required value={datePickerValue} onChange={(e) => { const v = e.target.value; setDatePickerValue(v); syncWindowFromEvent(v, startTime, endTime); }}
-                  className="w-full pl-10 pr-4 py-2.5 rounded-2xl border-2 border-[#CBAE94] text-xs font-bold text-[#5D5449] focus:outline-none focus:ring-2 focus:ring-[#8B735B] bg-white cursor-pointer" />
+                  className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-[#CBAE94] text-base sm:text-sm font-medium text-[#4A3F35] focus:outline-none focus:ring-2 focus:ring-[#8B735B] bg-white cursor-pointer" />
               </div>
-              <div className="bg-[#EFE6DC]/60 px-3 py-1.5 rounded-xl border border-[#CBAE94]/40 text-xs font-mono text-[#8B735B] flex items-center justify-between">
-                <span className="font-bold">{t.formattedLabel}</span>
-                <span className="font-sans font-bold text-[#5D5449]">{formatDateLong(datePickerValue, language)}</span>
-              </div>
+              {datePickerValue && (
+                <p className="px-1 text-xs text-[#5D5449]">
+                  {t.formattedLabel} <span className="font-semibold text-[#4A3F35]">{formatDateLong(datePickerValue, language)}</span>
+                </p>
+              )}
             </div>
 
             <div className="space-y-1">
               <label className="label-mono block mb-1">{t.eventTimeRangeLabel}</label>
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 bg-[#EFE6DC]/30 p-2.5 rounded-2xl border-2 border-[#CBAE94]/60">
+              <div className="grid grid-cols-2 gap-2">
                 <div>
-                  <span className="text-xs uppercase font-mono font-bold text-[#8B735B] block mb-1">{t.startTimeLabel}</span>
+                  <span className="text-xs font-medium text-[#5D5449] block mb-1">{t.startTimeLabel}</span>
                   <div className="relative">
-                    <Clock className="w-3.5 h-3.5 text-[#CBAE94] absolute left-2.5 top-2.5 pointer-events-none" />
+                    <Clock className="w-3.5 h-3.5 text-[#CBAE94] absolute left-2.5 top-1/2 -translate-y-1/2 pointer-events-none" />
                     <TextInput type="time" required value={startTime} onChange={(e) => { const v = e.target.value; setStartTime(v); syncWindowFromEvent(datePickerValue, v, endTime); }}
-                      className="w-full pl-8 pr-2 py-1.5 rounded-xl border border-[#CBAE94] text-xs font-bold text-[#5D5449] focus:outline-none focus:ring-2 focus:ring-[#8B735B] bg-white cursor-pointer" />
+                      className="w-full pl-8 pr-2 py-2.5 rounded-xl border border-[#CBAE94] text-base sm:text-sm font-medium text-[#4A3F35] focus:outline-none focus:ring-2 focus:ring-[#8B735B] bg-white cursor-pointer" />
                   </div>
                 </div>
                 <div>
-                  <span className="text-xs uppercase font-mono font-bold text-[#8B735B] block mb-1">{t.endTimeLabel}</span>
+                  <span className="text-xs font-medium text-[#5D5449] block mb-1">{t.endTimeLabel}</span>
                   <div className="relative">
-                    <Clock className="w-3.5 h-3.5 text-[#CBAE94] absolute left-2.5 top-2.5 pointer-events-none" />
+                    <Clock className="w-3.5 h-3.5 text-[#CBAE94] absolute left-2.5 top-1/2 -translate-y-1/2 pointer-events-none" />
                     <TextInput type="time" required value={endTime} onChange={(e) => { const v = e.target.value; setEndTime(v); syncWindowFromEvent(datePickerValue, startTime, v); }}
-                      className="w-full pl-8 pr-2 py-1.5 rounded-xl border border-[#CBAE94] text-xs font-bold text-[#5D5449] focus:outline-none focus:ring-2 focus:ring-[#8B735B] bg-white cursor-pointer" />
+                      className="w-full pl-8 pr-2 py-2.5 rounded-xl border border-[#CBAE94] text-base sm:text-sm font-medium text-[#4A3F35] focus:outline-none focus:ring-2 focus:ring-[#8B735B] bg-white cursor-pointer" />
                   </div>
                 </div>
               </div>
-              <div className="bg-[#EFE6DC]/60 px-3 py-1.5 rounded-xl border border-[#CBAE94]/40 text-xs font-mono text-[#8B735B] flex items-center justify-between">
-                <span className="font-bold">{t.combinedLabel}</span>
-                <span className="font-sans font-bold text-[#5D5449]">{formatTimeRangeString(startTime, endTime, language)}</span>
-              </div>
+              <p className="px-1 text-xs text-[#5D5449]">
+                {t.combinedLabel} <span className="font-semibold text-[#4A3F35]">{formatTimeRangeString(startTime, endTime, language)}</span>
+              </p>
             </div>
 
             <div>
               <label className="label-mono block mb-1">{t.venueNameLabel2}</label>
               <div className="relative">
-                <Building className="w-4 h-4 text-[#CBAE94] absolute left-3.5 top-3" />
+                <Building className="w-4 h-4 text-[#CBAE94] absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
                 <TextInput type="text" required value={venueName} onChange={(e) => setVenueName(e.target.value)}
                   placeholder={t.venueExamplePh}
-                  className="w-full pl-10 pr-4 py-2.5 rounded-2xl border-2 border-[#CBAE94] text-xs font-bold text-[#5D5449] focus:outline-none focus:ring-2 focus:ring-[#8B735B] bg-white" />
+                  className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-[#CBAE94] text-base sm:text-sm font-medium text-[#4A3F35] focus:outline-none focus:ring-2 focus:ring-[#8B735B] bg-white" />
               </div>
             </div>
             <div>
@@ -336,24 +336,24 @@ export const AdminSettingsTab: React.FC<AdminSettingsTabProps> = ({ language, t,
             <div>
               <label className="label-mono block mb-1">{t.registryLinkLabel}</label>
               <div className="relative">
-                <Gift className="w-4 h-4 text-[#CBAE94] absolute left-3.5 top-3" />
+                <Gift className="w-4 h-4 text-[#CBAE94] absolute left-3.5 top-1/2 -translate-y-1/2 pointer-events-none" />
                 <TextInput type="url" value={registryUrl} onChange={(e) => setRegistryUrl(e.target.value)}
                   placeholder="https://..."
-                  className="w-full pl-10 pr-4 py-2.5 rounded-2xl border-2 border-[#CBAE94] text-xs font-bold text-[#5D5449] focus:outline-none focus:ring-2 focus:ring-[#8B735B] bg-white" />
+                  className="w-full pl-10 pr-4 py-2.5 rounded-xl border border-[#CBAE94] text-base sm:text-sm font-medium text-[#4A3F35] focus:outline-none focus:ring-2 focus:ring-[#8B735B] bg-white" />
               </div>
             </div>
             <div>
               <label className="label-mono block mb-1">{t.rsvpDeadlineLabel}</label>
               <TextInput type="date" value={rsvpDeadline} onChange={(e) => setRsvpDeadline(e.target.value)}
-                className="w-full px-3 py-2.5 rounded-2xl border-2 border-[#CBAE94] text-xs font-bold text-[#5D5449] focus:outline-none focus:ring-2 focus:ring-[#8B735B] bg-white" />
-              <p className="text-xs text-[#5D5449]/70 mt-1 font-mono">{t.rsvpDeadlineHint}</p>
+                className="w-full px-3 py-2.5 rounded-xl border border-[#CBAE94] text-base sm:text-sm font-medium text-[#4A3F35] focus:outline-none focus:ring-2 focus:ring-[#8B735B] bg-white" />
+              <p className="text-xs text-[#5D5449] mt-1">{t.rsvpDeadlineHint}</p>
             </div>
           </div>
 
-          <div className="pt-6 border-t-2 border-[#CBAE94]/40 space-y-4">
+          <div className="pt-6 border-t border-[#CBAE94]/40 space-y-4">
             <div>
-              <h4 className="font-sans text-xl font-bold text-[#8B735B] flex items-center gap-2">
-                <Lock className="w-5 h-5 text-[#8B735B]" />{t.contentWindowTitle}
+              <h4 className="font-gaegu text-xl font-bold text-[#4A3F35] flex items-center gap-2">
+                <Lock className="w-5 h-5 shrink-0 text-[#8B735B]" />{t.contentWindowTitle}
               </h4>
               <p className="text-xs text-[#5D5449]">{t.contentWindowSubtitle}</p>
             </div>
@@ -364,7 +364,7 @@ export const AdminSettingsTab: React.FC<AdminSettingsTabProps> = ({ language, t,
                   type="datetime-local"
                   value={contentOpenAt}
                   onChange={(e) => setContentOpenAt(e.target.value)}
-                  className="w-full px-3 py-2.5 rounded-2xl border-2 border-[#CBAE94] text-xs font-bold text-[#5D5449] focus:outline-none focus:ring-2 focus:ring-[#8B735B] bg-white"
+                  className="w-full px-3 py-2.5 rounded-xl border border-[#CBAE94] text-base sm:text-sm font-medium text-[#4A3F35] focus:outline-none focus:ring-2 focus:ring-[#8B735B] bg-white"
                 />
               </div>
               <div>
@@ -373,37 +373,37 @@ export const AdminSettingsTab: React.FC<AdminSettingsTabProps> = ({ language, t,
                   type="datetime-local"
                   value={contentCloseAt}
                   onChange={(e) => setContentCloseAt(e.target.value)}
-                  className="w-full px-3 py-2.5 rounded-2xl border-2 border-[#CBAE94] text-xs font-bold text-[#5D5449] focus:outline-none focus:ring-2 focus:ring-[#8B735B] bg-white"
+                  className="w-full px-3 py-2.5 rounded-xl border border-[#CBAE94] text-base sm:text-sm font-medium text-[#4A3F35] focus:outline-none focus:ring-2 focus:ring-[#8B735B] bg-white"
                 />
               </div>
             </div>
           </div>
 
-          <div className="pt-6 border-t-2 border-[#CBAE94]/40 space-y-3">
+          <div className="pt-6 border-t border-[#CBAE94]/40 space-y-3">
             <div>
-              <h4 className="font-sans text-xl font-bold text-[#8B735B] flex items-center gap-2">
-                <Mail className="w-5 h-5 text-[#8B735B]" />{t.inviteMessageLabel}
+              <h4 className="font-gaegu text-xl font-bold text-[#4A3F35] flex items-center gap-2">
+                <Mail className="w-5 h-5 shrink-0 text-[#8B735B]" />{t.inviteMessageLabel}
               </h4>
               <p className="text-xs text-[#5D5449] mt-0.5">{t.invitationMessageDesc}</p>
             </div>
             <button
               type="button"
               onClick={() => setInvitationModalOpen(true)}
-              className="inline-flex items-center gap-2 min-h-[44px] px-4 rounded-2xl border-2 border-[#CBAE94] text-xs font-bold text-[#5D5449] bg-white hover:bg-[#EFE6DC] transition-colors"
+              className="btn-outline-accent min-h-[44px] px-4 text-xs gap-2 cursor-pointer"
             >
               <Mail className="w-4 h-4 text-[#8B735B]" /> {t.editInvitationMessageBtn}
             </button>
           </div>
 
-          <div className="pt-6 border-t-2 border-[#CBAE94]/40 space-y-4">
+          <div className="pt-6 border-t border-[#CBAE94]/40 space-y-4">
             <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
               <div>
-                <h4 className="font-sans text-xl font-bold text-[#8B735B] flex items-center gap-2">
-                  <Clock className="w-5 h-5 text-[#8B735B]" />{t.scheduleOfTheDayLabel}
+                <h4 className="font-gaegu text-xl font-bold text-[#4A3F35] flex items-center gap-2">
+                  <Clock className="w-5 h-5 shrink-0 text-[#8B735B]" />{t.scheduleOfTheDayLabel}
                 </h4>
                 <p className="text-xs text-[#5D5449]">{t.scheduleDesc}</p>
               </div>
-              <label className="inline-flex items-center gap-2.5 px-4 py-2 rounded-2xl bg-[#EFE6DC] border border-[#CBAE94] cursor-pointer hover:bg-[#E2D4C3] transition-colors select-none">
+              <label className="inline-flex items-center gap-2.5 px-4 py-2 rounded-full border border-[#CBAE94] bg-white cursor-pointer hover:bg-[#EFE6DC] transition-colors select-none">
                 <input type="checkbox" checked={showScheduleTime} onChange={(e) => setShowScheduleTime(e.target.checked)}
                   className="w-4 h-4 text-[#8B735B] rounded focus:ring-[#8B735B] border-[#CBAE94]" />
                 <span className="text-xs font-bold text-[#4A3F35]">{t.showScheduleTimesLabel}</span>
@@ -428,27 +428,27 @@ export const AdminSettingsTab: React.FC<AdminSettingsTabProps> = ({ language, t,
             </DndContext>
 
             <button type="button" onClick={() => setSchedule([...schedule, { id: `sch-${Date.now()}`, time: '17:00', titleEn: 'New Event Activity', titleFr: 'Nouvelle activité', descEn: 'Activity description details...', descFr: 'Détails de l\'activité...' }])}
-              className="w-full py-2.5 rounded-2xl border-2 border-dashed border-[#CBAE94] text-xs font-bold text-[#8B735B] hover:bg-[#EFE6DC]/50 transition-colors flex items-center justify-center gap-1.5">
+              className="w-full py-2.5 rounded-xl border border-dashed border-[#CBAE94] text-xs font-semibold text-[#5D5449] hover:bg-[#EFE6DC]/50 transition-colors flex items-center justify-center gap-1.5">
               <Plus className="w-4 h-4" /><span>{t.addScheduleItemBtn}</span>
             </button>
           </div>
 
-          <div className="pt-6 border-t-2 border-[#CBAE94]/40 space-y-4">
+          <div className="pt-6 border-t border-[#CBAE94]/40 space-y-4">
             <div>
-              <h4 className="font-sans text-xl font-bold text-[#8B735B] flex items-center gap-2">
-                <Palette className="w-5 h-5 text-[#8B735B]" />{t.themeComboSelectorLabel}
+              <h4 className="font-gaegu text-xl font-bold text-[#4A3F35] flex items-center gap-2">
+                <Palette className="w-5 h-5 shrink-0 text-[#8B735B]" />{t.themeComboSelectorLabel}
               </h4>
               <p className="text-xs text-[#5D5449] mt-0.5">{t.themeDesc}</p>
             </div>
             <div className="space-y-2">
-              <label className="block text-xs font-bold text-[#4A3F35] uppercase tracking-wider font-mono">{t.selectThemeLabel}</label>
+              <label className="label-mono block">{t.selectThemeLabel}</label>
               <div className="relative">
                 <select value={selectedThemeId} onChange={(e) => {
                   const v = e.target.value;
                   setSelectedThemeId(v);
                   applyThemeToDocument(v === CUSTOM_THEME_ID ? getCustomTheme(customTheme, t.customThemeLabel) : getThemeById(v));
                 }}
-                  className="w-full min-w-0 truncate px-4 py-3 rounded-2xl border-2 border-[#CBAE94] bg-white text-sm font-bold text-[#4A3F35] focus:outline-none focus:border-[#8B735B] shadow-xs cursor-pointer appearance-none pr-10">
+                  className="w-full min-w-0 truncate px-4 py-3 rounded-xl border border-[#CBAE94] bg-white text-base sm:text-sm font-medium text-[#4A3F35] focus:outline-none focus:ring-2 focus:ring-[#8B735B] cursor-pointer appearance-none pr-10">
                   {THEME_PRESETS.map((preset) => (
                     <option key={preset.id} value={preset.id}>{preset.name} ({preset.category}) — Font: {preset.displayFontName}</option>
                   ))}
@@ -473,7 +473,7 @@ export const AdminSettingsTab: React.FC<AdminSettingsTabProps> = ({ language, t,
                             type="color"
                             value={customTheme[key]}
                             onChange={(e) => updateCustomTheme(key, e.target.value)}
-                            className="w-10 h-10 rounded-xl border-2 border-[#CBAE94] cursor-pointer bg-white p-0.5"
+                            className="w-10 h-10 rounded-xl border border-[#CBAE94] cursor-pointer bg-white p-0.5"
                           />
                           <span className="text-xs font-mono font-bold text-[#5D5449]">{customTheme[key]}</span>
                         </div>
@@ -504,11 +504,11 @@ export const AdminSettingsTab: React.FC<AdminSettingsTabProps> = ({ language, t,
               const col3Text = getContrastTextColor(currentTheme.accent);
               const cardHeaderBg = currentTheme.surface || (currentTheme.isDark ? '#1E293B' : '#FFFFFF');
               return (
-                <div className="p-4 rounded-2xl border-2 shadow-sm space-y-3 transition-all"
+                <div className="p-4 rounded-2xl border shadow-sm space-y-3 transition-all"
                   style={{ backgroundColor: currentTheme.bg, color: currentTheme.ink, borderColor: currentTheme.accent }}>
                   <div className="flex flex-wrap items-center justify-between gap-2 border-b border-current/20 pb-2.5">
                     <div>
-                      <span className="text-xs font-mono font-bold uppercase tracking-wider opacity-85">Active Theme • {currentTheme.category}</span>
+                      <span className="text-xs font-mono font-bold uppercase tracking-wider opacity-85">{t.activeThemeLabel} · {currentTheme.category}</span>
                       <h5 className="text-lg font-bold leading-tight">{currentTheme.name}</h5>
                     </div>
                     <div className="text-right">
@@ -534,7 +534,7 @@ export const AdminSettingsTab: React.FC<AdminSettingsTabProps> = ({ language, t,
                     </div>
                   </div>
                   <div className="p-3.5 rounded-xl border border-dashed text-center space-y-0.5" style={{ backgroundColor: currentTheme.bg, borderColor: currentTheme.accent }}>
-                    <p className="text-xl font-bold" style={{ fontFamily: currentTheme.fontFamily, color: currentTheme.ink }}>Bébé Baby Shower Celebration</p>
+                    <p className="text-xl font-bold" style={{ fontFamily: currentTheme.fontFamily, color: currentTheme.ink }}>{t.themePreviewSampleTitle}</p>
                     <p className="text-xs font-medium opacity-85" style={{ color: currentTheme.ink }}>{t.livePreviewLabel}</p>
                   </div>
                 </div>
@@ -543,7 +543,7 @@ export const AdminSettingsTab: React.FC<AdminSettingsTabProps> = ({ language, t,
           </div>
 
           <div className="sticky bottom-0 z-10 -mx-6 sm:-mx-8 px-6 sm:px-8 py-4 bg-[#FFFDF9]/95 backdrop-blur border-t border-[#CBAE94]/40 flex justify-end">
-            <button type="submit" disabled={savingSettings} className="btn-accent w-full sm:w-auto px-8 py-3 text-xs flex items-center justify-center space-x-2">
+            <button type="submit" disabled={savingSettings} className="btn-accent w-full sm:w-auto px-8 py-3 text-sm gap-2 cursor-pointer disabled:opacity-50">
               <Save className="w-4 h-4" /><span>{savingSettings ? t.savingSettingsBtn : t.saveAllSettingsBtn}</span>
             </button>
           </div>
