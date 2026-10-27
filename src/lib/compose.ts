@@ -47,9 +47,15 @@ export interface MessageContent {
 }
 
 const isEN = (language: Language) => language === 'EN';
-const flowerLine = (language: Language) => (isEN(language)
-  ? "A little flower is on the way, and we can't wait to celebrate with you."
-  : 'Une petite fleur est en chemin et nous avons très hâte de célébrer son arrivée avec vous.');
+const welcomeLine = (language: Language) => (isEN(language)
+  ? "We can't wait to celebrate with you."
+  : 'Nous avons très hâte de célébrer avec vous.');
+
+// The organizer's own event title, when they have set one. Subjects and
+// headings use it verbatim; without it they keep the generic wording.
+function eventTitle(settings: Partial<EventSettings>): string {
+  return settings.eventTitle?.trim() || '';
+}
 
 // Join paragraphs with a blank line, dropping empty sections.
 function blocks(parts: (string | undefined)[]): string {
@@ -57,6 +63,8 @@ function blocks(parts: (string | undefined)[]): string {
 }
 
 function heading(settings: Partial<EventSettings>, language: Language): string {
+  const title = eventTitle(settings);
+  if (title) return `🌸 ${title} 🌸`;
   const host = eventContext(settings, language).parentsNames;
   if (isEN(language)) return host ? `🌸 ${host}'s Baby Shower 🌸` : '🌸 Baby Shower 🌸';
   return host ? `🌸 Baby Shower de ${host} 🌸` : '🌸 Baby Shower 🌸';
@@ -113,6 +121,8 @@ function closingBlock(settings: Partial<EventSettings>, language: Language): str
 }
 
 function invitationSubject(settings: Partial<EventSettings>, language: Language): string {
+  const title = eventTitle(settings);
+  if (title) return isEN(language) ? `You're invited: ${title}!` : `Vous êtes invité : ${title} !`;
   const host = eventContext(settings, language).parentsNames;
   if (isEN(language)) return `You're invited to ${host ? `${host}'s Baby Shower` : 'the Baby Shower'}!`;
   return `Vous êtes invité${host ? ` au baby shower de ${host}` : ' au baby shower'} !`;
@@ -162,7 +172,7 @@ export function composeInvitation(guest: Guest, settings: Partial<EventSettings>
     heading: heading(settings, lang),
     subtitle: settings.parentsNames,
     greetingName: guest.name,
-    intro: flowerLine(lang),
+    intro: welcomeLine(lang),
     rows: eventRows(settings, lang),
     deadline: deadlineText(settings, lang),
     link,
@@ -179,20 +189,24 @@ export function composeInvitation(guest: Guest, settings: Partial<EventSettings>
 
 export function composeReminder(guest: Guest, settings: Partial<EventSettings>, language?: Language): MessageContent {
   const lang = language ?? guest.language_pref ?? 'FR';
+  const title = eventTitle(settings);
   const host = settings.parentsNames || settings.babyName || '';
   const showerLabel = isEN(lang)
-    ? (host ? `${host}'s Baby Shower` : 'the Baby Shower')
-    : (host ? `le baby shower de ${host}` : 'le baby shower');
+    ? (title || (host ? `${host}'s Baby Shower` : 'the Baby Shower'))
+    : (title ? `« ${title} »` : (host ? `le baby shower de ${host}` : 'le baby shower'));
+  const frAt = title ? `à ${showerLabel}` : `au ${showerLabel}`;
   const date = settings.date || '';
+  const subjectDate = date ? ` (${date})` : '';
+  const onDate = date ? (isEN(lang) ? ` on ${date}` : ` le ${date}`) : '';
   return {
     kind: 'reminder',
     language: lang,
-    subject: isEN(lang) ? `⏰ Reminder: RSVP for ${showerLabel} (${date})` : `⏰ Rappel : RSVP pour ${showerLabel} (${date})`,
+    subject: isEN(lang) ? `⏰ Reminder: RSVP for ${showerLabel}${subjectDate}` : `⏰ Rappel : RSVP pour ${showerLabel}${subjectDate}`,
     heading: isEN(lang) ? 'Friendly Reminder' : 'Petit rappel',
     greetingName: guest.name,
     intro: isEN(lang)
-      ? `We haven't heard from you yet! Please let us know if you can make it to ${showerLabel} on ${date}.`
-      : `Nous n'avons pas encore de nouvelles de vous ! Merci de nous confirmer votre présence au ${showerLabel} le ${date}.`,
+      ? `We haven't heard from you yet! Please let us know if you can make it to ${showerLabel}${onDate}.`
+      : `Nous n'avons pas encore de nouvelles de vous ! Merci de nous confirmer votre présence ${frAt}${onDate}.`,
     rows: [],
     link: rsvpUrl(guest.magic_token),
     cta: isEN(lang) ? 'RSVP Now' : 'Répondre',
@@ -219,13 +233,16 @@ export function composeAlert(guest: Guest, settings: Partial<EventSettings>, tit
 
 export function composeFloorPlan(guest: Guest, settings: Partial<EventSettings>, tableName: string, customMessage: string, language?: Language): MessageContent {
   const lang = language ?? guest.language_pref ?? 'FR';
+  const title = eventTitle(settings);
   const tableLine = tableName
     ? (isEN(lang) ? `You are seated at table: ${tableName}.` : `Vous êtes à la table : ${tableName}.`)
     : (isEN(lang) ? 'You have open seating.' : "Vous n'avez pas de table attitrée.");
   return {
     kind: 'floorplan',
     language: lang,
-    subject: isEN(lang) ? 'Your table for the Baby Shower' : 'Votre table pour le baby shower',
+    subject: title
+      ? (isEN(lang) ? `Your table for ${title}` : `Votre table pour « ${title} »`)
+      : (isEN(lang) ? 'Your table for the Baby Shower' : 'Votre table pour le baby shower'),
     heading: isEN(lang) ? 'Your Seat' : 'Votre place',
     greetingName: guest.name,
     rows: [],

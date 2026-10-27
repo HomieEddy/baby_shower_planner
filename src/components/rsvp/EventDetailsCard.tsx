@@ -15,7 +15,7 @@ import { parseToYmd, parseTimeRange, formatTimeRangeString } from '../../lib/dat
 import { formatScheduleTime } from '../../lib/schedule';
 import { CurvedText } from './CurvedText';
 
-// "Eddy & Nana" / "Eddy et Nana" → [Eddy, Nana]; null when not splittable.
+// "Emma & Noah" / "Emma et Noah" → [Emma, Noah]; null when not splittable.
 function splitParents(names: string): [string, string] | null {
   const m = names.match(/\s+(?:&|et)\s+/i);
   if (!m) return null;

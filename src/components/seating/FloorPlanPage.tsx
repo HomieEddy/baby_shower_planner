@@ -19,6 +19,7 @@ import { Modal } from '../shared/Modal';
 import { useActionConfirm } from '../shared/ConfirmDialog';
 import { useToast } from '../shared/ToastContext';
 import { useSettings } from '../../lib/settingsQuery';
+import { eventFileSlug } from '../../lib/eventName';
 import {
   Stage,
   Layer,
@@ -507,7 +508,7 @@ export const FloorPlanPage = () => {
     if (!stageRef.current) return;
     const dataUrl = stageRef.current.toDataURL({ pixelRatio: 2 });
     const link = document.createElement('a');
-    link.download = `bebe-${settings?.babyName || 'shower'}-floor-map.png`;
+    link.download = `${eventFileSlug(settings)}-floor-map.png`;
     link.href = dataUrl;
     document.body.appendChild(link);
     link.click();

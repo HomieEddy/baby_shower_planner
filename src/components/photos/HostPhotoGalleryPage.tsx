@@ -18,6 +18,7 @@ import { useConfirm, useActionConfirm } from '../shared/ConfirmDialog';
 import { Modal } from '../shared/Modal';
 import { adminFetch } from '../../lib/api';
 import { useSettings } from '../../lib/settingsQuery';
+import { eventFileSlug } from '../../lib/eventName';
 import { EmptyState } from '../shared/EmptyState';
 import { PhotoCard } from './PhotoCard';
 import { PhotoLightbox } from './PhotoLightbox';
@@ -104,7 +105,7 @@ export const HostPhotoGalleryPage: React.FC<{ onChanged?: () => void }> = ({ onC
   };
 
   // ZIP Download Generator
-  const handleDownloadZip = async (photosToZip: EventPhoto[], filenamePrefix = 'baby_shower_photos') => {
+  const handleDownloadZip = async (photosToZip: EventPhoto[], filenamePrefix = `${eventFileSlug(settings)}-photos`) => {
     if (!(await confirmAction(t.downloadZipBtn))) return;
     if (photosToZip.length === 0) return;
     setIsZipping(true);
@@ -113,7 +114,7 @@ export const HostPhotoGalleryPage: React.FC<{ onChanged?: () => void }> = ({ onC
 
     try {
       const zip = new JSZip();
-      const folder = zip.folder('Baby_Shower_Photos');
+      const folder = zip.folder(`${eventFileSlug(settings)}-photos`);
 
       for (let i = 0; i < photosToZip.length; i++) {
         const p = photosToZip[i];
@@ -305,7 +306,7 @@ export const HostPhotoGalleryPage: React.FC<{ onChanged?: () => void }> = ({ onC
             {photos.length > 0 && (
               <button
                 type="button"
-                onClick={() => handleDownloadZip(photos, 'all_baby_shower_photos')}
+                onClick={() => handleDownloadZip(photos, `${eventFileSlug(settings)}-all-photos`)}
                 disabled={isZipping}
                 className="btn-accent text-xs sm:text-sm py-2.5 px-4 gap-2 cursor-pointer disabled:opacity-50"
               >
@@ -438,7 +439,7 @@ export const HostPhotoGalleryPage: React.FC<{ onChanged?: () => void }> = ({ onC
                 type="button"
                 onClick={() => {
                   const selectedPhotos = photos.filter((p) => selectedPhotoIds.includes(p.id));
-                  handleDownloadZip(selectedPhotos, `selected_photos_${selectedPhotoIds.length}`);
+                  handleDownloadZip(selectedPhotos, `${eventFileSlug(settings)}-selected-photos-${selectedPhotoIds.length}`);
                 }}
                 disabled={isZipping}
                 className="px-4 py-2 rounded-full bg-white hover:bg-white/90 text-[#4A3F35] text-xs font-semibold flex items-center gap-1.5 transition-colors cursor-pointer"

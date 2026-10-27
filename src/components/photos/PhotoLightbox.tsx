@@ -83,7 +83,7 @@ export const PhotoLightbox: React.FC<PhotoLightboxProps> = ({
           <div className="flex items-center justify-center gap-3 pt-2">
             <a
               href={photo.url}
-              download={photo.filename || 'baby-shower-photo.jpg'}
+              download={photo.filename || 'event-photo.jpg'}
               className="px-4 py-2 rounded-xl bg-white/20 hover:bg-white/30 text-white text-xs font-bold flex items-center gap-1.5"
             >
               <Download className="w-4 h-4" />

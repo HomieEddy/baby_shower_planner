@@ -115,7 +115,6 @@ export interface Translations {
   allergyBreakdownLabel: string;
   alreadySubmittedMsg: string;
   alreadySubmittedTitle: string;
-  amazonRegistryLabel: string;
   applySeatingBtn: string;
   applySeatingBtn_one: string;
   applySeatingBtn_other: string;
@@ -135,7 +134,6 @@ export interface Translations {
   awaitingResponse: string;
   babyLabelSet: string;
   babyLabelUnset: string;
-  babyNameLabel: string;
   babyNameOptionalLabel: string;
   babyNameOptionalPh: string;
   backHomeBtn: string;
@@ -1072,7 +1070,6 @@ export interface Translations {
   selectGuestHint: string;
   venueBadge: string;
   venueIntro: string;
-  registryTitle: string;
   registryTagline: string;
   tapToChoosePhoto: string;
   guestPhotoAlt: string;
@@ -1122,7 +1119,6 @@ export interface Translations {
   rectTableBtn: string;
   roundTableBtn: string;
   saveChangesBtn: string;
-  eventBadge: string;
   eventIntro: string;
   registerTitle: string;
   registerSubtitle: string;
@@ -1458,7 +1454,6 @@ export const translations: Record<Language, Translations> = {
     allergyBreakdownLabel: "Categorized Allergy & Dietary Breakdown",
     alreadySubmittedMsg: "You have already responded to this invitation. Would you like to update your response?",
     alreadySubmittedTitle: "RSVP Already Submitted",
-    amazonRegistryLabel: "Amazon Registry URL",
     applySeatingBtn: "Apply {{count}} Seating Assignments",
     applySeatingBtn_one: "Apply {{count}} Seating Assignment",
     applySeatingBtn_other: "Apply {{count}} Seating Assignments",
@@ -1478,7 +1473,6 @@ export const translations: Record<Language, Translations> = {
     awaitingResponse: "Awaiting response",
     babyLabelSet: "Baby {{name}}",
     babyLabelUnset: "the little one",
-    babyNameLabel: "Baby's Name",
     babyNameOptionalLabel: "Baby's Name (optional)",
     babyNameOptionalPh: "e.g. Emma — leave empty if undecided",
     backHomeBtn: "Return to Home",
@@ -1644,7 +1638,7 @@ export const translations: Record<Language, Translations> = {
     esDietaryBadge: "Dietary Preferences",
     esDietaryDesc: "All attending guests currently have standard menu preferences or haven’t specified special dietary needs.",
     esDietaryTitle: "No Special Dietary Needs Reported",
-    esGenericBadge: "Bébé Celebration",
+    esGenericBadge: "Celebration",
     esGenericDesc: "This section is sparkling clean and ready for your memories, guests, or custom details.",
     esGenericTitle: "Nothing Here Quite Yet",
     esGuestbookBadge: "Sweet Guestbook",
@@ -1725,7 +1719,7 @@ export const translations: Record<Language, Translations> = {
     floorPlanTitle: "Venue Seating & Floor Canvas",
     foldLineLabel: "Fold Line",
     footerCopyright: "© {{year}} {{eventTitle}}",
-    footerLove: "Made with love for our baby on the way",
+    footerLove: "Made with love, for everyone celebrating",
     formattedLabel: "Formatted:",
     fpAllSeatedToast: "ℹ All confirmed attending guests are already seated!",
     fpAssignFailedToast: "Failed to assign guest",
@@ -2111,7 +2105,6 @@ export const translations: Record<Language, Translations> = {
     saveAllSettingsBtn: "Save All Settings",
     saveAndCloseBtn: "Save & Close",
     saveChangesBtn: "Save Changes",
-    eventBadge: "Celebrating our baby's arrival",
     eventIntro: "Join us for an afternoon of games, sweet treats, and memories as we prepare to welcome our little angel into the world!",
     savingChangesBtn: "Saving...",
     savingSettingsBtn: "Saving...",
@@ -2422,7 +2415,6 @@ export const translations: Record<Language, Translations> = {
     selectGuestHint: "Select a confirmed guest above to view compatible tables and seat their party.",
     venueBadge: "Venue & Schedule",
     venueIntro: "Here are the details for the celebration - we can't wait to see you there!",
-    registryTitle: "Baby Registry",
     registryTagline: "If you'd like to gift something, here is our registry:",
     tapToChoosePhoto: "Tap to take or choose a photo",
     guestPhotoAlt: "Guest",
@@ -2454,7 +2446,7 @@ export const translations: Record<Language, Translations> = {
     seatedAtLabel: "Seated At",
     pauseBtn: "Pause",
     playBtn: "Play",
-    memoryMomentTitle: "Bebe Memory Moment",
+    memoryMomentTitle: "Memory Moment",
     deleteAllConfirmTitle: "Delete Guest?",
     deleteAllConfirmMsg: "Are you sure you want to delete {{name}} from the guest list? Their RSVP and seating will be removed.",
     bulkDeleteConfirmTitle: "Delete Selected Guests?",
@@ -2798,7 +2790,6 @@ export const translations: Record<Language, Translations> = {
     allergyBreakdownLabel: "Répartition des allergies & régimes",
     alreadySubmittedMsg: "Vous avez déjà répondu à cette invitation. Souhaitez-vous modifier votre réponse ?",
     alreadySubmittedTitle: "RSVP Déjà Envoyé",
-    amazonRegistryLabel: "Lien Liste de Naissance",
     applySeatingBtn: "Appliquer {{count}} placements",
     applySeatingBtn_one: "Appliquer {{count}} placement",
     applySeatingBtn_other: "Appliquer {{count}} placements",
@@ -2818,7 +2809,6 @@ export const translations: Record<Language, Translations> = {
     awaitingResponse: "En attente de réponse",
     babyLabelSet: "Bébé {{name}}",
     babyLabelUnset: "le petit trésor",
-    babyNameLabel: "Prénom du bébé",
     babyNameOptionalLabel: "Prénom du bébé (optionnel)",
     babyNameOptionalPh: "ex : Emma — laissez vide si indécis",
     backHomeBtn: "Retour à l'accueil",
@@ -2984,7 +2974,7 @@ export const translations: Record<Language, Translations> = {
     esDietaryBadge: "Préférences alimentaires",
     esDietaryDesc: "Tous les invités présents ont des préférences standard ou n'ont pas signalé de besoins particuliers.",
     esDietaryTitle: "Aucune restriction alimentaire signalée",
-    esGenericBadge: "Célébration Bébé",
+    esGenericBadge: "Célébration",
     esGenericDesc: "Cette section est prête à accueillir vos souvenirs, invités et détails personnalisés.",
     esGenericTitle: "Rien ici pour le moment",
     esGuestbookBadge: "Doux livre d'or",
@@ -3065,7 +3055,7 @@ export const translations: Record<Language, Translations> = {
     floorPlanTitle: "Plan de Salle & Emplacements",
     foldLineLabel: "Ligne de pli",
     footerCopyright: "© {{year}} {{eventTitle}}",
-    footerLove: "Fait avec amour pour notre bébé à venir",
+    footerLove: "Fait avec amour, pour tous ceux qui célèbrent",
     formattedLabel: "Formaté :",
     fpAllSeatedToast: "ℹ Tous les invités confirmés sont déjà placés !",
     fpAssignFailedToast: "Échec du placement de l'invité",
@@ -3451,7 +3441,6 @@ export const translations: Record<Language, Translations> = {
     saveAllSettingsBtn: "Enregistrer les paramètres",
     saveAndCloseBtn: "Enregistrer & Fermer",
     saveChangesBtn: "Enregistrer",
-    eventBadge: "Célébrons l'arrivée de notre bébé",
     eventIntro: "Rejoignez-nous pour une après-midi de jeux, gourmandises et souvenirs en attendant l'arrivée de notre petit ange !",
     savingChangesBtn: "Enregistrement...",
     savingSettingsBtn: "Enregistrement...",
@@ -3762,7 +3751,6 @@ export const translations: Record<Language, Translations> = {
     selectGuestHint: "Sélectionnez un invité confirmé ci-dessus pour voir les tables compatibles et placer son groupe.",
     venueBadge: "Lieu & Programme",
     venueIntro: "Voici les détails de la célébration — nous avons hâte de vous y voir !",
-    registryTitle: "Liste de naissance",
     registryTagline: "Si vous souhaitez offrir un cadeau, voici notre liste :",
     tapToChoosePhoto: "Touchez pour prendre ou choisir une photo",
     guestPhotoAlt: "Invité",
@@ -3794,7 +3782,7 @@ export const translations: Record<Language, Translations> = {
     seatedAtLabel: "Placé à",
     pauseBtn: "Pause",
     playBtn: "Lecture",
-    memoryMomentTitle: "Moment souvenir Bébé",
+    memoryMomentTitle: "Moment souvenir",
     deleteAllConfirmTitle: "Supprimer l'invité ?",
     deleteAllConfirmMsg: "Voulez-vous vraiment supprimer {{name}} de la liste des invités ? Son RSVP et son placement seront retirés.",
     bulkDeleteConfirmTitle: "Supprimer les invités sélectionnés ?",
