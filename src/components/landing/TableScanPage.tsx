@@ -2,12 +2,12 @@ import React, { useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { motion, AnimatePresence, type Variants } from 'motion/react';
 import { useQuery } from '@tanstack/react-query';
-import { BookOpen, Camera, KeyRound, AlertCircle, ArrowLeft } from 'lucide-react';
+import { BookOpen, Camera, KeyRound, AlertCircle, ArrowLeft, Sparkles } from 'lucide-react';
 import { TableElement } from '../../types';
 import { useT, useTf } from '../shared/i18n';
 import { isValidCode } from '../../lib/validation';
 import { decodeApiError } from '../../lib/errors';
-import { floatPulse } from '../shared/motionPresets';
+import { GuestPageHeader } from '../shared/GuestPageHeader';
 
 type Choice = 'guestbook' | 'photos';
 type Status = 'idle' | 'invalid' | 'resolving' | 'notFound' | 'rateLimited';
@@ -81,60 +81,25 @@ export const TableScanPage: React.FC = () => {
   };
 
   return (
-    <div className="relative min-h-screen bg-gradient-to-b from-[#F3EBE1] via-[#FAF6F0] to-[#F3EBE1] py-10 px-4 flex items-center justify-center overflow-hidden">
-      {/* Drifting decorative orbs — gentle physics in the background */}
-      <div aria-hidden className="pointer-events-none absolute inset-0">
-        <motion.div
-          className="absolute -top-16 -left-16 w-56 h-56 rounded-full bg-[#EFE6DC] blur-3xl opacity-70"
-          animate={{ x: [0, 26, 0], y: [0, 16, 0], scale: [1, 1.08, 1] }}
-          transition={{ ...floatPulse, duration: 9 }}
-        />
-        <motion.div
-          className="absolute -bottom-20 -right-16 w-64 h-64 rounded-full bg-[#E7D5BE] blur-3xl opacity-50"
-          animate={{ x: [0, -22, 0], y: [0, -18, 0], scale: [1, 1.12, 1] }}
-          transition={{ ...floatPulse, duration: 11 }}
-        />
-        <motion.div
-          className="absolute top-1/3 right-1/4 w-24 h-24 rounded-full bg-amber-200/40 blur-2xl"
-          animate={{ x: [0, -14, 0], y: [0, 22, 0] }}
-          transition={{ ...floatPulse, duration: 7 }}
-        />
-      </div>
-
+    <div className="min-h-[calc(100vh-8rem)] py-8 sm:py-14 px-4 flex items-center justify-center">
       <motion.div
         initial={{ opacity: 0, y: 26, scale: 0.96 }}
         animate={{ opacity: 1, y: 0, scale: 1 }}
         transition={{ type: 'spring', stiffness: 220, damping: 20 }}
-        className="relative w-full max-w-lg bg-[#FFFDF9] rounded-3xl shadow-xl border-2 border-[#CBAE94] p-6 sm:p-8 space-y-6"
+        className="card-guest w-full max-w-lg p-6 sm:p-8 space-y-6"
       >
-        <div className="text-center space-y-2">
-          <motion.h1
-            initial={{ opacity: 0, y: 10 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.1, ...spring }}
-            className="font-gaegu text-4xl font-bold text-[#4A3F35]"
-          >
-            {t.scanTitle}
-          </motion.h1>
-          <motion.p
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 0.2 }}
-            className="text-sm text-[#5D5449] font-medium"
-          >
-            {t.scanSubtitle}
-          </motion.p>
+        <GuestPageHeader icon={Sparkles} title={t.scanTitle} subtitle={t.scanSubtitle}>
           {table && (
             <motion.span
               initial={{ opacity: 0, scale: 0.8 }}
               animate={{ opacity: 1, scale: 1 }}
-              transition={{ delay: 0.28, ...spring }}
-              className="inline-block px-3 py-1 rounded-full bg-[#EFE6DC] text-[#8B735B] text-xs font-mono font-bold uppercase tracking-wider"
+              transition={{ delay: 0.15, ...spring }}
+              className="inline-block mt-1 px-3 py-1 rounded-full bg-[#EFE6DC] text-[#8B735B] text-xs font-mono font-bold uppercase tracking-wider"
             >
               {tf('scanAtTable', { table: table.name })}
             </motion.span>
           )}
-        </div>
+        </GuestPageHeader>
 
         <AnimatePresence mode="wait">
           {!choice ? (
@@ -158,19 +123,19 @@ export const TableScanPage: React.FC = () => {
                     whileTap={{ scale: 0.95 }}
                     transition={spring}
                     onClick={() => { setChoice(key); setStatus('idle'); }}
-                    className="p-6 rounded-3xl border-2 border-[#CBAE94] bg-white hover:bg-[#EFE6DC]/40 transition-colors text-center space-y-3 cursor-pointer shadow-xs"
+                    className="p-5 sm:p-6 rounded-2xl border border-[#CBAE94]/70 bg-white hover:bg-[#EFE6DC]/40 hover:border-[#CBAE94] transition-colors text-center space-y-2.5 cursor-pointer"
                   >
                     <motion.div
                       whileHover={{ rotate: 10, scale: 1.12 }}
                       transition={spring}
-                      className="w-14 h-14 mx-auto rounded-2xl bg-[#E9E0D2] border border-[#CBAE94] flex items-center justify-center"
+                      className="w-12 h-12 mx-auto rounded-2xl bg-[#EFE6DC] flex items-center justify-center"
                     >
-                      <Icon className="w-7 h-7 text-[#8B735B]" />
+                      <Icon className="w-6 h-6 text-[#8B735B]" />
                     </motion.div>
-                    <h2 className="font-newsreader text-xl font-bold text-[#4A3F35]">
+                    <h2 className="font-gaegu text-2xl font-bold text-[#4A3F35] leading-tight">
                       {key === 'guestbook' ? t.scanGuestbookCard : t.scanPhotosCard}
                     </h2>
-                    <p className="text-xs text-[#5D5449]/80 leading-relaxed">
+                    <p className="text-xs text-[#5D5449] leading-relaxed">
                       {key === 'guestbook' ? t.scanGuestbookDesc : t.scanPhotosDesc}
                     </p>
                   </motion.button>
@@ -189,7 +154,7 @@ export const TableScanPage: React.FC = () => {
             >
               <div className="text-center space-y-1">
                 <h2 className="font-sans text-lg font-bold text-[#4A3F35]">{t.scanEnterCodeTitle}</h2>
-                <p className="text-xs text-[#8B735B]">{t.scanEnterCodeHint}</p>
+                <p className="text-xs text-[#5D5449]">{t.scanEnterCodeHint}</p>
               </div>
 
               <motion.div
@@ -207,7 +172,8 @@ export const TableScanPage: React.FC = () => {
                   value={code}
                   onChange={(e) => { setCode(e.target.value.replace(/[^0-9]/g, '')); setStatus('idle'); }}
                   placeholder={t.uploadCodePlaceholder}
-                  className="w-full px-4 py-3 rounded-2xl border-2 border-[#CBAE94] bg-[#FAF6F0] text-sm font-bold tracking-[0.3em] text-[#4A3F35] placeholder:tracking-normal text-center focus:outline-none focus:ring-2 focus:ring-[#8B735B]"
+                  aria-label={t.scanEnterCodeTitle}
+                  className="w-full px-4 py-3 rounded-xl border border-[#CBAE94] bg-white text-base font-mono font-bold tracking-[0.3em] text-[#4A3F35] placeholder:tracking-normal placeholder:font-sans placeholder:font-normal text-center focus:outline-none focus:ring-2 focus:ring-[#8B735B]"
                 />
               </motion.div>
 
@@ -219,7 +185,8 @@ export const TableScanPage: React.FC = () => {
                     animate={{ opacity: 1, y: 0, scale: 1 }}
                     exit={{ opacity: 0, y: -6 }}
                     transition={spring}
-                    className="flex items-start gap-2 text-xs text-rose-700 bg-rose-50 border border-rose-300 rounded-xl p-3 font-sans"
+                    role="alert"
+                    className="notice-error"
                   >
                     <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" />
                     {status === 'rateLimited' ? t.scanRateLimited : status === 'notFound' ? t.portalCodeNotFound : t.portalInvalidInput}
