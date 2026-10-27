@@ -167,6 +167,7 @@ export const FloorPlanEditor = ({
     modalTransformerRef,
     modalContainerRef,
     modalCanvasScale,
+    handleModalZoomStep,
     seatingWorkflowTab,
     setSeatingWorkflowTab,
     selectedGuestForSeating,
@@ -786,6 +787,7 @@ export const FloorPlanEditor = ({
               map={draftFloorMap}
               guests={draftGuests}
               scale={modalCanvasScale}
+              onZoomStep={handleModalZoomStep}
               showAxes={showAxes}
               stageRef={modalStageRef}
               transformerRef={modalTransformerRef}

@@ -4,7 +4,7 @@
 //
 // Note: the 3D view is a separate component; the parent picks between them.
 
-import { useState, type DragEvent as ReactDragEvent, type MouseEvent, type ReactNode, type RefObject } from 'react';
+import { useEffect, useLayoutEffect, useRef, useState, type DragEvent as ReactDragEvent, type MouseEvent, type ReactNode, type RefObject } from 'react';
 import { Stage, Layer, Group, Circle, Rect, Text, Transformer } from 'react-konva';
 import type { FloorMapData, Guest, LandmarkElement, SeatOccupant, TableElement } from '../../types';
 import {
@@ -137,6 +137,8 @@ export interface FloorPlanCanvasProps {
   /** The member currently being dragged from the palette, if any. */
   dragging: SeatOccupant | null;
   scale: number;
+  /** Ctrl/Cmd + wheel zoom step (multiplier). The canvas keeps the point under the cursor fixed. */
+  onZoomStep?: (factor: number) => void;
   /** Draw the X/Y rulers around the stage. */
   showAxes: boolean;
   stageRef: RefObject<any>;
@@ -150,6 +152,7 @@ export const FloorPlanCanvas = ({
   selection,
   dragging,
   scale,
+  onZoomStep,
   showAxes,
   stageRef,
   transformerRef,
@@ -159,6 +162,44 @@ export const FloorPlanCanvas = ({
   const tf = useTf();
   const canvasPalette = useCanvasPalette();
   const [dropTarget, setDropTarget] = useState<{ tableId: string; seatIndex: number } | null>(null);
+  const scrollRef = useRef<HTMLDivElement>(null);
+  // The map point under the cursor when a zoom step started, so it can stay under the cursor.
+  const zoomAnchorRef = useRef<{ mapX: number; mapY: number; clientX: number; clientY: number } | null>(null);
+
+  // Native listener, so Ctrl/Cmd + wheel can be cancelled (React's onWheel is passive).
+  useEffect(() => {
+    const el = scrollRef.current;
+    if (!el || !onZoomStep) return;
+    const handleWheel = (e: WheelEvent) => {
+      if (!e.ctrlKey && !e.metaKey) return;
+      e.preventDefault();
+      const stage = stageRef.current;
+      if (stage) {
+        const rect = stage.container().getBoundingClientRect();
+        zoomAnchorRef.current = {
+          mapX: (e.clientX - rect.left) / scale,
+          mapY: (e.clientY - rect.top) / scale,
+          clientX: e.clientX,
+          clientY: e.clientY,
+        };
+      }
+      onZoomStep(e.deltaY < 0 ? 1.1 : 1 / 1.1);
+    };
+    el.addEventListener('wheel', handleWheel, { passive: false });
+    return () => el.removeEventListener('wheel', handleWheel);
+  }, [onZoomStep, scale, stageRef]);
+
+  // After a zoom step, scroll so the anchored map point is back under the cursor.
+  useLayoutEffect(() => {
+    const anchor = zoomAnchorRef.current;
+    const stage = stageRef.current;
+    const el = scrollRef.current;
+    if (!anchor || !stage || !el) return;
+    zoomAnchorRef.current = null;
+    const rect = stage.container().getBoundingClientRect();
+    el.scrollLeft += rect.left + anchor.mapX * scale - anchor.clientX;
+    el.scrollTop += rect.top + anchor.mapY * scale - anchor.clientY;
+  }, [scale, stageRef]);
 
   const eventToSeat = (e: ReactDragEvent | MouseEvent) => {
     const stage = stageRef.current;
@@ -205,6 +246,7 @@ export const FloorPlanCanvas = ({
 
   return (
     <div
+      ref={scrollRef}
       className={`flex-1 w-full overflow-auto flex bg-[#FAF6F0] p-3 rounded-2xl border-2 transition-colors ${
         dragging ? 'border-emerald-500 bg-emerald-50/40' : 'border-[#CBAE94]/40'
       }`}
@@ -224,7 +266,7 @@ export const FloorPlanCanvas = ({
           }}
         >
         {/* Layer 1: Grid + Room Boundary */}
-        <Layer>{renderRoomBoundary(map)}</Layer>
+        <Layer listening={false}>{renderRoomBoundary(map)}</Layer>
 
         {/* Layer 2: Landmarks */}
         <Layer>
@@ -351,6 +393,7 @@ export const FloorPlanCanvas = ({
                     shadowBlur={outline.shadowBlur}
                     shadowColor={outline.shadowColor}
                     shadowOpacity={0.4}
+                    perfectDrawEnabled={false}
                   />
                 ) : (
                   <Rect
@@ -364,6 +407,7 @@ export const FloorPlanCanvas = ({
                     shadowBlur={outline.shadowBlur}
                     shadowColor={outline.shadowColor}
                     shadowOpacity={0.4}
+                    perfectDrawEnabled={false}
                   />
                 )}
 

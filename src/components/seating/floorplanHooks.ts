@@ -44,7 +44,12 @@ export function useFloorPlanEditor({ floorMap, guests, notify, onSave, onCancel 
   const modalStageRef = useRef<any>(null);
   const modalTransformerRef = useRef<any>(null);
   const modalContainerRef = useRef<HTMLDivElement>(null);
-  const [modalCanvasScale, setModalCanvasScale] = useState(1);
+  // Fit-to-container scale, times the user's zoom (Ctrl/Cmd + wheel or zoom steps).
+  const [modalFitScale, setModalFitScale] = useState(1);
+  const [modalZoom, setModalZoom] = useState(1);
+  const modalCanvasScale = modalFitScale * modalZoom;
+  const handleModalZoomStep = (factor: number) =>
+    setModalZoom((z) => Math.min(3, Math.max(0.5, z * factor)));
 
   // Bidirectional Seating Editor State: 'table' (select table then guest) vs 'guest' (select guest then choose valid table)
   const [seatingWorkflowTab, setSeatingWorkflowTab] = useState<'table' | 'guest'>('table');
@@ -60,7 +65,7 @@ export function useFloorPlanEditor({ floorMap, guests, notify, onSave, onCancel 
         const scaleX = w / draftFloorMap.canvasWidth;
         const scaleY = h / draftFloorMap.canvasHeight;
         const scale = Math.min(1, scaleX, scaleY);
-        setModalCanvasScale(Math.max(0.45, scale));
+        setModalFitScale(Math.max(0.45, scale));
       }
     };
 
@@ -370,6 +375,7 @@ export function useFloorPlanEditor({ floorMap, guests, notify, onSave, onCancel 
     modalTransformerRef,
     modalContainerRef,
     modalCanvasScale,
+    handleModalZoomStep,
     seatingWorkflowTab,
     setSeatingWorkflowTab,
     selectedGuestForSeating,
