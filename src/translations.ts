@@ -967,6 +967,7 @@ export interface Translations {
   fpRoomStandard: string;
   fpRoomLarge: string;
   fpRoomGrand: string;
+  fpShareMenuLabel: string;
   unseatedWord: string;
   editorTitle: string;
   unsavedChangesBadge: string;
@@ -2272,6 +2273,7 @@ export const translations: Record<Language, Translations> = {
     fpRoomStandard: "Standard",
     fpRoomLarge: "Large",
     fpRoomGrand: "Grand",
+    fpShareMenuLabel: "Share & export",
     unseatedWord: "unseated",
     editorTitle: "Full-Screen Floor Plan Editor",
     unsavedChangesBadge: "Unsaved Changes",
@@ -3567,6 +3569,7 @@ export const translations: Record<Language, Translations> = {
     fpRoomStandard: "Standard",
     fpRoomLarge: "Grande",
     fpRoomGrand: "Très grande",
+    fpShareMenuLabel: "Partager et exporter",
     unseatedWord: "non placé(s)",
     editorTitle: "Éditeur de plan de salle plein écran",
     unsavedChangesBadge: "Modifications non enregistrées",

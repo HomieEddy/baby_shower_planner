@@ -41,6 +41,8 @@ import {
   Redo2,
   Wand2,
   PieChart,
+  Share2,
+  ChevronDown,
 } from 'lucide-react';
 import {
   getGuestPartySize,
@@ -326,6 +328,7 @@ export const FloorPlanPage = () => {
 
   // Email Share Modal
   const [isEmailModalOpen, setIsEmailModalOpen] = useState(false);
+  const [isShareMenuOpen, setIsShareMenuOpen] = useState(false);
   const [shareCustomMsg, setShareCustomMsg] = useState('');
   const [sendingEmail, setSendingEmail] = useState(false);
 
@@ -588,7 +591,7 @@ export const FloorPlanPage = () => {
         return (
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
           {/* Left Column: Unassigned Guests Sidebar & Host Actions (lg:col-span-4) */}
-          <div className="lg:col-span-4 space-y-4 order-2 lg:order-1">
+          <div className="lg:col-span-4 space-y-4 order-2 lg:order-1 lg:sticky lg:top-6 lg:self-start">
             <UnassignedGuestsSidebar
               unassignedGuests={unassignedGuestsList}
               floorMap={floorMap}
@@ -610,13 +613,13 @@ export const FloorPlanPage = () => {
                 <button
                   type="button"
                   onClick={handleGenerateSmartSuggestions}
-                  className="w-full inline-flex items-center justify-between px-3.5 py-3 rounded-2xl bg-gradient-to-r from-amber-700 via-[#8B735B] to-emerald-700 hover:brightness-110 text-white text-xs font-bold shadow-md transition-all transform hover:-translate-y-0.5 border border-amber-300/40 group"
+                  className="w-full inline-flex items-center justify-between px-3.5 py-2.5 rounded-2xl bg-[#8B735B] hover:bg-[#705C47] text-white text-xs font-bold shadow-sm transition-all border border-[#CBAE94] group"
                 >
                   <div className="flex items-center gap-2">
-                    <Wand2 className="w-4 h-4 text-amber-200 animate-pulse group-hover:rotate-12 transition-transform" />
+                    <Wand2 className="w-4 h-4 text-white group-hover:rotate-12 transition-transform" />
                     <span>{t.smartSuggestBtn}</span>
                   </div>
-                  <span className="px-2 py-0.5 rounded-full bg-white/20 text-xs font-mono font-bold text-amber-100">
+                  <span className="px-2 py-0.5 rounded-full bg-white/20 text-xs font-mono font-bold text-white">
                     {t.autoFitBadge}
                   </span>
                 </button>
@@ -624,33 +627,59 @@ export const FloorPlanPage = () => {
                 <button
                   onClick={handleOpenEditor}
                   title={t.btnFullscreenEditor}
-                  className="w-full inline-flex items-center justify-center gap-2 px-3.5 py-2.5 rounded-2xl bg-[#8B735B] hover:bg-[#705C47] text-white text-xs font-bold shadow-sm transition-all border border-[#CBAE94]"
+                  className="w-full inline-flex items-center justify-center gap-2 px-3.5 py-2.5 rounded-2xl border-2 border-[#CBAE94] text-xs font-bold text-[#4A3F35] bg-white hover:bg-[#EFE6DC] transition-colors"
                 >
-                  <Maximize2 className="w-4 h-4 text-white" /> {t.btnFullscreenEditor}
+                  <Maximize2 className="w-4 h-4 text-[#8B735B]" /> {t.btnFullscreenEditor}
                 </button>
 
-                <button
-                  onClick={() => setIsEmailModalOpen(true)}
-                  disabled={sendsBlocked}
-                  title={sendsBlocked ? t.providerNotConfigured : undefined}
-                  className="w-full inline-flex items-center justify-center gap-2 px-3.5 py-2.5 rounded-2xl border-2 border-[#CBAE94] text-xs font-bold text-[#5D5449] bg-white hover:bg-[#EFE6DC] transition-colors disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-white"
-                >
-                  <Mail className="w-4 h-4 text-[#8B735B]" /> {t.btnShareEmail}
-                </button>
+                <div className="relative">
+                  <button
+                    type="button"
+                    onClick={() => setIsShareMenuOpen((open) => !open)}
+                    aria-haspopup="menu"
+                    aria-expanded={isShareMenuOpen}
+                    className="w-full inline-flex items-center justify-between px-3.5 py-2.5 rounded-2xl border-2 border-[#CBAE94] text-xs font-bold text-[#5D5449] bg-white hover:bg-[#EFE6DC] transition-colors"
+                  >
+                    <span className="inline-flex items-center gap-2">
+                      <Share2 className="w-4 h-4 text-[#8B735B]" /> {t.fpShareMenuLabel}
+                    </span>
+                    <ChevronDown className={`w-4 h-4 text-[#8B735B] transition-transform ${isShareMenuOpen ? 'rotate-180' : ''}`} />
+                  </button>
 
-                <button
-                  onClick={() => setIsQrModalOpen(true)}
-                  className="w-full inline-flex items-center justify-center gap-2 px-3.5 py-2.5 rounded-2xl border-2 border-[#CBAE94] text-xs font-bold text-[#5D5449] bg-white hover:bg-[#EFE6DC] transition-colors"
-                >
-                  <Printer className="w-4 h-4 text-[#8B735B]" /> {t.btnPrintQr}
-                </button>
-
-                <button
-                  onClick={handleExportImage}
-                  className="w-full inline-flex items-center justify-center gap-2 px-3.5 py-2.5 rounded-2xl border-2 border-[#CBAE94] text-xs font-bold text-[#5D5449] bg-white hover:bg-[#EFE6DC] transition-colors"
-                >
-                  <Download className="w-4 h-4 text-[#8B735B]" /> {t.btnExportImage}
-                </button>
+                  {isShareMenuOpen && (
+                    <div
+                      role="menu"
+                      className="absolute left-0 right-0 top-full mt-2 z-10 bg-[#FFFDF9] rounded-2xl border-2 border-[#CBAE94] shadow-xl p-1.5 space-y-1"
+                    >
+                      <button
+                        type="button"
+                        role="menuitem"
+                        onClick={() => { setIsShareMenuOpen(false); setIsEmailModalOpen(true); }}
+                        disabled={sendsBlocked}
+                        title={sendsBlocked ? t.providerNotConfigured : undefined}
+                        className="w-full inline-flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-bold text-[#4A3F35] hover:bg-[#EFE6DC] transition-colors disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:bg-transparent"
+                      >
+                        <Mail className="w-4 h-4 text-[#8B735B]" /> {t.btnShareEmail}
+                      </button>
+                      <button
+                        type="button"
+                        role="menuitem"
+                        onClick={() => { setIsShareMenuOpen(false); setIsQrModalOpen(true); }}
+                        className="w-full inline-flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-bold text-[#4A3F35] hover:bg-[#EFE6DC] transition-colors"
+                      >
+                        <Printer className="w-4 h-4 text-[#8B735B]" /> {t.btnPrintQr}
+                      </button>
+                      <button
+                        type="button"
+                        role="menuitem"
+                        onClick={() => { setIsShareMenuOpen(false); void handleExportImage(); }}
+                        className="w-full inline-flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-bold text-[#4A3F35] hover:bg-[#EFE6DC] transition-colors"
+                      >
+                        <Download className="w-4 h-4 text-[#8B735B]" /> {t.btnExportImage}
+                      </button>
+                    </div>
+                  )}
+                </div>
               </div>
             </div>
 
@@ -668,11 +697,11 @@ export const FloorPlanPage = () => {
 
           {/* Right Column: Stats, Progress Bar & Read-Only Floor Canvas (lg:col-span-8) */}
           <div className="lg:col-span-8 space-y-4 order-1 lg:order-2">
-            {/* Seating Progress Bar Banner */}
-            <div className="bg-[#FFFDF9] rounded-2xl p-4 border-2 border-[#CBAE94] shadow-md space-y-2.5">
+            {/* Seating Progress & Stats (one card: bar plus compact chips) */}
+            <div className="bg-[#FFFDF9] rounded-2xl p-4 border-2 border-[#CBAE94] shadow-md space-y-3">
               <div className="flex flex-wrap items-center justify-between gap-2">
                 <div className="flex items-center gap-2.5">
-                  <div className="w-9 h-9 rounded-xl bg-[#8B735B]/10 text-[#8B735B] flex items-center justify-center font-bold">
+                  <div className="w-9 h-9 rounded-xl bg-[#8B735B]/10 text-[#8B735B] flex items-center justify-center">
                     <Users className="w-5 h-5" />
                   </div>
                   <div>
@@ -688,49 +717,39 @@ export const FloorPlanPage = () => {
                   <span className="text-2xl font-bold font-mono text-[#8B735B]">
                     {seatingProgressPercent}%
                   </span>
-                  {seatingProgressPercent === 100 ? (
+                  {seatingProgressPercent === 100 && (
                     <span className="px-2.5 py-1 rounded-full bg-emerald-100 text-emerald-800 text-xs font-bold flex items-center gap-1 border border-emerald-300">
                       <CheckCircle2 className="w-3.5 h-3.5" /> {t.fullySeatedBadge}
                     </span>
-                  ) : null}
+                  )}
                 </div>
               </div>
 
-              {/* Visual Progress Bar */}
-              <div className="w-full bg-[#EFE6DC] h-3.5 rounded-full overflow-hidden border border-[#CBAE94]/60 p-0.5">
+              <div className="w-full bg-[#EFE6DC] h-3 rounded-full overflow-hidden border border-[#CBAE94]/60 p-0.5">
                 <div
                   className="h-full bg-gradient-to-r from-[#8B735B] to-emerald-600 rounded-full transition-all duration-500 ease-out shadow-sm"
                   style={{ width: `${seatingProgressPercent}%` }}
                 />
               </div>
-            </div>
 
-            {/* Quick Stats Summary Bar */}
-            <div className="bg-[#FFFDF9] rounded-2xl p-3 border-2 border-[#CBAE94] grid grid-cols-2 sm:grid-cols-4 gap-2 text-center">
-              <div className="p-2 rounded-xl bg-[#EFE6DC]/40 border border-[#CBAE94]/40">
-                <span className="text-xs font-mono uppercase font-bold text-[#8B735B]">{t.confirmedGuestsLabel}</span>
-                <p className="text-base font-bold text-[#4A3F35]">
-                  {totalConfirmedGuests} <span className="text-xs font-normal text-[#5D5449]">{t.attendingWord}</span>
-                </p>
-              </div>
-              <div className="p-2 rounded-xl bg-[#EFE6DC]/40 border border-[#CBAE94]/40">
-                <span className="text-xs font-mono uppercase font-bold text-[#8B735B]">{t.seatsAssignedLabel}</span>
-                <p className="text-base font-bold text-[#4A3F35]">
-                  {totalSeatedGuests} <span className="text-xs font-normal text-[#5D5449]">{t.seatedWord}</span>
-                </p>
-              </div>
-              <div className="p-2 rounded-xl bg-[#EFE6DC]/40 border border-[#CBAE94]/40">
-                <span className="text-xs font-mono uppercase font-bold text-[#8B735B]">{t.unseatedConfirmedLabel}</span>
-                <p className="text-base font-bold text-[#8B735B]">
-                  {Math.max(0, totalConfirmedGuests - totalSeatedGuests)} <span className="text-xs font-normal text-[#5D5449]">{t.guestsWord}</span>
-                </p>
-              </div>
-              <div className="p-2 rounded-xl bg-[#EFE6DC]/40 border border-[#CBAE94]/40">
-                <span className="text-xs font-mono uppercase font-bold text-[#8B735B]">{t.venueCapacityLabel}</span>
-                <p className="text-base font-bold text-[#4A3F35]">
-                  {floorMap ? floorMap.tables.reduce((s, tbl) => s + tbl.capacity, 0) : 0} <span className="text-xs font-normal text-[#5D5449]">{t.totalSeatsWord}</span>
-                </p>
-              </div>
+              <dl className="flex flex-wrap gap-1.5 text-xs text-[#5D5449]">
+                <div className="px-2.5 py-1 rounded-full bg-[#EFE6DC]/50 border border-[#CBAE94]/50">
+                  <dt className="inline">{t.confirmedGuestsLabel}</dt>{' '}
+                  <dd className="inline font-bold text-[#4A3F35]">{totalConfirmedGuests}</dd>
+                </div>
+                <div className="px-2.5 py-1 rounded-full bg-[#EFE6DC]/50 border border-[#CBAE94]/50">
+                  <dt className="inline">{t.seatsAssignedLabel}</dt>{' '}
+                  <dd className="inline font-bold text-[#4A3F35]">{totalSeatedGuests}</dd>
+                </div>
+                <div className="px-2.5 py-1 rounded-full bg-[#EFE6DC]/50 border border-[#CBAE94]/50">
+                  <dt className="inline">{t.unseatedConfirmedLabel}</dt>{' '}
+                  <dd className="inline font-bold text-[#8B735B]">{Math.max(0, totalConfirmedGuests - totalSeatedGuests)}</dd>
+                </div>
+                <div className="px-2.5 py-1 rounded-full bg-[#EFE6DC]/50 border border-[#CBAE94]/50">
+                  <dt className="inline">{t.venueCapacityLabel}</dt>{' '}
+                  <dd className="inline font-bold text-[#4A3F35]">{floorMap ? floorMap.tables.reduce((s, tbl) => s + tbl.capacity, 0) : 0}</dd>
+                </div>
+              </dl>
             </div>
 
             {/* Read-Only Floor Plan Canvas Stage */}
