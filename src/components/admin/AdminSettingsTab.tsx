@@ -38,7 +38,7 @@ import { EventSettings, ScheduleItem, Language, CustomTheme } from '../../types'
 import { Translations } from '../../translations';
 import { parseToYmd, formatDateLong, formatTime12h, parseTimeRange, formatTimeRangeString } from '../../lib/dateUtils';
 import { findDuplicateScheduleTimes, normalizeScheduleItems, normalizeScheduleTime } from '../../lib/schedule';
-import { THEME_PRESETS, getThemeById, applyThemeToDocument, getContrastTextColor, getCustomTheme, CUSTOM_THEME_ID, FONT_OPTIONS, DEFAULT_CUSTOM_THEME } from '../../themePresets';
+import { THEME_PRESETS, getThemeById, applyThemeToDocument, getContrastTextColor, getCustomTheme, CUSTOM_THEME_ID, FONT_OPTIONS, DEFAULT_CUSTOM_THEME, isColorDark, mixHex } from '../../themePresets';
 import { useToast } from '../shared/ToastContext';
 import { useActionConfirm } from '../shared/ConfirmDialog';
 import { useTf } from '../shared/i18n';
@@ -502,13 +502,13 @@ export const AdminSettingsTab: React.FC<AdminSettingsTabProps> = ({ language, t,
               const col1Text = getContrastTextColor(currentTheme.bg);
               const col2Text = getContrastTextColor(currentTheme.ink);
               const col3Text = getContrastTextColor(currentTheme.accent);
-              const cardHeaderBg = currentTheme.surface || (currentTheme.isDark ? '#1E293B' : '#FFFFFF');
+              const cardHeaderBg = currentTheme.surface || ((currentTheme.isDark || isColorDark(currentTheme.bg)) ? mixHex(currentTheme.bg, currentTheme.ink, 0.08) : '#FFFFFF');
               return (
                 <div className="p-4 rounded-2xl border shadow-sm space-y-3 transition-all"
                   style={{ backgroundColor: currentTheme.bg, color: currentTheme.ink, borderColor: currentTheme.accent }}>
                   <div className="flex flex-wrap items-center justify-between gap-2 border-b border-current/20 pb-2.5">
                     <div>
-                      <span className="text-xs font-mono font-bold uppercase tracking-wider opacity-85">{t.activeThemeLabel} · {currentTheme.category}</span>
+                      <span className="text-xs font-mono font-bold uppercase tracking-wider opacity-85">{t.activeThemeLabel}{selectedThemeId !== CUSTOM_THEME_ID && ` · ${currentTheme.category}`}</span>
                       <h5 className="text-lg font-bold leading-tight">{currentTheme.name}</h5>
                     </div>
                     <div className="text-right">
