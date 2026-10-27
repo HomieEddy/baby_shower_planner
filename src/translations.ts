@@ -959,6 +959,14 @@ export interface Translations {
   partialTablesFilterLabel: string;
   fullTablesFilterLabel: string;
   fullySeatedBadge: string;
+  fpStatusFull: string;
+  fpStatusPartial: string;
+  fpStatusEmpty: string;
+  fpNoRoomLabel: string;
+  fpRoomSmall: string;
+  fpRoomStandard: string;
+  fpRoomLarge: string;
+  fpRoomGrand: string;
   unseatedWord: string;
   editorTitle: string;
   unsavedChangesBadge: string;
@@ -2256,6 +2264,14 @@ export const translations: Record<Language, Translations> = {
     partialTablesFilterLabel: "Partial ({{count}})",
     fullTablesFilterLabel: "Full ({{count}})",
     fullySeatedBadge: "Fully Seated!",
+    fpStatusFull: "Full",
+    fpStatusPartial: "Partial",
+    fpStatusEmpty: "Empty",
+    fpNoRoomLabel: "No room",
+    fpRoomSmall: "Small",
+    fpRoomStandard: "Standard",
+    fpRoomLarge: "Large",
+    fpRoomGrand: "Grand",
     unseatedWord: "unseated",
     editorTitle: "Full-Screen Floor Plan Editor",
     unsavedChangesBadge: "Unsaved Changes",
@@ -3543,6 +3559,14 @@ export const translations: Record<Language, Translations> = {
     partialTablesFilterLabel: "Partielles ({{count}})",
     fullTablesFilterLabel: "Pleines ({{count}})",
     fullySeatedBadge: "Tous placés !",
+    fpStatusFull: "Complète",
+    fpStatusPartial: "Partielle",
+    fpStatusEmpty: "Vide",
+    fpNoRoomLabel: "Pas de place",
+    fpRoomSmall: "Petite",
+    fpRoomStandard: "Standard",
+    fpRoomLarge: "Grande",
+    fpRoomGrand: "Très grande",
     unseatedWord: "non placé(s)",
     editorTitle: "Éditeur de plan de salle plein écran",
     unsavedChangesBadge: "Modifications non enregistrées",
