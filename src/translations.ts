@@ -968,6 +968,9 @@ export interface Translations {
   fpRoomLarge: string;
   fpRoomGrand: string;
   fpShareMenuLabel: string;
+  fpZoomIn: string;
+  fpZoomOut: string;
+  fpZoomReset: string;
   unseatedWord: string;
   editorTitle: string;
   unsavedChangesBadge: string;
@@ -2274,6 +2277,9 @@ export const translations: Record<Language, Translations> = {
     fpRoomLarge: "Large",
     fpRoomGrand: "Grand",
     fpShareMenuLabel: "Share & export",
+    fpZoomIn: "Zoom in",
+    fpZoomOut: "Zoom out",
+    fpZoomReset: "Reset zoom",
     unseatedWord: "unseated",
     editorTitle: "Full-Screen Floor Plan Editor",
     unsavedChangesBadge: "Unsaved Changes",
@@ -3570,6 +3576,9 @@ export const translations: Record<Language, Translations> = {
     fpRoomLarge: "Grande",
     fpRoomGrand: "Très grande",
     fpShareMenuLabel: "Partager et exporter",
+    fpZoomIn: "Zoom avant",
+    fpZoomOut: "Zoom arrière",
+    fpZoomReset: "Réinitialiser le zoom",
     unseatedWord: "non placé(s)",
     editorTitle: "Éditeur de plan de salle plein écran",
     unsavedChangesBadge: "Modifications non enregistrées",

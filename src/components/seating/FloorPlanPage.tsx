@@ -57,6 +57,8 @@ import {
   getSeatingStats,
 } from '../../lib/tableAssignment';
 import { seatTooltipContent, tableTooltipContent } from './floorPlanHelpers';
+import { guestInitials } from './tableVisuals';
+import { useCanvasPalette } from './canvasPalette';
 import { suggestSeating, unseatedParties } from '../../lib/seatingSuggestions';
 import type { SmartSuggestion } from '../../lib/seatingSuggestions';
 import { renderTableBody, renderLandmark, SeatRing, TableLabel, renderRoomBoundary } from './venueShapes';
@@ -369,7 +371,11 @@ export const FloorPlanPage = () => {
   const stageRef = useRef<any>(null);
   const transformerRef = useRef<any>(null);
   const containerRef = useRef<HTMLDivElement>(null);
-  const [canvasScale, setCanvasScale] = useState(1);
+  // Fit-to-container scale, then the host's zoom on top of it.
+  const [fitScale, setFitScale] = useState(1);
+  const [zoomLevel, setZoomLevel] = useState(1);
+  const canvasScale = fitScale * zoomLevel;
+  const palette = useCanvasPalette();
 
   // Fetch Floor Map & Guests (admins get the full roster; guests get a scrubbed one)
   const fetchData = async () => {
@@ -416,7 +422,7 @@ export const FloorPlanPage = () => {
       if (containerRef.current && floorMap) {
         const containerWidth = containerRef.current.clientWidth - 32; // padding
         const scale = Math.min(1, containerWidth / floorMap.canvasWidth);
-        setCanvasScale(Math.max(0.45, scale));
+        setFitScale(Math.max(0.45, scale));
       }
     };
 
@@ -801,6 +807,34 @@ export const FloorPlanPage = () => {
                 </div>
 
                 <div className="flex items-center gap-2 shrink-0">
+                  <div className="flex items-center gap-1 rounded-xl border border-[#CBAE94] bg-white p-0.5">
+                    <button
+                      type="button"
+                      aria-label={t.fpZoomOut}
+                      onClick={() => setZoomLevel((z) => Math.max(0.75, Math.round((z - 0.25) * 100) / 100))}
+                      disabled={zoomLevel <= 0.75}
+                      className="w-7 h-7 rounded-lg text-sm font-bold text-[#4A3F35] hover:bg-[#EFE6DC] disabled:opacity-40"
+                    >
+                      −
+                    </button>
+                    <button
+                      type="button"
+                      aria-label={t.fpZoomReset}
+                      onClick={() => setZoomLevel(1)}
+                      className="min-w-[3rem] h-7 px-1.5 rounded-lg text-xs font-mono font-bold text-[#8B735B] hover:bg-[#EFE6DC]"
+                    >
+                      {Math.round(zoomLevel * 100)}%
+                    </button>
+                    <button
+                      type="button"
+                      aria-label={t.fpZoomIn}
+                      onClick={() => setZoomLevel((z) => Math.min(2, Math.round((z + 0.25) * 100) / 100))}
+                      disabled={zoomLevel >= 2}
+                      className="w-7 h-7 rounded-lg text-sm font-bold text-[#4A3F35] hover:bg-[#EFE6DC] disabled:opacity-40"
+                    >
+                      +
+                    </button>
+                  </div>
                   <ViewModeToggle value={viewMode} onChange={setViewMode} />
                 </div>
               </div>
@@ -1035,16 +1069,17 @@ export const FloorPlanPage = () => {
                             <SeatRing
                               table={table}
                               renderSeat={(pos, idx) => {
-                                const isOccupied = !!tableSeats[idx];
-                                let seatFill = isOccupied ? '#8B735B' : '#FFFDF9';
-                                let seatStroke = '#CBAE94';
+                                const occupant = tableSeats[idx];
+                                const isOccupied = !!occupant;
+                                let seatFill = isOccupied ? '#8B735B' : palette.surface;
+                                let seatStroke = palette.accent;
                                 if (isUnassignedActive && !isOccupied && canFitSelected) {
                                   seatFill = '#A7F3D0';
                                   seatStroke = '#059669';
                                 }
                                 return (
+                                  <Group key={`seat-${table.id}-${idx}`}>
                                   <Circle
-                                    key={`seat-${table.id}-${idx}`}
                                     x={pos.x}
                                     y={pos.y}
                                     radius={8}
@@ -1061,6 +1096,20 @@ export const FloorPlanPage = () => {
                                     }}
                                     onMouseLeave={() => setHoverTooltip(null)}
                                   />
+                                  {occupant && (
+                                    <Text
+                                      text={guestInitials(guests.find((g) => g.id === occupant.guestId)?.name ?? '')}
+                                      x={pos.x - 8}
+                                      y={pos.y - 4.5}
+                                      width={16}
+                                      align="center"
+                                      fontSize={7.5}
+                                      fontStyle="bold"
+                                      fill="#FFFDF9"
+                                      listening={false}
+                                    />
+                                  )}
+                                  </Group>
                                 );
                               }}
                             />
