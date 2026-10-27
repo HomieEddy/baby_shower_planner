@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest';
-import { eventDisplayName } from './eventName';
+import { eventDisplayName, eventFileSlug } from './eventName';
 
 describe('eventDisplayName', () => {
   it('uses the organizer title when one is set', () => {
@@ -17,5 +17,16 @@ describe('eventDisplayName', () => {
 
   it('trims a title that has padding', () => {
     expect(eventDisplayName({ eventTitle: '  Sophie  ' }, 'Fallback')).toBe('Sophie');
+  });
+});
+
+describe('eventFileSlug', () => {
+  it('slugs the organizer title, accents and punctuation included', () => {
+    expect(eventFileSlug({ eventTitle: "Le shower d'Amélie & Noé!" })).toBe('le-shower-d-amelie-noe');
+  });
+
+  it('is a neutral stem when no title is set', () => {
+    expect(eventFileSlug({ eventTitle: '  ' })).toBe('event');
+    expect(eventFileSlug(null)).toBe('event');
   });
 });

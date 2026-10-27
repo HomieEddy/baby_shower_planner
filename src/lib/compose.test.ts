@@ -3,7 +3,9 @@ import type { EventSettings, Guest } from '../types';
 import {
   buildInviteMessage,
   buildUniversalInviteMessage,
+  composeFloorPlan,
   composeInvitation,
+  composeReminder,
   renderEmailHtml,
   renderSms,
   renderText,
@@ -29,12 +31,12 @@ const guest = (over: Partial<Guest> = {}): Guest => ({
 });
 
 const settings = (over: Partial<EventSettings> = {}): Partial<EventSettings> => ({
-  parentsNames: 'Eddy & Nana',
-  date: '7 novembre 2026',
+  parentsNames: 'Emma & Noah',
+  date: '12 septembre 2026',
   time: '18 h à 22 h',
-  venueName: 'La salle St-Gilles',
-  venueAddress: '226 des Alouettes H7G 3W1',
-  registryUrl: 'https://www.amazon.ca/list',
+  venueName: 'Salle Maplewood',
+  venueAddress: '428 avenue Rosewood, Montréal',
+  registryUrl: 'https://registry.example.com/list',
   rsvpDeadline: '2026-10-01',
   ...over,
 });
@@ -43,10 +45,10 @@ describe('buildUniversalInviteMessage (self-serve)', () => {
   it('renders event details, registry and deadline, with no em-dashes', () => {
     const msg = buildUniversalInviteMessage(settings(), 'FR');
     expect(msg).toContain('Nous avons hâte de célébrer ce moment avec vous.');
-    expect(msg).toContain('Eddy & Nana');
-    expect(msg).toContain('7 novembre 2026');
-    expect(msg).toContain('La salle St-Gilles, 226 des Alouettes H7G 3W1');
-    expect(msg).toContain('https://www.amazon.ca/list');
+    expect(msg).toContain('Emma & Noah');
+    expect(msg).toContain('12 septembre 2026');
+    expect(msg).toContain('Salle Maplewood, 428 avenue Rosewood, Montréal');
+    expect(msg).toContain('https://registry.example.com/list');
     expect(msg).toContain('/register');
     expect(msg).toContain('au plus tard le jeudi 1 octobre 2026');
     expect(msg).not.toMatch(/[\u2014\u2013\u2E3B]/);
@@ -68,7 +70,7 @@ describe('buildUniversalInviteMessage (self-serve)', () => {
       { ...settings(), invitationTemplateFr: 'Salut {{parentsNames}} — {{date}} — {{registerLink}}' },
       'FR'
     );
-    expect(msg).toMatch(/^Salut Eddy & Nana — 7 novembre 2026 — https?:\/\/.+\/register$/);
+    expect(msg).toMatch(/^Salut Emma & Noah — 12 septembre 2026 — https?:\/\/.+\/register$/);
     expect(msg).not.toContain('BABY SHOWER');
   });
 });
@@ -116,7 +118,7 @@ describe('composeInvitation', () => {
     expect(content.language).toBe('EN');
     expect(content.link).toContain('/rsvp/tok-123');
     const text = renderText(content);
-    expect(text).toContain('A little flower is on the way');
+    expect(text).toContain("We can't wait to celebrate with you.");
     expect(text).toContain('Your reservation code: 2468');
   });
 
@@ -138,7 +140,28 @@ describe('renderSms', () => {
 
   it('renders French SMS (no EN-only gap)', () => {
     const sms = renderSms(composeInvitation(guest({ language_pref: 'FR' }), settings()));
-    expect(sms).toContain('Baby Shower de Eddy & Nana');
+    expect(sms).toContain('Baby Shower de Emma & Noah');
     expect(sms).toContain('RSVP: ');
+  });
+});
+
+describe('event title', () => {
+  it('names the event by its title in headings and subjects when set', () => {
+    const titled = settings({ eventTitle: 'Mia & Leo Shower' });
+    const invite = composeInvitation(guest({ language_pref: 'EN' }), titled);
+    expect(invite.heading).toContain('Mia & Leo Shower');
+    expect(invite.subject).toBe("You're invited: Mia & Leo Shower!");
+    expect(composeReminder(guest({ language_pref: 'FR' }), titled).intro).toContain('à « Mia & Leo Shower » le 12 septembre 2026');
+    expect(composeFloorPlan(guest({ language_pref: 'EN' }), titled, 'A', '').subject).toBe('Your table for Mia & Leo Shower');
+  });
+
+  it('keeps the generic wording without a title', () => {
+    expect(composeInvitation(guest({ language_pref: 'EN' }), settings()).subject).toBe("You're invited to Emma & Noah's Baby Shower!");
+  });
+
+  it('leaves no empty date in reminders when the date is unset', () => {
+    const reminder = composeReminder(guest({ language_pref: 'EN' }), settings({ date: '' }));
+    expect(reminder.subject).not.toContain('()');
+    expect(reminder.intro).not.toMatch(/ on \.$/);
   });
 });

@@ -6,6 +6,7 @@ import { QrCode, Printer, Download, MapPin, Sparkles, Globe } from 'lucide-react
 import { fadeUp, floatPulse } from '../shared/motionPresets';
 import { Modal } from '../shared/Modal';
 import { useActionConfirm } from '../shared/ConfirmDialog';
+import { eventDisplayName, eventFileSlug } from '../../lib/eventName';
 
 interface DayOfQrModalProps {
   isOpen: boolean;
@@ -29,7 +30,6 @@ export const DayOfQrModal: React.FC<DayOfQrModalProps> = ({
   const activeLang = posterLang || language;
   const t = translations[activeLang];
 
-  const babyName = settings?.babyName || '';
   const parentsNames = settings?.parentsNames || '';
   const venue = settings?.venueName || '';
   const date = settings?.date || '';
@@ -53,7 +53,7 @@ export const DayOfQrModal: React.FC<DayOfQrModalProps> = ({
     if (!(await confirmAction(t.downloadQr))) return;
     const a = document.createElement('a');
     a.href = qrImageUrl;
-    a.download = `bebe-${babyName || 'shower'}-dayof-qr-${activeLang.toLowerCase()}.png`;
+    a.download = `${eventFileSlug(settings)}-dayof-qr-${activeLang.toLowerCase()}.png`;
     document.body.appendChild(a);
     a.click();
     a.remove();
@@ -110,12 +110,10 @@ export const DayOfQrModal: React.FC<DayOfQrModalProps> = ({
                   <Sparkles className="w-3.5 h-3.5" /> {t.posterWelcome}
                 </span>
                 <h2 className="font-newsreader text-3xl sm:text-4xl font-bold text-[#4A3F35]">
-                  {activeLang === 'FR'
-                    ? (babyName ? `Baby Shower de Bébé ${babyName}` : 'Baby Shower')
-                    : (babyName ? `Bébé ${babyName}'s Baby Shower` : 'Bébé Baby Shower')}
+                  {eventDisplayName(settings, t.eventFallbackTitle)}
                 </h2>
                 <p className="text-sm font-bold text-[#8B735B]">
-                  {activeLang === 'FR' ? `Célébrons ${parentsNames} • ${venue}` : `Celebrating ${parentsNames} • ${venue}`}
+                  {[parentsNames && (activeLang === 'FR' ? `Célébrons ${parentsNames}` : `Celebrating ${parentsNames}`), venue].filter(Boolean).join(' • ')}
                 </p>
               </motion.div>
 

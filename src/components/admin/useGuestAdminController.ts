@@ -11,6 +11,8 @@ import { useSearchParams } from 'react-router-dom';
 import type { Guest, FloorMapData, DeliveryChannel, Language } from '../../types';
 import type { Translations } from '../../translations';
 import { adminFetch } from '../../lib/api';
+import { useSettings } from '../../lib/settingsQuery';
+import { eventFileSlug } from '../../lib/eventName';
 import { toCsv, downloadCsv } from '../../lib/csv';
 import { getPartyDietary, getAttendeeDietary, type AdditionalAttendee } from '../../lib/guestAttendees';
 import { getGuestPartySize } from '../../lib/tableAssignment';
@@ -46,6 +48,7 @@ export function useGuestAdminController({ language, t, guests, onRefresh }: Gues
   const { toast } = useToast();
   const tf = useTf();
   const apiError = useApiErrorMessage();
+  const settings = useSettings();
   const confirm = useConfirm();
   const confirmAction = useActionConfirm();
 
@@ -484,7 +487,7 @@ export function useGuestAdminController({ language, t, guests, onRefresh }: Gues
     // First five columns stay import-compatible (name, email, phone, max party, channel).
     const { headers, rows } = buildGuestCsv(list, floorMap, window.location.origin);
 
-    downloadCsv(`baby_shower_guests_${new Date().toISOString().split('T')[0]}.csv`, toCsv(headers, rows));
+    downloadCsv(`${eventFileSlug(settings)}-guests-${new Date().toISOString().split('T')[0]}.csv`, toCsv(headers, rows));
     toast.love(t.exportedToast);
   };
 

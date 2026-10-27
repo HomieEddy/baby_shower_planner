@@ -91,19 +91,19 @@ describe('buildUniversalInviteMessage', () => {
 
   it('renders event details and registry, without em-dashes', () => {
     const msg = buildUniversalInviteMessage({
-      parentsNames: 'Eddy & Nana',
-      date: '7 novembre 2026',
+      parentsNames: 'Emma & Noah',
+      date: '12 septembre 2026',
       time: '18 h à 22 h',
-      venueName: 'La salle St-Gilles',
-      venueAddress: '226 des Alouettes H7G 3W1',
-      registryUrl: 'https://www.amazon.ca/list',
+      venueName: 'Salle Maplewood',
+      venueAddress: '428 avenue Rosewood, Montréal',
+      registryUrl: 'https://registry.example.com/list',
       rsvpDeadline: '2026-10-01',
     }, 'FR');
     expect(msg).toContain('Nous avons hâte de célébrer ce moment avec vous.');
-    expect(msg).toContain('Eddy & Nana');
-    expect(msg).toContain('7 novembre 2026');
-    expect(msg).toContain('La salle St-Gilles, 226 des Alouettes H7G 3W1');
-    expect(msg).toContain('https://www.amazon.ca/list');
+    expect(msg).toContain('Emma & Noah');
+    expect(msg).toContain('12 septembre 2026');
+    expect(msg).toContain('Salle Maplewood, 428 avenue Rosewood, Montréal');
+    expect(msg).toContain('https://registry.example.com/list');
     expect(msg).toContain('/register');
     expect(msg).toContain('au plus tard le jeudi 1 octobre 2026');
     expect(msg).not.toMatch(/[\u2014\u2013\u2E3B]/);
