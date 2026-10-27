@@ -1,4 +1,4 @@
-# AGENTS.md: Bébé Baby Shower Planner
+# AGENTS.md: Baby Shower Planner
 
 ## Stack
 - React 19 + TypeScript 5.8 + Vite 6 + Tailwind CSS v4 + `motion/react` (formerly Framer Motion)
@@ -72,7 +72,7 @@ themePresets.ts visual theme definitions
 ```
 
 ## API Routes (all under `/api/`)
-Guest CRUD, RSVP (token-based), guestbook, photo upload/gallery, floor plan editor, settings, alerts, baby predictions, gift log, database reset/wipe.
+Guest CRUD, RSVP (token-based), guestbook, photo upload/gallery, floor plan editor, settings, alerts, gift log, database reset/wipe.
 
 ## Docker
 - **Two services**: `app` (Node dev server) + `pocketbase` (PB server)
