@@ -67,6 +67,23 @@ export function hasDietaryRestriction(text: string): boolean {
   return r.length > 0 && r !== 'none';
 }
 
+export type DietaryCategory = 'vegetarian' | 'glutenFree' | 'nut' | 'dairy' | 'halal';
+
+// Catering buckets for a free-text dietary note, in EN or FR (accents ignored).
+// A note can land in several buckets; an empty result means "other".
+const DIETARY_KEYWORDS: [DietaryCategory, string[]][] = [
+  ['vegetarian', ['veg']],
+  ['glutenFree', ['gluten', 'gf', 'celiac', 'coeliac', 'celiaque', 'coeliaque']],
+  ['nut', ['nut', 'peanut', 'noix', 'arachide', 'noisette', 'amande']],
+  ['dairy', ['dairy', 'lactose', 'lait']],
+  ['halal', ['halal', 'kosher', 'casher', 'cacher', 'kasher']],
+];
+
+export function dietaryCategoriesOf(text: string): DietaryCategory[] {
+  const norm = (text || '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').toLowerCase();
+  return DIETARY_KEYWORDS.filter(([, words]) => words.some((w) => norm.includes(w))).map(([cat]) => cat);
+}
+
 // Per-member dietary, aligned index-for-index with getPartyMembers.
 export function getPartyDietary(guest: Guest): { name: string; dietary: string }[] {
   return getPartyMembers(guest).map((name, i) => ({ name, dietary: getAttendeeDietary(guest, i) }));

@@ -122,7 +122,7 @@ export const RegisterPage = () => {
 
       {/* Result: pending / approved / rejected / already registered */}
       {result && (
-        <div className="card-paper p-6 sm:p-8 text-center space-y-4">
+        <div className="card-soft p-6 sm:p-8 text-center space-y-4">
           <div className="w-14 h-14 rounded-2xl flex items-center justify-center mx-auto border border-[#CBAE94] bg-[#EFE6DC]">
             {approval === 'rejected'
               ? <XCircle className="w-7 h-7 text-rose-600" />
@@ -157,50 +157,50 @@ export const RegisterPage = () => {
 
       {/* Registration form */}
       {showForm && !result && (
-        <div className="card-paper p-6 sm:p-8 space-y-6">
+        <div className="card-soft p-6 sm:p-8 space-y-6">
           <div className="text-center space-y-1.5 border-b border-dashed border-[#4A3F35]/20 pb-5">
             <div className="label-mono">{t.registerTitle}</div>
-            <h2 className="font-newsreader text-2xl font-bold text-[#4A3F35]">{t.registerFormTitle}</h2>
-            <p className="text-xs text-[#4A3F35]/70 font-sans">{t.registerHint}</p>
+            <h2 className="font-gaegu text-3xl font-bold text-[#4A3F35]">{t.registerFormTitle}</h2>
+            <p className="text-sm text-[#5D5449]">{t.registerHint}</p>
           </div>
 
           <form onSubmit={handleSubmit(onSubmit)} className="space-y-5">
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               <div>
-                <label htmlFor="reg-name" className="label-mono block mb-1">{t.fieldName} *</label>
-                <TextInput id="reg-name" type="text" placeholder={t.nameExamplePh} {...register('name')} />
-                {errors.name && <p role="alert" className="text-rose-600 text-xs">{t.registerNameRequiredToast}</p>}
+                <label htmlFor="reg-name" className="guest-label">{t.fieldName} *</label>
+                <TextInput variant="guest" id="reg-name" type="text" placeholder={t.nameExamplePh} {...register('name')} />
+                {errors.name && <p role="alert" className="text-rose-700 text-xs mt-1">{t.registerNameRequiredToast}</p>}
               </div>
               <div>
-                <label htmlFor="reg-language" className="label-mono block mb-1">{t.fieldLanguage}</label>
-                <Select id="reg-language" {...register('language_pref')}>
+                <label htmlFor="reg-language" className="guest-label">{t.fieldLanguage}</label>
+                <Select variant="guest" id="reg-language" {...register('language_pref')}>
                   <option value="EN">{t.presetEnglish}</option>
                   <option value="FR">{t.presetFrench}</option>
                 </Select>
               </div>
               <div>
-                <label htmlFor="reg-email" className="label-mono block mb-1">{t.fieldEmail}</label>
-                <TextInput id="reg-email" type="email" placeholder={t.emailExamplePh} {...register('email')} />
+                <label htmlFor="reg-email" className="guest-label">{t.fieldEmail}</label>
+                <TextInput variant="guest" id="reg-email" type="email" placeholder={t.emailExamplePh} {...register('email')} />
               </div>
               <div>
-                <label htmlFor="reg-phone" className="label-mono block mb-1">{t.fieldPhone}</label>
-                <TextInput id="reg-phone" type="tel" placeholder={t.fieldPhonePlaceholder} {...register('phone')} />
+                <label htmlFor="reg-phone" className="guest-label">{t.fieldPhone}</label>
+                <TextInput variant="guest" id="reg-phone" type="tel" placeholder={t.fieldPhonePlaceholder} {...register('phone')} />
               </div>
             </div>
 
             <div className="space-y-3 bg-[#E9E0D2]/40 p-4 rounded-2xl border border-[#4A3F35]/20">
               <div>
-                <span className="label-mono block">{t.registerMembersTitle}</span>
+                <span className="guest-label">{t.registerMembersTitle}</span>
               </div>
               {fields.map((field, index) => (
                 <div key={field.id} className="grid grid-cols-1 sm:grid-cols-[1fr_1fr_1fr_auto] gap-2 items-start">
-                  <TextInput type="text" aria-label={`${t.registerMemberPh} ${index + 1}`} placeholder={t.registerMemberPh} {...register(`members.${index}.name`)} />
-                  <TextInput type="text" aria-label={t.attendeeContactLabel} placeholder={t.attendeeContactPlaceholder} {...register(`members.${index}.contact`)} />
-                  <TextInput type="text" aria-label={t.colDietary} placeholder={t.dietaryPlaceholder} {...register(`members.${index}.dietary`)} />
+                  <TextInput variant="guest" type="text" aria-label={`${t.registerMemberPh} ${index + 1}`} placeholder={t.registerMemberPh} {...register(`members.${index}.name`)} />
+                  <TextInput variant="guest" type="text" aria-label={t.attendeeContactLabel} placeholder={t.attendeeContactPlaceholder} {...register(`members.${index}.contact`)} />
+                  <TextInput variant="guest" type="text" aria-label={t.colDietary} placeholder={t.dietaryPlaceholder} {...register(`members.${index}.dietary`)} />
                   <button
                     type="button"
                     onClick={() => remove(index)}
-                    className="justify-self-start p-2 text-rose-600 hover:text-rose-800 hover:bg-rose-50 rounded-lg transition-colors"
+                    className="justify-self-start min-w-[44px] min-h-[44px] flex items-center justify-center text-rose-700 hover:text-rose-900 rounded-lg transition-colors"
                     aria-label={t.removeGuestBtn}
                     title={t.removeGuestBtn}
                   >
@@ -211,7 +211,7 @@ export const RegisterPage = () => {
               <button
                 type="button"
                 onClick={() => append({ name: '', contact: '', dietary: '' })}
-                className="w-full py-2.5 rounded-xl border border-dashed border-[#4A3F35]/30 bg-white/80 hover:bg-white text-xs font-bold text-[#4A3F35] transition-colors flex items-center justify-center gap-1.5"
+                className="w-full min-h-[44px] py-2.5 px-3 rounded-xl border border-dashed border-[#4A3F35]/40 bg-white text-xs sm:text-sm font-bold text-[#4A3F35] transition-transform hover:-translate-y-0.5 flex items-center justify-center gap-1.5"
               >
                 <Users className="w-4 h-4 text-[#8B735B]" />
                 <span>{t.addAnotherGuestBtn}</span>
@@ -219,7 +219,7 @@ export const RegisterPage = () => {
             </div>
 
             <div>
-              <label htmlFor="reg-dietary" className="label-mono block mb-1">
+              <label htmlFor="reg-dietary" className="guest-label">
                 {tf('dietaryForMember', { name: watch('name').trim() || t.finderPartyLead })}
               </label>
               <textarea
@@ -227,7 +227,7 @@ export const RegisterPage = () => {
                 rows={2}
                 {...register('dietary')}
                 placeholder={t.dietaryPlaceholder}
-                className="w-full px-4 py-3 rounded-xl border border-[#4A3F35]/20 focus:outline-none focus:ring-2 focus:ring-[#4A3F35] text-sm bg-white text-[#4A3F35]"
+                className="guest-input"
               />
             </div>
 

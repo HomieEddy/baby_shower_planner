@@ -33,6 +33,7 @@ import { TextInput, Select } from '../shared/ui';
 import { Pagination } from '../shared/Pagination';
 import { usePagination } from '../shared/hooks';
 import { useGuestAdminController } from './useGuestAdminController';
+import { AdminPageHeader, AdminSectionTitle } from './AdminPageHeader';
 
 interface AdminGuestsTabProps {
   language: Language;
@@ -79,65 +80,65 @@ export const AdminGuestsTab: React.FC<AdminGuestsTabProps> = ({ language, t, gue
       animate="show"
       className="space-y-8"
     >
+      <AdminPageHeader
+        icon={Users}
+        eyebrow={t.guestsHeaderEyebrow}
+        title={t.tabGuestRsvps}
+        subtitle={t.guestsHeaderSubtitle}
+        actions={
+          <Segmented
+            ariaLabel={`${t.metricInvitesLabel} / ${t.colPartySize}`}
+            value={metricMode}
+            onChange={onMetricMode}
+            options={[
+              { value: 'invites', label: t.metricInvitesLabel },
+              { value: 'party', label: t.colPartySize },
+            ]}
+          />
+        }
+      />
+
       {/* Metrics Cards Grid */}
-      <div className="flex justify-end mb-3">
-        <Segmented
-          ariaLabel={`${t.metricInvitesLabel} / ${t.colPartySize}`}
-          value={metricMode}
-          onChange={onMetricMode}
-          options={[
-            { value: 'invites', label: t.metricInvitesLabel },
-            { value: 'party', label: t.colPartySize },
-          ]}
-        />
-      </div>
-      <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
-        <MetricCard label={t.statAttending} icon={<CheckCircle2 className="w-5 h-5" />}
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
+        <MetricCard label={t.statAttending} icon={<CheckCircle2 />} iconClass="text-ok"
           value={metricMode === 'party' ? totalAttendingPartySize : attendingGuests.length}
           footer={metricMode === 'party' ? t.statTotalAttendingParty : t.statTotalAttendingInvites} onClick={() => { filters.onStatus('Attending'); scrollToList(); }} />
-        <MetricCard label={t.statPending} icon={<Clock className="w-5 h-5" />}
+        <MetricCard label={t.statPending} icon={<Clock />}
           value={metricMode === 'party' ? pendingPartySize : pendingGuests.length}
           footer={t.awaitingResponse} iconClass="text-[#5D5449]" onClick={() => { filters.onStatus('Pending'); scrollToList(); }} />
-        <MetricCard label={t.statDeclined} icon={<XCircle className="w-5 h-5 text-rose-500" />}
+        <MetricCard label={t.statDeclined} icon={<XCircle />}
           value={metricMode === 'party' ? declinedPartySize : declinedGuests.length}
-          footer={t.unableToAttend} iconClass="text-rose-600" onClick={() => { filters.onStatus('Declined'); scrollToList(); }} />
-        <MetricCard label={t.statAwaitingApproval} icon={<Clock className="w-5 h-5 text-amber-600" />}
+          footer={t.unableToAttend} iconClass="text-[#A09080]" onClick={() => { filters.onStatus('Declined'); scrollToList(); }} />
+        <MetricCard label={t.statAwaitingApproval} icon={<Clock />}
           value={pendingApprovals.length}
           footer={t.approvalPendingBadge} iconClass="text-amber-700" onClick={() => approvalRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' })} />
-        <MetricCard label={t.statTotalGuests} icon={<Users className="w-5 h-5" />}
+        <MetricCard label={t.statTotalGuests} icon={<Users />}
           value={metricMode === 'party' ? totalPartySize : guests.length}
           footer={metricMode === 'party' ? t.statTotalPartySize : t.totalGuestInvites} onClick={() => { filters.onStatus('All'); scrollToList(); }} />
       </div>
 
       {/* Add Guest Form */}
-      <motion.div variants={adminCardVariants} className="card-paper p-5 sm:p-6 space-y-4">
-          <div className="flex items-center space-x-3">
-            <div className="p-2 bg-[#EFE6DC] text-[#8B735B] rounded-2xl border border-[#CBAE94]">
-              <UserPlus className="w-5 h-5" />
-            </div>
-            <div>
-              <h3 className="font-sans text-lg font-bold text-[#8B735B]">{t.addGuestTitle}</h3>
-              <p className="text-xs text-[#5D5449]">{t.addGuestSubtitle}</p>
-            </div>
-          </div>
+      <motion.div variants={adminCardVariants} className="card-soft p-5 sm:p-6 space-y-4">
+          <AdminSectionTitle icon={UserPlus} title={t.addGuestTitle} subtitle={t.addGuestSubtitle} />
 
           <form onSubmit={addForm.onSubmit} className="space-y-3">
-            <label className="flex items-start gap-3 p-3 rounded-2xl border border-[#CBAE94]/60 bg-[#EFE6DC]/40 cursor-pointer">
+            <label className="flex items-start gap-3 p-3 rounded-xl border border-[#CBAE94]/50 bg-[#EFE6DC]/30 cursor-pointer">
               <input type="checkbox" checked={addForm.going} onChange={(e) => addForm.onGoing(e.target.checked)}
                 className="mt-0.5 w-4 h-4 accent-[#8B735B] shrink-0" />
               <span>
-                <span className="block text-xs font-bold text-[#8B735B]">{t.addGuestGoingToggle}</span>
+                <span className="block text-sm font-semibold text-[#4A3F35]">{t.addGuestGoingToggle}</span>
                 <span className="block text-xs text-[#5D5449]">{t.addGuestGoingHint}</span>
               </span>
             </label>
 
             {!addForm.going && (
-            <div className="bg-[#EFE6DC]/40 p-3 rounded-2xl border border-[#CBAE94]/60 space-y-2">
-              <label className="label-mono block text-xs font-bold text-[#8B735B]">{t.fieldSendVia} *</label>
+            <div className="space-y-2">
+              <span className="label-mono block">{t.fieldSendVia} *</span>
               <div className="flex flex-wrap gap-2">
                 {addForm.channels.map((c) => (
                   <button key={c} type="button" onClick={() => addForm.setChannel(c)}
-                    className={`flex-1 min-w-[7rem] py-2 px-3 rounded-xl border text-xs font-bold transition-all flex items-center justify-center gap-1.5 ${addForm.channel === c ? 'bg-[#8B735B] text-white border-[#8B735B] shadow-xs' : 'bg-white text-[#5D5449] border-[#CBAE94] hover:bg-[#EFE6DC]'}`}>
+                    aria-pressed={addForm.channel === c}
+                    className={`flex-1 min-w-[7rem] py-2 px-3 rounded-full border text-xs font-semibold transition-colors flex items-center justify-center gap-1.5 cursor-pointer ${addForm.channel === c ? 'bg-[#4A3F35] text-white border-[#4A3F35]' : 'bg-white text-[#5D5449] border-[#CBAE94] hover:bg-[#EFE6DC]'}`}>
                     {c === 'none' ? <Link2 className="w-3.5 h-3.5" />
                       : c === 'email' ? <Mail className="w-3.5 h-3.5" />
                       : c === 'text' ? <MessageSquare className="w-3.5 h-3.5" />
@@ -147,8 +148,8 @@ export const AdminGuestsTab: React.FC<AdminGuestsTabProps> = ({ language, t, gue
                 ))}
               </div>
               {addForm.channel === 'none' && (
-                <p className="text-xs text-[#8B735B] font-mono flex items-center gap-1">
-                  <Lightbulb className="w-3 h-3 shrink-0" /> {t.linkOnlyHint}
+                <p className="text-xs text-[#5D5449] flex items-center gap-1.5">
+                  <Lightbulb className="w-3.5 h-3.5 shrink-0" /> {t.linkOnlyHint}
                 </p>
               )}
             </div>
@@ -188,8 +189,8 @@ export const AdminGuestsTab: React.FC<AdminGuestsTabProps> = ({ language, t, gue
               </div>
               <div className="flex items-end">
                 <motion.button whileTap={{ scale: 0.98 }} type="submit" disabled={addForm.submitting}
-                  className="btn-accent w-full py-2.5 px-6 text-sm disabled:opacity-50">
-                  <Send className="w-4 h-4 mr-2" />
+                  className="btn-accent w-full py-2.5 px-6 text-sm gap-2 cursor-pointer disabled:opacity-50">
+                  <Send className="w-4 h-4" />
                   <span>{addForm.submitting ? t.sendingInviteBtn : addForm.going || addForm.channel === 'none' ? t.createInviteBtn : t.sendInviteBtn}</span>
                 </motion.button>
               </div>
@@ -199,22 +200,14 @@ export const AdminGuestsTab: React.FC<AdminGuestsTabProps> = ({ language, t, gue
 
       {/* Pending self-registrations awaiting host approval */}
       {pendingApprovals.length > 0 && (
-        <motion.div ref={approvalRef} variants={adminCardVariants} className="card-paper p-6 sm:p-8 space-y-4">
-          <div className="flex items-center gap-3">
-            <div className="p-2.5 bg-amber-50 text-amber-700 rounded-2xl border border-amber-300">
-              <Clock className="w-5 h-5" />
-            </div>
-            <div>
-              <div className="label-mono">{t.approvalPendingBadge}</div>
-              <h3 className="font-sans text-xl font-bold text-[#8B735B]">{t.approvalQueueTitle}</h3>
-            </div>
-          </div>
+        <motion.div ref={approvalRef} variants={adminCardVariants} className="card-soft p-6 sm:p-8 space-y-4">
+          <AdminSectionTitle icon={Clock} title={t.approvalQueueTitle} subtitle={t.approvalPendingBadge} />
           <div className="grid grid-cols-1 gap-3">
             {approvalsPager.pageItems.map((g) => (
-              <div key={g.id} className="flex flex-wrap items-center justify-between gap-3 p-4 bg-white border border-[#CBAE94]/50 rounded-2xl">
+              <div key={g.id} className="flex flex-wrap items-center justify-between gap-3 px-4 py-3 bg-white border border-[#CBAE94]/50 rounded-2xl">
                 <div className="min-w-0">
-                  <p className="text-sm font-bold text-[#5D5449] truncate">{g.name}</p>
-                  <p className="text-xs font-mono text-[#5D5449]/70 truncate">
+                  <p className="text-sm font-semibold text-[#4A3F35] truncate">{g.name}</p>
+                  <p className="text-xs text-[#5D5449] truncate">
                     {[g.email, g.phone].filter(Boolean).join(' | ') || t.channelNone}
                     {' · '}
                     {tf('guestPartySizeLabel', { count: String(getGuestPartySize(g)), max: String(g.max_party_size || 1) })}
@@ -227,7 +220,7 @@ export const AdminGuestsTab: React.FC<AdminGuestsTabProps> = ({ language, t, gue
                   <button
                     type="button"
                     onClick={() => actions.setApproval(g, 'approve')}
-                    className="px-4 min-h-[44px] rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold inline-flex items-center gap-1.5 transition-colors cursor-pointer"
+                    className="btn-accent min-h-[44px] px-4 text-xs gap-1.5 cursor-pointer"
                   >
                     <CheckCircle2 className="w-4 h-4" />
                     <span>{t.approveBtn}</span>
@@ -235,7 +228,7 @@ export const AdminGuestsTab: React.FC<AdminGuestsTabProps> = ({ language, t, gue
                   <button
                     type="button"
                     onClick={() => actions.setApproval(g, 'reject')}
-                    className="px-4 min-h-[44px] rounded-xl border border-rose-300 bg-rose-50 hover:bg-rose-100 text-rose-700 text-xs font-bold inline-flex items-center gap-1.5 transition-colors cursor-pointer"
+                    className="px-4 min-h-[44px] rounded-full border border-rose-300 bg-white hover:bg-rose-50 text-rose-700 text-xs font-semibold inline-flex items-center gap-1.5 transition-colors cursor-pointer"
                   >
                     <XCircle className="w-4 h-4" />
                     <span>{t.rejectBtn}</span>
@@ -256,14 +249,11 @@ export const AdminGuestsTab: React.FC<AdminGuestsTabProps> = ({ language, t, gue
       )}
 
       {/* Invited Guests Table Section */}
-      <motion.div ref={listRef} variants={adminCardVariants} className="card-paper p-6 sm:p-8 space-y-6">
-        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
-          <div className="shrink-0">
-            <h3 className="font-sans text-xl font-bold text-[#8B735B] whitespace-nowrap">{t.guestListTitle}</h3>
-          </div>
+      <motion.div ref={listRef} variants={adminCardVariants} className="card-soft p-5 sm:p-6 space-y-5">
+        <div className="space-y-4">
+          <AdminSectionTitle icon={Users} title={`${t.guestListTitle} (${filteredGuests.length})`} />
 
           <GuestToolbar
-            className="lg:flex-1 lg:min-w-0"
             search={filters.search}
             onSearch={filters.onSearch}
             status={filters.status}

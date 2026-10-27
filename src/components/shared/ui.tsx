@@ -1,18 +1,20 @@
 import { ReactNode, ReactElement, InputHTMLAttributes, SelectHTMLAttributes, TextareaHTMLAttributes, useId, cloneElement, isValidElement } from 'react';
 import { Search } from 'lucide-react';
 
-// Small, theme-consistent form primitives. Two visual variants:
-//   solid — bold 2px border (settings / guest edit forms)
-//   soft  — thin border, compact (tracker / check-in forms)
+// Small, theme-consistent form primitives. Three visual variants:
+//   solid — default admin field (settings / guest edit forms)
+//   soft  — same look, compact (toolbars, tracker / check-in forms)
+//   guest — the guest-page field style (.guest-input in index.css)
 
 const SOLID =
-  'w-full px-3.5 py-2.5 rounded-2xl border-2 border-[#CBAE94] text-sm font-bold focus:outline-none focus:ring-2 focus:ring-[#8B735B] bg-white text-[#5D5449]';
+  'w-full px-3.5 py-2.5 rounded-xl border border-[#CBAE94] text-base sm:text-sm font-medium focus:outline-none focus:ring-2 focus:ring-[#8B735B] bg-white text-[#4A3F35]';
 const SOFT =
-  'w-full px-3.5 py-2 rounded-xl border border-[#CBAE94] text-xs font-bold focus:outline-none focus:ring-2 focus:ring-[#8B735B] bg-white text-[#4A3F35]';
+  'w-full px-3 py-2 rounded-xl border border-[#CBAE94] text-base sm:text-sm font-medium focus:outline-none focus:ring-2 focus:ring-[#8B735B] bg-white text-[#4A3F35]';
 
-type Variant = 'solid' | 'soft';
+type Variant = 'solid' | 'soft' | 'guest';
 
-const variantClass = (variant: Variant) => (variant === 'solid' ? SOLID : SOFT);
+const variantClass = (variant: Variant) =>
+  variant === 'solid' ? SOLID : variant === 'guest' ? 'guest-input' : SOFT;
 
 interface FieldProps {
   label: ReactNode;
@@ -79,7 +81,7 @@ export const SearchInput = ({ variant = 'sm', className = '', ...props }: Search
       className={
         variant === 'lg'
           ? 'w-4 h-4 text-[#A09080] absolute left-3 top-1/2 -translate-y-1/2'
-          : 'w-3.5 h-3.5 text-[#CBAE94] absolute left-3 top-2.5'
+          : 'w-3.5 h-3.5 text-[#A09080] absolute left-3 top-1/2 -translate-y-1/2'
       }
     />
     <input
@@ -87,8 +89,8 @@ export const SearchInput = ({ variant = 'sm', className = '', ...props }: Search
       {...props}
       className={
         variant === 'lg'
-          ? `w-full pl-10 pr-4 py-3 rounded-2xl border-2 border-[#CBAE94] bg-white text-sm focus:outline-none focus:ring-2 focus:ring-[#8B735B] ${className}`
-          : `pl-8 pr-3 py-1.5 rounded-full border border-[#CBAE94] text-xs font-bold text-[#4A3F35] bg-white focus:outline-none focus:ring-2 focus:ring-[#8B735B] ${className}`
+          ? `w-full pl-10 pr-4 py-3 rounded-xl border border-[#CBAE94] bg-white text-base sm:text-sm focus:outline-none focus:ring-2 focus:ring-[#8B735B] ${className}`
+          : `pl-8 pr-3 py-1.5 rounded-full border border-[#CBAE94] text-base sm:text-sm font-medium text-[#4A3F35] bg-white focus:outline-none focus:ring-2 focus:ring-[#8B735B] ${className}`
       }
     />
   </div>

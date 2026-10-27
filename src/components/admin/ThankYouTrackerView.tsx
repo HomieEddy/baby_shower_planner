@@ -23,6 +23,7 @@ import { adminFetch } from '../../lib/api';
 import { useCapabilities, noProviders } from '../../lib/capabilities';
 import { useT, useTf } from '../shared/i18n';
 import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer } from 'recharts';
+import { AdminPageHeader, AdminSectionTitle } from './AdminPageHeader';
 
 interface ThankYouTrackerViewProps {
   gifts: GiftLog[];
@@ -225,6 +226,16 @@ export const ThankYouTrackerView: React.FC<ThankYouTrackerViewProps> = ({
   const pendingCount = totalGifts - sentCount;
   const percentComplete = totalGifts > 0 ? Math.round((sentCount / totalGifts) * 100) : 0;
 
+  const categoryLabels: Record<string, string> = {
+    Nursery: t.catNursery,
+    Clothing: t.catClothing,
+    Toys: t.catToys,
+    Feeding: t.catFeeding,
+    Diapering: t.catDiapering,
+    Other: t.catOther,
+  };
+  const categoryLabel = (cat?: string) => (cat ? categoryLabels[cat] ?? cat : '');
+
   const donutData = [
     { name: t.thankYousCompletedLabel, value: sentCount },
     { name: t.pendingThankYousLabel, value: pendingCount },
@@ -233,26 +244,19 @@ export const ThankYouTrackerView: React.FC<ThankYouTrackerViewProps> = ({
   return (
     <motion.div variants={adminContainerVariants} initial="hidden" animate="show" className="space-y-6">
       {/* Header & Metrics */}
-      <div className="card-paper p-6 sm:p-8 space-y-4">
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-[#CBAE94]/30 pb-4">
-          <div>
-            <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#EFE6DC] text-[#8B735B] font-bold text-xs uppercase tracking-wider font-mono">
-              <Mail className="w-3.5 h-3.5" />
-              <span>{t.gratitudeTitle}</span>
-            </div>
-            <h2 className="font-newsreader text-3xl font-bold text-[#4A3F35] mt-1">
-              {t.thankYouTrackerTitle}
-            </h2>
-            <p className="text-xs text-[#8B735B] font-sans">
-              {t.thankYouTrackerSubtitle}
-            </p>
-          </div>
-        </div>
+      <AdminPageHeader
+        icon={Mail}
+        eyebrow={t.gratitudeTitle}
+        title={t.thankYouTrackerTitle}
+        subtitle={t.thankYouTrackerSubtitle}
+      />
+
+      <div className="card-soft p-6 sm:p-8 space-y-4">
 
         {/* Completion Bar + Donut */}
         <div className="flex flex-col sm:flex-row sm:items-center gap-6">
           <div className="flex-1 space-y-2">
-            <div className="flex justify-between text-xs font-bold text-[#4A3F35] font-mono">
+            <div className="flex flex-wrap justify-between gap-x-3 gap-y-1 text-xs font-semibold text-[#4A3F35]">
               <span>{t.thankYouProgressLabel}</span>
               <span>
                 {tf('progressSentLabel', { sent: sentCount, total: totalGifts, percent: percentComplete })}
@@ -260,7 +264,7 @@ export const ThankYouTrackerView: React.FC<ThankYouTrackerViewProps> = ({
             </div>
             <div className="w-full bg-[#EFE6DC] h-3.5 rounded-full overflow-hidden border border-[#CBAE94]/40">
               <div
-                className="bg-emerald-500 h-full transition-all duration-500 rounded-full"
+                className="bg-green-600 h-full transition-all duration-500 rounded-full"
                 style={{ width: `${percentComplete}%` }}
               />
             </div>
@@ -279,20 +283,20 @@ export const ThankYouTrackerView: React.FC<ThankYouTrackerViewProps> = ({
                     paddingAngle={2}
                     strokeWidth={0}
                   >
-                    <Cell fill="#10B981" />
-                    <Cell fill="#FB7185" />
+                    <Cell fill="#16A34A" />
+                    <Cell fill="var(--accent)" />
                   </Pie>
-                  <Tooltip contentStyle={{ fontSize: 12, borderRadius: 12, border: '1px solid #CBAE94' }} />
+                  <Tooltip contentStyle={{ fontSize: 12, borderRadius: 12, border: '1px solid var(--border)' }} />
                 </PieChart>
               </ResponsiveContainer>
             </div>
-            <div className="flex items-center justify-center gap-4 text-xs font-bold text-[#4A3F35] font-mono mt-1">
+            <div className="flex flex-wrap items-center justify-center gap-x-4 gap-y-1 text-xs font-semibold text-[#4A3F35] mt-1">
               <span className="flex items-center gap-1.5">
-                <span className="w-2.5 h-2.5 rounded-full bg-emerald-500" />
+                <span className="w-2.5 h-2.5 rounded-full bg-green-600" />
                 {t.thankYousCompletedLabel} ({sentCount})
               </span>
               <span className="flex items-center gap-1.5">
-                <span className="w-2.5 h-2.5 rounded-full bg-rose-400" />
+                <span className="w-2.5 h-2.5 rounded-full bg-[var(--accent)]" />
                 {t.pendingThankYousLabel} ({pendingCount})
               </span>
             </div>
@@ -301,18 +305,15 @@ export const ThankYouTrackerView: React.FC<ThankYouTrackerViewProps> = ({
 
         {/* Stats Row */}
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-2">
-          <MetricCard label={t.totalGiftsLabel} value={totalGifts} icon={<Gift className="w-5 h-5" />} />
-          <MetricCard label={t.thankYousCompletedLabel} value={sentCount} icon={<CheckCircle2 className="w-5 h-5" />} iconClass="text-emerald-600" />
-          <MetricCard label={t.pendingThankYousLabel} value={pendingCount} icon={<Clock className="w-5 h-5" />} iconClass="text-rose-500" />
+          <MetricCard label={t.totalGiftsLabel} value={totalGifts} icon={<Gift />} />
+          <MetricCard label={t.thankYousCompletedLabel} value={sentCount} icon={<CheckCircle2 />} iconClass="text-ok" />
+          <MetricCard label={t.pendingThankYousLabel} value={pendingCount} icon={<Clock />} iconClass="text-amber-700" />
         </div>
       </div>
 
       {/* Log New Gift Form */}
-      <div className="card-paper p-6 sm:p-8 space-y-4">
-        <div className="flex items-center gap-2">
-          <Gift className="w-5 h-5 text-[#8B735B]" />
-          <h3 className="font-sans text-xl font-bold text-[#4A3F35]">{t.logGiftBtn}</h3>
-        </div>
+      <div className="card-soft p-6 sm:p-8 space-y-4">
+        <AdminSectionTitle icon={Gift} title={t.logGiftBtn} />
 
         <form onSubmit={handleSubmit(handleLogGift)} className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 items-end">
           <Field label={t.giftGuestSelectLabel}>
@@ -366,7 +367,7 @@ export const ThankYouTrackerView: React.FC<ThankYouTrackerViewProps> = ({
           <button
             type="submit"
             disabled={submitting}
-            className="btn-accent py-2 px-4 text-xs font-bold h-10 flex items-center justify-center gap-1.5 cursor-pointer"
+            className="btn-accent py-2 px-4 text-sm h-10 gap-1.5 cursor-pointer disabled:opacity-50"
           >
             <Gift className="w-4 h-4" />
             <span>{submitting ? t.loggingGiftBtn : t.logGiftSubmitBtn}</span>
@@ -375,10 +376,8 @@ export const ThankYouTrackerView: React.FC<ThankYouTrackerViewProps> = ({
       </div>
 
       {/* Gifts List & Auto-Generated Note Engine */}
-      <div className="card-paper p-6 sm:p-8 space-y-4">
-        <h3 className="font-sans text-xl font-bold text-[#4A3F35] border-b border-[#CBAE94]/30 pb-3">
-          {tf('giftLogStatusLabel', { count: filteredGifts.length })}
-        </h3>
+      <div className="card-soft p-6 sm:p-8 space-y-4">
+        <AdminSectionTitle icon={Mail} title={tf('giftLogStatusLabel', { count: filteredGifts.length })} />
 
         <AdminToolbar
           primary={
@@ -410,8 +409,8 @@ export const ThankYouTrackerView: React.FC<ThankYouTrackerViewProps> = ({
             type="generic"
             actionLabel={t.logSampleGiftBtn}
             onAction={() => {
-              setValue('guest_name', 'Grandma Ellen');
-              setValue('gift_description', 'Handcrafted Baby Shoes & Quilt');
+              setValue('guest_name', t.sampleGiftGuestName);
+              setValue('gift_description', t.sampleGiftDescription);
               setValue('category', 'Clothing');
             }}
           />
@@ -422,20 +421,20 @@ export const ThankYouTrackerView: React.FC<ThankYouTrackerViewProps> = ({
                 key={gift.id}
                 className={`p-4 rounded-2xl border transition-all flex flex-col justify-between gap-3 ${
                   gift.thank_you_sent
-                    ? 'bg-emerald-50/50 border-emerald-200'
-                    : 'bg-[#FFFDF9] border-[#CBAE94]/60 shadow-xs'
+                    ? 'bg-[#FFFDF9] border-green-200'
+                    : 'bg-[#FFFDF9] border-[#CBAE94]/60'
                 }`}
               >
                 <div className="space-y-2">
                   <div className="flex items-start justify-between gap-2">
                     <div>
-                      <div className="flex items-center gap-2">
-                        <h4 className="text-sm font-bold text-[#4A3F35]">{gift.guest_name}</h4>
-                        <span className="px-2 py-0.5 rounded-md bg-[#EFE6DC] text-[#8B735B] text-xs font-bold font-mono">
-                          {gift.category}
+                      <div className="flex flex-wrap items-center gap-2">
+                        <p className="text-sm font-semibold text-[#4A3F35]">{gift.guest_name}</p>
+                        <span className="px-2 py-0.5 rounded-full bg-[#EFE6DC] text-[#5D5449] text-xs font-medium">
+                          {categoryLabel(gift.category)}
                         </span>
                       </div>
-                      <p className="text-xs text-[#4A3F35]/80 font-sans mt-1 italic">
+                      <p className="text-sm text-[#5D5449] mt-1">
                         "{gift.gift_description}"
                       </p>
                     </div>
@@ -451,17 +450,17 @@ export const ThankYouTrackerView: React.FC<ThankYouTrackerViewProps> = ({
                   </div>
                 </div>
 
-                <div className="pt-2 border-t border-[#CBAE94]/30 flex items-center justify-between gap-2">
+                <div className="pt-2 border-t border-[#CBAE94]/30 flex flex-wrap items-center gap-2 [&>button]:flex-1 [&>button]:justify-center">
                   <button
                     type="button"
                     onClick={() => generateDraft(gift)}
                     disabled={draftGeneratingId === gift.id}
-                    className="px-3 py-1.5 rounded-xl bg-white border border-[#CBAE94] text-[#8B735B] hover:bg-[#EFE6DC] font-bold text-xs flex items-center gap-1.5 cursor-pointer shadow-2xs disabled:opacity-60"
+                    className="btn-outline-accent py-1.5 px-3 text-xs gap-1.5 cursor-pointer disabled:opacity-60"
                   >
                     {draftGeneratingId === gift.id ? (
-                      <Loader2 className="w-3.5 h-3.5 text-amber-600 animate-spin" />
+                      <Loader2 className="w-3.5 h-3.5 animate-spin" />
                     ) : (
-                      <Sparkles className="w-3.5 h-3.5 text-amber-600" />
+                      <Sparkles className="w-3.5 h-3.5" />
                     )}
                     <span>{draftGeneratingId === gift.id ? t.aiGeneratingBtn : t.autoDraftBtn}</span>
                   </button>
@@ -469,11 +468,10 @@ export const ThankYouTrackerView: React.FC<ThankYouTrackerViewProps> = ({
                   <button
                     type="button"
                     onClick={() => handleToggleThankYou(gift.id)}
-                    className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer ${
-                      gift.thank_you_sent
-                        ? 'bg-emerald-600 text-white shadow-2xs'
-                        : 'bg-[#8B735B] text-white hover:bg-[#705C47]'
-                    }`}
+                    aria-pressed={gift.thank_you_sent}
+                    className={gift.thank_you_sent
+                      ? 'status-ok px-3 py-1.5 rounded-full border text-xs font-semibold flex items-center gap-1.5 cursor-pointer'
+                      : 'btn-accent py-1.5 px-3 text-xs gap-1.5 cursor-pointer'}
                   >
                     {gift.thank_you_sent ? (
                       <>
@@ -507,7 +505,7 @@ export const ThankYouTrackerView: React.FC<ThankYouTrackerViewProps> = ({
       <Modal open={!!activeDraft} onClose={() => activeDraft && !sendingThankYou && setActiveDraft(null)} maxWidth="lg"
         title={
           <div className="flex items-center gap-2">
-            <Sparkles className="w-5 h-5 text-amber-600" />
+            <Sparkles className="w-5 h-5 text-[#8B735B]" />
             <h3 className="font-sans text-xl font-bold text-[#4A3F35]">
               {tf('thankYouModalTitle', { name: activeDraft?.guest || '' })}
             </h3>
@@ -518,7 +516,7 @@ export const ThankYouTrackerView: React.FC<ThankYouTrackerViewProps> = ({
             <button
               type="button"
               onClick={() => activeDraft && handleCopyDraft(activeDraft.text)}
-              className="btn-accent px-4 py-2 text-xs font-bold flex items-center justify-center gap-1.5"
+              className="btn-outline-accent px-4 py-2 text-xs gap-1.5 cursor-pointer"
             >
               <Copy className="w-3.5 h-3.5" />
               <span>{t.copyNoteBtn}</span>
@@ -529,7 +527,7 @@ export const ThankYouTrackerView: React.FC<ThankYouTrackerViewProps> = ({
                 type="button"
                 onClick={() => setActiveDraft(null)}
                 disabled={sendingThankYou}
-                className="px-4 py-2 rounded-xl border border-[#CBAE94] text-xs font-bold text-[#8B735B] disabled:opacity-50"
+                className="px-4 py-2 rounded-full text-xs font-semibold text-[#5D5449] hover:bg-[#EFE6DC] disabled:opacity-50 cursor-pointer"
               >
                 {t.closeModal}
               </button>
@@ -538,7 +536,7 @@ export const ThankYouTrackerView: React.FC<ThankYouTrackerViewProps> = ({
                 onClick={handleSendThankYou}
                 disabled={sendingThankYou || !activeDraft?.text.trim() || sendsBlocked || channelOptions.length === 0}
                 title={sendsBlocked ? t.providerNotConfigured : undefined}
-                className="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold flex items-center gap-1.5 shadow-md disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
+                className="btn-accent px-4 py-2 text-xs gap-1.5 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
               >
                 {sendingThankYou ? (
                   <Loader2 className="w-3.5 h-3.5 animate-spin" />
@@ -568,7 +566,7 @@ export const ThankYouTrackerView: React.FC<ThankYouTrackerViewProps> = ({
               options={channelOptions}
             />
           ) : (
-            <p className="text-xs text-amber-800 bg-amber-50 border border-amber-200 rounded-2xl px-4 py-3 font-mono">{t.providerNotConfigured}</p>
+            <p className="text-xs text-amber-800 bg-amber-50 border border-amber-200 rounded-xl px-4 py-3">{t.providerNotConfigured}</p>
           )}
         </div>
       </Modal>

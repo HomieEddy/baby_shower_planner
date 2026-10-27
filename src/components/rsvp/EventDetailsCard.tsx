@@ -183,15 +183,17 @@ export const EventDetailsCard = ({
                     {status.label}
                   </span>
                 ) : (
+                  // Narrow and wrapping so long FR kickers stay clear of the
+                  // corner balloons and the arched title below.
                   <p
-                    className="text-base sm:text-xl font-bold tracking-[0.18em] uppercase"
+                    className="max-w-[15rem] sm:max-w-xs text-sm sm:text-lg font-bold tracking-[0.12em] uppercase leading-snug text-balance"
                     style={{ ...ink, ...headingFont, opacity: 0.8 }}
                   >
                     {t.youAreInvitedLabel}
                   </p>
                 )}
 
-                <CurvedText text={eventDisplayName(settings, t.eventFallbackTitle)} className="-my-2 sm:-my-3" />
+                <CurvedText text={eventDisplayName(settings, t.eventFallbackTitle)} className="mt-1 -mb-2 sm:mt-2 sm:-mb-3" />
 
                 <p className="text-base sm:text-lg font-bold tracking-wider italic" style={{ ...ink, ...headingFont, opacity: 0.75 }}>
                   {t.celebratingLabel}
@@ -217,7 +219,7 @@ export const EventDetailsCard = ({
                   )}
                 </div>
 
-                <p className="text-base sm:text-lg italic leading-snug max-w-md px-2 pt-1" style={{ ...ink, ...headingFont, opacity: 0.75 }}>
+                <p className="text-base sm:text-lg italic leading-snug max-w-md sm:max-w-sm px-2 pt-1" style={{ ...ink, ...headingFont, opacity: 0.75 }}>
                   {t.eventIntro}
                 </p>
 
