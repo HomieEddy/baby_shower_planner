@@ -6,6 +6,7 @@ import {
   getAttendeeDietary,
   getPartyDietarySummary,
   hasDietaryRestriction,
+  dietaryCategoriesOf,
   isMemberCheckedIn,
   isPartyLead,
   dedupePartyNames,
@@ -245,5 +246,21 @@ describe('partyNames', () => {
 
   it('caps a registered party at MAX_REGISTERED_PARTY', () => {
     expect(MAX_REGISTERED_PARTY).toBe(20);
+  });
+});
+
+describe('dietaryCategoriesOf', () => {
+  it('matches EN and FR notes, ignoring accents', () => {
+    expect(dietaryCategoriesOf('Végétarien')).toEqual(['vegetarian']);
+    expect(dietaryCategoriesOf('Vegan')).toEqual(['vegetarian']);
+    expect(dietaryCategoriesOf('Sans gluten')).toEqual(['glutenFree']);
+    expect(dietaryCategoriesOf('Allergie aux arachides')).toEqual(['nut']);
+    expect(dietaryCategoriesOf('Sans produits laitiers')).toEqual(['dairy']);
+    expect(dietaryCategoriesOf('Casher')).toEqual(['halal']);
+  });
+
+  it('can return several buckets, or none for a custom note', () => {
+    expect(dietaryCategoriesOf('Vegan, gluten-free')).toEqual(['vegetarian', 'glutenFree']);
+    expect(dietaryCategoriesOf('Pas de coriandre')).toEqual([]);
   });
 });

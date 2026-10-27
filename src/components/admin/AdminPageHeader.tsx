@@ -33,3 +33,26 @@ export const AdminPageHeader = ({
     {actions && <div className="flex flex-wrap items-center gap-2 shrink-0">{actions}</div>}
   </div>
 );
+
+interface AdminSectionTitleProps {
+  icon: LucideIcon;
+  title: ReactNode;
+  subtitle?: ReactNode;
+  /** Controls on the right of the title (wrap under it on phones). */
+  actions?: ReactNode;
+  className?: string;
+}
+
+/** Title row for a card inside an admin tab: icon, title, optional subtitle. */
+export const AdminSectionTitle = ({ icon: Icon, title, subtitle, actions, className = '' }: AdminSectionTitleProps) => (
+  <div className={`flex flex-col sm:flex-row sm:items-start justify-between gap-3 ${className}`}>
+    <div className="flex items-start gap-2.5 min-w-0">
+      <Icon className="w-5 h-5 mt-0.5 shrink-0 text-[#8B735B]" aria-hidden />
+      <div className="min-w-0">
+        <h3 className="font-gaegu text-xl font-bold text-[#4A3F35] leading-snug">{title}</h3>
+        {subtitle && <p className="text-sm text-[#5D5449] mt-0.5">{subtitle}</p>}
+      </div>
+    </div>
+    {actions && <div className="flex flex-wrap items-center gap-2 shrink-0">{actions}</div>}
+  </div>
+);
