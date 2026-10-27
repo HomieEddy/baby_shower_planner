@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useMemo, useRef, lazy, Suspense } from 'react';
+import { useCanvasWheelZoom } from './useCanvasWheelZoom';
 import {
   Guest,
   FloorMapData,
@@ -375,6 +376,15 @@ export const FloorPlanPage = () => {
   const [fitScale, setFitScale] = useState(1);
   const [zoomLevel, setZoomLevel] = useState(1);
   const canvasScale = fitScale * zoomLevel;
+  const canvasScrollRef = useRef<HTMLDivElement>(null);
+  useCanvasWheelZoom({
+    scrollRef: canvasScrollRef,
+    stageRef,
+    scale: canvasScale,
+    enabled: viewMode === '2d' && !!floorMap,
+    onZoomStep: (factor) =>
+      setZoomLevel((z) => Math.min(2, Math.max(0.75, Math.round(z * factor * 100) / 100))),
+  });
   const palette = useCanvasPalette();
 
   // Fetch Floor Map & Guests (admins get the full roster; guests get a scrubbed one)
@@ -900,7 +910,7 @@ export const FloorPlanPage = () => {
                       />
                     </Suspense>
                   ) : (
-                    <div className="w-full overflow-x-auto flex justify-center">
+                    <div ref={canvasScrollRef} className="w-full overflow-x-auto flex justify-center">
                   <Stage
                     ref={stageRef}
                     width={floorMap.canvasWidth * canvasScale}

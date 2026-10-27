@@ -4,8 +4,9 @@
 //
 // Note: the 3D view is a separate component; the parent picks between them.
 
-import { useEffect, useLayoutEffect, useRef, useState, type DragEvent as ReactDragEvent, type MouseEvent, type ReactNode, type RefObject } from 'react';
-import { Stage, Layer, Group, Circle, Rect, Text, Transformer } from 'react-konva';
+import { useRef, useState, type DragEvent as ReactDragEvent, type MouseEvent, type ReactNode, type RefObject } from 'react';
+import { Stage, Layer, Group, Circle, Rect, Text, Transformer, Line } from 'react-konva';
+import { useCanvasWheelZoom } from './useCanvasWheelZoom';
 import type { FloorMapData, Guest, LandmarkElement, SeatOccupant, TableElement } from '../../types';
 import {
   getAvailableSeats,
@@ -116,6 +117,28 @@ export interface FloorPlanSelection {
   party: Guest | null;
 }
 
+// A table within this many map units of another centre (or the room centre) shows a guide.
+const SNAP_TOLERANCE = 4;
+
+interface SnapGuides {
+  /** Vertical guide at this map x, or null. */
+  x: number | null;
+  /** Horizontal guide at this map y, or null. */
+  y: number | null;
+}
+
+const snapGuidesFor = (map: FloorMapData, tableId: string, cx: number, cy: number): SnapGuides => {
+  const centres = [
+    { x: map.canvasWidth / 2, y: map.canvasHeight / 2 },
+    ...map.tables
+      .filter((t) => t.id !== tableId)
+      .map((t) => ({ x: t.x + t.width / 2, y: t.y + t.height / 2 })),
+  ];
+  const x = centres.find((c) => Math.abs(c.x - cx) <= SNAP_TOLERANCE)?.x ?? null;
+  const y = centres.find((c) => Math.abs(c.y - cy) <= SNAP_TOLERANCE)?.y ?? null;
+  return { x, y };
+};
+
 export interface FloorPlanCanvasCallbacks {
   onSelect: (id: string | null, type: 'table' | 'landmark' | null) => void;
   onPickAttendee: (attendee: SeatOccupant | null) => void;
@@ -163,43 +186,14 @@ export const FloorPlanCanvas = ({
   const canvasPalette = useCanvasPalette();
   const [dropTarget, setDropTarget] = useState<{ tableId: string; seatIndex: number } | null>(null);
   const scrollRef = useRef<HTMLDivElement>(null);
-  // The map point under the cursor when a zoom step started, so it can stay under the cursor.
-  const zoomAnchorRef = useRef<{ mapX: number; mapY: number; clientX: number; clientY: number } | null>(null);
+  const [snapGuides, setSnapGuides] = useState<SnapGuides>({ x: null, y: null });
+  useCanvasWheelZoom({ scrollRef, stageRef, scale, onZoomStep });
 
-  // Native listener, so Ctrl/Cmd + wheel can be cancelled (React's onWheel is passive).
-  useEffect(() => {
-    const el = scrollRef.current;
-    if (!el || !onZoomStep) return;
-    const handleWheel = (e: WheelEvent) => {
-      if (!e.ctrlKey && !e.metaKey) return;
-      e.preventDefault();
-      const stage = stageRef.current;
-      if (stage) {
-        const rect = stage.container().getBoundingClientRect();
-        zoomAnchorRef.current = {
-          mapX: (e.clientX - rect.left) / scale,
-          mapY: (e.clientY - rect.top) / scale,
-          clientX: e.clientX,
-          clientY: e.clientY,
-        };
-      }
-      onZoomStep(e.deltaY < 0 ? 1.1 : 1 / 1.1);
-    };
-    el.addEventListener('wheel', handleWheel, { passive: false });
-    return () => el.removeEventListener('wheel', handleWheel);
-  }, [onZoomStep, scale, stageRef]);
-
-  // After a zoom step, scroll so the anchored map point is back under the cursor.
-  useLayoutEffect(() => {
-    const anchor = zoomAnchorRef.current;
-    const stage = stageRef.current;
-    const el = scrollRef.current;
-    if (!anchor || !stage || !el) return;
-    zoomAnchorRef.current = null;
-    const rect = stage.container().getBoundingClientRect();
-    el.scrollLeft += rect.left + anchor.mapX * scale - anchor.clientX;
-    el.scrollTop += rect.top + anchor.mapY * scale - anchor.clientY;
-  }, [scale, stageRef]);
+  // Faint guide lines while a table's centre lines up with another table or the room centre.
+  const updateSnapGuides = (tableId: string, cx: number, cy: number) => {
+    const next = snapGuidesFor(map, tableId, cx, cy);
+    setSnapGuides((prev) => (prev.x === next.x && prev.y === next.y ? prev : next));
+  };
 
   const eventToSeat = (e: ReactDragEvent | MouseEvent) => {
     const stage = stageRef.current;
@@ -324,7 +318,11 @@ export const FloorPlanCanvas = ({
                 rotation={table.rotation || 0}
                 draggable
                 dragBoundFunc={(pos: any) => clampPointToRoom(pos.x, pos.y, map)}
-                onDragEnd={(e) => callbacks.onTableDragEnd(table.id, e)}
+                onDragMove={(e) => updateSnapGuides(table.id, e.target.x(), e.target.y())}
+                onDragEnd={(e) => {
+                  setSnapGuides({ x: null, y: null });
+                  callbacks.onTableDragEnd(table.id, e);
+                }}
                 onClick={() => handleTableClick(table)}
                 onMouseEnter={(e) => callbacks.onHoverTable(table, e.evt.clientX, e.evt.clientY)}
                 onMouseMove={(e) => callbacks.onHoverTable(table, e.evt.clientX, e.evt.clientY)}
@@ -450,6 +448,28 @@ export const FloorPlanCanvas = ({
             boundBoxFunc={(oldBox, newBox) => (newBox.width < 40 || newBox.height < 30 ? oldBox : newBox)}
             onTransformEnd={callbacks.onTransformEnd}
           />
+        </Layer>
+
+        {/* Layer 4: Snap guides, drawn above the tables and never interactive */}
+        <Layer listening={false}>
+          {snapGuides.x !== null && (
+            <Line
+              points={[snapGuides.x, 0, snapGuides.x, map.canvasHeight]}
+              stroke="#10B981"
+              strokeWidth={1}
+              dash={[6, 4]}
+              opacity={0.7}
+            />
+          )}
+          {snapGuides.y !== null && (
+            <Line
+              points={[0, snapGuides.y, map.canvasWidth, snapGuides.y]}
+              stroke="#10B981"
+              strokeWidth={1}
+              dash={[6, 4]}
+              opacity={0.7}
+            />
+          )}
         </Layer>
         </Stage>
       </CanvasAxes>
