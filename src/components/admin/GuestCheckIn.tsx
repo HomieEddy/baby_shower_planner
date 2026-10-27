@@ -9,6 +9,7 @@ import { useActionConfirm } from '../shared/ConfirmDialog';
 import { CheckCircle2, RotateCcw, Users, UserCheck, UserX, ChevronDown, ChevronRight, QrCode } from 'lucide-react';
 import { useT, useTf, useApiErrorMessage } from '../shared/i18n';
 import { useAppStore } from '../../stores/appStore';
+import { formatClockTime } from '../../lib/dateUtils';
 import { useSettings } from '../../lib/settingsQuery';
 import { DayOfQrModal } from '../seating/DayOfQrModal';
 import { decodeApiError } from '../../lib/errors';
@@ -122,10 +123,10 @@ export const GuestCheckIn = () => {
       />
 
       {/* Stats bar — individuals: expected vs checked in */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-        <MetricCard label={t.totalGuestsLabel} value={stats.total} icon={<Users className="w-5 h-5" />} />
-        <MetricCard label={t.checkedInLabel} value={stats.checkedIn} icon={<UserCheck className="w-5 h-5" />} iconClass="text-green-600" />
-        <MetricCard label={t.notYetLabel} value={notYet} icon={<UserX className="w-5 h-5" />} iconClass="text-amber-600" />
+      <div className="grid grid-cols-3 gap-2 sm:gap-3">
+        <MetricCard label={t.checkinExpectedLabel} value={stats.expected} icon={<Users />} footer={t.checkinExpectedFooter} />
+        <MetricCard label={t.checkedInLabel} value={stats.checkedIn} icon={<UserCheck />} iconClass="text-ok" />
+        <MetricCard label={t.notYetLabel} value={notYet} icon={<UserX />} iconClass="text-amber-700" />
       </div>
 
       {/* Search */}
@@ -139,7 +140,7 @@ export const GuestCheckIn = () => {
 
       {/* Guest list */}
       {loading ? (
-        <div className="text-center py-8 text-[#A09080]">{t.loadingLabel}</div>
+        <div className="text-center py-8 text-[#5D5449]">{t.loadingLabel}</div>
       ) : (
         <div className="space-y-2">
           {pager.pageItems.map(guest => {
@@ -155,14 +156,14 @@ export const GuestCheckIn = () => {
                 key={guest.id}
                 className={`rounded-2xl border transition-colors overflow-hidden ${
                   allChecked
-                    ? 'bg-green-50 border-green-300'
+                    ? 'bg-[#FFFDF9] border-green-300'
                     : anyChecked
-                      ? 'bg-amber-50/60 border-amber-200'
-                      : 'bg-white border-[#CBAE94]/30'
+                      ? 'bg-[#FFFDF9] border-amber-300'
+                      : 'bg-white border-[#CBAE94]/50'
                 }`}
               >
                 {/* Row header — click to expand the party */}
-                <div className="flex flex-wrap items-center justify-between gap-3 p-4">
+                <div className="flex items-center justify-between gap-3 px-4 py-3">
                   <button
                     type="button"
                     onClick={() => setExpandedId(isExpanded ? null : guest.id)}
@@ -179,23 +180,23 @@ export const GuestCheckIn = () => {
                       <span className="w-4 shrink-0" />
                     )}
                     <div className="min-w-0">
-                      <div className="font-semibold text-sm text-[#4A3F35] truncate">
+                      <div className="font-semibold text-sm text-[#4A3F35] break-words">
                         {guest.name}
                         {members.length > 1 && (
-                          <span className={`ml-2 text-xs font-mono px-2 py-0.5 rounded-full ${
+                          <span className={`ml-2 text-xs font-semibold px-2 py-0.5 rounded-full border ${
                             allChecked
-                              ? 'bg-green-100 text-green-800'
+                              ? 'status-ok'
                               : anyChecked
-                                ? 'bg-amber-100 text-amber-800'
-                                : 'bg-[#EFE6DC] text-[#8B735B]'
+                                ? 'bg-amber-50 text-amber-800 border-amber-200'
+                                : 'bg-[#EFE6DC] text-[#5D5449] border-transparent'
                           }`}>
                             {checkedCount}/{members.length}
                           </span>
                         )}
                       </div>
-                      <div className="text-xs text-[#A09080] font-mono">
+                      <div className="text-xs text-[#5D5449] break-words">
                         {guest.email || guest.phone || t.noContactLabel} · {tf('partyOfLabel', { count: String(getGuestPartySize(guest)) })}
-                        {guest.checked_in_at && ` · ${new Date(guest.checked_in_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}`}
+                        {guest.checked_in_at && ` · ${formatClockTime(guest.checked_in_at, language)}`}
                       </div>
                     </div>
                   </button>
@@ -205,19 +206,19 @@ export const GuestCheckIn = () => {
                       <button
                         onClick={() => handleUndo(guest.id)}
                         disabled={isBusy}
-                        className="px-4 min-h-[44px] rounded-full text-xs font-bold border border-green-300 text-green-700 bg-white hover:bg-green-50 transition-colors flex items-center space-x-1 disabled:opacity-50"
+                        aria-label={t.undoCheckinBtn}
+                        title={t.undoCheckinBtn}
+                        className="px-3 sm:px-4 min-h-[44px] rounded-full text-xs font-semibold border border-[#CBAE94] text-[#5D5449] bg-white hover:bg-[#EFE6DC] transition-colors flex items-center gap-1 cursor-pointer disabled:opacity-50"
                       >
                         <RotateCcw className="w-3.5 h-3.5" />
-                        <span>{t.undoCheckinBtn}</span>
+                        <span className="hidden sm:inline">{t.undoCheckinBtn}</span>
                       </button>
                     )}
                     {!allChecked && (
                       <button
                         onClick={() => handleCheckIn(guest.id)}
                         disabled={isBusy}
-                        className={`px-4 min-h-[44px] rounded-full text-xs font-bold text-white transition-colors flex items-center space-x-1 disabled:opacity-50 ${
-                          checkedCount === 0 ? 'bg-[#8B735B] hover:bg-[#4A3F35]' : 'bg-[#C9A227] hover:bg-[#A8861C]'
-                        }`}
+                        className="btn-accent min-h-[44px] px-4 text-xs gap-1 cursor-pointer disabled:opacity-50"
                       >
                         <CheckCircle2 className="w-3.5 h-3.5" />
                         <span>{checkedCount === 0 ? t.checkInBtn : t.checkinAllBtn}</span>
@@ -238,11 +239,11 @@ export const GuestCheckIn = () => {
                           className="flex items-center justify-between gap-3 py-1.5 px-2 rounded-xl hover:bg-[#EFE6DC]/40"
                         >
                           <div className="flex items-center gap-2 min-w-0">
-                            <span className={`w-1.5 h-1.5 rounded-full shrink-0 ${checked ? 'bg-green-500' : 'bg-[#CBAE94]'}`} />
-                            <span className="text-xs font-semibold text-[#4A3F35] truncate">
+                            <span className={`w-1.5 h-1.5 rounded-full shrink-0 ${checked ? 'bg-green-600' : 'bg-[#CBAE94]'}`} />
+                            <span className="text-sm font-medium text-[#4A3F35] truncate">
                               {member}
                               {isPrimary && (
-                                <span className="ml-1.5 text-xs font-mono uppercase text-[#8B735B]">
+                                <span className="ml-1.5 text-xs font-medium text-[#5D5449]">
                                   {t.finderPartyLead}
                                 </span>
                               )}
@@ -252,7 +253,7 @@ export const GuestCheckIn = () => {
                             <button
                               onClick={() => handleMemberUndo(guest.id, member)}
                               disabled={isBusy}
-                              className="flex items-center gap-1 px-2 min-h-[44px] text-xs font-bold text-green-700 hover:text-green-900 disabled:opacity-50"
+                              className="flex items-center gap-1 px-2 min-h-[44px] text-xs font-semibold text-ok cursor-pointer disabled:opacity-50"
                             >
                               <CheckCircle2 className="w-3.5 h-3.5" />
                               <span>{t.checkedInLabel}</span>
@@ -262,7 +263,7 @@ export const GuestCheckIn = () => {
                             <button
                               onClick={() => handleMemberCheckIn(guest.id, member)}
                               disabled={isBusy}
-                              className="px-3 min-h-[44px] rounded-full text-xs font-bold bg-[#8B735B] text-white hover:bg-[#4A3F35] transition-colors disabled:opacity-50"
+                              className="btn-accent min-h-[44px] px-3 text-xs cursor-pointer disabled:opacity-50"
                             >
                               {t.checkInBtn}
                             </button>
@@ -276,7 +277,7 @@ export const GuestCheckIn = () => {
             );
           })}
           {filtered.length === 0 && (
-            <div className="text-center py-8 text-[#A09080]">{t.noMatchMsg}</div>
+            <div className="text-center py-8 text-[#5D5449]">{t.noMatchMsg}</div>
           )}
         </div>
       )}

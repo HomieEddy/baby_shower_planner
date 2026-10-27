@@ -21,7 +21,7 @@ import { Segmented } from '../shared/Segmented';
 import { AgendaCalendar } from './AgendaCalendar';
 import { AgendaKanban } from './AgendaKanban';
 import { AgendaTaskModal } from './AgendaTaskModal';
-import { AdminPageHeader } from './AdminPageHeader';
+import { AdminPageHeader, AdminSectionTitle } from './AdminPageHeader';
 
 interface AdminAgendaTabProps {
   language: Language;
@@ -197,10 +197,10 @@ export const AdminAgendaTab: React.FC<AdminAgendaTabProps> = ({ language, t, set
     }
   };
 
-  const inputCls = 'w-full px-4 py-2.5 rounded-2xl border-2 border-[#CBAE94] text-xs font-bold text-[#5D5449] focus:outline-none focus:ring-2 focus:ring-[#8B735B] bg-white';
+  const inputCls = 'w-full px-3.5 py-2.5 rounded-xl border border-[#CBAE94] text-base sm:text-sm font-medium text-[#4A3F35] focus:outline-none focus:ring-2 focus:ring-[#8B735B] bg-white';
   const toggleCls = (on: boolean) =>
-    `px-4 py-2.5 rounded-2xl border-2 text-xs font-bold transition-colors cursor-pointer flex items-center gap-2 ${
-      on ? 'border-[#8B735B] bg-[#EFE6DC] text-[#8B735B]' : 'border-[#CBAE94]/50 bg-white text-[#5D5449] hover:bg-[#EFE6DC]/40'
+    `px-4 py-2.5 rounded-xl border text-sm font-semibold transition-colors cursor-pointer flex items-center gap-2 ${
+      on ? 'border-[#4A3F35] bg-[#EFE6DC] text-[#4A3F35]' : 'border-[#CBAE94]/60 bg-white text-[#5D5449] hover:bg-[#EFE6DC]/40'
     }`;
 
   const missingProvider = !!caps && ((emailOn && !caps.email) || (smsOn && !caps.sms));
@@ -265,16 +265,8 @@ export const AdminAgendaTab: React.FC<AdminAgendaTabProps> = ({ language, t, set
       </motion.div>
 
       {/* Reminder settings */}
-      <motion.div variants={adminCardVariants} className="card-soft p-6 sm:p-8 space-y-5">
-        <div className="flex items-center gap-3 border-b border-[#CBAE94]/40 pb-4">
-          <div className="p-3 bg-[#EFE6DC] text-[#8B735B] rounded-2xl border border-[#CBAE94]/50">
-            <Bell className="w-6 h-6" />
-          </div>
-          <div>
-            <h3 className="font-sans text-xl font-bold text-[#8B735B]">{t.agendaReminderPanelTitle}</h3>
-            <p className="text-xs text-[#5D5449]">{t.agendaReminderPanelDesc}</p>
-          </div>
-        </div>
+      <motion.div variants={adminCardVariants} className="card-soft p-5 sm:p-6 space-y-5">
+        <AdminSectionTitle icon={Bell} title={t.agendaReminderPanelTitle} subtitle={t.agendaReminderPanelDesc} />
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <button type="button" disabled={!caps?.email} title={!caps?.email ? t.providerNotConfigured : undefined}
@@ -282,14 +274,14 @@ export const AdminAgendaTab: React.FC<AdminAgendaTabProps> = ({ language, t, set
             className={`${toggleCls(emailOn)} disabled:opacity-40 disabled:cursor-not-allowed`}>
             <Mail className="w-4 h-4" />
             {t.agendaReminderEmailLabel}
-            {caps?.email ? null : <span className="ml-auto text-xs font-mono text-amber-700 bg-amber-100 px-1.5 py-0.5 rounded-full">{t.mockBadge}</span>}
+            {caps?.email ? null : <span className="ml-auto text-xs font-semibold text-amber-800 bg-amber-50 border border-amber-200 px-2 py-0.5 rounded-full">{t.mockBadge}</span>}
           </button>
           <button type="button" disabled={!caps?.sms} title={!caps?.sms ? t.providerNotConfigured : undefined}
             onClick={() => setReminderForm((f) => ({ ...f, smsOn: !f.smsOn }))}
             className={`${toggleCls(smsOn)} disabled:opacity-40 disabled:cursor-not-allowed`}>
             <MessageSquare className="w-4 h-4" />
             {t.agendaReminderSmsLabel}
-            {caps?.sms ? null : <span className="ml-auto text-xs font-mono text-amber-700 bg-amber-100 px-1.5 py-0.5 rounded-full">{t.mockBadge}</span>}
+            {caps?.sms ? null : <span className="ml-auto text-xs font-semibold text-amber-800 bg-amber-50 border border-amber-200 px-2 py-0.5 rounded-full">{t.mockBadge}</span>}
           </button>
         </div>
 
@@ -323,7 +315,7 @@ export const AdminAgendaTab: React.FC<AdminAgendaTabProps> = ({ language, t, set
           </div>
         </div>
 
-        {missingProvider && <p className="text-xs text-amber-800 bg-amber-50 border border-amber-200 rounded-2xl px-4 py-3 font-mono">{t.providerNotConfigured}</p>}
+        {missingProvider && <p className="text-xs text-amber-800 bg-amber-50 border border-amber-200 rounded-xl px-4 py-3">{t.providerNotConfigured}</p>}
 
         <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-3 pt-1 border-t border-[#CBAE94]/30">
           <button

@@ -23,6 +23,10 @@ export interface Translations {
   checkinHeaderSubtitle: string;
   cateringInvitationsFooter: string;
   cateringEmptyCategoriesLabel: string;
+  sampleGiftGuestName: string;
+  sampleGiftDescription: string;
+  checkinExpectedLabel: string;
+  checkinExpectedFooter: string;
   agendaAddTaskBtn: string;
   agendaAdvance1d: string;
   agendaAdvance1h: string;
@@ -1332,6 +1336,10 @@ export const translations: Record<Language, Translations> = {
     addTimelineEventBtn: "Add Timeline Event",
     addVenueFeatureBtn: "Add Venue Feature",
     agendaAddTaskBtn: "Add Task",
+    checkinExpectedLabel: "Expected guests",
+    checkinExpectedFooter: "people who said yes",
+    sampleGiftGuestName: "Grandma Ellen",
+    sampleGiftDescription: "Handcrafted baby shoes and quilt",
     cateringInvitationsFooter: "across {{count}} invitations",
     cateringEmptyCategoriesLabel: "No guests yet",
     agendaHeaderEyebrow: "Planning",
@@ -2645,6 +2653,10 @@ export const translations: Record<Language, Translations> = {
     addTimelineEventBtn: "Ajouter un horaire",
     addVenueFeatureBtn: "Ajouter un élément du lieu",
     agendaAddTaskBtn: "Ajouter une tâche",
+    checkinExpectedLabel: "Invités attendus",
+    checkinExpectedFooter: "personnes ayant répondu oui",
+    sampleGiftGuestName: "Grand-maman Hélène",
+    sampleGiftDescription: "Chaussons et courtepointe faits main",
     cateringInvitationsFooter: "répartis sur {{count}} invitations",
     cateringEmptyCategoriesLabel: "Aucun invité pour l'instant",
     agendaHeaderEyebrow: "Organisation",
