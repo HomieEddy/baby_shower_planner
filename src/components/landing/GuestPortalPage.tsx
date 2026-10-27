@@ -5,6 +5,7 @@ import { ArrowRight, Ticket, AlertCircle } from 'lucide-react';
 import { useT } from '../shared/i18n';
 import { BackButton } from '../shared/BackButton';
 import { fadeUp } from '../shared/motionPresets';
+import { GuestPageHeader } from '../shared/GuestPageHeader';
 import { isValidCode } from '../../lib/validation';
 
 type PortalStatus = 'idle' | 'invalid' | 'resolving' | 'notFound';
@@ -45,18 +46,13 @@ export const GuestPortalPage = () => {
   };
 
   return (
-    <motion.div variants={fadeUp} initial="hidden" animate="show" className="max-w-xl mx-auto">
-      <div className="card-paper p-6 sm:p-10 text-center space-y-5">
-        <div className="w-14 h-14 bg-[#EFE6DC] text-[#8B735B] rounded-2xl flex items-center justify-center mx-auto border border-[#CBAE94]">
-          <Ticket className="w-7 h-7" />
-        </div>
+    <motion.div variants={fadeUp} initial="hidden" animate="show" className="w-full max-w-md mx-auto space-y-4">
+      <BackButton label={t.backHomeBtn} />
 
-        <div className="space-y-1.5">
-          <h1 className="font-newsreader text-3xl font-bold text-[#4A3F35]">{t.portalTitle}</h1>
-          <p className="text-xs sm:text-sm text-[#4A3F35]/70 leading-relaxed font-sans">{t.portalSubtitle}</p>
-        </div>
+      <div className="card-guest p-6 sm:p-8 space-y-6">
+        <GuestPageHeader icon={Ticket} title={t.portalTitle} subtitle={t.portalSubtitle} />
 
-        <form onSubmit={handleSubmit} className="space-y-3 text-left">
+        <form onSubmit={handleSubmit} className="space-y-3">
           <label htmlFor="portal-code" className="label-mono block">{t.portalInputLabel}</label>
           <input
             id="portal-code"
@@ -65,19 +61,15 @@ export const GuestPortalPage = () => {
             onChange={(e) => { setInput(e.target.value); setStatus('idle'); }}
             placeholder="XXXX"
             autoComplete="off"
-            className="w-full px-4 py-3 rounded-xl border border-[#4A3F35]/20 focus:outline-none focus:ring-2 focus:ring-[#4A3F35] text-sm bg-white text-[#4A3F35] text-center font-mono font-bold tracking-widest"
+            aria-invalid={status === 'invalid' || status === 'notFound'}
+            aria-describedby={status === 'invalid' || status === 'notFound' ? 'portal-error' : undefined}
+            className="w-full px-4 py-3 rounded-xl border border-[#CBAE94] focus:outline-none focus:ring-2 focus:ring-[#8B735B] text-base bg-white text-[#4A3F35] text-center font-mono font-bold tracking-widest"
           />
 
-          {status === 'invalid' && (
-            <p className="flex items-start gap-2 text-xs text-amber-700 bg-amber-50 border border-amber-300 rounded-xl p-3 font-sans">
+          {(status === 'invalid' || status === 'notFound') && (
+            <p id="portal-error" role="alert" className="notice-error">
               <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" />
-              {t.portalInvalidInput}
-            </p>
-          )}
-          {status === 'notFound' && (
-            <p className="flex items-start gap-2 text-xs text-rose-700 bg-rose-50 border border-rose-300 rounded-xl p-3 font-sans">
-              <AlertCircle className="w-4 h-4 shrink-0 mt-0.5" />
-              {t.portalCodeNotFound}
+              {status === 'invalid' ? t.portalInvalidInput : t.portalCodeNotFound}
             </p>
           )}
 
@@ -85,14 +77,12 @@ export const GuestPortalPage = () => {
             whileTap={{ scale: 0.98 }}
             type="submit"
             disabled={status === 'resolving' || !input.trim()}
-            className="btn-accent w-full py-3.5 text-sm font-bold disabled:opacity-50 inline-flex items-center justify-center gap-2"
+            className="btn-accent w-full py-3.5 text-sm font-bold disabled:opacity-50 gap-2"
           >
-            <ArrowRight className="w-4 h-4" />
             <span>{status === 'resolving' ? t.portalResolving : t.portalContinueBtn}</span>
+            <ArrowRight className="w-4 h-4" />
           </motion.button>
         </form>
-
-        <BackButton label={t.portalBackBtn} />
       </div>
     </motion.div>
   );

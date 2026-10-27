@@ -5,6 +5,7 @@ import { useSettings } from '../../lib/settingsQuery';
 import { useAppStore } from '../../stores/appStore';
 import { useT } from '../shared/i18n';
 import { fadeUp } from '../shared/motionPresets';
+import { GuestPageHeader } from '../shared/GuestPageHeader';
 
 export const LandingPage = () => {
   const t = useT();
@@ -18,29 +19,21 @@ export const LandingPage = () => {
     : (parents ? `Baby Shower de ${parents}` : 'Baby Shower');
 
   return (
-    <motion.div variants={fadeUp} initial="hidden" animate="show" className="w-full max-w-sm mx-auto pt-2 sm:pt-6">
-      {/* Brand */}
-      <div className="text-center mb-8">
-        <div className="w-16 h-16 bg-[#E9E0D2] border-2 border-[#4A3F35] rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-xs">
-          <Baby className="w-8 h-8 text-[#4A3F35]" />
-        </div>
-        <h1 className="font-newsreader text-3xl font-bold text-[#4A3F35]">{title}</h1>
-        <p className="text-sm text-[#A09080] mt-1 font-mono">{t.landingHeroSubtitle}</p>
-      </div>
+    <motion.div variants={fadeUp} initial="hidden" animate="show" className="w-full max-w-sm mx-auto pt-2 sm:pt-8 space-y-6">
+      <GuestPageHeader icon={Baby} title={title} subtitle={t.landingHeroSubtitle} />
 
-      {/* Card */}
-      <div className="bg-white rounded-2xl border border-[#CBAE94]/40 p-8 shadow-sm space-y-3">
+      <div className="card-guest p-6 sm:p-8 space-y-3">
         <button
           type="button"
           onClick={() => navigate('/portal')}
-          className="w-full py-2.5 rounded-xl bg-[#8B735B] text-white font-bold text-sm hover:bg-[#4A3F35] transition-colors flex items-center justify-center gap-2 cursor-pointer"
+          className="btn-accent w-full py-3 text-sm font-bold gap-2 cursor-pointer"
         >
           <UserRound className="w-4 h-4" />
           {t.landingGuestBtn}
         </button>
-        <p className="text-xs text-[#A09080] font-sans text-center">{t.landingGuestCaption}</p>
+        <p className="text-xs text-[#5D5449] text-center">{t.landingGuestCaption}</p>
 
-        <div className="flex items-center gap-3 py-1" aria-hidden>
+        <div className="flex items-center gap-3 py-2" aria-hidden>
           <span className="flex-1 border-t border-[#CBAE94]/50" />
           <span className="text-xs font-mono font-bold text-[#A09080] uppercase tracking-widest">{t.landingEntryLabel}</span>
           <span className="flex-1 border-t border-[#CBAE94]/50" />
@@ -49,7 +42,7 @@ export const LandingPage = () => {
         <button
           type="button"
           onClick={() => navigate('/admin')}
-          className="w-full py-2.5 rounded-xl border-2 border-[#CBAE94] bg-white text-[#4A3F35] font-bold text-sm hover:bg-[#EFE6DC] transition-colors flex items-center justify-center gap-2 cursor-pointer"
+          className="btn-outline-accent w-full py-3 text-sm font-bold gap-2 cursor-pointer hover:-translate-y-0.5 hover:shadow-sm"
         >
           <ShieldCheck className="w-4 h-4" />
           {t.landingAdminBtn}
