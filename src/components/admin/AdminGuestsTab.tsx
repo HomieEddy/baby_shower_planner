@@ -33,6 +33,7 @@ import { TextInput, Select } from '../shared/ui';
 import { Pagination } from '../shared/Pagination';
 import { usePagination } from '../shared/hooks';
 import { useGuestAdminController } from './useGuestAdminController';
+import { AdminPageHeader } from './AdminPageHeader';
 
 interface AdminGuestsTabProps {
   language: Language;
@@ -79,18 +80,25 @@ export const AdminGuestsTab: React.FC<AdminGuestsTabProps> = ({ language, t, gue
       animate="show"
       className="space-y-8"
     >
+      <AdminPageHeader
+        icon={Users}
+        eyebrow={t.guestsHeaderEyebrow}
+        title={t.tabGuestRsvps}
+        subtitle={t.guestsHeaderSubtitle}
+        actions={
+          <Segmented
+            ariaLabel={`${t.metricInvitesLabel} / ${t.colPartySize}`}
+            value={metricMode}
+            onChange={onMetricMode}
+            options={[
+              { value: 'invites', label: t.metricInvitesLabel },
+              { value: 'party', label: t.colPartySize },
+            ]}
+          />
+        }
+      />
+
       {/* Metrics Cards Grid */}
-      <div className="flex justify-end mb-3">
-        <Segmented
-          ariaLabel={`${t.metricInvitesLabel} / ${t.colPartySize}`}
-          value={metricMode}
-          onChange={onMetricMode}
-          options={[
-            { value: 'invites', label: t.metricInvitesLabel },
-            { value: 'party', label: t.colPartySize },
-          ]}
-        />
-      </div>
       <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
         <MetricCard label={t.statAttending} icon={<CheckCircle2 className="w-5 h-5" />}
           value={metricMode === 'party' ? totalAttendingPartySize : attendingGuests.length}
@@ -110,7 +118,7 @@ export const AdminGuestsTab: React.FC<AdminGuestsTabProps> = ({ language, t, gue
       </div>
 
       {/* Add Guest Form */}
-      <motion.div variants={adminCardVariants} className="card-paper p-5 sm:p-6 space-y-4">
+      <motion.div variants={adminCardVariants} className="card-soft p-5 sm:p-6 space-y-4">
           <div className="flex items-center space-x-3">
             <div className="p-2 bg-[#EFE6DC] text-[#8B735B] rounded-2xl border border-[#CBAE94]">
               <UserPlus className="w-5 h-5" />
@@ -199,7 +207,7 @@ export const AdminGuestsTab: React.FC<AdminGuestsTabProps> = ({ language, t, gue
 
       {/* Pending self-registrations awaiting host approval */}
       {pendingApprovals.length > 0 && (
-        <motion.div ref={approvalRef} variants={adminCardVariants} className="card-paper p-6 sm:p-8 space-y-4">
+        <motion.div ref={approvalRef} variants={adminCardVariants} className="card-soft p-6 sm:p-8 space-y-4">
           <div className="flex items-center gap-3">
             <div className="p-2.5 bg-amber-50 text-amber-700 rounded-2xl border border-amber-300">
               <Clock className="w-5 h-5" />
@@ -256,7 +264,7 @@ export const AdminGuestsTab: React.FC<AdminGuestsTabProps> = ({ language, t, gue
       )}
 
       {/* Invited Guests Table Section */}
-      <motion.div ref={listRef} variants={adminCardVariants} className="card-paper p-6 sm:p-8 space-y-6">
+      <motion.div ref={listRef} variants={adminCardVariants} className="card-soft p-6 sm:p-8 space-y-6">
         <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
           <div className="shrink-0">
             <h3 className="font-sans text-xl font-bold text-[#8B735B] whitespace-nowrap">{t.guestListTitle}</h3>

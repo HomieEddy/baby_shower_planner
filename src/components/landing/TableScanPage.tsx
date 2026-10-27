@@ -86,7 +86,7 @@ export const TableScanPage: React.FC = () => {
         initial={{ opacity: 0, y: 26, scale: 0.96 }}
         animate={{ opacity: 1, y: 0, scale: 1 }}
         transition={{ type: 'spring', stiffness: 220, damping: 20 }}
-        className="card-guest w-full max-w-lg p-6 sm:p-8 space-y-6"
+        className="card-soft w-full max-w-lg p-6 sm:p-8 space-y-6"
       >
         <GuestPageHeader icon={Sparkles} title={t.scanTitle} subtitle={t.scanSubtitle}>
           {table && (

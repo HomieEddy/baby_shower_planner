@@ -43,6 +43,7 @@ import { useToast } from '../shared/ToastContext';
 import { useActionConfirm } from '../shared/ConfirmDialog';
 import { useTf } from '../shared/i18n';
 import { InvitationMessageModal } from './InvitationMessageModal';
+import { AdminPageHeader } from './AdminPageHeader';
 
 // ISO timestamp -> <TextInput type="datetime-local"> value (local time)
 function isoToLocalInput(iso: string): string {
@@ -252,18 +253,16 @@ export const AdminSettingsTab: React.FC<AdminSettingsTabProps> = ({ language, t,
       animate="show"
       className="space-y-8"
     >
-      <motion.div variants={adminCardVariants} className="card-paper p-6 sm:p-8 space-y-6">
-        <div className="flex items-center justify-between border-b border-[#CBAE94]/40 pb-4">
-          <div className="flex items-center space-x-2.5 sm:space-x-3 min-w-0">
-            <div className="p-2.5 sm:p-3 bg-[#EFE6DC] text-[#8B735B] rounded-2xl border border-[#CBAE94] shrink-0">
-              <Settings className="w-6 h-6" />
-            </div>
-            <div className="min-w-0">
-              <h3 className="font-sans text-xl sm:text-2xl font-bold text-[#8B735B]">{t.hostCustomizationTitle}</h3>
-              <p className="text-xs text-[#5D5449]">{t.hostCustomizationDesc}</p>
-            </div>
-          </div>
-        </div>
+      <motion.div variants={adminCardVariants}>
+        <AdminPageHeader
+          icon={Settings}
+          eyebrow={t.tabHostSettings}
+          title={t.hostCustomizationTitle}
+          subtitle={t.hostCustomizationDesc}
+        />
+      </motion.div>
+
+      <motion.div variants={adminCardVariants} className="card-soft p-6 sm:p-8 space-y-6">
 
         <form onSubmit={handleSaveSettings} className="space-y-6">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">

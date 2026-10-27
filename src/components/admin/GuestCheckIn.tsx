@@ -17,6 +17,7 @@ import { MetricCard } from '../shared/MetricCard';
 import { Pagination } from '../shared/Pagination';
 import { usePagination } from '../shared/hooks';
 import { adminContainerVariants } from '../shared/motionPresets';
+import { AdminPageHeader } from './AdminPageHeader';
 
 export const GuestCheckIn = () => {
   const t = useT();
@@ -103,23 +104,28 @@ export const GuestCheckIn = () => {
 
   return (
     <motion.div variants={adminContainerVariants} initial="hidden" animate="show" className="space-y-6">
+      <AdminPageHeader
+        icon={UserCheck}
+        eyebrow={t.checkinHeaderEyebrow}
+        title={t.tabCheckIn}
+        subtitle={t.checkinHeaderSubtitle}
+        actions={
+          <button
+            type="button"
+            onClick={() => setQrOpen(true)}
+            className="btn-accent text-xs sm:text-sm py-2.5 px-4 gap-2 cursor-pointer"
+          >
+            <QrCode className="w-4 h-4" />
+            <span>{t.printFindTableQrBtn}</span>
+          </button>
+        }
+      />
+
       {/* Stats bar — individuals: expected vs checked in */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
         <MetricCard label={t.totalGuestsLabel} value={stats.total} icon={<Users className="w-5 h-5" />} />
         <MetricCard label={t.checkedInLabel} value={stats.checkedIn} icon={<UserCheck className="w-5 h-5" />} iconClass="text-green-600" />
         <MetricCard label={t.notYetLabel} value={notYet} icon={<UserX className="w-5 h-5" />} iconClass="text-amber-600" />
-      </div>
-
-      {/* Find-my-table QR poster */}
-      <div className="flex justify-end">
-        <button
-          type="button"
-          onClick={() => setQrOpen(true)}
-          className="px-4 py-2.5 rounded-2xl bg-[#8B735B] text-white text-xs font-bold hover:bg-[#705C47] transition-colors flex items-center gap-2 cursor-pointer"
-        >
-          <QrCode className="w-4 h-4" />
-          <span>{t.printFindTableQrBtn}</span>
-        </button>
       </div>
 
       {/* Search */}

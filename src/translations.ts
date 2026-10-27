@@ -15,6 +15,12 @@ export interface Translations {
   addTableBtn: string;
   addTimelineEventBtn: string;
   addVenueFeatureBtn: string;
+  agendaHeaderEyebrow: string;
+  agendaHeaderSubtitle: string;
+  guestsHeaderEyebrow: string;
+  guestsHeaderSubtitle: string;
+  checkinHeaderEyebrow: string;
+  checkinHeaderSubtitle: string;
   agendaAddTaskBtn: string;
   agendaAdvance1d: string;
   agendaAdvance1h: string;
@@ -1324,6 +1330,12 @@ export const translations: Record<Language, Translations> = {
     addTimelineEventBtn: "Add Timeline Event",
     addVenueFeatureBtn: "Add Venue Feature",
     agendaAddTaskBtn: "Add Task",
+    agendaHeaderEyebrow: "Planning",
+    agendaHeaderSubtitle: "Keep track of what is left to do before the big day.",
+    guestsHeaderEyebrow: "Guests & RSVPs",
+    guestsHeaderSubtitle: "Invite guests, follow their answers and approve sign-ups.",
+    checkinHeaderEyebrow: "Day of",
+    checkinHeaderSubtitle: "Check guests in as they arrive and see who is still on the way.",
     agendaAdvance1d: "1 day before",
     agendaAdvance1h: "1 hour before",
     agendaAdvance1w: "1 week before",
@@ -2629,6 +2641,12 @@ export const translations: Record<Language, Translations> = {
     addTimelineEventBtn: "Ajouter un horaire",
     addVenueFeatureBtn: "Ajouter un élément du lieu",
     agendaAddTaskBtn: "Ajouter une tâche",
+    agendaHeaderEyebrow: "Organisation",
+    agendaHeaderSubtitle: "Suivez ce qu'il reste à faire avant le grand jour.",
+    guestsHeaderEyebrow: "Invités et réponses",
+    guestsHeaderSubtitle: "Invitez vos proches, suivez leurs réponses et approuvez les inscriptions.",
+    checkinHeaderEyebrow: "Jour J",
+    checkinHeaderSubtitle: "Pointez les invités à leur arrivée et voyez qui est encore en route.",
     agendaAdvance1d: "1 jour avant",
     agendaAdvance1h: "1 heure avant",
     agendaAdvance1w: "1 semaine avant",

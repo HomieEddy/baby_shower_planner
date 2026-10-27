@@ -120,7 +120,7 @@ export const VenueModal = ({ open, selected, floorMap, roster, onClose }: VenueM
             exit={{ opacity: 0, scale: 0.95, y: -12 }}
             transition={{ type: 'spring', stiffness: 240, damping: 22 }}
             onClick={(e) => e.stopPropagation()}
-            className="card-guest relative w-full max-w-4xl p-5 sm:p-8 max-h-[92vh] overflow-y-auto"
+            className="card-soft relative w-full max-w-4xl p-5 sm:p-8 max-h-[92vh] overflow-y-auto"
           >
             {/* Header */}
             <div className="flex items-start justify-between gap-3 border-b border-[#CBAE94]/40 pb-4 mb-5">

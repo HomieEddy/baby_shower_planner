@@ -421,7 +421,7 @@ export const GuestbookPage = () => {
       />
 
       {/* Leave-a-wish form or success card */}
-      <div className="card-guest p-6 sm:p-8 print:hidden">
+      <div className="card-soft p-6 sm:p-8 print:hidden">
         <AnimatePresence mode="wait">
           {submitted ? (
             <GuestbookSuccess onLeaveAnother={handleResetForm} />

@@ -122,7 +122,7 @@ export const RegisterPage = () => {
 
       {/* Result: pending / approved / rejected / already registered */}
       {result && (
-        <div className="card-guest p-6 sm:p-8 text-center space-y-4">
+        <div className="card-soft p-6 sm:p-8 text-center space-y-4">
           <div className="w-14 h-14 rounded-2xl flex items-center justify-center mx-auto border border-[#CBAE94] bg-[#EFE6DC]">
             {approval === 'rejected'
               ? <XCircle className="w-7 h-7 text-rose-600" />
@@ -157,7 +157,7 @@ export const RegisterPage = () => {
 
       {/* Registration form */}
       {showForm && !result && (
-        <div className="card-guest p-6 sm:p-8 space-y-6">
+        <div className="card-soft p-6 sm:p-8 space-y-6">
           <div className="text-center space-y-1.5 border-b border-dashed border-[#4A3F35]/20 pb-5">
             <div className="label-mono">{t.registerTitle}</div>
             <h2 className="font-gaegu text-3xl font-bold text-[#4A3F35]">{t.registerFormTitle}</h2>

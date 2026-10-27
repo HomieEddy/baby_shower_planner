@@ -23,6 +23,7 @@ import { adminFetch } from '../../lib/api';
 import { useCapabilities, noProviders } from '../../lib/capabilities';
 import { useT, useTf } from '../shared/i18n';
 import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer } from 'recharts';
+import { AdminPageHeader } from './AdminPageHeader';
 
 interface ThankYouTrackerViewProps {
   gifts: GiftLog[];
@@ -233,21 +234,14 @@ export const ThankYouTrackerView: React.FC<ThankYouTrackerViewProps> = ({
   return (
     <motion.div variants={adminContainerVariants} initial="hidden" animate="show" className="space-y-6">
       {/* Header & Metrics */}
-      <div className="card-paper p-6 sm:p-8 space-y-4">
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-[#CBAE94]/30 pb-4">
-          <div>
-            <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#EFE6DC] text-[#8B735B] font-bold text-xs uppercase tracking-wider font-mono">
-              <Mail className="w-3.5 h-3.5" />
-              <span>{t.gratitudeTitle}</span>
-            </div>
-            <h2 className="font-newsreader text-3xl font-bold text-[#4A3F35] mt-1">
-              {t.thankYouTrackerTitle}
-            </h2>
-            <p className="text-xs text-[#8B735B] font-sans">
-              {t.thankYouTrackerSubtitle}
-            </p>
-          </div>
-        </div>
+      <AdminPageHeader
+        icon={Mail}
+        eyebrow={t.gratitudeTitle}
+        title={t.thankYouTrackerTitle}
+        subtitle={t.thankYouTrackerSubtitle}
+      />
+
+      <div className="card-soft p-6 sm:p-8 space-y-4">
 
         {/* Completion Bar + Donut */}
         <div className="flex flex-col sm:flex-row sm:items-center gap-6">
@@ -308,7 +302,7 @@ export const ThankYouTrackerView: React.FC<ThankYouTrackerViewProps> = ({
       </div>
 
       {/* Log New Gift Form */}
-      <div className="card-paper p-6 sm:p-8 space-y-4">
+      <div className="card-soft p-6 sm:p-8 space-y-4">
         <div className="flex items-center gap-2">
           <Gift className="w-5 h-5 text-[#8B735B]" />
           <h3 className="font-sans text-xl font-bold text-[#4A3F35]">{t.logGiftBtn}</h3>
@@ -375,7 +369,7 @@ export const ThankYouTrackerView: React.FC<ThankYouTrackerViewProps> = ({
       </div>
 
       {/* Gifts List & Auto-Generated Note Engine */}
-      <div className="card-paper p-6 sm:p-8 space-y-4">
+      <div className="card-soft p-6 sm:p-8 space-y-4">
         <h3 className="font-sans text-xl font-bold text-[#4A3F35] border-b border-[#CBAE94]/30 pb-3">
           {tf('giftLogStatusLabel', { count: filteredGifts.length })}
         </h3>

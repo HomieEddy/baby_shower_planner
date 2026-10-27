@@ -49,7 +49,7 @@ export const GuestPortalPage = () => {
     <motion.div variants={fadeUp} initial="hidden" animate="show" className="w-full max-w-md mx-auto space-y-4">
       <BackButton label={t.backHomeBtn} />
 
-      <div className="card-guest p-6 sm:p-8 space-y-6">
+      <div className="card-soft p-6 sm:p-8 space-y-6">
         <GuestPageHeader icon={Ticket} title={t.portalTitle} subtitle={t.portalSubtitle} />
 
         <form onSubmit={handleSubmit} className="space-y-3">

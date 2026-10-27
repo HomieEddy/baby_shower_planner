@@ -7,6 +7,7 @@ import { Select, TextInput } from '../shared/ui';
 import { getAttendeeLocations } from '../../lib/tableAssignment';
 import { getPartyMembers, isAttending } from '../../lib/guestAttendees';
 import { TableScanQrModal } from './TableScanQrModal';
+import { AdminPageHeader } from './AdminPageHeader';
 
 interface EscortCardsGeneratorProps {
   guests: Guest[];
@@ -80,30 +81,25 @@ export const EscortCardsGenerator: React.FC<EscortCardsGeneratorProps> = ({ gues
   return (
     <div className="space-y-6">
       {/* Header Banner & Controls */}
-      <div className="card-paper p-6 sm:p-8 space-y-4 print:hidden">
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 border-b border-[#CBAE94]/30 pb-4">
-          <div>
-            <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#EFE6DC] text-[#8B735B] font-bold text-xs uppercase tracking-wider font-mono">
-              <Tag className="w-3.5 h-3.5" />
-              <span>{t.stationeryTitle}</span>
-            </div>
-            <h2 className="font-newsreader text-3xl font-bold text-[#4A3F35] mt-1">
-              {t.escortTitle}
-            </h2>
-            <p className="text-xs text-[#8B735B] font-sans">
-              {t.escortSubtitle}
-            </p>
-          </div>
-
+      <AdminPageHeader
+        className="print:hidden"
+        icon={Tag}
+        eyebrow={t.stationeryTitle}
+        title={t.escortTitle}
+        subtitle={t.escortSubtitle}
+        actions={
           <button
             type="button"
             onClick={() => print(t.escortPrintToast)}
-            className="px-5 py-3 rounded-xl bg-[#8B735B] text-white font-bold text-xs hover:bg-[#705C47] transition-all flex items-center gap-2 shadow-md cursor-pointer shrink-0"
+            className="btn-accent text-xs sm:text-sm py-2.5 px-4 gap-2 cursor-pointer"
           >
             <Printer className="w-4 h-4" />
             <span>{tf('escortPrintBtn', { count: filteredRows.length })}</span>
           </button>
-        </div>
+        }
+      />
+
+      <div className="card-soft p-6 sm:p-8 space-y-4 print:hidden">
 
         {/* Main table QR — one standee per table, opens the guest chooser */}
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 rounded-2xl bg-[#EFE6DC]/50 border border-[#CBAE94]/50 p-4">
@@ -170,7 +166,7 @@ export const EscortCardsGenerator: React.FC<EscortCardsGeneratorProps> = ({ gues
       </div>
 
       {/* Cards Display Grid (Optimized for both screen & paper printing) */}
-      <div className="card-paper p-6 sm:p-8 space-y-4">
+      <div className="card-soft p-6 sm:p-8 space-y-4">
         <div className="flex items-center justify-between border-b border-[#CBAE94]/30 pb-3 print:hidden">
           <h3 className="font-sans text-lg font-bold text-[#4A3F35]">
             {t.printPreviewLabel} ({tf('escortItemsCount', { count: filteredRows.length })})

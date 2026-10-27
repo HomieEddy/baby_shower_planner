@@ -66,15 +66,15 @@
 .card-paper-sm {
   background-color: var(--surface) !important;
   color: var(--ink) !important;
-  border: 1px solid var(--accent);
+  border: 1px solid color-mix(in srgb, var(--accent) 55%, var(--surface));
   border-radius: 20px;
 }
 
-/* Guest page pieces live in the components layer so utilities (padding,
+/* Guest and admin page pieces live in the components layer so utilities (padding,
    fonts, spacing) can still adjust them per use. */
 @layer components {
-/* Lighter card for guest pages: 1px theme border and a soft shadow. */
-.card-guest {
+/* Lighter card for guest and admin pages: 1px theme border and a soft shadow. */
+.card-soft {
   background-color: var(--surface) !important;
   color: var(--ink) !important;
   border: 1px solid color-mix(in srgb, var(--accent) 55%, var(--surface));
@@ -190,11 +190,15 @@ select option {
   color: var(--ink) !important;
 }
 
-.dark .card-paper,
-.dark .card-paper-sm {
+.dark .card-paper {
   background-color: var(--surface) !important;
   color: var(--ink) !important;
   border-color: var(--accent) !important;
+}
+
+.dark .card-paper-sm {
+  background-color: var(--surface) !important;
+  color: var(--ink) !important;
 }
 
 .dark [class*="bg-white"],

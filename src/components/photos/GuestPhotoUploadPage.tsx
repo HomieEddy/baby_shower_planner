@@ -350,7 +350,7 @@ export const GuestPhotoUploadPage = () => {
         {!uploadSuccess ? (
           <form
             onSubmit={handleBatchUpload}
-            className="card-guest p-6 sm:p-8 space-y-5"
+            className="card-soft p-6 sm:p-8 space-y-5"
           >
             {fileError && (
               <div role="alert" className="notice-error animate-shake">

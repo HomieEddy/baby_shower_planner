@@ -22,7 +22,7 @@ export const LandingPage = () => {
     <motion.div variants={fadeUp} initial="hidden" animate="show" className="w-full max-w-sm mx-auto pt-2 sm:pt-8 space-y-6">
       <GuestPageHeader icon={Baby} title={title} subtitle={t.landingHeroSubtitle} />
 
-      <div className="card-guest p-6 sm:p-8 space-y-3">
+      <div className="card-soft p-6 sm:p-8 space-y-3">
         <button
           type="button"
           onClick={() => navigate('/portal')}

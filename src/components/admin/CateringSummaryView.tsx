@@ -26,6 +26,7 @@ import {
 } from '@tanstack/react-table';
 import { Pagination } from '../shared/Pagination';
 import { BarChart, Bar, XAxis, YAxis, Tooltip, ResponsiveContainer } from 'recharts';
+import { AdminPageHeader } from './AdminPageHeader';
 
 interface CateringSummaryViewProps {
   guests: Guest[];
@@ -283,20 +284,12 @@ export const CateringSummaryView: React.FC<CateringSummaryViewProps> = ({ guests
   return (
     <motion.div variants={adminContainerVariants} initial="hidden" animate="show" className="space-y-6">
       {/* Header Banner */}
-      <div className="card-paper p-6 sm:p-8 bg-gradient-to-br from-[#FFFDF9] to-[#FAF6F0] border border-[#CBAE94]/60 shadow-xs relative overflow-hidden">
-        <div className="space-y-2">
-          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#EFE6DC] text-[#8B735B] font-bold text-xs uppercase tracking-wider font-mono">
-            <Utensils className="w-3.5 h-3.5" />
-            <span>{t.cateringTitle}</span>
-          </div>
-          <h2 className="font-newsreader text-3xl font-bold text-[#4A3F35]">
-            {t.cateringSummaryHeading}
-          </h2>
-          <p className="text-xs text-[#8B735B] font-sans max-w-xl">
-            {t.cateringSummaryDesc}
-          </p>
-        </div>
-      </div>
+      <AdminPageHeader
+        icon={Utensils}
+        eyebrow={t.cateringTitle}
+        title={t.cateringSummaryHeading}
+        subtitle={t.cateringSummaryDesc}
+      />
 
       {/* Metrics Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
@@ -324,7 +317,7 @@ export const CateringSummaryView: React.FC<CateringSummaryViewProps> = ({ guests
       </div>
 
       {/* Categorized Dietary Manifest */}
-      <div className="card-paper p-6 space-y-4">
+      <div className="card-soft p-6 space-y-4">
         <h3 className="font-sans text-lg font-bold text-[#4A3F35] flex items-center gap-2">
           <Utensils className="w-5 h-5 text-[#8B735B]" />
           <span>{t.allergyBreakdownLabel}</span>
@@ -367,7 +360,7 @@ export const CateringSummaryView: React.FC<CateringSummaryViewProps> = ({ guests
       </div>
 
       {/* Dietary Breakdown Chart */}
-      <div className="card-paper p-6 space-y-4">
+      <div className="card-soft p-6 space-y-4">
         <h3 className="font-sans text-lg font-bold text-[#4A3F35] flex items-center gap-2">
           <BarChart3 className="w-5 h-5 text-[#8B735B]" />
           <span>{t.allergyBreakdownLabel} — Top 6</span>
@@ -389,7 +382,7 @@ export const CateringSummaryView: React.FC<CateringSummaryViewProps> = ({ guests
       </div>
 
       {/* Guest Dietary Table */}
-      <div className="card-paper p-6 space-y-4">
+      <div className="card-soft p-6 space-y-4">
         <h3 className="font-sans text-lg font-bold text-[#4A3F35]">{tf('cateringManifestTitle', { count: String(filteredList.length) })}</h3>
 
         <AdminToolbar
