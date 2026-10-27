@@ -53,9 +53,9 @@ const LANDMARK_H = 0.55;
 export type TableStatusFilter = 'all' | 'empty' | 'partial' | 'full';
 
 const STATUS_GLOW: Record<Exclude<TableStatusFilter, 'all'>, string> = {
-  empty: '#10B981',
+  empty: '#CBAE94',
   partial: '#F59E0B',
-  full: '#EF4444',
+  full: '#10B981',
 };
 
 export interface FloorPlan3DProps {

@@ -368,8 +368,8 @@ export const FloorPlanEditor = ({
               </h3>
               <span className="text-xs font-mono font-bold text-[#4A3F35] bg-[#EFE6DC] px-2 py-0.5 rounded-lg border border-[#CBAE94]/60">
                 {(draftFloorMap.roomShape ?? 'rectangle') === 'circle'
-                  ? `ÃƒËœ ${Math.min(draftFloorMap.canvasWidth, draftFloorMap.canvasHeight)} px`
-                  : `${draftFloorMap.canvasWidth} Ãƒâ€” ${draftFloorMap.canvasHeight} px`}
+                  ? `Ø ${Math.min(draftFloorMap.canvasWidth, draftFloorMap.canvasHeight)} px`
+                  : `${draftFloorMap.canvasWidth} × ${draftFloorMap.canvasHeight} px`}
               </span>
             </div>
 
@@ -418,16 +418,16 @@ export const FloorPlanEditor = ({
                 </label>
                 <div className="grid grid-cols-2 gap-1.5 text-xs font-bold">
                   <button type="button" onClick={() => handleUpdateDiameter(650)} className={`min-h-[44px] px-3 py-2 rounded-xl border transition-all text-left flex items-center gap-1 ${Math.min(draftFloorMap.canvasWidth, draftFloorMap.canvasHeight) === 650 ? 'bg-[#8B735B] text-white border-[#8B735B]' : 'bg-white text-[#5D5449] border-[#CBAE94]/60 hover:bg-[#EFE6DC]'}`}>
-                    <Home className="w-3 h-3" /> Small (ÃƒËœ 650)
+                    <Home className="w-3 h-3" /> {t.fpRoomSmall} (Ø 650)
                   </button>
                   <button type="button" onClick={() => handleUpdateDiameter(850)} className={`min-h-[44px] px-3 py-2 rounded-xl border transition-all text-left flex items-center gap-1 ${Math.min(draftFloorMap.canvasWidth, draftFloorMap.canvasHeight) === 850 ? 'bg-[#8B735B] text-white border-[#8B735B]' : 'bg-white text-[#5D5449] border-[#CBAE94]/60 hover:bg-[#EFE6DC]'}`}>
-                    <Landmark className="w-3 h-3" /> Standard (ÃƒËœ 850)
+                    <Landmark className="w-3 h-3" /> {t.fpRoomStandard} (Ø 850)
                   </button>
                   <button type="button" onClick={() => handleUpdateDiameter(1100)} className={`min-h-[44px] px-3 py-2 rounded-xl border transition-all text-left flex items-center gap-1 ${Math.min(draftFloorMap.canvasWidth, draftFloorMap.canvasHeight) === 1100 ? 'bg-[#8B735B] text-white border-[#8B735B]' : 'bg-white text-[#5D5449] border-[#CBAE94]/60 hover:bg-[#EFE6DC]'}`}>
-                    <Castle className="w-3 h-3" /> Large (ÃƒËœ 1100)
+                    <Castle className="w-3 h-3" /> {t.fpRoomLarge} (Ø 1100)
                   </button>
                   <button type="button" onClick={() => handleUpdateDiameter(1400)} className={`min-h-[44px] px-3 py-2 rounded-xl border transition-all text-left flex items-center gap-1 ${Math.min(draftFloorMap.canvasWidth, draftFloorMap.canvasHeight) === 1400 ? 'bg-[#8B735B] text-white border-[#8B735B]' : 'bg-white text-[#5D5449] border-[#CBAE94]/60 hover:bg-[#EFE6DC]'}`}>
-                    <Tent className="w-3 h-3" /> Grand (ÃƒËœ 1400)
+                    <Tent className="w-3 h-3" /> {t.fpRoomGrand} (Ø 1400)
                   </button>
                 </div>
               </div>
@@ -446,7 +446,7 @@ export const FloorPlanEditor = ({
                         : 'bg-white text-[#5D5449] border-[#CBAE94]/60 hover:bg-[#EFE6DC]'
                     }`}
                   >
-                    <Home className="w-3 h-3" /> Small (750Ãƒâ€”550)
+                    <Home className="w-3 h-3" /> {t.fpRoomSmall} (750×550)
                   </button>
                   <button
                     type="button"
@@ -457,7 +457,7 @@ export const FloorPlanEditor = ({
                         : 'bg-white text-[#5D5449] border-[#CBAE94]/60 hover:bg-[#EFE6DC]'
                     }`}
                   >
-                    <Landmark className="w-3 h-3" /> Standard (900Ãƒâ€”650)
+                    <Landmark className="w-3 h-3" /> {t.fpRoomStandard} (900×650)
                   </button>
                   <button
                     type="button"
@@ -468,7 +468,7 @@ export const FloorPlanEditor = ({
                         : 'bg-white text-[#5D5449] border-[#CBAE94]/60 hover:bg-[#EFE6DC]'
                     }`}
                   >
-                    <Castle className="w-3 h-3" /> Large (1200Ãƒâ€”850)
+                    <Castle className="w-3 h-3" /> {t.fpRoomLarge} (1200×850)
                   </button>
                   <button
                     type="button"
@@ -479,7 +479,7 @@ export const FloorPlanEditor = ({
                         : 'bg-white text-[#5D5449] border-[#CBAE94]/60 hover:bg-[#EFE6DC]'
                     }`}
                   >
-                    <Tent className="w-3 h-3" /> Grand (1500Ãƒâ€”1000)
+                    <Tent className="w-3 h-3" /> {t.fpRoomGrand} (1500×1000)
                   </button>
                 </div>
               </div>
