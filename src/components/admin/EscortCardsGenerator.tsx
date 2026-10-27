@@ -7,7 +7,7 @@ import { Select, TextInput } from '../shared/ui';
 import { getAttendeeLocations } from '../../lib/tableAssignment';
 import { getPartyMembers, isAttending } from '../../lib/guestAttendees';
 import { TableScanQrModal } from './TableScanQrModal';
-import { AdminPageHeader } from './AdminPageHeader';
+import { AdminPageHeader, AdminSectionTitle } from './AdminPageHeader';
 
 interface EscortCardsGeneratorProps {
   guests: Guest[];
@@ -102,20 +102,20 @@ export const EscortCardsGenerator: React.FC<EscortCardsGeneratorProps> = ({ gues
       <div className="card-soft p-6 sm:p-8 space-y-4 print:hidden">
 
         {/* Main table QR — one standee per table, opens the guest chooser */}
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 rounded-2xl bg-[#EFE6DC]/50 border border-[#CBAE94]/50 p-4">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 rounded-2xl bg-[#EFE6DC]/30 border border-[#CBAE94]/50 p-4">
           <div className="flex items-center gap-3 min-w-0">
             <div className="w-10 h-10 rounded-2xl bg-white border border-[#CBAE94] flex items-center justify-center shrink-0">
               <QrCode className="w-5 h-5 text-[#8B735B]" />
             </div>
             <div className="min-w-0">
-              <p className="text-xs font-bold text-[#4A3F35]">{t.tableQrPrintTitle}</p>
-              <p className="text-xs text-[#8B735B]">{t.tableQrPrintSubtitle}</p>
+              <p className="text-sm font-semibold text-[#4A3F35]">{t.tableQrPrintTitle}</p>
+              <p className="text-xs text-[#5D5449]">{t.tableQrPrintSubtitle}</p>
             </div>
           </div>
           <button
             type="button"
             onClick={() => setShowQrModal(true)}
-            className="px-4 py-2.5 rounded-xl border-2 border-[#CBAE94] bg-white text-[#4A3F35] font-bold text-xs hover:bg-[#EFE6DC] transition-all flex items-center gap-2 cursor-pointer shrink-0"
+            className="btn-outline-accent py-2.5 px-4 text-xs gap-2 cursor-pointer shrink-0"
           >
             <QrCode className="w-4 h-4" />
             <span>{t.tableQrPrintTitle}</span>
@@ -125,7 +125,7 @@ export const EscortCardsGenerator: React.FC<EscortCardsGeneratorProps> = ({ gues
         {/* Customization Options */}
         <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
           <div>
-            <label className="label-mono block text-xs font-bold mb-1">{t.stationeryFormatLabel}</label>
+            <label className="label-mono block mb-1">{t.stationeryFormatLabel}</label>
             <Select
               variant="soft"
               value={cardType}
@@ -137,7 +137,7 @@ export const EscortCardsGenerator: React.FC<EscortCardsGeneratorProps> = ({ gues
           </div>
 
           <div>
-            <label className="label-mono block text-xs font-bold mb-1">{t.filterByTableLabel}</label>
+            <label className="label-mono block mb-1">{t.filterByTableLabel}</label>
             <Select
               variant="soft"
               value={selectedTableFilter}
@@ -153,7 +153,7 @@ export const EscortCardsGenerator: React.FC<EscortCardsGeneratorProps> = ({ gues
           </div>
 
           <div>
-            <label className="label-mono block text-xs font-bold mb-1">{t.customHeaderLabel}</label>
+            <label className="label-mono block mb-1">{t.customHeaderLabel}</label>
             <TextInput
               variant="soft"
               type="text"
@@ -166,18 +166,16 @@ export const EscortCardsGenerator: React.FC<EscortCardsGeneratorProps> = ({ gues
       </div>
 
       {/* Cards Display Grid (Optimized for both screen & paper printing) */}
-      <div className="card-soft p-6 sm:p-8 space-y-4">
-        <div className="flex items-center justify-between border-b border-[#CBAE94]/30 pb-3 print:hidden">
-          <h3 className="font-sans text-lg font-bold text-[#4A3F35]">
-            {t.printPreviewLabel} ({tf('escortItemsCount', { count: filteredRows.length })})
-          </h3>
-          <span className="text-xs font-mono text-[#8B735B]">
-            {t.paperLayoutLabel}: {t.escortPaperLayout}
-          </span>
-        </div>
+      <div className="card-soft p-5 sm:p-6 space-y-4">
+        <AdminSectionTitle
+          className="print:hidden"
+          icon={Printer}
+          title={`${t.printPreviewLabel} (${tf('escortItemsCount', { count: filteredRows.length })})`}
+          subtitle={`${t.paperLayoutLabel}: ${t.escortPaperLayout}`}
+        />
 
         {filteredRows.length === 0 ? (
-          <div className="text-center py-12 text-[#8B735B] font-sans">
+          <div className="text-center py-12 text-[#5D5449]">
                 {t.noAttendingGuestsMsg}
           </div>
         ) : (
@@ -193,9 +191,9 @@ export const EscortCardsGenerator: React.FC<EscortCardsGeneratorProps> = ({ gues
                 return (
                   <div
                     key={row.key}
-                    className="border-2 border-dashed border-[#CBAE94] rounded-2xl bg-[#FAF6F0] h-56 relative shadow-xs overflow-hidden print:shadow-none print:border-solid print:border-slate-300 break-inside-avoid"
+                    className="border-2 border-dashed border-[#CBAE94] rounded-2xl bg-[#FAF6F0] h-72 sm:h-56 relative shadow-xs overflow-hidden print:shadow-none print:border-solid print:border-slate-300 break-inside-avoid"
                   >
-                    {/* Top Fold (Folded Back / Front Header) â€” occupies the top half, centered */}
+                    {/* Top Fold (Folded Back / Front Header) - occupies the top half, centered */}
                     <div className="h-1/2 flex items-center justify-center opacity-75 transform rotate-180 print:rotate-180 text-center px-4 min-w-0">
                       <div className="space-y-1 min-w-0 w-full">
                         <p className="text-xs font-mono uppercase tracking-widest text-[#8B735B] truncate">
@@ -207,17 +205,17 @@ export const EscortCardsGenerator: React.FC<EscortCardsGeneratorProps> = ({ gues
                       </div>
                     </div>
 
-                    {/* Fold line â€” a dedicated divider at the exact middle of the card */}
+                    {/* Fold line - a dedicated divider at the exact middle of the card */}
                     <div className="relative h-0 border-t border-dotted border-[#CBAE94] print:border-slate-300">
                       <span className="absolute -top-2 right-2 text-xs font-mono text-[#CBAE94] bg-[#FAF6F0] px-1 print:hidden">
-                        <Scissors className="w-2.5 h-2.5 inline" /> {t.foldLineLabel}
+                        <Scissors className="w-2.5 h-2.5 inline" aria-label={t.foldLineLabel} /> <span className="hidden sm:inline">{t.foldLineLabel}</span>
                       </span>
                     </div>
 
-                    {/* Bottom Fold (Primary Front Facing Display) â€” occupies the bottom half, centered */}
+                    {/* Bottom Fold (Primary Front Facing Display) - occupies the bottom half, centered */}
                     <div className="h-1/2 flex items-center justify-between gap-3 px-4">
                       <div className="space-y-1 min-w-0">
-                        <p className="text-xs font-mono uppercase tracking-widest text-[#8B735B] truncate">
+                        <p className="text-xs font-mono uppercase tracking-wider text-[#8B735B] break-words line-clamp-2">
                           {customHeader}
                         </p>
                         <h3 className="font-newsreader text-2xl font-bold text-[#4A3F35] leading-tight break-words line-clamp-2">
@@ -226,8 +224,8 @@ export const EscortCardsGenerator: React.FC<EscortCardsGeneratorProps> = ({ gues
                         <p className="text-xs font-mono font-bold text-[#8B735B] truncate">
                           {seatLine}
                         </p>
-                        <p className="text-xs font-mono font-bold text-[#4A3F35] truncate">
-                          {t.uploadCodeLabel}: {guest.code}
+                        <p className="text-xs font-semibold text-[#4A3F35]">
+                          {t.uploadCodeLabel}: <span className="font-mono whitespace-nowrap">{guest.code}</span>
                         </p>
                       </div>
 

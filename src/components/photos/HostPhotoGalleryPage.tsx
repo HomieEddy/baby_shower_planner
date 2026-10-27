@@ -31,6 +31,7 @@ import { SearchInput } from '../shared/ui';
 import { Pagination } from '../shared/Pagination';
 import { usePagination } from '../shared/hooks';
 import { AdminPageHeader } from '../admin/AdminPageHeader';
+import { MetricCard } from '../shared/MetricCard';
 
 export const HostPhotoGalleryPage: React.FC<{ onChanged?: () => void }> = ({ onChanged }) => {
   const t = useT();
@@ -342,36 +343,13 @@ export const HostPhotoGalleryPage: React.FC<{ onChanged?: () => void }> = ({ onC
         />
 
         {/* Gallery Stats Row */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-          <div className="bg-[#FFFDF9] p-5 rounded-2xl border border-[#CBAE94]/40 shadow-sm flex items-center justify-between">
-            <div>
-              <p className="text-xs font-bold uppercase tracking-wider text-[#8B735B]">
-                {t.totalUploadedPhotos}
-              </p>
-              <p className="text-2xl font-bold text-[#4A3F35] mt-0.5">{photos.length}</p>
-            </div>
-            <div className="w-10 h-10 rounded-2xl bg-amber-100 text-amber-800 flex items-center justify-center">
-              <ImageIcon className="w-5 h-5" />
-            </div>
-          </div>
-
-          <div className="bg-[#FFFDF9] p-5 rounded-2xl border border-[#CBAE94]/40 shadow-sm flex items-center justify-between">
-            <div>
-              <p className="text-xs font-bold uppercase tracking-wider text-[#8B735B]">
-                {t.activeGuestTables}
-              </p>
-              <p className="text-2xl font-bold text-[#4A3F35] mt-0.5">
-                {new Set(photos.map((p) => p.table_name)).size}
-              </p>
-            </div>
-            <div className="w-10 h-10 rounded-2xl bg-emerald-100 text-emerald-800 flex items-center justify-center">
-              <Building2 className="w-5 h-5" />
-            </div>
-          </div>
+        <div className="grid grid-cols-2 gap-3">
+          <MetricCard label={t.totalUploadedPhotos} value={photos.length} icon={<ImageIcon />} />
+          <MetricCard label={t.activeGuestTables} value={new Set(photos.map((p) => p.table_name)).size} icon={<Building2 />} />
         </div>
 
         {/* Filter and Search Bar */}
-        <div className="bg-[#FFFDF9] p-4 rounded-2xl border border-[#CBAE94]/50">
+        <div className="card-soft p-4">
           <AdminToolbar
             primary={
               <>
@@ -445,9 +423,9 @@ export const HostPhotoGalleryPage: React.FC<{ onChanged?: () => void }> = ({ onC
 
         {/* Sticky Batch Actions Toolbar */}
         {selectedPhotoIds.length > 0 && (
-          <div className="sticky top-4 z-30 bg-[#4A3F35] text-white px-5 py-3.5 rounded-2xl shadow-xl flex flex-wrap items-center justify-between gap-3 border border-amber-500/30 transition-all">
+          <div className="sticky top-4 z-30 bg-[#4A3F35] text-white px-5 py-3.5 rounded-2xl shadow-xl flex flex-wrap items-center justify-between gap-3 transition-all">
             <div className="flex items-center gap-2.5">
-              <span className="w-6 h-6 rounded-full bg-amber-400 text-[#4A3F35] text-xs font-bold flex items-center justify-center">
+              <span className="w-6 h-6 rounded-full bg-white text-[#4A3F35] text-xs font-bold flex items-center justify-center">
                 {selectedPhotoIds.length}
               </span>
               <span className="text-xs sm:text-sm font-bold">
@@ -463,7 +441,7 @@ export const HostPhotoGalleryPage: React.FC<{ onChanged?: () => void }> = ({ onC
                   handleDownloadZip(selectedPhotos, `selected_photos_${selectedPhotoIds.length}`);
                 }}
                 disabled={isZipping}
-                className="px-4 py-2 rounded-xl bg-amber-500 hover:bg-amber-400 text-[#4A3F35] text-xs font-bold flex items-center gap-1.5 transition-colors shadow-sm"
+                className="px-4 py-2 rounded-full bg-white hover:bg-white/90 text-[#4A3F35] text-xs font-semibold flex items-center gap-1.5 transition-colors cursor-pointer"
               >
                 <DownloadCloud className="w-4 h-4" />
                 <span>{tf('downloadSelectedZip', { count: selectedPhotoIds.length })}</span>
@@ -472,7 +450,7 @@ export const HostPhotoGalleryPage: React.FC<{ onChanged?: () => void }> = ({ onC
               <button
                 type="button"
                 onClick={handleBatchDelete}
-                className="px-3.5 py-2 rounded-xl bg-rose-600 hover:bg-rose-500 text-white text-xs font-bold flex items-center gap-1.5 transition-colors shadow-sm"
+                className="px-3.5 py-2 rounded-full bg-rose-600 hover:bg-rose-500 text-white text-xs font-semibold flex items-center gap-1.5 transition-colors cursor-pointer"
               >
                 <Trash2 className="w-3.5 h-3.5" />
                 <span className="hidden sm:inline">{t.deleteSelectedBtn}</span>
@@ -481,7 +459,7 @@ export const HostPhotoGalleryPage: React.FC<{ onChanged?: () => void }> = ({ onC
               <button
                 type="button"
                 onClick={() => setSelectedPhotoIds([])}
-                className="px-3 py-2 rounded-xl bg-white/10 hover:bg-white/20 text-white text-xs font-bold transition-colors"
+                className="px-3 py-2 rounded-full bg-white/10 hover:bg-white/20 text-white text-xs font-semibold transition-colors cursor-pointer"
               >
                 {t.clearSelectionBtn}
               </button>
@@ -567,7 +545,7 @@ export const HostPhotoGalleryPage: React.FC<{ onChanged?: () => void }> = ({ onC
         {/* ZIP Compression Progress Modal */}
         <Modal open={isZipping} onClose={() => {}} dismissible={false} maxWidth="md">
           <div className="text-center space-y-4">
-            <div className="w-14 h-14 mx-auto rounded-full bg-amber-100 text-amber-800 flex items-center justify-center animate-bounce">
+            <div className="w-14 h-14 mx-auto rounded-full bg-[#EFE6DC] text-[#8B735B] flex items-center justify-center animate-bounce">
               <DownloadCloud className="w-7 h-7" />
             </div>
             <div>
@@ -582,7 +560,7 @@ export const HostPhotoGalleryPage: React.FC<{ onChanged?: () => void }> = ({ onC
             {/* Progress Bar */}
             <div className="w-full bg-[#EFE6DC] h-3 rounded-full overflow-hidden p-0.5 border border-[#CBAE94]/40">
               <div
-                className="bg-gradient-to-r from-amber-600 to-amber-700 h-full rounded-full transition-all duration-300"
+                className="bg-[#8B735B] h-full rounded-full transition-all duration-300"
                 style={{ width: `${zipProgress}%` }}
               />
             </div>
