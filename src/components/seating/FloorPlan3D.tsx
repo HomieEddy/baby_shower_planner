@@ -299,7 +299,7 @@ const Table3D = ({
               color={topColor}
               roughness={0.42}
               emissive={glow || '#000000'}
-              emissiveIntensity={glow ? 0.35 : 0}
+              emissiveIntensity={glow ? (statusActive ? 0.12 : 0.35) : 0}
               transparent={dimmed}
               opacity={dimmed ? 0.18 : 1}
             />
@@ -317,7 +317,7 @@ const Table3D = ({
               color={topColor}
               roughness={0.42}
               emissive={glow || '#000000'}
-              emissiveIntensity={glow ? 0.35 : 0}
+              emissiveIntensity={glow ? (statusActive ? 0.12 : 0.35) : 0}
               transparent={dimmed}
               opacity={dimmed ? 0.18 : 1}
             />
