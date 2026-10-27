@@ -851,9 +851,9 @@ export const FloorPlanPage = () => {
                   onChange={setTableStatusFilter}
                   options={[
                     { value: 'all', label: tf('allTablesFilterLabel', { count: String(floorMap ? floorMap.tables.length : 0) }) },
-                    { value: 'empty', icon: <span className="w-2 h-2 rounded-full bg-emerald-500" />, label: tf('emptyTablesFilterLabel', { count: String(emptyTablesCount) }) },
+                    { value: 'empty', icon: <span className="w-2 h-2 rounded-full bg-[#CBAE94]" />, label: tf('emptyTablesFilterLabel', { count: String(emptyTablesCount) }) },
                     { value: 'partial', icon: <span className="w-2 h-2 rounded-full bg-amber-500" />, label: tf('partialTablesFilterLabel', { count: String(partialTablesCount) }) },
-                    { value: 'full', icon: <span className="w-2 h-2 rounded-full bg-rose-500" />, label: tf('fullTablesFilterLabel', { count: String(fullTablesCount) }) },
+                    { value: 'full', icon: <span className="w-2 h-2 rounded-full bg-emerald-500" />, label: tf('fullTablesFilterLabel', { count: String(fullTablesCount) }) },
                   ]}
                 />
               </div>
@@ -875,6 +875,7 @@ export const FloorPlanPage = () => {
                         guests={guests}
                         selectedGuest={selectedUnassignedGuest}
                         tableStatusFilter={tableStatusFilter}
+                        zoom={zoomLevel}
                         onTableHover={(table, x, y) => handleTableHover(table, guests, x, y)}
                         onSeatHover={(table, idx, x, y) => handleSeatHover(table, idx, guests, x, y)}
                         onLandmarkHover={(lm, x, y) => handleLandmarkHover(lm, x, y)}
