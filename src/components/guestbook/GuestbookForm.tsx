@@ -2,7 +2,7 @@ import { useRef } from 'react';
 import type { ReactNode } from 'react';
 import { FieldErrors, UseFormRegister } from 'react-hook-form';
 import { motion } from 'motion/react';
-import { Camera, Send, X, CheckCircle2, Sparkles } from 'lucide-react';
+import { Camera, Send, X, CheckCircle2, Sparkles, User, MessageSquare } from 'lucide-react';
 import { z } from 'zod';
 import { GuestbookEntrySchema } from '../../lib/validation';
 import { useT } from '../shared/i18n';
@@ -15,8 +15,10 @@ interface GuestbookFormProps {
   submitting: boolean;
   previewUrl: string | null;
   nameInputRef: React.RefObject<HTMLInputElement | null>;
-  /** Reservation code + table identity fields, rendered above the name input. */
+  /** Reservation code field, rendered above the name input. */
   identity?: ReactNode;
+  /** Table picker, rendered below the name input. */
+  tableField?: ReactNode;
   onFileChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
   onRemovePhoto: () => void;
   onSubmit: () => void;
@@ -29,6 +31,7 @@ export const GuestbookForm = ({
   previewUrl,
   nameInputRef,
   identity,
+  tableField,
   onFileChange,
   onRemovePhoto,
   onSubmit,
@@ -43,13 +46,14 @@ export const GuestbookForm = ({
       animate={{ opacity: 1, y: 0 }}
       exit={{ opacity: 0, y: -10 }}
       onSubmit={onSubmit}
-      className="space-y-6"
+      className="space-y-5"
     >
       {identity}
 
       {/* Name Input */}
       <div className="space-y-1.5">
-        <label htmlFor="gb-name" className="label-mono block">
+        <label htmlFor="gb-name" className="guest-label">
+          <User aria-hidden />
           {t.gbNameLabel} *
         </label>
         {(() => {
@@ -63,16 +67,19 @@ export const GuestbookForm = ({
               ref={(el) => { nameRef(el); nameInputRef.current = el; }}
               {...nameFieldProps}
               placeholder={t.gbNamePlaceholder}
-              className="w-full px-4 py-3 rounded-2xl border-2 border-[#CBAE94] text-sm font-bold focus:outline-none focus:ring-2 focus:ring-[#8B735B] bg-white text-[#5D5449]"
+              className="guest-input"
             />
           );
         })()}
-        {errors.guest_name && <p role="alert" className="text-rose-600 text-xs">{errors.guest_name.message}</p>}
+        {errors.guest_name && <p role="alert" className="text-rose-700 text-xs">{errors.guest_name.message}</p>}
       </div>
+
+      {tableField}
 
       {/* Message Input */}
       <div className="space-y-1.5">
-        <label htmlFor="gb-message" className="label-mono block">
+        <label htmlFor="gb-message" className="guest-label">
+          <MessageSquare aria-hidden />
           {t.gbMessageLabel} *
         </label>
         <textarea
@@ -81,14 +88,15 @@ export const GuestbookForm = ({
           rows={4}
           {...register('message')}
           placeholder={t.gbMessagePlaceholder}
-          className="w-full px-4 py-3 rounded-2xl border-2 border-[#CBAE94] text-sm font-medium focus:outline-none focus:ring-2 focus:ring-[#8B735B] bg-white text-[#5D5449]"
+          className="guest-input resize-y"
         />
-        {errors.message && <p role="alert" className="text-rose-600 text-xs">{errors.message.message}</p>}
+        {errors.message && <p role="alert" className="text-rose-700 text-xs">{errors.message.message}</p>}
       </div>
 
       {/* Photo Upload Input */}
       <div className="space-y-2">
-        <label htmlFor="gb-photo" className="label-mono block">
+        <label htmlFor="gb-photo" className="guest-label">
+          <Camera aria-hidden />
           {t.gbPhotoLabel}
         </label>
 
@@ -98,7 +106,7 @@ export const GuestbookForm = ({
             whileHover={{ scale: 1.01 }}
             whileTap={{ scale: 0.99 }}
             onClick={() => fileInputRef.current?.click()}
-            className="w-full border-2 border-dashed border-[#CBAE94] hover:border-[#8B735B] bg-[#EFE6DC]/40 hover:bg-[#EFE6DC] rounded-2xl p-6 text-center cursor-pointer transition-colors space-y-2"
+            className="w-full border-2 border-dashed border-[#CBAE94] hover:border-[#8B735B] bg-[#EFE6DC]/40 rounded-2xl p-6 text-center cursor-pointer transition-colors space-y-2"
           >
             <div className="w-10 h-10 bg-white rounded-full flex items-center justify-center mx-auto border border-[#CBAE94]">
               <Camera className="w-5 h-5 text-[#8B735B]" />
@@ -106,7 +114,7 @@ export const GuestbookForm = ({
             <p className="text-xs font-bold text-[#5D5449]">
               {t.tapToChoosePhoto}
             </p>
-            <p className="text-xs text-[#5D5449]/70 font-mono">
+            <p className="text-xs text-[#5D5449]">
               {t.gbPhotoHelper}
             </p>
           </motion.button>
@@ -114,7 +122,7 @@ export const GuestbookForm = ({
           <motion.div
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
-            className="relative rounded-2xl overflow-hidden border-2 border-[#CBAE94] bg-white shadow-md"
+            className="relative rounded-2xl overflow-hidden border border-[#CBAE94] bg-white"
           >
             <img
               src={previewUrl}
@@ -151,12 +159,12 @@ export const GuestbookForm = ({
         whileTap={{ scale: 0.98 }}
         type="submit"
         disabled={submitting}
-        className="btn-accent w-full py-4 text-base disabled:opacity-50 min-h-[52px] cursor-pointer"
+        className="btn-accent w-full py-3.5 text-sm font-bold gap-2 disabled:opacity-50 min-h-[52px] cursor-pointer"
       >
         {submitting ? (
-          <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+          <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin" />
         ) : (
-          <Send className="w-5 h-5 mr-2 text-white" />
+          <Send className="w-4 h-4" />
         )}
         <span>{submitting ? t.gbSubmittingBtn : t.gbSubmitBtn}</span>
       </motion.button>
@@ -179,7 +187,7 @@ export const GuestbookSuccess = ({ onLeaveAnother }: { onLeaveAnother: () => voi
         initial={{ scale: 0, rotate: -180 }}
         animate={{ scale: 1, rotate: 0 }}
         transition={{ type: 'spring', stiffness: 300, damping: 18 }}
-        className="w-16 h-16 bg-[#EFE6DC] text-[#8B735B] rounded-full flex items-center justify-center mx-auto shadow-sm border-2 border-[#CBAE94]"
+        className="w-16 h-16 bg-[#EFE6DC] text-[#8B735B] rounded-full flex items-center justify-center mx-auto border border-[#CBAE94]/60"
       >
         <CheckCircle2 className="w-8 h-8 text-[#8B735B]" />
       </motion.div>
@@ -189,7 +197,7 @@ export const GuestbookSuccess = ({ onLeaveAnother }: { onLeaveAnother: () => voi
           <Sparkles className="w-3.5 h-3.5 text-[#8B735B]" />
           {t.gbSuccessTitle}
         </span>
-        <h3 className="font-sans text-2xl font-bold text-[#8B735B]">
+        <h3 className="font-gaegu text-3xl font-bold text-[#4A3F35]">
           {t.gbSuccessMsg}
         </h3>
       </div>
@@ -198,9 +206,9 @@ export const GuestbookSuccess = ({ onLeaveAnother }: { onLeaveAnother: () => voi
         whileHover={{ scale: 1.02 }}
         whileTap={{ scale: 0.98 }}
         onClick={onLeaveAnother}
-        className="btn-accent w-full text-sm space-x-2 cursor-pointer"
+        className="btn-accent w-full py-3.5 text-sm font-bold gap-2 cursor-pointer"
       >
-        <Sparkles className="w-4 h-4 mr-2 text-white" />
+        <Sparkles className="w-4 h-4" />
         <span>{t.gbLeaveAnotherBtn}</span>
       </motion.button>
     </motion.div>
