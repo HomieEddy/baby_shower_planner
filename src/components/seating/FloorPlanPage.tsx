@@ -43,6 +43,7 @@ import {
   PieChart,
   Share2,
   ChevronDown,
+  ChevronUp,
 } from 'lucide-react';
 import {
   getGuestPartySize,
@@ -329,6 +330,8 @@ export const FloorPlanPage = () => {
   // Email Share Modal
   const [isEmailModalOpen, setIsEmailModalOpen] = useState(false);
   const [isShareMenuOpen, setIsShareMenuOpen] = useState(false);
+  // Below lg the host panel becomes a bottom sheet; closed by default so the canvas is clear.
+  const [isGuestSheetOpen, setIsGuestSheetOpen] = useState(false);
   const [shareCustomMsg, setShareCustomMsg] = useState('');
   const [sendingEmail, setSendingEmail] = useState(false);
 
@@ -503,7 +506,7 @@ export const FloorPlanPage = () => {
   );
 
   return (
-    <div className="space-y-6 pb-12">
+    <div className="space-y-6 pb-12 max-lg:pb-28">
       {/* Top Banner & Mode Switcher */}
       <div className="bg-[#FFFDF9] rounded-3xl p-4 sm:p-6 shadow-xl border-2 border-[#CBAE94] flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
@@ -591,7 +594,26 @@ export const FloorPlanPage = () => {
         return (
         <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
           {/* Left Column: Unassigned Guests Sidebar & Host Actions (lg:col-span-4) */}
-          <div className="lg:col-span-4 space-y-4 order-2 lg:order-1 lg:sticky lg:top-6 lg:self-start">
+          <div
+            className={`lg:col-span-4 space-y-4 order-2 lg:order-1 lg:sticky lg:top-6 lg:self-start max-lg:fixed max-lg:inset-x-0 max-lg:bottom-0 max-lg:z-40 max-lg:rounded-t-3xl max-lg:bg-[#FAF6F0] max-lg:shadow-[0_-8px_24px_rgba(74,63,53,0.18)] max-lg:border-t-2 max-lg:border-[#CBAE94] max-lg:px-3 max-lg:pt-2 max-lg:pb-3 ${isGuestSheetOpen ? 'max-lg:max-h-[70vh] max-lg:overflow-y-auto' : ''}`}
+          >
+            {/* Phone handle: always visible below lg, toggles the sheet */}
+            <button
+              type="button"
+              onClick={() => setIsGuestSheetOpen((open) => !open)}
+              aria-expanded={isGuestSheetOpen}
+              className="lg:hidden w-full flex items-center justify-between gap-2 px-3.5 py-2.5 rounded-2xl bg-[#8B735B] text-white text-xs font-bold shadow-md"
+            >
+              <span className="truncate">
+                {selectedUnassignedGuest ? selectedUnassignedGuest.name : t.unassignedGuestsLabel}
+              </span>
+              <span className="inline-flex items-center gap-1.5 shrink-0 font-mono">
+                {!selectedUnassignedGuest && tf('unseatedCountLabel', { count: String(hostStats.unassignedGuestsList.length) })}
+                {isGuestSheetOpen ? <ChevronDown className="w-4 h-4" /> : <ChevronUp className="w-4 h-4" />}
+              </span>
+            </button>
+
+            <div className={`space-y-4 ${isGuestSheetOpen ? '' : 'max-lg:hidden'}`}>
             <UnassignedGuestsSidebar
               unassignedGuests={unassignedGuestsList}
               floorMap={floorMap}
@@ -599,7 +621,10 @@ export const FloorPlanPage = () => {
               selectedGuest={selectedUnassignedGuest}
               filterQuery={unassignedFilterQuery}
               onFilterQueryChange={setUnassignedFilterQuery}
-              onSelectGuest={setSelectedUnassignedGuest}
+              onSelectGuest={(guest) => {
+                setSelectedUnassignedGuest(guest);
+                setIsGuestSheetOpen(false);
+              }}
               onAssign={handleMainAssignGuest}
             />
 
@@ -692,6 +717,7 @@ export const FloorPlanPage = () => {
               <p className="leading-relaxed">
                 {t.floorPlanInfoDesc}
               </p>
+            </div>
             </div>
           </div>
 
