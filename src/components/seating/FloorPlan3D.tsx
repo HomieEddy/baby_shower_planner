@@ -63,7 +63,8 @@ const LANDMARK_H = 0.55;
 
 export type TableStatusFilter = 'all' | 'empty' | 'partial' | 'full';
 
-const STATUS_GLOW: Record<Exclude<TableStatusFilter, 'all'>, string> = {
+// Same status colours as the 2D canvas, so a filtered table reads the same in both views.
+const STATUS_COLOR: Record<Exclude<TableStatusFilter, 'all'>, string> = {
   empty: '#CBAE94',
   partial: '#F59E0B',
   full: '#10B981',
@@ -79,8 +80,10 @@ export interface FloorPlan3DProps {
   targetSeatIndex?: number | null;
   /** true (default) = host seating mode; false = read-only highlight (guest). */
   seating?: boolean;
-  /** Host table-status filter: dim non-matching tables, glow matching ones. */
+  /** Host table-status filter: dim non-matching tables, colour matching ones by status. */
   tableStatusFilter?: TableStatusFilter;
+  /** Host zoom level shared with the 2D canvas (1 = default distance). */
+  zoom?: number;
   onTableHover?: (table: TableElement, x: number, y: number) => void;
   onSeatHover?: (table: TableElement, seatIndex: number, x: number, y: number) => void;
   onLandmarkHover?: (landmark: LandmarkElement, x: number, y: number) => void;
@@ -260,17 +263,20 @@ const Table3D = ({
   const w = table.width * WORLD_SCALE;
   const d = table.height * WORLD_SCALE;
 
-  const topColor = table.color || '#F1E3CD';
-
-  // Status filter: non-matching tables fade out, matching ones glow in their status colour.
+  // Status filter: non-matching tables fade out, matching ones take their status colour.
   const status = getTableStatus(table, guests);
   const matchesFilter = tableStatusFilter === 'all' || status === tableStatusFilter;
   const dimmed = tableStatusFilter !== 'all' && !matchesFilter;
+  const statusActive = tableStatusFilter !== 'all' && !dimmed;
+
+  const topColor = statusActive
+    ? STATUS_COLOR[tableStatusFilter as Exclude<TableStatusFilter, 'all'>]
+    : table.color || '#F1E3CD';
 
   let glow: string | null = null;
   if (isTarget) glow = C.glowTarget;
   else if (seating && selectedGuest) glow = canFit ? C.canFit : C.cannotFit;
-  else if (!dimmed && tableStatusFilter !== 'all') glow = STATUS_GLOW[tableStatusFilter];
+  else if (statusActive) glow = STATUS_COLOR[tableStatusFilter as Exclude<TableStatusFilter, 'all'>];
 
   const events = useHover({
     onOver: (e) => onTableHover?.(table, e.clientX, e.clientY),
@@ -577,21 +583,53 @@ const useRoomEnvironmentTexture = () => {
 };
 
 // Moves the camera straight above the room when `signal` changes (skips the initial mount).
-const TopDownCamera = ({ signal, roomW, roomH }: { signal: number; roomW: number; roomH: number }) => {
+const TopDownCamera = ({
+  signal,
+  roomW,
+  roomH,
+  zoom,
+}: {
+  signal: number;
+  roomW: number;
+  roomH: number;
+  zoom: number;
+}) => {
   const camera = useThree((state) => state.camera);
   const controls = useThree((state) => state.controls) as unknown as {
     target: { set: (x: number, y: number, z: number) => void };
     update: () => void;
   } | null;
+  // Read the latest zoom only when the button is pressed, so zoom clicks don't re-aim the camera.
+  const zoomRef = useRef(zoom);
+  useEffect(() => {
+    zoomRef.current = zoom;
+  }, [zoom]);
   useEffect(() => {
     if (signal === 0) return;
-    camera.position.set(0, Math.max(roomW, roomH) * 1.6, 0.001);
+    camera.position.set(0, (Math.max(roomW, roomH) * 1.6) / zoomRef.current, 0.001);
     camera.lookAt(0, 0, 0);
     if (controls) {
       controls.target.set(0, 0, 0);
       controls.update();
     }
   }, [signal, camera, controls, roomW, roomH]);
+  return null;
+};
+
+// Maps the shared 2D zoom buttons onto the orbit camera: each zoom step scales the
+// camera distance from the room centre, so zoom in/out behaves the same in both views.
+const ZoomSync = ({ zoom }: { zoom: number }) => {
+  const camera = useThree((state) => state.camera);
+  const controls = useThree((state) => state.controls) as unknown as { update: () => void } | null;
+  // Starts at 1 so a remount (switching views) applies the current zoom once.
+  const appliedZoom = useRef(1);
+  useEffect(() => {
+    const factor = appliedZoom.current / zoom;
+    appliedZoom.current = zoom;
+    if (factor === 1) return;
+    camera.position.multiplyScalar(factor);
+    controls?.update();
+  }, [zoom, camera, controls]);
   return null;
 };
 
@@ -654,7 +692,8 @@ const Scene = (props: FloorPlan3DProps & { topDownSignal: number }) => {
   return (
     <>
       <primitive attach="environment" object={environmentTexture} />
-      <TopDownCamera signal={props.topDownSignal} roomW={roomW} roomH={roomH} />
+      <TopDownCamera signal={props.topDownSignal} roomW={roomW} roomH={roomH} zoom={props.zoom ?? 1} />
+      <ZoomSync zoom={props.zoom ?? 1} />
       <ambientLight intensity={0.3} />
       <directionalLight
         position={[scale, scale * 1.5, scale * 0.8]}
