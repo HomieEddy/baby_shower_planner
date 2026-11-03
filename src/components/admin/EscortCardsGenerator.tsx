@@ -235,10 +235,10 @@ export const EscortCardsGenerator: React.FC<EscortCardsGeneratorProps> = ({ gues
                 return (
                   <div
                     key={row.key}
-                    className="border-2 border-dashed border-[#CBAE94] rounded-none bg-[#FAF6F0] h-72 sm:h-56 relative shadow-xs overflow-hidden print:shadow-none print:border-solid print:border-slate-300 break-inside-avoid"
+                    className="border-2 border-dashed border-[#CBAE94] rounded-none bg-[#FAF6F0] h-80 sm:h-72 relative shadow-xs overflow-hidden print:shadow-none print:border-solid print:border-slate-300 break-inside-avoid"
                   >
                     {/* Top Fold (Folded Back / Front Header) - occupies the top half, centered */}
-                    <div className="h-1/2 flex items-center justify-center opacity-75 transform rotate-180 print:rotate-180 text-center px-4 min-w-0">
+                    <div className="h-1/2 flex flex-col items-center justify-center gap-1.5 transform rotate-180 print:rotate-180 text-center px-4 min-w-0">
                       <div className="space-y-1 min-w-0 w-full">
                         <p className="text-xs font-mono uppercase tracking-widest text-[#8B735B] break-words line-clamp-2" style={{ fontSize: `${headerPx}px` }}>
                           {customHeader}
@@ -246,6 +246,16 @@ export const EscortCardsGenerator: React.FC<EscortCardsGeneratorProps> = ({ gues
                         <h4 className="font-newsreader font-bold text-[#4A3F35] break-words line-clamp-2" style={{ fontSize: `${fitFontPx(row.name, { maxPx: 20, minPx: 12, widthPx: 300 })}px` }}>
                           {row.name}
                         </h4>
+                      </div>
+                      {/* Back of the card: baby-name guessing vote, guests write a guess here */}
+                      <div className="w-full bg-white border border-dashed border-[#8B735B] px-3 py-1.5 space-y-1">
+                        <p className="text-[10px] font-mono font-bold uppercase tracking-wider text-[#8B735B]">
+                          {t.escortVoteTitle}
+                        </p>
+                        <div className="h-4 border-b-2 border-[#4A3F35]" aria-hidden="true" />
+                        <p className="text-[9px] font-medium text-[#5D5449] leading-tight">
+                          {t.escortVoteHint}
+                        </p>
                       </div>
                     </div>
 

@@ -1255,6 +1255,8 @@ export interface Translations {
   escortPaperLayout: string;
   escortHeaderWithBaby: string;
   escortHeaderDefault: string;
+  escortVoteTitle: string;
+  escortVoteHint: string;
   mockBadge: string;
   providerNotConfigured: string;
   breadcrumbLabel: string;
@@ -2581,6 +2583,8 @@ export const translations: Record<Language, Translations> = {
     escortPaperLayout: "2-Column Grid (Standard A4 / Letter)",
     escortHeaderWithBaby: "Celebrating Baby {{name}}",
     escortHeaderDefault: "Welcome to Our Baby Shower",
+    escortVoteTitle: "Guess the Baby's Name!",
+    escortVoteHint: "Write your guess and drop this card in the box",
     mockBadge: "MOCK",
     providerNotConfigured: "No email or SMS provider is configured",
     breadcrumbLabel: "Breadcrumb",
@@ -3904,6 +3908,8 @@ export const translations: Record<Language, Translations> = {
     escortPaperLayout: "Grille 2 colonnes (A4 / Letter standard)",
     escortHeaderWithBaby: "Célébration de bébé {{name}}",
     escortHeaderDefault: "Bienvenue à notre baby shower",
+    escortVoteTitle: "Devinez le prénom de bébé !",
+    escortVoteHint: "Écrivez votre proposition et déposez cette carte dans l'urne",
     mockBadge: "SIMULÉ",
     providerNotConfigured: "Aucun fournisseur e-mail ou SMS n'est configuré",
     breadcrumbLabel: "Fil d'Ariane",
