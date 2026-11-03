@@ -1,8 +1,16 @@
 ﻿import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Guest, FloorMapData, LandmarkElement, TableElement } from '../../types';
 import { applyRoomClamp, clampElementToRoom, clampPointToRoom } from './floorPlanHelpers';
-import { getGuestPartySize, seatAttendee, seatParty, unseatAttendee, unassignParty } from '../../lib/tableAssignment';
-import { useTf } from '../shared/i18n';
+import {
+  getAvailableSeats,
+  getGuestPartySize,
+  getPartyTableIds,
+  seatAttendee,
+  seatParty,
+  unseatAttendee,
+  unassignParty,
+} from '../../lib/tableAssignment';
+import { useT, useTf } from '../shared/i18n';
 import { applySeatOutcome, createSeatingDraft, editMap, markSaved, type SeatingDraft } from './seatingDraft';
 
 export interface FloorPlanEditorDeps {
@@ -18,6 +26,7 @@ export interface FloorPlanEditorDeps {
 // mounted fresh on every open (parent keys it), so drafts initialize from the
 // current floor map without effects.
 export function useFloorPlanEditor({ floorMap, guests, notify, onSave, onCancel }: FloorPlanEditorDeps) {
+  const t = useT();
   const tf = useTf();
   const [draft, setDraft] = useState<SeatingDraft>(() => createSeatingDraft(floorMap, guests));
   const draftFloorMap = draft.map;
@@ -322,14 +331,29 @@ export function useFloorPlanEditor({ floorMap, guests, notify, onSave, onCancel 
     applyOutcome(unseatAttendee(draftFloorMap, draftGuests, tableId, seatIndex));
   };
 
-  // Fill a table's free chairs with the party's not-yet-seated members. Any
-  // member who doesn't fit stays unseated â€” the split.
+  // Seat the whole party at one table. Refused (and reported) when the party
+  // does not fit together or already sits at another table.
   const handleAutoSeatParty = (guestId: string, tableId: string): boolean => {
     const guest = draftGuests.find((g) => g.id === guestId);
-    const target = draftFloorMap.tables.find((t) => t.id === tableId);
+    const target = draftFloorMap.tables.find((tbl) => tbl.id === tableId);
     if (!guest || !target) return false;
 
-    applyOutcome(seatParty(draftFloorMap, draftGuests, guestId, tableId));
+    const outcome = seatParty(draftFloorMap, draftGuests, guestId, tableId);
+    if (outcome.unplaced > 0) {
+      const elsewhere = getPartyTableIds(guestId, draftFloorMap.tables, draftGuests).some((id) => id !== tableId);
+      notify(
+        elsewhere
+          ? t.partySeatedElsewhereHint
+          : tf('fpNoFitTableToast', {
+              table: target.name,
+              free: String(getAvailableSeats(target, draftGuests)),
+              guest: guest.name,
+              needed: String(getGuestPartySize(guest)),
+            })
+      );
+      return false;
+    }
+    applyOutcome(outcome);
     notify(tf('fpSeatedToast', { guest: guest.name, size: String(getGuestPartySize(guest)), table: target.name }));
     return true;
   };
