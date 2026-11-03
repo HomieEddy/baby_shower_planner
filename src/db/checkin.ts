@@ -91,8 +91,8 @@ export type SelfCheckInResult =
 
 // Check in / undo one party member (targetName) or the whole party (all).
 // With a magic token the caller is the party lead and may act for anyone;
-// with code+name, members may only check in themselves and only the lead
-// may use `all`.
+// with code+name, any member may check in the whole party (`all`) but may
+// only check in or undo other members individually as the lead.
 export async function selfCheckIn(opts: {
   token?: string;
   code?: string;
@@ -124,8 +124,8 @@ export async function selfCheckIn(opts: {
   const isLead = isPartyLead(guest, identified);
   const scrub = (g: Guest) => (token ? scrubForGuestLookup(g) : scrubForRoster(g));
 
+  // The party is one unit: any identified member can check in (or undo) all of it.
   if (opts.all) {
-    if (!token && !isLead) return { ok: false, error: 'ONLY_LEAD' };
     const updated = opts.undo ? await undoCheckIn(record.id) : await checkInGuest(record.id);
     return { ok: true, guest: scrub(updated) };
   }

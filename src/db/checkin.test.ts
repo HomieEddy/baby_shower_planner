@@ -79,16 +79,25 @@ describe('selfCheckIn without a token', () => {
     expect(await selfCheckIn({ code: '1234' })).toEqual({ ok: false, error: 'NOT_FOUND' });
   });
 
-  it('refuses a member checking in someone else, or the whole party', async () => {
+  it('refuses a member checking in someone else by name', async () => {
     expect(await selfCheckIn({ code: '1234', name: 'Bob', targetName: 'Cara' })).toEqual({ ok: false, error: 'ONLY_LEAD' });
-    expect(await selfCheckIn({ code: '1234', name: 'Bob', all: true })).toEqual({ ok: false, error: 'ONLY_LEAD' });
   });
 
-  it('lets the lead check in the whole party', async () => {
-    const res = await selfCheckIn({ code: '1234', name: 'Alice', all: true });
+  it('lets any member check in the whole party at once', async () => {
+    const res = await selfCheckIn({ code: '1234', name: 'Bob', all: true });
     expect(res.ok).toBe(true);
     if (!res.ok) return;
     expect(res.guest.checked_in).toBe(true);
+    expect(res.guest.checked_in_names).toEqual(['Bob', 'Cara']);
+  });
+
+  it('lets any member undo the whole party', async () => {
+    await selfCheckIn({ code: '1234', name: 'Cara', all: true });
+    const res = await selfCheckIn({ code: '1234', name: 'Bob', all: true, undo: true });
+    expect(res.ok).toBe(true);
+    if (!res.ok) return;
+    expect(res.guest.checked_in).toBe(false);
+    expect(res.guest.checked_in_names).toEqual([]);
   });
 
   it('rejects a target that is not in the party', async () => {

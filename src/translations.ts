@@ -193,6 +193,7 @@ export interface Translations {
   checkinDoneToast: string;
   checkinMeBtn: string;
   checkinPartyLabel: string;
+  partyProgressLabel: string;
   checkinSearchPh: string;
   checkinYouLabel: string;
   checkingLabel: string;
@@ -1519,6 +1520,7 @@ export const translations: Record<Language, Translations> = {
     checkinDoneToast: "{{name}} is checked in!",
     checkinMeBtn: "Check Me In",
     checkinPartyLabel: "Your Party",
+    partyProgressLabel: "{{done}} of {{total}} checked in",
     checkinSearchPh: "Your 4-digit code",
     checkinYouLabel: "You",
     checkingLabel: "Checking...",
@@ -2842,6 +2844,7 @@ export const translations: Record<Language, Translations> = {
     checkinDoneToast: "{{name}} est enregistré(e) !",
     checkinMeBtn: "M'enregistrer",
     checkinPartyLabel: "Votre groupe",
+    partyProgressLabel: "{{done}} sur {{total}} enregistrés",
     checkinSearchPh: "Votre code à 4 chiffres",
     checkinYouLabel: "Vous",
     checkingLabel: "Vérification...",
