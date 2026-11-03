@@ -34,7 +34,6 @@ import {
   getAttendeeLocations,
   getGuestSeatedCount,
   canSeatParty,
-  getPartyTableIds,
 } from '../../lib/tableAssignment';
 import { clampElementToRoom } from './floorPlanHelpers';
 import type { HoverTooltipData as HoverTooltip } from './HoverTooltip';
@@ -1072,7 +1071,7 @@ export const FloorPlanEditor = ({
                                 type="button"
                                 onClick={() => handleUnseatAttendee(draftSelectedTable.id, idx)}
                                 className="text-red-500 hover:text-red-700 p-1 rounded-lg hover:bg-red-50 shrink-0"
-                                title={t.unseatAttendeeBtn}
+                                title={t.unassignParty}
                               >
                                 <X className="w-3.5 h-3.5" />
                               </button>
@@ -1105,12 +1104,9 @@ export const FloorPlanEditor = ({
                           const pSize = getGuestPartySize(g);
                           const remaining = pSize - getGuestSeatedCount(g.id, draftFloorMap, draftGuests);
                           const fitsHere = canSeatParty(draftSelectedTable, draftFloorMap, draftGuests, g.id);
-                          const elsewhere = getPartyTableIds(g.id, draftFloorMap.tables, draftGuests).some((id) => id !== draftSelectedTable.id);
                           const disabled = remaining <= 0 || !fitsHere;
                           const reason = remaining <= 0
                             ? t.allAttendeesSeatedMsg
-                            : elsewhere
-                            ? t.partySeatedElsewhereHint
                             : !fitsHere
                             ? tf('partyNeedsSeatsTogether', { count: pSize })
                             : tf('remainingToSeatLabel', { count: remaining });
@@ -1299,7 +1295,6 @@ export const FloorPlanEditor = ({
                         const free = table.capacity - occCount;
                         const partySize = getGuestPartySize(selectedGuestForSeating);
                         const canFill = remaining > 0 && canSeatParty(table, draftFloorMap, draftGuests, selectedGuestForSeating.id);
-                        const elsewhere = getPartyTableIds(selectedGuestForSeating.id, draftFloorMap.tables, draftGuests).some((id) => id !== table.id);
 
                         return (
                           <div
@@ -1329,8 +1324,6 @@ export const FloorPlanEditor = ({
                               <div className="py-1 px-2 rounded-lg bg-red-100 text-red-700 text-xs font-bold text-center">
                                 {remaining <= 0
                                   ? t.allAttendeesSeatedMsg
-                                  : elsewhere
-                                  ? t.partySeatedElsewhereHint
                                   : tf('partyNeedsSeatsTogether', { count: partySize })}
                               </div>
                             )}

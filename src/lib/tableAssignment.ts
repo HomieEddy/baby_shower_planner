@@ -138,10 +138,10 @@ export const getPartyTableIds = (
     .filter((t) => getTableSeats(t, guestsList).some((s) => s?.guestId === guestId))
     .map((t) => t.id);
 
-// Whole-party eligibility: the party can take `table` as one group. Its own
-// chairs there count as free (they are re-seated together), there must be room
-// for every member, and the party must not hold chairs at any other table. This
-// is the single rule every seating surface and seatParty share.
+// Whole-party eligibility: the party can sit at `table` as one group. Its own
+// chairs there count as free (they are re-seated together), so a party can also
+// move whole from another table. There must be room for every member. This is
+// the single fit rule every seating surface and seatParty share.
 export const canSeatParty = (
   table: TableElement,
   floorMap: FloorMapData | null,
@@ -150,7 +150,6 @@ export const canSeatParty = (
 ): boolean => {
   const guest = guestsList.find((g) => g.id === guestId);
   if (!guest || !floorMap) return false;
-  if (getPartyTableIds(guestId, floorMap.tables, guestsList).some((id) => id !== table.id)) return false;
   const ownChairsHere = getTableSeats(table, guestsList).filter((s) => s?.guestId === guestId).length;
   return getAvailableSeats(table, guestsList) + ownChairsHere >= getGuestPartySize(guest);
 };
@@ -348,75 +347,23 @@ const commit = (
   return { map: { ...map, tables }, guests: syncGuestTableIds(tables, guests) };
 };
 
-// Place one named attendee in a chair. Moves them out of any current chair
-// first. Refused (placed 0) when the move would put the party on a second table,
-// or when it would displace someone whose own party would then be split.
-// Displacing a stranger is only allowed when the displaced guest can take the
-// vacated chair and stay on one table.
+// A single member's drag or click acts on the whole party: the party is seated
+// (or moved) as one unit at `table`, in party order. The chair index is accepted
+// for call-site compatibility but ignored, so no one is ever seated alone.
 export function seatAttendee(
   map: FloorMapData,
   guests: Guest[],
   guestId: string,
-  attendeeIndex: number,
+  _attendeeIndex: number,
   tableId: string,
-  seatIndex: number | null
+  _seatIndex: number | null
 ): SeatingOutcome {
-  const refused = { map, guests, placed: 0, unplaced: 1 };
-  const targetTable = map.tables.find((t) => t.id === tableId);
-  const guest = guests.find((g) => g.id === guestId);
-  if (!targetTable || !guest) return refused;
-
-  // A party may not be spread over two tables: a member can only join a party
-  // that is already at this table (or one with no chairs yet).
-  if (getPartyTableIds(guestId, map.tables, guests).some((id) => id !== tableId)) return refused;
-
-  const seats = seatsByTableId(map.tables, guests);
-  const targetSeats = seats.get(tableId)!;
-  const desired = seatIndex ?? targetSeats.findIndex((s) => s === null);
-  if (desired < 0 || desired >= targetSeats.length) return refused;
-
-  let originTableId: string | null = null;
-  let originIndex = -1;
-  for (const [tid, tableSeats] of seats) {
-    const i = tableSeats.findIndex((s) => s?.guestId === guestId && s.attendeeIndex === attendeeIndex);
-    if (i !== -1) {
-      originTableId = tid;
-      originIndex = i;
-      break;
-    }
-  }
-  if (originTableId === tableId && originIndex === desired) {
-    return { map, guests, placed: 1, unplaced: 0 };
-  }
-
-  const displaced = targetSeats[desired];
-  const isSelf = (s: SeatOccupant | null) =>
-    !!s && s.guestId === guestId && s.attendeeIndex === attendeeIndex;
-  for (const tableSeats of seats.values()) {
-    for (let i = 0; i < tableSeats.length; i++) {
-      if (isSelf(tableSeats[i])) tableSeats[i] = null;
-    }
-  }
-  if (displaced && !isSelf(displaced)) {
-    // Swap: the displaced occupant takes the vacated chair, or the move is refused.
-    const originSeats = originTableId ? seats.get(originTableId) : undefined;
-    if (!originSeats || originIndex < 0 || originSeats[originIndex] !== null) return refused;
-    originSeats[originIndex] = displaced;
-  }
-  targetSeats[desired] = { guestId, attendeeIndex };
-
-  // Final check: the mover, and anyone displaced, still sit at one table each.
-  const tablesHolding = (gid: string) =>
-    [...seats.entries()].filter(([, ss]) => ss.some((s) => s?.guestId === gid)).length;
-  if (tablesHolding(guestId) > 1 || (displaced && tablesHolding(displaced.guestId) > 1)) return refused;
-
-  return { ...commit(map, guests, seats), placed: 1, unplaced: 0 };
+  return seatParty(map, guests, guestId, tableId);
 }
 
-// Seat the whole party at one table, in party order, or change nothing. The
-// party must fit (see canSeatParty) and must not already sit at another table:
-// moving a party means unseating it first, so nothing moves silently. Returns
-// placed = party size on success, unplaced = party size on refusal.
+// Seat the whole party at one table, in party order, or change nothing. A party
+// already seated elsewhere moves as one unit: its old chairs are freed in the
+// same step. Refused (placed 0, unplaced = party size) when it does not fit.
 // `tableId === null` clears the whole party.
 export function seatParty(
   map: FloorMapData,
@@ -439,8 +386,11 @@ export function seatParty(
   const alreadyWhole = targetSeats.filter((s) => s?.guestId === guestId).length === size;
   if (alreadyWhole) return { map, guests, placed: 0, unplaced: 0 };
 
-  for (let i = 0; i < targetSeats.length; i++) {
-    if (targetSeats[i]?.guestId === guestId) targetSeats[i] = null;
+  // Free every chair the party holds, on any table, then seat it whole here.
+  for (const tableSeats of seats.values()) {
+    for (let i = 0; i < tableSeats.length; i++) {
+      if (tableSeats[i]?.guestId === guestId) tableSeats[i] = null;
+    }
   }
   let next = 0;
   for (let i = 0; i < targetSeats.length && next < size; i++) {
@@ -452,19 +402,17 @@ export function seatParty(
   return { ...commit(map, guests, seats), placed: size, unplaced: 0 };
 }
 
+// Removing any one chair removes its whole party, from every table, in one step.
 export function unseatAttendee(
   map: FloorMapData,
   guests: Guest[],
   tableId: string,
   seatIndex: number
 ): SeatingOutcome {
-  const seats = seatsByTableId(map.tables, guests);
-  const tableSeats = seats.get(tableId);
-  if (!tableSeats || seatIndex < 0 || seatIndex >= tableSeats.length) {
-    return { map, guests, placed: 0, unplaced: 0 };
-  }
-  tableSeats[seatIndex] = null;
-  return { ...commit(map, guests, seats), placed: 0, unplaced: 0 };
+  const tableSeats = seatsByTableId(map.tables, guests).get(tableId);
+  const occupant = tableSeats && seatIndex >= 0 && seatIndex < tableSeats.length ? tableSeats[seatIndex] : null;
+  if (!occupant) return { map, guests, placed: 0, unplaced: 0 };
+  return unassignParty(map, guests, occupant.guestId);
 }
 
 export function unassignParty(

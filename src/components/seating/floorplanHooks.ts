@@ -4,13 +4,12 @@ import { applyRoomClamp, clampElementToRoom, clampPointToRoom } from './floorPla
 import {
   getAvailableSeats,
   getGuestPartySize,
-  getPartyTableIds,
   seatAttendee,
   seatParty,
   unseatAttendee,
   unassignParty,
 } from '../../lib/tableAssignment';
-import { useT, useTf } from '../shared/i18n';
+import { useTf } from '../shared/i18n';
 import { applySeatOutcome, createSeatingDraft, editMap, markSaved, type SeatingDraft } from './seatingDraft';
 
 export interface FloorPlanEditorDeps {
@@ -26,7 +25,6 @@ export interface FloorPlanEditorDeps {
 // mounted fresh on every open (parent keys it), so drafts initialize from the
 // current floor map without effects.
 export function useFloorPlanEditor({ floorMap, guests, notify, onSave, onCancel }: FloorPlanEditorDeps) {
-  const t = useT();
   const tf = useTf();
   const [draft, setDraft] = useState<SeatingDraft>(() => createSeatingDraft(floorMap, guests));
   const draftFloorMap = draft.map;
@@ -316,19 +314,25 @@ export function useFloorPlanEditor({ floorMap, guests, notify, onSave, onCancel 
     const guest = draftGuests.find((g) => g.id === guestId);
     if (!targetTable || !guest) return false;
 
+    // A single member's drag acts on the whole party.
     const outcome = seatAttendee(draftFloorMap, draftGuests, guestId, attendeeIndex, tableId, seatIndex);
-    if (outcome.placed === 0) {
-      notify(tf('fpCannotSeatToast', { guest: guest.name, size: '1', table: targetTable.name, available: '0' }));
+    const size = getGuestPartySize(guest);
+    if (outcome.unplaced > 0) {
+      notify(tf('fpCannotSeatToast', { guest: guest.name, size: String(size), table: targetTable.name, available: String(getAvailableSeats(targetTable, draftGuests)) }));
       return false;
     }
 
     applyOutcome(outcome);
-    notify(tf('fpSeatedToast', { guest: guest.name, size: '1', table: targetTable.name }));
+    notify(tf('fpSeatedToast', { guest: guest.name, size: String(size), table: targetTable.name }));
     return true;
   };
 
+  // Removing one chair removes the whole party from the table.
   const handleUnseatAttendee = (tableId: string, seatIndex: number): void => {
+    const occupant = draftFloorMap.tables.find((tbl) => tbl.id === tableId)?.seats?.[seatIndex];
+    const guest = occupant ? draftGuests.find((g) => g.id === occupant.guestId) : undefined;
     applyOutcome(unseatAttendee(draftFloorMap, draftGuests, tableId, seatIndex));
+    if (guest) notify(tf('fpUnseatedToast', { guest: guest.name }));
   };
 
   // Seat the whole party at one table. Refused (and reported) when the party
@@ -340,16 +344,13 @@ export function useFloorPlanEditor({ floorMap, guests, notify, onSave, onCancel 
 
     const outcome = seatParty(draftFloorMap, draftGuests, guestId, tableId);
     if (outcome.unplaced > 0) {
-      const elsewhere = getPartyTableIds(guestId, draftFloorMap.tables, draftGuests).some((id) => id !== tableId);
       notify(
-        elsewhere
-          ? t.partySeatedElsewhereHint
-          : tf('fpNoFitTableToast', {
-              table: target.name,
-              free: String(getAvailableSeats(target, draftGuests)),
-              guest: guest.name,
-              needed: String(getGuestPartySize(guest)),
-            })
+        tf('fpNoFitTableToast', {
+          table: target.name,
+          free: String(getAvailableSeats(target, draftGuests)),
+          guest: guest.name,
+          needed: String(getGuestPartySize(guest)),
+        })
       );
       return false;
     }
