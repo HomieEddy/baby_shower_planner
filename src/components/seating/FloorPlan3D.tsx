@@ -9,7 +9,6 @@ import {
   PMREMGenerator,
   RepeatWrapping,
   SRGBColorSpace,
-  type Mesh,
   type MeshBasicMaterial,
 } from 'three';
 import { RoomEnvironment } from 'three/examples/jsm/environments/RoomEnvironment.js';
@@ -77,7 +76,7 @@ export interface FloorPlan3DProps {
   selectedGuest?: Guest | null;
   /** Guest's own table/seat (day-of VenueModal). */
   targetTableId?: string | null;
-  targetSeatIndex?: number | null;
+  targetSeatIndices?: number[];
   /** true (default) = host seating mode; false = read-only highlight (guest). */
   seating?: boolean;
   /** Host table-status filter: dim non-matching tables, colour matching ones by status. */
@@ -206,17 +205,13 @@ const Chair3D = ({ table, seatIndex, fill, dimmed = false, onSeatHover, onLeave 
 
 const SeatPulse3D = ({ table, seatIndex }: { table: TableElement; seatIndex: number }) => {
   const pos = seatLocalWorld(table, seatIndex);
-  const ring = useRef<Mesh>(null);
   const material = useRef<MeshBasicMaterial>(null);
   useFrame(({ clock }) => {
-    const cycle = 1.3;
-    const p = (clock.getElapsedTime() % cycle) / cycle;
-    const s = 0.7 + p * 1.1;
-    ring.current?.scale.setScalar(s);
-    if (material.current) material.current.opacity = 0.75 * (1 - p);
+    // Fast flicker so every seat the party holds reads as live, in green.
+    if (material.current) material.current.opacity = 0.35 + 0.65 * Math.abs(Math.sin(clock.getElapsedTime() * 7));
   });
   return (
-    <mesh ref={ring} position={[pos.x, 0.03, pos.z]} rotation={[-Math.PI / 2, 0, 0]}>
+    <mesh position={[pos.x, 0.03, pos.z]} rotation={[-Math.PI / 2, 0, 0]}>
       <ringGeometry args={[0.16, 0.24, 32]} />
       <meshBasicMaterial ref={material} color={C.mine} transparent opacity={0.7} side={DoubleSide} depthWrite={false} />
     </mesh>
@@ -224,13 +219,15 @@ const SeatPulse3D = ({ table, seatIndex }: { table: TableElement; seatIndex: num
 };
 
 // ─── Table ────────────────────────────────────────────────────────
+const NO_SEATS: number[] = [];
+
 interface TableProps {
   floorMap: FloorMapData;
   table: TableElement;
   guests: Guest[];
   selectedGuest?: Guest | null;
   targetTableId?: string | null;
-  targetSeatIndex?: number | null;
+  targetSeatIndices?: number[];
   seating: boolean;
   tableStatusFilter?: TableStatusFilter;
   onTableHover?: FloorPlan3DProps['onTableHover'];
@@ -245,7 +242,7 @@ const Table3D = ({
   guests,
   selectedGuest,
   targetTableId,
-  targetSeatIndex,
+  targetSeatIndices = NO_SEATS,
   seating,
   tableStatusFilter = 'all',
   onTableHover,
@@ -266,8 +263,12 @@ const Table3D = ({
   // Status filter: non-matching tables fade out, matching ones take their status colour.
   const status = getTableStatus(table, guests);
   const matchesFilter = tableStatusFilter === 'all' || status === tableStatusFilter;
-  const dimmed = tableStatusFilter !== 'all' && !matchesFilter;
+  // Day-of spotlight: every table except the guest's own fades back.
+  const spotlightDim = !!targetTableId && !isTarget;
+  const dimmed = (tableStatusFilter !== 'all' && !matchesFilter) || spotlightDim;
   const statusActive = tableStatusFilter !== 'all' && !dimmed;
+  // Outer radius of the target ring: clears the chairs on round and square tables.
+  const ringOuter = (isRound ? r : Math.hypot(w, d) / 2) + 0.4;
 
   const topColor = statusActive
     ? STATUS_COLOR[tableStatusFilter as Exclude<TableStatusFilter, 'all'>]
@@ -290,6 +291,12 @@ const Table3D = ({
 
   return (
     <group position={[center.x, 0, center.z]} rotation={[0, tableRotationY(table), 0]}>
+      {isTarget && (
+        <mesh position={[0, 0.025, 0]} rotation={[-Math.PI / 2, 0, 0]} renderOrder={2}>
+          <ringGeometry args={[ringOuter - 0.08, ringOuter, 72]} />
+          <meshBasicMaterial color="#000000" side={DoubleSide} depthWrite={false} />
+        </mesh>
+      )}
       <group {...events}>
         {/* Tabletop */}
         {isRound ? (
@@ -360,7 +367,7 @@ const Table3D = ({
             seatIndex={idx}
             dimmed={dimmed}
             fill={
-              isTarget && targetSeatIndex === idx
+              isTarget && targetSeatIndices.includes(idx)
                 ? C.mine
                 : tableSeats[idx]
                   ? C.occupied
@@ -374,9 +381,10 @@ const Table3D = ({
         ))}
 
         {/* Green pulse on the guest's own seat */}
-        {isTarget && targetSeatIndex != null && (
-          <SeatPulse3D table={table} seatIndex={targetSeatIndex} />
-        )}
+        {isTarget &&
+          targetSeatIndices.map((seatIdx) => (
+            <SeatPulse3D key={`pulse-${seatIdx}`} table={table} seatIndex={seatIdx} />
+          ))}
 
         {/* Table name label */}
         <Html
@@ -771,7 +779,7 @@ const Scene = (props: FloorPlan3DProps & { topDownSignal: number }) => {
           guests={guests}
           selectedGuest={props.selectedGuest}
           targetTableId={props.targetTableId}
-          targetSeatIndex={props.targetSeatIndex}
+          targetSeatIndices={props.targetSeatIndices}
           seating={props.seating ?? true}
           tableStatusFilter={props.tableStatusFilter}
           onTableHover={props.onTableHover}

@@ -32,7 +32,7 @@ export const VenueModal = ({ open, selected, floorMap, roster, onClose }: VenueM
   const t = useT();
   const tf = useTf();
   const palette = useCanvasPalette();
-  const [viewMode, setViewMode] = useState<ViewMode>('2d');
+  const [viewMode, setViewMode] = useState<ViewMode>('3d');
   const [mapWidth, setMapWidth] = useState(440);
   const mapWrapRef = useRef<HTMLDivElement>(null);
   const panelRef = useRef<HTMLDivElement>(null);
@@ -66,7 +66,17 @@ export const VenueModal = ({ open, selected, floorMap, roster, onClose }: VenueM
   );
 
   const guestAssignedTable = guestSeat?.table ?? null;
-  const seatIndex = guestSeat?.seatIndex ?? null;
+
+  // Every chair this party holds at that table: the whole party sits together.
+  const partySeatIndices = useMemo(() => {
+    if (!guestAssignedTable) return [] as number[];
+    const out: number[] = [];
+    getTableSeats(guestAssignedTable, roster).forEach((seat, i) => {
+      if (seat?.guestId === selected.guest.id) out.push(i);
+    });
+    return out;
+  }, [guestAssignedTable, roster, selected.guest.id]);
+  const partySeatSet = useMemo(() => new Set(partySeatIndices), [partySeatIndices]);
 
   const scale = floorMap ? mapWidth / floorMap.canvasWidth : 1;
   const mapHeight = floorMap ? Math.round(floorMap.canvasHeight * scale) : 280;
@@ -83,15 +93,18 @@ export const VenueModal = ({ open, selected, floorMap, roster, onClose }: VenueM
       }
     : null;
 
-  // Canvas position of the selected attendee's seat (for the green pulse)
-  const seatCenter = useMemo(() => {
-    if (!guestAssignedTable || seatIndex === null) return null;
-    const local = getSeatLocalPosition(guestAssignedTable, seatIndex);
-    return {
-      x: (guestAssignedTable.x + local.x) * scale,
-      y: (guestAssignedTable.y + local.y) * scale,
-    };
-  }, [guestAssignedTable, seatIndex, scale]);
+  // Canvas positions of every seat this party holds (they all flicker green)
+  const partySeatCenters = useMemo(() => {
+    if (!guestAssignedTable) return [];
+    return partySeatIndices.map((idx) => {
+      const local = getSeatLocalPosition(guestAssignedTable, idx);
+      return {
+        idx,
+        x: (guestAssignedTable.x + local.x) * scale,
+        y: (guestAssignedTable.y + local.y) * scale,
+      };
+    });
+  }, [guestAssignedTable, partySeatIndices, scale]);
 
   const entranceCenter = entrance
     ? {
@@ -253,7 +266,7 @@ export const VenueModal = ({ open, selected, floorMap, roster, onClose }: VenueM
                             guests={roster}
                             seating={false}
                             targetTableId={guestAssignedTable.id}
-                            targetSeatIndex={seatIndex}
+                            targetSeatIndices={partySeatIndices}
                           />
                         </Suspense>
                       ) : (
@@ -278,12 +291,12 @@ export const VenueModal = ({ open, selected, floorMap, roster, onClose }: VenueM
                               const occupied = getTableOccupiedSeats(tbl, roster);
                               const seatLayout = getTableSeats(tbl, roster);
                               return (
-                                <Group key={`gtbl-${tbl.id}`} x={tbl.x} y={tbl.y}>
+                                <Group key={`gtbl-${tbl.id}`} x={tbl.x} y={tbl.y} opacity={isTarget ? 1 : 0.25}>
                                   {/* Outer seat dots around the table (editor geometry) */}
                                   <SeatRing
                                     table={tbl}
                                     renderSeat={(pos, i) => {
-                                      const isMine = isTarget && seatIndex === i;
+                                      const isMine = isTarget && partySeatSet.has(i);
                                       return (
                                         <Circle
                                           key={`seat-${i}`}
@@ -309,55 +322,47 @@ export const VenueModal = ({ open, selected, floorMap, roster, onClose }: VenueM
                           </Layer>
                         </Stage>
 
-                        {/* Static ring on the guest's table — only the seat pulses */}
+                        {/* Solid black ring around the guest's table */}
                         {targetTableCenter && (
                           <div
                             className="absolute pointer-events-none"
                             style={{
                               left: targetTableCenter.x,
                               top: targetTableCenter.y,
-                              // The wrapper needs a size: the ring spans the table plus its chairs.
-                              width: (guestAssignedTable.width + 36) * scale,
-                              height: (guestAssignedTable.height + 36) * scale,
+                              width: (guestAssignedTable.width + 72) * scale,
+                              height: (guestAssignedTable.height + 72) * scale,
                               transform: 'translate(-50%, -50%)',
                             }}
                           >
                             <span
                               aria-hidden
-                              className={`absolute inset-0 border-[3px] ${guestAssignedTable.shape === 'circle' ? 'rounded-full' : 'rounded-2xl'}`}
-                              style={{ borderColor: 'var(--ink)' }}
-                            />
-                            <span
-                              aria-hidden
-                              className={`absolute inset-0 blur-[2px] ${guestAssignedTable.shape === 'circle' ? 'rounded-full' : 'rounded-2xl'}`}
-                              style={{ backgroundColor: 'color-mix(in srgb, var(--ink) 12%, transparent)' }}
+                              className={`absolute inset-0 border-[6px] border-black ${guestAssignedTable.shape === 'circle' ? 'rounded-full' : 'rounded-[28px]'}`}
                             />
                           </div>
                         )}
 
-                        {/* Pulsing green seat — the attendee's exact seat */}
-                        {seatCenter && (
+                        {/* Every seat this party holds flickers green */}
+                        {partySeatCenters.map((p) => (
                           <div
+                            key={`mine-${p.idx}`}
                             className="absolute pointer-events-none"
                             style={{
-                              left: seatCenter.x,
-                              top: seatCenter.y,
-                              width: Math.max(20 * scale, 14),
-                              height: Math.max(20 * scale, 14),
+                              left: p.x,
+                              top: p.y,
+                              width: Math.max(16 * scale, 10),
+                              height: Math.max(16 * scale, 10),
                               transform: 'translate(-50%, -50%)',
                             }}
                           >
                             <motion.span
                               aria-hidden
-                              className="absolute inset-0 rounded-full border-[3px]"
-                              style={{ borderColor: MY_SEAT }}
-                              initial={{ scale: 0.5, opacity: 0.9 }}
-                              animate={{ scale: [0.6, 2.2], opacity: [0.9, 0] }}
-                              transition={{ duration: 1.2, repeat: Infinity, ease: 'easeOut' }}
+                              className="absolute inset-0 rounded-full"
+                              style={{ backgroundColor: MY_SEAT, boxShadow: `0 0 0 2px ${MY_SEAT_STROKE}` }}
+                              animate={{ opacity: [1, 0.15, 1, 0.4, 1] }}
+                              transition={{ duration: 1, repeat: Infinity, ease: 'linear' }}
                             />
-                            <span className="absolute inset-0 rounded-full blur-[1px]" style={{ backgroundColor: `${MY_SEAT}4D` }} />
                           </div>
-                        )}
+                        ))}
 
                         {/* Bobbing entrance pin */}
                         {entranceCenter && (
@@ -394,10 +399,10 @@ export const VenueModal = ({ open, selected, floorMap, roster, onClose }: VenueM
                   {/* Legend */}
                   <div className="flex flex-wrap items-center justify-center gap-x-4 gap-y-2 mt-3 text-xs font-mono font-bold text-[#5D5449]">
                     <span className="flex items-center gap-1.5">
-                      <span className="w-2.5 h-2.5 rounded-full border-2" style={{ borderColor: 'var(--ink)' }} />
+                      <span className="w-2.5 h-2.5 rounded-full border-2 border-black" />
                       {t.finderLegendYourTable}
                     </span>
-                    {seatCenter && (
+                    {partySeatCenters.length > 0 && (
                       <span className="flex items-center gap-1.5">
                         <motion.span
                           className="w-2.5 h-2.5 rounded-full"
