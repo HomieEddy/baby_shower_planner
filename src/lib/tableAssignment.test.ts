@@ -143,18 +143,16 @@ describe('validateTables', () => {
 });
 
 describe('seatParty', () => {
-  it('refuses to split a party onto a second table', () => {
-    // One member already on t1: the party may not reach t2, and nothing changes.
+  it('moves a party whole to another table, freeing its old chairs', () => {
+    // One member on t1 today: the whole party lands on t2 and leaves t1 empty.
     const g = guest();
     const t1 = table({ seats: [{ guestId: 'g1', attendeeIndex: 0 }, null, null, null] });
     const t2 = table({ id: 't2', capacity: 4 });
-    const fm = map({ tables: [t1, t2] });
-
-    const out = seatParty(fm, [g], 'g1', 't2');
-    expect(out.placed).toBe(0);
-    expect(out.unplaced).toBe(3);
-    expect(out.map).toBe(fm);
-    expect(getTableOccupiedSeats(out.map.tables[1], out.guests)).toBe(0);
+    const out = seatParty(map({ tables: [t1, t2] }), [g], 'g1', 't2');
+    expect(out.placed).toBe(3);
+    expect(getTableOccupiedSeats(out.map.tables[0], out.guests)).toBe(0);
+    expect(getTableOccupiedSeats(out.map.tables[1], out.guests)).toBe(3);
+    expect(() => validateTables(out.map.tables, out.guests)).not.toThrow();
   });
 
   it('seats the whole party at one table in party order', () => {
@@ -194,32 +192,25 @@ describe('seatParty', () => {
 });
 
 describe('seatAttendee', () => {
-  it('swaps the displaced attendee back into the vacated chair', () => {
-    const g1 = guest({ id: 'g1', name: 'Alice', attending_party_size: 3, attendee_names: ['Alice', 'Bob', 'Cara'] });
-    const g2 = guest({ id: 'g2', name: 'Dana', attending_party_size: 1, attendee_names: ['Dana'] });
-    const t1 = table({
-      capacity: 4,
-      seats: [{ guestId: 'g1', attendeeIndex: 0 }, { guestId: 'g2', attendeeIndex: 0 }, null, null],
-    });
-    const out = seatAttendee(map({ tables: [t1] }), [g1, g2], 'g2', 0, 't1', 0);
-
-    const seats = getTableSeats(out.map.tables[0], out.guests);
-    expect(seats[0]).toEqual({ guestId: 'g2', attendeeIndex: 0 });
-    expect(seats[1]).toEqual({ guestId: 'g1', attendeeIndex: 0 });
+  it('seats the whole party when one member is picked', () => {
+    const out = seatAttendee(map({ tables: [table({ capacity: 4 })] }), [guest()], 'g1', 1, 't1', 3);
+    expect(out.placed).toBe(3);
+    expect(getTableOccupiedSeats(out.map.tables[0], out.guests)).toBe(3);
     expect(() => validateTables(out.map.tables, out.guests)).not.toThrow();
   });
 
-  it('reports unplaced when the target chair is out of range', () => {
-    const out = seatAttendee(map({ tables: [table({ capacity: 2 })] }), [guest()], 'g1', 0, 't1', 9);
+  it('refuses the party when it does not fit, and seats nobody alone', () => {
+    const out = seatAttendee(map({ tables: [table({ capacity: 2 })] }), [guest()], 'g1', 0, 't1', 0);
     expect(out.placed).toBe(0);
-    expect(out.unplaced).toBe(1);
+    expect(out.unplaced).toBe(3);
+    expect(getTableOccupiedSeats(out.map.tables[0], out.guests)).toBe(0);
   });
 });
 
 describe('unseatAttendee / unassignParty', () => {
-  it('clears a single chair', () => {
-    const t1 = table({ seats: [{ guestId: 'g1', attendeeIndex: 0 }, null, null, null] });
-    const out = unseatAttendee(map({ tables: [t1] }), [guest()], 't1', 0);
+  it('unseats the whole party when any one chair is removed', () => {
+    const t1 = table({ seats: [{ guestId: 'g1', attendeeIndex: 0 }, { guestId: 'g1', attendeeIndex: 1 }, null, null] });
+    const out = unseatAttendee(map({ tables: [t1] }), [guest()], 't1', 1);
     expect(getTableOccupiedSeats(out.map.tables[0], out.guests)).toBe(0);
     expect(out.guests[0].table_id).toBeUndefined();
   });
@@ -314,31 +305,33 @@ describe('seat availability predicate', () => {
     // table full
     const full = table({ capacity: 1, seats: [{ guestId: 'g2', attendeeIndex: 0 }] });
     expect(canSeatParty(full, map({ tables: [full] }), [g, guest({ id: 'g2', name: 'Eve' })], 'g1')).toBe(false);
-    // guest fully seated elsewhere -> nothing left to seat
+    // a party seated elsewhere can still move whole to a table with room
     const seated = [
       table({ id: 'a', seats: [{ guestId: 'g1', attendeeIndex: 0 }, null, null, null] }),
       table({ id: 'b', seats: [{ guestId: 'g1', attendeeIndex: 1 }, null, null, null] }),
       table({ id: 'c', seats: [{ guestId: 'g1', attendeeIndex: 2 }, null, null, null] }),
     ];
-    expect(canSeatParty(table({ id: 'd' }), map({ tables: seated }), [g], 'g1')).toBe(false);
+    expect(canSeatParty(table({ id: 'd', capacity: 3 }), map({ tables: seated }), [g], 'g1')).toBe(true);
   });
 
-  it('canSeatParty refuses a party already seated at another table', () => {
+  it("canSeatParty counts a party's own chairs when it moves within the room", () => {
     const g = guest();
     const t1 = table({ seats: [{ guestId: 'g1', attendeeIndex: 0 }, null, null, null] });
-    const target = table({ id: 't2', capacity: 4 });
+    const target = table({ id: 't2', capacity: 3 });
     const fm = map({ tables: [t1, target] });
     expect(getUnseatedPartySize('g1', fm, [g])).toBe(2);
-    expect(canSeatParty(target, fm, [g], 'g1')).toBe(false);
+    expect(canSeatParty(target, fm, [g], 'g1')).toBe(true);
+    expect(canSeatParty(table({ id: 't3', capacity: 2 }), fm, [g], 'g1')).toBe(false);
   });
 
-  it('seatAttendee refuses a member who would join a party seated elsewhere', () => {
+  it('seatAttendee moves a split party whole onto the dropped table', () => {
     const g = guest();
     const t1 = table({ seats: [{ guestId: 'g1', attendeeIndex: 0 }, null, null, null] });
     const t2 = table({ id: 't2', capacity: 4 });
     const out = seatAttendee(map({ tables: [t1, t2] }), [g], 'g1', 1, 't2', null);
-    expect(out.placed).toBe(0);
-    expect(getTableOccupiedSeats(out.map.tables[1], out.guests)).toBe(0);
+    expect(out.placed).toBe(3);
+    expect(getTableOccupiedSeats(out.map.tables[0], out.guests)).toBe(0);
+    expect(getTableOccupiedSeats(out.map.tables[1], out.guests)).toBe(3);
   });
 });
 

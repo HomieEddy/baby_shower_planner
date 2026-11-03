@@ -1,6 +1,6 @@
 import { Search, UserX, CheckCircle2, Users, Utensils, X } from 'lucide-react';
 import { Guest, FloorMapData, TableElement } from '../../types';
-import { getGuestPartySize, getAvailableSeats, getPartyTableIds, canSeatParty } from '../../lib/tableAssignment';
+import { getGuestPartySize, getAvailableSeats, canSeatParty } from '../../lib/tableAssignment';
 import { useT, useTf } from '../shared/i18n';
 
 interface UnassignedGuestsSidebarProps {
@@ -36,7 +36,6 @@ export const UnassignedGuestsSidebar = ({
   // Greyed-out reason for a party card, or null when some table can take it.
   const blockedReason = (g: Guest): string | null => {
     if (!floorMap) return null;
-    if (getPartyTableIds(g.id, floorMap.tables, guests).length > 0) return t.partySeatedElsewhereHint;
     const fits = floorMap.tables.some((tbl) => canSeatParty(tbl, floorMap, guests, g.id));
     return fits ? null : tf('noTableFitsPartyHint', { count: getGuestPartySize(g) });
   };
