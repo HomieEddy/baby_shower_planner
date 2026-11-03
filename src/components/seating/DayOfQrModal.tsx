@@ -121,7 +121,7 @@ export const DayOfQrModal: React.FC<DayOfQrModalProps> = ({
 
               {/* QR Code Container with breathing pulse */}
               <motion.div
-                className="mx-auto w-64 h-64 p-4 bg-white rounded-3xl border-4 border-[#CBAE94] shadow-md flex items-center justify-center"
+                className="mx-auto w-64 h-64 p-4 bg-white rounded-none border-4 border-[#CBAE94] shadow-md flex items-center justify-center"
                 initial={{ opacity: 0, scale: 0.7, rotate: -4 }}
                 animate={{ opacity: 1, scale: 1, rotate: 0 }}
                 transition={{ type: 'spring', stiffness: 220, damping: 16, delay: 0.15 }}
@@ -129,7 +129,7 @@ export const DayOfQrModal: React.FC<DayOfQrModalProps> = ({
                 <motion.img
                   src={qrImageUrl}
                   alt={t.posterScanTitle}
-                  className="w-full h-full object-contain rounded-xl"
+                  className="w-full h-full object-contain rounded-none"
                   animate={{ scale: [1, 1.03, 1] }}
                   transition={floatPulse}
                 />

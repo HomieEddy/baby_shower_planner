@@ -191,7 +191,7 @@ export const EscortCardsGenerator: React.FC<EscortCardsGeneratorProps> = ({ gues
                 return (
                   <div
                     key={row.key}
-                    className="border-2 border-dashed border-[#CBAE94] rounded-2xl bg-[#FAF6F0] h-72 sm:h-56 relative shadow-xs overflow-hidden print:shadow-none print:border-solid print:border-slate-300 break-inside-avoid"
+                    className="border-2 border-dashed border-[#CBAE94] rounded-none bg-[#FAF6F0] h-72 sm:h-56 relative shadow-xs overflow-hidden print:shadow-none print:border-solid print:border-slate-300 break-inside-avoid"
                   >
                     {/* Top Fold (Folded Back / Front Header) - occupies the top half, centered */}
                     <div className="h-1/2 flex items-center justify-center opacity-75 transform rotate-180 print:rotate-180 text-center px-4 min-w-0">
@@ -245,7 +245,7 @@ export const EscortCardsGenerator: React.FC<EscortCardsGeneratorProps> = ({ gues
                   /* Wearable Name Badge */
                   <div
                     key={row.key}
-                    className="border-2 border-[#4A3F35] rounded-2xl p-5 bg-white flex flex-col justify-between h-48 relative shadow-sm overflow-hidden print:shadow-none print:border-slate-800 break-inside-avoid"
+                    className="border-2 border-[#4A3F35] rounded-none p-5 bg-white flex flex-col justify-between h-48 relative shadow-sm overflow-hidden print:shadow-none print:border-slate-800 break-inside-avoid"
                   >
                     <div className="text-center border-b border-[#CBAE94]/40 pb-2 min-w-0">
                       <span className="text-xs font-mono font-bold text-[#8B735B] uppercase tracking-wider block truncate">
@@ -260,7 +260,7 @@ export const EscortCardsGenerator: React.FC<EscortCardsGeneratorProps> = ({ gues
                     </div>
 
                     <div className="flex items-center justify-between border-t border-[#CBAE94]/40 pt-2 text-xs font-mono">
-                      <span className="font-bold text-[#8B735B]">{t.tableFilterLabel} {tableNum}{seatLine ? ` · ${seatLine}` : ''}</span>
+                      <span className="font-bold text-[#8B735B]">{tableNum}{seatLine ? ` · ${seatLine}` : ''}</span>
                       <span className="font-bold text-[#4A3F35]">{t.uploadCodeLabel} {guest.code}</span>
                     </div>
                   </div>
