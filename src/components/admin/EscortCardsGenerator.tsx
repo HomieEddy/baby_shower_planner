@@ -3,6 +3,8 @@ import { Guest, EventSettings, FloorMapData } from '../../types';
 import { Printer, Scissors, Tag, QrCode } from 'lucide-react';
 import { useT, useTf } from '../shared/i18n';
 import { usePrint } from '../shared/hooks';
+import { useToast } from '../shared/ToastContext';
+import { fitFontPx } from '../../lib/cardText';
 import { Select, TextInput } from '../shared/ui';
 import { getAttendeeLocations } from '../../lib/tableAssignment';
 import { getPartyMembers, isAttending } from '../../lib/guestAttendees';
@@ -12,6 +14,7 @@ import { AdminPageHeader, AdminSectionTitle } from './AdminPageHeader';
 interface EscortCardsGeneratorProps {
   guests: Guest[];
   settings?: EventSettings | null;
+  onSaveSettings?: (data: Partial<EventSettings>) => Promise<EventSettings>;
 }
 
 interface CardRow {
@@ -24,15 +27,46 @@ interface CardRow {
 
 const UNASSIGNED = '__unassigned__';
 
-export const EscortCardsGenerator: React.FC<EscortCardsGeneratorProps> = ({ guests, settings }) => {
+export const EscortCardsGenerator: React.FC<EscortCardsGeneratorProps> = ({ guests, settings, onSaveSettings }) => {
     const t = useT();
     const tf = useTf();
   const print = usePrint();
+  const { toast } = useToast();
   const [cardType, setCardType] = useState<'tent' | 'nametag'>('tent');
   const [selectedTableFilter, setSelectedTableFilter] = useState<string>('ALL');
-  const [customHeader, setCustomHeader] = useState(
-    settings?.babyName ? tf('escortHeaderWithBaby', { name: settings.babyName }) : t.escortHeaderDefault
-  );
+
+  // The header saved in settings wins; otherwise fall back to the baby-name default.
+  const defaultHeader = settings?.babyName
+    ? tf('escortHeaderWithBaby', { name: settings.babyName })
+    : t.escortHeaderDefault;
+  const savedHeader = settings?.escortHeader?.trim() ? settings.escortHeader : defaultHeader;
+  const [headerDraft, setHeaderDraft] = useState(savedHeader);
+  const [syncedHeader, setSyncedHeader] = useState(savedHeader);
+  const [savingHeader, setSavingHeader] = useState(false);
+  // Pick up a saved header that arrives or changes after mount (settings load async).
+  if (savedHeader !== syncedHeader) {
+    setSyncedHeader(savedHeader);
+    setHeaderDraft(savedHeader);
+  }
+  const headerDirty = headerDraft.trim() !== savedHeader.trim();
+  // Cards preview the draft, so edits show on the cards before they are saved.
+  const customHeader = headerDraft;
+  const headerPx = fitFontPx(customHeader, { maxPx: 12, minPx: 8, widthPx: 200, emPerChar: 0.7 });
+
+  const handleSaveHeader = async () => {
+    if (!onSaveSettings) return;
+    const value = headerDraft.trim();
+    setSavingHeader(true);
+    try {
+      await onSaveSettings({ escortHeader: value });
+      setHeaderDraft(value || defaultHeader);
+      toast.success(t.settingsSavedToast);
+    } catch {
+      toast.error(t.settingsSaveFailedToast);
+    } finally {
+      setSavingHeader(false);
+    }
+  };
   const [floorMap, setFloorMap] = useState<FloorMapData | null>(null);
   const [showQrModal, setShowQrModal] = useState(false);
 
@@ -154,12 +188,22 @@ export const EscortCardsGenerator: React.FC<EscortCardsGeneratorProps> = ({ gues
 
           <div>
             <label className="label-mono block mb-1">{t.customHeaderLabel}</label>
-            <TextInput
-              variant="soft"
-              type="text"
-              value={customHeader}
-              onChange={(e) => setCustomHeader(e.target.value)}
-            />
+            <div className="flex gap-2">
+              <TextInput
+                variant="soft"
+                type="text"
+                value={headerDraft}
+                onChange={(e) => setHeaderDraft(e.target.value)}
+              />
+              <button
+                type="button"
+                onClick={handleSaveHeader}
+                disabled={!headerDirty || savingHeader || !onSaveSettings}
+                className="btn-outline-accent py-2 px-3 text-xs shrink-0 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {t.saveChangesBtn}
+              </button>
+            </div>
           </div>
 
         </div>
@@ -196,10 +240,10 @@ export const EscortCardsGenerator: React.FC<EscortCardsGeneratorProps> = ({ gues
                     {/* Top Fold (Folded Back / Front Header) - occupies the top half, centered */}
                     <div className="h-1/2 flex items-center justify-center opacity-75 transform rotate-180 print:rotate-180 text-center px-4 min-w-0">
                       <div className="space-y-1 min-w-0 w-full">
-                        <p className="text-xs font-mono uppercase tracking-widest text-[#8B735B] truncate">
+                        <p className="text-xs font-mono uppercase tracking-widest text-[#8B735B] break-words line-clamp-2" style={{ fontSize: `${headerPx}px` }}>
                           {customHeader}
                         </p>
-                        <h4 className="font-newsreader text-xl font-bold text-[#4A3F35] truncate">
+                        <h4 className="font-newsreader font-bold text-[#4A3F35] break-words line-clamp-2" style={{ fontSize: `${fitFontPx(row.name, { maxPx: 20, minPx: 12, widthPx: 300 })}px` }}>
                           {row.name}
                         </h4>
                       </div>
@@ -215,10 +259,10 @@ export const EscortCardsGenerator: React.FC<EscortCardsGeneratorProps> = ({ gues
                     {/* Bottom Fold (Primary Front Facing Display) - occupies the bottom half, centered */}
                     <div className="h-1/2 flex items-center justify-between gap-3 px-4">
                       <div className="space-y-1 min-w-0">
-                        <p className="text-xs font-mono uppercase tracking-wider text-[#8B735B] break-words line-clamp-2">
+                        <p className="text-xs font-mono uppercase tracking-wider text-[#8B735B] break-words line-clamp-2" style={{ fontSize: `${headerPx}px` }}>
                           {customHeader}
                         </p>
-                        <h3 className="font-newsreader text-2xl font-bold text-[#4A3F35] leading-tight break-words line-clamp-2">
+                        <h3 className="font-newsreader font-bold text-[#4A3F35] leading-tight break-words line-clamp-2" style={{ fontSize: `${fitFontPx(row.name, { maxPx: 24, minPx: 14, widthPx: 200 })}px` }}>
                           {row.name}
                         </h3>
                         <p className="text-xs font-mono font-bold text-[#8B735B] truncate">
@@ -248,13 +292,13 @@ export const EscortCardsGenerator: React.FC<EscortCardsGeneratorProps> = ({ gues
                     className="border-2 border-[#4A3F35] rounded-none p-5 bg-white flex flex-col justify-between h-48 relative shadow-sm overflow-hidden print:shadow-none print:border-slate-800 break-inside-avoid"
                   >
                     <div className="text-center border-b border-[#CBAE94]/40 pb-2 min-w-0">
-                      <span className="text-xs font-mono font-bold text-[#8B735B] uppercase tracking-wider block truncate">
+                      <span className="text-xs font-mono font-bold text-[#8B735B] uppercase tracking-wider block break-words line-clamp-2" style={{ fontSize: `${headerPx}px` }}>
                         {customHeader}
                       </span>
                     </div>
 
                     <div className="text-center my-auto py-2 min-w-0">
-                      <h2 className="font-newsreader text-3xl font-bold text-[#4A3F35] mt-1 leading-tight break-words line-clamp-2">
+                      <h2 className="font-newsreader font-bold text-[#4A3F35] mt-1 leading-tight break-words line-clamp-2" style={{ fontSize: `${fitFontPx(row.name, { maxPx: 30, minPx: 14, widthPx: 280 })}px` }}>
                         {row.name}
                       </h2>
                     </div>

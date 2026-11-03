@@ -577,7 +577,7 @@ export const AdminDashboard = () => {
 
       {adminSubTab === 'escort' && (
         <TabPane>
-          <EscortCardsGenerator guests={guests} settings={settings} />
+          <EscortCardsGenerator guests={guests} settings={settings} onSaveSettings={handleSaveSettings} />
         </TabPane>
       )}
 
