@@ -8,7 +8,6 @@ import {
   ChevronRight,
   Info,
   Sparkles,
-  CheckCircle2,
   RotateCcw,
   UserCheck,
 } from 'lucide-react';
@@ -161,22 +160,21 @@ export const GuestFinderPage: React.FC = () => {
   // The person who identified themselves; only they (or the party lead, via
   // their own name or the magic-token link) can trigger check-in actions.
   const identifiedName = selected?.attendeeName ?? selected?.guest.name ?? '';
-  const isLead = selected ? isPartyLead(selected.guest, identifiedName) : false;
   const members = selected ? getPartyMembers(selected.guest) : [];
   const checkedCount = selected
     ? members.filter((m) => isMemberCheckedIn(selected.guest, m)).length
     : 0;
   const allChecked = selected && members.length > 0 && checkedCount === members.length;
 
-  const act = async (targetName?: string, all = false, undo = false, confirmLabel = t.checkInBtn) => {
+  // The party is one unit: any identified member checks in (or undoes) everyone.
+  const act = async (undo = false) => {
     if (!selected) return;
-    if (!(await confirmAction(confirmLabel))) return;
-    const key = targetName ?? 'all';
-    setBusy(key);
+    if (!(await confirmAction(undo ? t.undoCheckinBtn : t.checkinAllBtn))) return;
+    setBusy('all');
     try {
       const body = initialToken
-        ? { token: initialToken, targetName, all, undo }
-        : { code: selected.guest.code, name: identifiedName, targetName, all, undo };
+        ? { token: initialToken, all: true, undo }
+        : { code: selected.guest.code, name: identifiedName, all: true, undo };
       const res = await fetch('/api/check-in/self', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -206,9 +204,11 @@ export const GuestFinderPage: React.FC = () => {
           prev && prev.guest.id === updated.id ? { ...prev, guest: updated } : prev
         );
       }
-      toast.success(tf('checkinDoneToast', { name: targetName ?? identifiedName }));
-      // The arrival moment: show the venue full-screen after checking in.
-      if (!undo) setVenueOpen(true);
+      if (!undo) {
+        toast.success(t.checkinAllDone);
+        // The arrival moment: show the venue full-screen after checking in.
+        setVenueOpen(true);
+      }
     } finally {
       setBusy(null);
     }
@@ -354,12 +354,62 @@ export const GuestFinderPage: React.FC = () => {
                 </button>
               </div>
 
-              {/* Check-in — each guest checks in themselves; the lead can check in the whole party */}
-              <div className="space-y-2">
-                <p className="guest-label">
-                  <UserCheck aria-hidden />
-                  {t.checkinPartyLabel}
-                </p>
+              {/* Check-in — the party is one unit: any member checks everyone in at once */}
+              <div className="space-y-3">
+                <div className="flex flex-wrap items-center justify-between gap-2">
+                  <p className="guest-label">
+                    <UserCheck aria-hidden />
+                    {t.checkinPartyLabel}
+                  </p>
+                  <span className={`text-xs font-mono font-bold ${allChecked ? 'text-ok' : 'text-[#5D5449]'}`}>
+                    {tf('partyProgressLabel', { done: String(checkedCount), total: String(members.length) })}
+                  </span>
+                </div>
+
+                <ul className="rounded-xl border border-[#CBAE94]/50 bg-white divide-y divide-[#CBAE94]/30 overflow-hidden">
+                  {members.map((member) => {
+                    const checked = isMemberCheckedIn(selected.guest, member);
+                    const isSelf = member.trim().toLowerCase() === identifiedName.toLowerCase();
+                    const isLeader = isPartyLead(selected.guest, member);
+                    return (
+                      <motion.li
+                        key={member}
+                        initial={{ opacity: 0, x: -14 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        transition={{ type: 'spring', stiffness: 280, damping: 22 }}
+                        className={`flex items-center gap-3 px-4 py-3 transition-colors ${
+                          isLeader ? 'bg-[#EFE6DC]/70 border-l-4 border-l-[#8B735B]' : ''
+                        }`}
+                      >
+                        <span
+                          className={`w-9 h-9 rounded-full flex items-center justify-center text-xs font-bold shrink-0 ${
+                            checked ? 'bg-green-800 text-white' : 'bg-[#EFE6DC] text-[#8B735B]'
+                          }`}
+                        >
+                          {member.split(' ').map((w) => w[0]).filter(Boolean).slice(0, 2).join('').toUpperCase()}
+                        </span>
+                        <div className="min-w-0 flex-1">
+                          <p className="text-sm font-bold text-[#4A3F35] break-words">
+                            {member}
+                            {isSelf && (
+                              <span className="ml-1.5 text-xs font-mono uppercase text-[#8B735B]">
+                                {t.checkinYouLabel}
+                              </span>
+                            )}
+                            {isLeader && (
+                              <span className="ml-1.5 text-xs font-mono uppercase font-bold text-[#8B735B]">
+                                {t.finderPartyLead}
+                              </span>
+                            )}
+                          </p>
+                        </div>
+                        <span className={`text-xs font-mono font-bold shrink-0 ${checked ? 'text-ok' : 'text-[#5D5449]'}`}>
+                          {checked ? t.checkedInLabel : t.notYetLabel}
+                        </span>
+                      </motion.li>
+                    );
+                  })}
+                </ul>
 
                 {allChecked ? (
                   <motion.div
@@ -377,98 +427,30 @@ export const GuestFinderPage: React.FC = () => {
                     <p className="text-sm font-bold">{t.checkinAllDone}</p>
                   </motion.div>
                 ) : (
-                  members.map((member) => {
-                    const checked = isMemberCheckedIn(selected.guest, member);
-                    const isSelf =
-                      member.trim().toLowerCase() === identifiedName.toLowerCase();
-                    const canAct = isLead || isSelf;
-                    const isBusy = busy === member;
-                    return (
-                      <motion.div
-                        key={member}
-                        initial={{ opacity: 0, x: -14 }}
-                        animate={{ opacity: 1, x: 0 }}
-                        transition={{ type: 'spring', stiffness: 280, damping: 22 }}
-                        className={`flex flex-wrap items-center justify-between gap-3 p-3.5 rounded-xl border transition-colors ${
-                          checked
-                            ? 'status-ok'
-                            : isSelf
-                              ? 'bg-[#EFE6DC]/60 border-[#CBAE94]'
-                              : 'bg-white border-[#CBAE94]/40'
-                        }`}
-                      >
-                        <div className="flex items-center gap-3 min-w-0 flex-1 basis-44">
-                          <span
-                            className={`w-9 h-9 rounded-full flex items-center justify-center text-xs font-bold shrink-0 ${
-                              checked
-                                ? 'bg-green-800 text-white'
-                                : 'bg-[#EFE6DC] text-[#8B735B]'
-                            }`}
-                          >
-                            {member.split(' ').map((w) => w[0]).filter(Boolean).slice(0, 2).join('').toUpperCase()}
-                          </span>
-                          <div className="min-w-0">
-                            <p className="text-sm font-bold text-[#4A3F35] break-words">
-                              {member}
-                              {isSelf && (
-                                <span className="ml-1.5 text-xs font-mono uppercase text-[#8B735B]">
-                                  {t.checkinYouLabel}
-                                </span>
-                              )}
-                              {!isSelf && isPartyLead(selected.guest, member) && (
-                                <span className="ml-1.5 text-xs font-mono uppercase text-[#8B735B]">
-                                  {t.finderPartyLead}
-                                </span>
-                              )}
-                            </p>
-                            <p className={`text-xs font-mono font-bold ${checked ? 'text-ok' : 'text-[#5D5449]'}`}>
-                              {checked ? t.checkedInLabel : t.notYetLabel}
-                            </p>
-                          </div>
-                        </div>
-
-                        {checked ? (
-                          <button
-                            onClick={() => void act(member, false, true, t.undoCheckinBtn)}
-                            disabled={isBusy || !canAct}
-                            className="min-w-[44px] min-h-[44px] flex items-center justify-center gap-1 text-xs font-bold text-ok hover:opacity-80 disabled:opacity-40 transition-colors ml-auto"
-                            title={t.undoCheckinBtn}
-                            aria-label={t.undoCheckinBtn}
-                          >
-                            <CheckCircle2 className="w-4 h-4" />
-                            <RotateCcw className="w-3 h-3" />
-                          </button>
-                        ) : canAct ? (
-                          <button
-                            onClick={() => void act(member, false, false, isSelf ? t.checkinMeBtn : t.checkInBtn)}
-                            disabled={isBusy}
-                            className="btn-accent min-h-[44px] px-4 py-2 text-xs font-bold gap-1.5 disabled:opacity-50 active:scale-95 ml-auto"
-                          >
-                            <CheckCircle2 className="w-3.5 h-3.5" />
-                            {isSelf ? t.checkinMeBtn : t.checkInBtn}
-                          </button>
-                        ) : (
-                          <span className="text-xs font-mono text-[#5D5449] italic">
-                            {t.notYetLabel}
-                          </span>
-                        )}
-                      </motion.div>
-                    );
-                  })
-                )}
-
-                {isLead && !allChecked && members.length > 1 && (
                   <motion.button
                     initial={{ opacity: 0, y: 10 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: 0.15 }}
-                    onClick={() => void act(undefined, true, false, t.checkinAllBtn)}
+                    onClick={() => void act(false)}
                     disabled={busy === 'all'}
                     className="btn-accent w-full py-3.5 min-h-[52px] text-sm font-bold gap-2 disabled:opacity-50"
                   >
                     <UserCheck className="w-4 h-4" />
                     {t.checkinAllBtn}
                   </motion.button>
+                )}
+
+                {checkedCount > 0 && (
+                  <div className="flex justify-end">
+                    <button
+                      onClick={() => void act(true)}
+                      disabled={busy === 'all'}
+                      className="min-h-[44px] flex items-center gap-1.5 text-xs font-bold text-[#5D5449] hover:text-[#4A3F35] disabled:opacity-40 transition-colors"
+                    >
+                      <RotateCcw className="w-3 h-3" />
+                      {t.undoCheckinBtn}
+                    </button>
+                  </div>
                 )}
               </div>
 
@@ -488,7 +470,7 @@ export const GuestFinderPage: React.FC = () => {
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: 0.15 }}
                   onClick={() => setVenueOpen(true)}
-                  className={`${isLead && !allChecked && members.length > 1 ? 'btn-outline-accent' : 'btn-accent'} w-full py-3.5 min-h-[52px] text-sm font-bold gap-2`}
+                  className="btn-accent w-full py-3.5 min-h-[52px] text-sm font-bold gap-2"
                 >
                   <MapPin className="w-4 h-4" />
                   {t.venueBtn}
