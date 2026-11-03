@@ -15,7 +15,7 @@ const QrStandeeCard = ({ table, last }: { table: TableElement; last?: boolean })
   const tf = useTf();
   return (
     <div
-      className={`printable-qr-card p-6 bg-[#FAF6F0] rounded-3xl border-2 border-dashed border-[#8B735B] text-center space-y-4 ${
+      className={`printable-qr-card p-6 bg-[#FAF6F0] rounded-none border-2 border-dashed border-[#8B735B] text-center space-y-4 ${
         last ? '' : 'page-break-after'
       }`}
     >
@@ -27,7 +27,7 @@ const QrStandeeCard = ({ table, last }: { table: TableElement; last?: boolean })
         {t.tableQrShareTitle}
       </h4>
 
-      <div className="w-40 h-40 mx-auto bg-white p-3 rounded-2xl border-2 border-[#CBAE94] shadow-md flex items-center justify-center">
+      <div className="w-40 h-40 mx-auto bg-white p-3 rounded-none border-2 border-[#CBAE94] shadow-md flex items-center justify-center">
         <img
           src={qrUrl(table.id)}
           alt={tf('tableQrAlt', { name: table.name })}

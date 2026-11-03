@@ -610,7 +610,7 @@ select option {
     padding: 2.5rem 2rem !important;
     margin: 1.5rem auto !important;
     max-width: 500px !important;
-    border-radius: 28px !important;
+    border-radius: 0 !important;
     box-shadow: none !important;
     text-align: center !important;
     display: block !important;
@@ -621,7 +621,7 @@ select option {
     height: auto !important;
     margin: 1rem auto !important;
     display: block !important;
-    border-radius: 16px !important;
+    border-radius: 0 !important;
     border: 2px solid #CBAE94 !important;
     background: #ffffff !important;
     padding: 8px !important;
