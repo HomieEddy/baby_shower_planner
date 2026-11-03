@@ -39,6 +39,9 @@ export function suggestSeating(floorMap: FloorMapData, guests: Guest[]): SmartSu
 
   const generated: SmartSuggestion[] = [];
   for (const g of sorted) {
+    // Only parties with no chair yet: a partly seated party is left for a
+    // manual unseat-and-reseat, never split by an automatic pass.
+    if (getGuestSeatedCount(g.id, floorMap, guests) > 0) continue;
     const partySize = getGuestPartySize(g);
     const candidates = floorMap.tables.filter((t) => (tableCapacities[t.id] || 0) >= partySize);
     if (candidates.length === 0) continue;

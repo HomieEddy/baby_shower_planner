@@ -10,9 +10,9 @@ import { useCanvasWheelZoom } from './useCanvasWheelZoom';
 import type { FloorMapData, Guest, LandmarkElement, SeatOccupant, TableElement } from '../../types';
 import {
   getAvailableSeats,
+  getGuestPartySize,
   getTableOccupiedSeats,
   getTableSeats,
-  getUnseatedPartySize,
   canSeatParty,
 } from '../../lib/tableAssignment';
 import { clampPointToRoom, findNearestSeat } from './floorPlanHelpers';
@@ -341,9 +341,7 @@ export const FloorPlanCanvas = ({
             const partyFocused = !!selection.party;
             const partyFits = selection.party ? canSeatParty(table, map, guests, selection.party.id) : false;
             const freeSeatsForParty = selection.party ? getAvailableSeats(table, guests) : 0;
-            const unseatedForParty = selection.party
-              ? getUnseatedPartySize(selection.party.id, map, guests)
-              : 0;
+            const unseatedForParty = selection.party ? getGuestPartySize(selection.party) : 0;
 
             const outline = tableOutline({ isSelected, isFull, partyFocused, partyFits });
 
@@ -471,7 +469,7 @@ export const FloorPlanCanvas = ({
                   text={
                     selection.party
                       ? partyFits
-                        ? tf('fpFitsSeats', { count: Math.min(freeSeatsForParty, unseatedForParty) })
+                        ? tf('fpFitsSeats', { count: freeSeatsForParty })
                         : tf('fpNeedSeats', { count: unseatedForParty })
                       : `${occupiedCount}/${table.capacity} ${t.seatsLabel}`
                   }

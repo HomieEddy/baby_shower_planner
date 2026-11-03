@@ -1,6 +1,6 @@
 import { Search, UserX, CheckCircle2, Users, Utensils, X } from 'lucide-react';
 import { Guest, FloorMapData, TableElement } from '../../types';
-import { getGuestPartySize, getAvailableSeats, getUnseatedPartySize, canSeatParty } from '../../lib/tableAssignment';
+import { getGuestPartySize, getAvailableSeats, getPartyTableIds, canSeatParty } from '../../lib/tableAssignment';
 import { useT, useTf } from '../shared/i18n';
 
 interface UnassignedGuestsSidebarProps {
@@ -26,12 +26,20 @@ export const UnassignedGuestsSidebar = ({
 }: UnassignedGuestsSidebarProps) => {
   const t = useT();
   const tf = useTf();
-  // Members of the selected party still without a chair (split-aware).
-  const pSize = selectedGuest ? getUnseatedPartySize(selectedGuest.id, floorMap, guests) : 0;
+  // A party always sits together, so the whole party size is what must fit.
+  const pSize = selectedGuest ? getGuestPartySize(selectedGuest) : 0;
 
   const matchingTables: TableElement[] = selectedGuest && floorMap
     ? floorMap.tables.filter((tbl) => canSeatParty(tbl, floorMap, guests, selectedGuest.id))
     : [];
+
+  // Greyed-out reason for a party card, or null when some table can take it.
+  const blockedReason = (g: Guest): string | null => {
+    if (!floorMap) return null;
+    if (getPartyTableIds(g.id, floorMap.tables, guests).length > 0) return t.partySeatedElsewhereHint;
+    const fits = floorMap.tables.some((tbl) => canSeatParty(tbl, floorMap, guests, g.id));
+    return fits ? null : tf('noTableFitsPartyHint', { count: getGuestPartySize(g) });
+  };
 
   return (
     <div className="bg-[#FFFDF9] rounded-3xl p-5 shadow-lg border-2 border-[#CBAE94] space-y-3">
@@ -147,6 +155,7 @@ export const UnassignedGuestsSidebar = ({
           unassignedGuests.map((g) => {
             const guestPSize = getGuestPartySize(g);
             const isSelected = selectedGuest?.id === g.id;
+            const blocked = isSelected ? null : blockedReason(g);
 
             return (
               <div
@@ -154,6 +163,8 @@ export const UnassignedGuestsSidebar = ({
                 className={`p-3 rounded-2xl border-2 transition-all space-y-2 ${
                   isSelected
                     ? 'bg-emerald-50/80 border-emerald-500 shadow-md ring-2 ring-emerald-300'
+                    : blocked
+                    ? 'bg-[#F3F0EC] border-[#CBAE94]/40 opacity-60'
                     : 'bg-white hover:bg-[#EFE6DC]/40 border-[#CBAE94]/60'
                 }`}
               >
@@ -186,10 +197,17 @@ export const UnassignedGuestsSidebar = ({
                   </div>
                 )}
 
+                {blocked && (
+                  <p className="text-xs font-bold text-[#8B735B] bg-[#EFE6DC]/70 rounded-lg px-2 py-1">
+                    {blocked}
+                  </p>
+                )}
+
                 <button
                   type="button"
+                  disabled={!!blocked}
                   onClick={() => onSelectGuest(isSelected ? null : g)}
-                  className={`w-full min-h-[44px] px-3 rounded-xl text-xs font-bold transition-colors flex items-center justify-center gap-1.5 ${
+                  className={`w-full min-h-[44px] px-3 rounded-xl text-xs font-bold transition-colors flex items-center justify-center gap-1.5 disabled:cursor-not-allowed disabled:opacity-50 ${
                     isSelected
                       ? 'bg-emerald-600 text-white shadow-sm'
                       : 'bg-[#EFE6DC] hover:bg-[#CBAE94]/40 text-[#8B735B]'

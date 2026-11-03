@@ -77,3 +77,23 @@ describe('suggestSeating', () => {
     expect(suggestSeating(fm, [seatedGuest, declined, pending])).toEqual([]);
   });
 });
+
+describe('suggestSeating whole-party rule', () => {
+  it('never proposes a party that already has a chair (no automatic split)', () => {
+    const g = guest({ id: 'g1', attending_party_size: 2 });
+    const seated = table({ id: 't1', capacity: 4, seats: [{ guestId: 'g1', attendeeIndex: 0 }, null, null, null] });
+    const open = table({ id: 't2', capacity: 4 });
+    const out = suggestSeating(map([seated, open]), [g]);
+    expect(out.find((s) => s.guest.id === 'g1')).toBeUndefined();
+  });
+
+  it('only suggests a table with room for the whole party', () => {
+    const g = guest({ id: 'g1', attending_party_size: 3 });
+    const small = table({ id: 't1', capacity: 2 });
+    const big = table({ id: 't2', capacity: 4 });
+    const out = suggestSeating(map([small, big]), [g]);
+    expect(out).toHaveLength(1);
+    expect(out[0].table.id).toBe('t2');
+  });
+});
+

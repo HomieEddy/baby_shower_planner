@@ -1194,6 +1194,9 @@ export interface Translations {
   packagingZipTitle: string;
   partyMemberLabel: string;
   partySeatsNeededLabel: string;
+  partySeatedElsewhereHint: string;
+  noTableFitsPartyHint: string;
+  partyNeedsSeatsTogether: string;
   photoGallerySubtitle: string;
   photoMemoryLibraryHosts: string;
   photoMemoryLibraryOwn: string;
@@ -2517,6 +2520,9 @@ export const translations: Record<Language, Translations> = {
     packagingZipTitle: "Packaging Photo ZIP Archive",
     partyMemberLabel: "Party Member #{{n}}",
     partySeatsNeededLabel: "Party of {{party}} ({{seats}} seats needed)",
+    partySeatedElsewhereHint: "Already seated at a table. Unseat the party first to move it.",
+    noTableFitsPartyHint: "No table has {{count}} free seats together.",
+    partyNeedsSeatsTogether: "Needs {{count}} seats together at this table",
     photoGallerySubtitle: "Real-time gallery of pictures snapped & uploaded by guests from their event tables.",
     photoMemoryLibraryHosts: "Hosts' Photo Memory Library",
     photoMemoryLibraryOwn: "{{name}}'s Photo Memory Library",
@@ -3837,6 +3843,9 @@ export const translations: Record<Language, Translations> = {
     packagingZipTitle: "Préparation de l'archive ZIP des photos",
     partyMemberLabel: "Membre du groupe n° {{n}}",
     partySeatsNeededLabel: "Groupe de {{party}} ({{seats}} places nécessaires)",
+    partySeatedElsewhereHint: "Déjà installé à une table. Retirez le groupe d'abord pour le déplacer.",
+    noTableFitsPartyHint: "Aucune table n'a {{count}} places libres ensemble.",
+    partyNeedsSeatsTogether: "Nécessite {{count}} places ensemble à cette table",
     photoGallerySubtitle: "Galerie en temps réel des photos prises et envoyées par les invités depuis leur table.",
     photoMemoryLibraryHosts: "Bibliothèque photo des hôtes",
     photoMemoryLibraryOwn: "Bibliothèque photo de {{name}}",

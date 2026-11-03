@@ -52,8 +52,8 @@ import {
   getTableSeats,
   getTableStatus,
   getAvailableSeats,
-  getUnseatedPartySize,
   canSeatParty,
+  getPartyTableIds,
   seatParty,
   getSeatingStats,
 } from '../../lib/tableAssignment';
@@ -290,6 +290,21 @@ export const FloorPlanPage = () => {
 
     const targetTable = tableId ? floorMap.tables.find((t) => t.id === tableId) : undefined;
     if (tableId && !targetTable) return false;
+    if (targetTable && !canSeatParty(targetTable, floorMap, guests, guestId)) {
+      const elsewhere = getPartyTableIds(guestId, floorMap.tables, guests).some((id) => id !== tableId);
+      setNotification(
+        elsewhere
+          ? t.partySeatedElsewhereHint
+          : tf('fpNoFitTableToast', {
+              table: targetTable.name,
+              free: String(getAvailableSeats(targetTable, guests)),
+              guest: guest.name,
+              needed: String(getGuestPartySize(guest)),
+            })
+      );
+      setTimeout(() => setNotification(null), 4000);
+      return false;
+    }
     if (!(await confirmAction(tableId ? t.seatPartyHereBtn : t.unassignParty))) return false;
 
     const outcome = seatParty(floorMap, guests, guestId, tableId);
@@ -314,8 +329,16 @@ export const FloorPlanPage = () => {
         setNotification(tf('fpSeatedToast', { guest: guest.name, size: String(Math.min(getGuestPartySize(guest), targetTable.capacity)), table: targetTable.name }));
         setTimeout(() => setNotification(null), 3000);
       } else if (outcome.unplaced > 0) {
+        const elsewhere = getPartyTableIds(guestId, updatedMap.tables, updatedGuests).some((id) => id !== tableId);
         setNotification(
-          tf('fpNoFitTableToast', { table: targetTable.name, free: '0', guest: guest.name, needed: String(outcome.unplaced) })
+          elsewhere
+            ? t.partySeatedElsewhereHint
+            : tf('fpNoFitTableToast', {
+                table: targetTable.name,
+                free: String(getAvailableSeats(targetTable, guests)),
+                guest: guest.name,
+                needed: String(getGuestPartySize(guest)),
+              })
         );
         setTimeout(() => setNotification(null), 4000);
       }
@@ -891,7 +914,7 @@ export const FloorPlanPage = () => {
                         onLandmarkHover={(lm, x, y) => handleLandmarkHover(lm, x, y)}
                         onTableClick={(table) => {
                           if (!selectedUnassignedGuest) return;
-                          const partyNeeded = getUnseatedPartySize(selectedUnassignedGuest.id, floorMap, guests);
+                          const partyNeeded = getGuestPartySize(selectedUnassignedGuest);
                           const freeSeats = getAvailableSeats(table, guests);
                           if (canSeatParty(table, floorMap, guests, selectedUnassignedGuest.id)) {
                             void handleMainAssignGuest(selectedUnassignedGuest.id, table.id).then(
@@ -959,9 +982,7 @@ export const FloorPlanPage = () => {
                         const tableOpacity = matchesFilter ? 1 : 0.25;
 
                         // Unassigned guest seating highlighting (any free chair is usable — partial split allowed)
-                        const partyNeeded = selectedUnassignedGuest
-                          ? getUnseatedPartySize(selectedUnassignedGuest.id, floorMap, guests)
-                          : 0;
+                        const partyNeeded = selectedUnassignedGuest ? getGuestPartySize(selectedUnassignedGuest) : 0;
                         const freeSeats = getAvailableSeats(table, guests);
                         const isUnassignedActive = selectedUnassignedGuest !== null;
                         const canFitSelected = isUnassignedActive && canSeatParty(table, floorMap, guests, selectedUnassignedGuest.id);
