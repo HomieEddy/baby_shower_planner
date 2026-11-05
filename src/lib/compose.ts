@@ -278,17 +278,26 @@ export function renderText(content: MessageContent): string {
   ]);
 }
 
-// Concise plain-text lines for SMS.
-export function renderSms(content: MessageContent): string {
-  const lines = [
+// Concise plain-text lines for SMS. The RSVP link and code are the tail, so when
+// the text is too long we shorten the body above them and never cut the link.
+export function renderSms(content: MessageContent, maxChars = 640): string {
+  const fr = !isEN(content.language);
+  const head = [
     content.heading,
-    ...content.rows.map((r) => (r.label ? `${r.label}${isEN(content.language) ? ': ' : ' : '}${r.value}` : r.value)),
-    content.deadline ? (isEN(content.language) ? `RSVP by ${content.deadline}` : `Réponse avant le ${content.deadline}`) : '',
+    ...content.rows.map((r) => (r.label ? `${r.label}${fr ? ' : ' : ': '}${r.value}` : r.value)),
+    content.deadline ? (fr ? `Réponse avant le ${content.deadline}` : `RSVP by ${content.deadline}`) : '',
     ...content.paragraphs,
+  ].filter((l) => l && l.trim() !== '').join('\n');
+  const tail = [
     content.link ? `RSVP: ${content.link}` : '',
     content.code ? `Code: ${content.code}` : '',
-  ];
-  return lines.filter((l) => l && l.trim() !== '').join('\n');
+  ].filter(Boolean).join('\n');
+
+  const full = [head, tail].filter(Boolean).join('\n');
+  if (full.length <= maxChars) return full;
+  // Plain "..." rather than "…": the ellipsis is not GSM-7 and would force UCS-2.
+  const room = maxChars - (tail ? tail.length + 1 : 0) - '...'.length;
+  return [head.slice(0, Math.max(0, room)).trimEnd() + '...', tail].filter(Boolean).join('\n');
 }
 
 // Shared email HTML shell. One template for every kind; only the content varies.
