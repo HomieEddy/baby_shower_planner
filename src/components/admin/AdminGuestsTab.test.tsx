@@ -110,7 +110,7 @@ describe('admin guest list: seating', () => {
     renderWithProviders(<AdminGuestsTab language="EN" t={t} guests={GUESTS} onRefresh={vi.fn(async () => {})} />);
     await screen.findByText('Alice');
     expect(await screen.findByText('Table Rosé')).toBeInTheDocument();
-    expect(screen.getByText(t.seatingSeatedBadge)).toBeInTheDocument();
+    expect(screen.queryByText(t.seatingNotSeatedBadge)).not.toBeInTheDocument();
 
     fireEvent.click(screen.getByRole('button', { name: t.viewTableBtn }));
     expect(await screen.findByRole('columnheader', { name: t.colTable })).toBeInTheDocument();
@@ -119,7 +119,6 @@ describe('admin guest list: seating', () => {
   it('hides the seating indicator while no guest is seated', async () => {
     await setup();
     expect(screen.queryByText(t.seatingNotSeatedBadge)).not.toBeInTheDocument();
-    expect(screen.queryByText(t.seatingSeatedBadge)).not.toBeInTheDocument();
   });
 });
 

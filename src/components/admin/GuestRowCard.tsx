@@ -125,27 +125,24 @@ export const RsvpStatusChip = ({ guest }: { guest: Guest }) => {
   );
 };
 
-// Seated / partly seated / not seated for an attending party, followed by one
-// chip per table that holds a chair of the party (a split party lists each).
+// One piece of seating info per guest: the table name(s) when any of the party
+// has a chair (a split party lists each table), otherwise "Not seated".
 export const GuestSeatingBadge = ({ seating }: { seating: GuestSeating }) => {
   const t = useT();
-  const tf = useTf();
   const base = 'inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-semibold border whitespace-nowrap';
-  const label = seating.status === 'seated'
-    ? t.seatingSeatedBadge
-    : seating.status === 'partial'
-      ? tf('seatingPartialBadge', { seated: seating.seated, total: seating.total })
-      : t.seatingNotSeatedBadge;
-  const tone = seating.status === 'unseated'
-    ? 'bg-[#EFE6DC] text-[#5D5449] border-[#CBAE94]'
-    : 'status-ok';
+  if (seating.tableNames.length === 0) {
+    return (
+      <span className={`${base} bg-[#EFE6DC] text-[#5D5449] border-[#CBAE94]`}>
+        <MapPin className="w-3 h-3 shrink-0" /><span>{t.seatingNotSeatedBadge}</span>
+      </span>
+    );
+  }
   return (
     <span className="flex flex-wrap items-center gap-1.5">
-      <span className={`${base} ${tone}`}>
-        <MapPin className="w-3 h-3 shrink-0" /><span>{label}</span>
-      </span>
       {seating.tableNames.map((name) => (
-        <span key={name} className={`${base} bg-white text-[#8B735B] border-[#CBAE94]`}>{name}</span>
+        <span key={name} className={`${base} status-ok`}>
+          <MapPin className="w-3 h-3 shrink-0" /><span>{name}</span>
+        </span>
       ))}
     </span>
   );
