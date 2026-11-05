@@ -2,8 +2,8 @@
 // Extracted from AdminGuestsTab/the controller so the behaviour is testable
 // without the DOM.
 
-import type { FloorMapData, Guest, Language } from '../../types';
-import { getGuestPartySize, getAttendeeLocations } from '../../lib/tableAssignment';
+import type { FloorMapData, Guest, Language, TableElement } from '../../types';
+import { getGuestPartySize, getAttendeeLocations, getTableSeats } from '../../lib/tableAssignment';
 import { getPartyDietary, getAttendeeDietary, isAttending } from '../../lib/guestAttendees';
 import { csvCell, parseCsvLine } from '../../lib/csv';
 
@@ -60,6 +60,43 @@ export function computeGuestMetrics(guests: Guest[]): GuestMetrics {
     declinedPartySize: partySum(declinedGuests),
     totalPartySize: partySum(guests),
   };
+}
+
+// ─── Seating ───────────────────────────────────────────────────────────────
+
+export type SeatingStatus = 'seated' | 'partial' | 'unseated';
+
+export interface GuestSeating {
+  status: SeatingStatus;
+  seated: number;
+  total: number;
+  // Every table holding a chair of this party, in table order. A split party
+  // lists each table.
+  tableNames: string[];
+}
+
+// True once at least one guest in the event holds a chair. The seating
+// indicator is only shown after this, so an unseated event keeps the plain list.
+export function hasAnySeatedGuest(tables: TableElement[], guests: Guest[]): boolean {
+  return tables.some((table) => getTableSeats(table, guests).some((seat) => seat !== null));
+}
+
+// Seating for one attending guest, split-aware. Non-attending guests have no
+// seating status (null).
+export function getGuestSeating(guest: Guest, tables: TableElement[], guests: Guest[]): GuestSeating | null {
+  if (!isAttending(guest)) return null;
+  const total = getGuestPartySize(guest);
+  let seated = 0;
+  const tableNames: string[] = [];
+  for (const table of tables) {
+    const chairs = getTableSeats(table, guests).filter((seat) => seat?.guestId === guest.id).length;
+    if (chairs > 0) {
+      seated += chairs;
+      tableNames.push(table.name);
+    }
+  }
+  const status: SeatingStatus = seated === 0 ? 'unseated' : seated >= total ? 'seated' : 'partial';
+  return { status, seated, total, tableNames };
 }
 
 // ─── CSV ───────────────────────────────────────────────────────────────────

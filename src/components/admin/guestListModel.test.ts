@@ -1,6 +1,7 @@
 import { describe, it, expect } from 'vitest';
 import type { Guest } from '../../types';
-import { buildGuestCsv, computeGuestMetrics, filterGuests, parseGuestCsvRows } from './guestListModel';
+import { buildGuestCsv, computeGuestMetrics, filterGuests, getGuestSeating, hasAnySeatedGuest, parseGuestCsvRows } from './guestListModel';
+import type { TableElement } from '../../types';
 
 const guest = (over: Partial<Guest> = {}): Guest => ({
   id: 'g1',
@@ -107,5 +108,48 @@ describe('buildGuestCsv', () => {
     const { rows } = buildGuestCsv(guests, null, 'https://shower.test');
     expect(rows).toHaveLength(1);
     expect(rows[0][7]).toBe('""');
+  });
+});
+
+describe('guest seating status', () => {
+  const table = (id: string, name: string, seats: (string | null)[], attendeeIdx: number[] = []): TableElement => ({
+    id, name, shape: 'circle', x: 0, y: 0, width: 100, height: 100, capacity: seats.length,
+    assignedGuestIds: [], seats: seats.map((gid, i) => (gid ? { guestId: gid, attendeeIndex: attendeeIdx[i] ?? 0 } : null)),
+  });
+  const family = guest({ id: 'f', name: 'Family', attending_party_size: 3, attendee_names: ['A', 'B', 'C'], max_party_size: 3 });
+  const solo = guest({ id: 's', name: 'Solo', attending_party_size: 1, attendee_names: ['Solo'] });
+  const pending = guest({ id: 'p', name: 'Pending', rsvp_status: 'Pending', max_party_size: 2 });
+  const guests = [family, solo, pending];
+
+  it('shows nothing until at least one guest in the event is seated', () => {
+    const empty = [table('t1', 'Table 1', [null, null, null])];
+    expect(hasAnySeatedGuest(empty, guests)).toBe(false);
+    const seated = [table('t1', 'Table 1', ['s', null, null])];
+    expect(hasAnySeatedGuest(seated, guests)).toBe(true);
+  });
+
+  it('reports a fully seated party with its table', () => {
+    const tables = [table('t1', 'Table 1', ['f', 'f', 'f'], [0, 1, 2])];
+    expect(getGuestSeating(family, tables, guests)).toEqual({ status: 'seated', seated: 3, total: 3, tableNames: ['Table 1'] });
+  });
+
+  it('reports a party split across tables with each table listed', () => {
+    const tables = [
+      table('t1', 'Table 1', ['f', 'f', null], [0, 1, 0]),
+      table('t2', 'Table 2', [null, 'f', null], [2, 0, 0]),
+    ];
+    const seating = getGuestSeating(family, tables, guests);
+    expect(seating).toEqual({ status: 'seated', seated: 3, total: 3, tableNames: ['Table 1', 'Table 2'] });
+  });
+
+  it('reports a partly seated party (some chairs placed, some not)', () => {
+    const tables = [table('t1', 'Table 1', ['f', null, null], [0, 0, 0]), table('t2', 'Table 2', [null, 'f', null], [1, 0, 0])];
+    expect(getGuestSeating(family, tables, guests)).toEqual({ status: 'partial', seated: 2, total: 3, tableNames: ['Table 1', 'Table 2'] });
+  });
+
+  it('marks an attending guest with no chair as not seated, and skips non-attending guests', () => {
+    const tables = [table('t1', 'Table 1', ['s', null, null])];
+    expect(getGuestSeating(family, tables, guests)).toEqual({ status: 'unseated', seated: 0, total: 3, tableNames: [] });
+    expect(getGuestSeating(pending, tables, guests)).toBeNull();
   });
 });

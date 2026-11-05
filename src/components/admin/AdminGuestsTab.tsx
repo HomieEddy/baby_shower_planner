@@ -33,6 +33,8 @@ import { TextInput, Select } from '../shared/ui';
 import { Pagination } from '../shared/Pagination';
 import { usePagination } from '../shared/hooks';
 import { useGuestAdminController } from './useGuestAdminController';
+import { useFloorMapTables } from '../shared/hooks';
+import { getGuestSeating, hasAnySeatedGuest } from './guestListModel';
 import { AdminPageHeader, AdminSectionTitle } from './AdminPageHeader';
 
 interface AdminGuestsTabProps {
@@ -57,6 +59,11 @@ export const AdminGuestsTab: React.FC<AdminGuestsTabProps> = ({ language, t, gue
   } = useGuestAdminController({ language, t, guests, onRefresh });
 
   const filteredGuests = list.guests;
+  // Seating status comes from the floor map. It only appears once at least one
+  // guest in the event holds a chair.
+  const { data: tables = [] } = useFloorMapTables();
+  const seatingActive = hasAnySeatedGuest(tables, guests);
+  const seatingOf = seatingActive ? (g: Guest) => getGuestSeating(g, tables, guests) : null;
   const {
     attendingGuests, pendingGuests, declinedGuests, pendingApprovals,
     totalPartySize, totalAttendingPartySize, pendingPartySize, declinedPartySize,
@@ -281,7 +288,7 @@ export const AdminGuestsTab: React.FC<AdminGuestsTabProps> = ({ language, t, gue
         )}
 
         {listView === 'table' && filteredGuests.length > 0 && (
-          <GuestTableView guests={guestsPager.pageItems} onView={details.open} />
+          <GuestTableView guests={guestsPager.pageItems} onView={details.open} seatingOf={seatingOf} />
         )}
 
         {listView === 'cards' && (
@@ -294,6 +301,7 @@ export const AdminGuestsTab: React.FC<AdminGuestsTabProps> = ({ language, t, gue
                 selected={selection.ids.includes(guest.id)}
                 onToggleSelect={selection.toggle}
                 onView={details.open}
+                seating={seatingOf ? getGuestSeating(guest, tables, guests) : null}
               />
             ))}
           </AnimatePresence>

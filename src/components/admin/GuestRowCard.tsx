@@ -6,17 +6,21 @@ import {
   Clock,
   XCircle,
   Check,
+  MapPin,
 } from 'lucide-react';
 import { Guest } from '../../types';
 import { getGuestPartySize } from '../../lib/tableAssignment';
 import { isAttending } from '../../lib/guestAttendees';
 import { useT, useTf } from '../shared/i18n';
+import type { GuestSeating } from './guestListModel';
 
 interface GuestRowCardProps {
   guest: Guest;
   selected: boolean;
   onToggleSelect: (id: string) => void;
   onView: (guest: Guest) => void;
+  // null while no guest in the event is seated yet (the indicator stays hidden).
+  seating: GuestSeating | null;
 }
 
 // Whole card opens the details modal; the selection checkbox is the only
@@ -27,6 +31,7 @@ export const GuestRowCard = ({
   selected,
   onToggleSelect,
   onView,
+  seating,
 }: GuestRowCardProps) => {
   const t = useT();
   const tf = useTf();
@@ -85,6 +90,7 @@ export const GuestRowCard = ({
                 </span>
               ) : null}
             </div>
+            {seating ? <div className="mt-1.5"><GuestSeatingBadge seating={seating} /></div> : null}
           </div>
         </div>
         <RsvpStatusChip guest={guest} />
@@ -115,6 +121,32 @@ export const RsvpStatusChip = ({ guest }: { guest: Guest }) => {
   return (
     <span className={`${base} bg-white text-[#5D5449] border-[#CBAE94]/70`}>
       <XCircle className="w-3 h-3 shrink-0" /><span>{t.statusDeclinedWord}</span>
+    </span>
+  );
+};
+
+// Seated / partly seated / not seated for an attending party, followed by one
+// chip per table that holds a chair of the party (a split party lists each).
+export const GuestSeatingBadge = ({ seating }: { seating: GuestSeating }) => {
+  const t = useT();
+  const tf = useTf();
+  const base = 'inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-semibold border whitespace-nowrap';
+  const label = seating.status === 'seated'
+    ? t.seatingSeatedBadge
+    : seating.status === 'partial'
+      ? tf('seatingPartialBadge', { seated: seating.seated, total: seating.total })
+      : t.seatingNotSeatedBadge;
+  const tone = seating.status === 'unseated'
+    ? 'bg-[#EFE6DC] text-[#5D5449] border-[#CBAE94]'
+    : 'status-ok';
+  return (
+    <span className="flex flex-wrap items-center gap-1.5">
+      <span className={`${base} ${tone}`}>
+        <MapPin className="w-3 h-3 shrink-0" /><span>{label}</span>
+      </span>
+      {seating.tableNames.map((name) => (
+        <span key={name} className={`${base} bg-white text-[#8B735B] border-[#CBAE94]`}>{name}</span>
+      ))}
     </span>
   );
 };
