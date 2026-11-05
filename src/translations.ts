@@ -1141,6 +1141,8 @@ export interface Translations {
   rejectConfirmTitle: string;
   rejectConfirmMsg: string;
   approvalPendingBadge: string;
+  seatingNotSeatedBadge: string;
+  colTable: string;
   inviteStatusInvited: string;
   inviteStatusRegistered: string;
   invitePendingHint: string;
@@ -2469,6 +2471,8 @@ export const translations: Record<Language, Translations> = {
     rejectConfirmTitle: "Reject this registration?",
     rejectConfirmMsg: "{{name}} will be marked as not approved and won't be able to confirm.",
     approvalPendingBadge: "Pending approval",
+    seatingNotSeatedBadge: "Not seated",
+    colTable: "Table",
     inviteStatusInvited: "Invited",
     inviteStatusRegistered: "Registered",
     invitePendingHint: "They'll appear here as invited until they register.",
@@ -3794,6 +3798,8 @@ export const translations: Record<Language, Translations> = {
     rejectConfirmTitle: "Refuser cette inscription ?",
     rejectConfirmMsg: "{{name}} sera marqué(e) comme non approuvé(e) et ne pourra pas confirmer.",
     approvalPendingBadge: "Approbation en attente",
+    seatingNotSeatedBadge: "Non placé(e)",
+    colTable: "Table",
     inviteStatusInvited: "Invité(e)",
     inviteStatusRegistered: "Inscrit(e)",
     invitePendingHint: "Ils apparaîtront ici comme invités jusqu'à leur inscription.",

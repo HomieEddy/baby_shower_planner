@@ -20,6 +20,8 @@ import { AdminToolbar } from './AdminToolbar';
 import { getGuestPartySize } from '../../lib/tableAssignment';
 import { isAttending } from '../../lib/guestAttendees';
 import { useCapabilities, noProviders } from '../../lib/capabilities';
+import { GuestSeatingBadge } from './GuestRowCard';
+import type { GuestSeating } from './guestListModel';
 
 export const GuestToolbar = ({
   className = '',
@@ -114,12 +116,16 @@ export const GuestToolbar = ({
 };
 
 // Dense rows for scanning a long guest list; clicking a row opens details.
+// `seatingOf` is null while no guest in the event is seated, which hides the
+// Table column entirely.
 export const GuestTableView = ({
   guests,
   onView,
+  seatingOf,
 }: {
   guests: Guest[];
   onView: (guest: Guest) => void;
+  seatingOf: ((guest: Guest) => GuestSeating | null) | null;
 }) => {
   const t = useT();
   const statusWord = (g: Guest) =>
@@ -136,10 +142,13 @@ export const GuestTableView = ({
             <th className="px-3 py-2">{t.emailLabel}</th>
             <th className="px-3 py-2 text-right">{t.colPartySize}</th>
             <th className="px-3 py-2">{t.rsvpStatusLabel}</th>
+            {seatingOf ? <th className="px-3 py-2">{t.colTable}</th> : null}
           </tr>
         </thead>
         <tbody className="divide-y divide-[#CBAE94]/30 bg-white">
-          {guests.map((g) => (
+          {guests.map((g) => {
+            const seating = seatingOf ? seatingOf(g) : null;
+            return (
             <tr key={g.id}
               onClick={() => onView(g)}
               tabIndex={0}
@@ -154,8 +163,14 @@ export const GuestTableView = ({
               </td>
               <td className="px-3 py-2 text-right font-bold">{getGuestPartySize(g)}</td>
               <td className="px-3 py-2 text-xs font-bold">{statusWord(g)}</td>
+              {seatingOf ? (
+                <td className="px-3 py-2">
+                  {seating ? <GuestSeatingBadge seating={seating} /> : <span className="text-xs text-[#5D5449]">{'\u2014'}</span>}
+                </td>
+              ) : null}
             </tr>
-          ))}
+            );
+          })}
         </tbody>
       </table>
     </div>

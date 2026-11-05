@@ -87,6 +87,41 @@ const setup = async (guests: Guest[] = GUESTS) => {
 const metricCard = (label: string, footer: string) =>
   screen.getByRole('button', { name: new RegExp(`${label}[\\s\\S]*${footer}`) });
 
+describe('admin guest list: seating', () => {
+  const floorMap = {
+    id: 'fm', canvasWidth: 800, canvasHeight: 600, landmarks: [], updatedAt: '',
+    tables: [{
+      id: 'tbl-a', name: 'Table Rosé', shape: 'circle', x: 0, y: 0, width: 100, height: 100, capacity: 4,
+      assignedGuestIds: ['g1'], seats: [{ guestId: 'g1', attendeeIndex: 0 }, { guestId: 'g1', attendeeIndex: 1 }, null, null],
+    }],
+  };
+  const withFloorMap = () => {
+    vi.stubGlobal('fetch', vi.fn(async (input: unknown, init?: RequestInit) => {
+      const url = String(input);
+      calls.push({ url, method: init?.method || 'GET', body: undefined });
+      if (url.startsWith('/api/capabilities')) return jsonResponse({ email: true, sms: true });
+      if (url.startsWith('/api/floorplan')) return jsonResponse({ floorMap });
+      return jsonResponse({});
+    }));
+  };
+
+  it('shows the seated table on the card, and the Table column in list view', async () => {
+    withFloorMap();
+    renderWithProviders(<AdminGuestsTab language="EN" t={t} guests={GUESTS} onRefresh={vi.fn(async () => {})} />);
+    await screen.findByText('Alice');
+    expect(await screen.findByText('Table Rosé')).toBeInTheDocument();
+    expect(screen.queryByText(t.seatingNotSeatedBadge)).not.toBeInTheDocument();
+
+    fireEvent.click(screen.getByRole('button', { name: t.viewTableBtn }));
+    expect(await screen.findByRole('columnheader', { name: t.colTable })).toBeInTheDocument();
+  });
+
+  it('hides the seating indicator while no guest is seated', async () => {
+    await setup();
+    expect(screen.queryByText(t.seatingNotSeatedBadge)).not.toBeInTheDocument();
+  });
+});
+
 describe('admin guest list: metrics', () => {
   it('counts party members by default and invites in invites mode', async () => {
     await setup();
