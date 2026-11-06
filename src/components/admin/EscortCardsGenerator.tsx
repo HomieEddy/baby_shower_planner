@@ -9,7 +9,7 @@ import { fitFontPx } from '../../lib/cardText';
 import { Select, TextInput } from '../shared/ui';
 import { getAttendeeLocations } from '../../lib/tableAssignment';
 import { getPartyMembers, isAttending } from '../../lib/guestAttendees';
-import { downloadExportFiles, exportSection, ExportFile, ExportFormat } from '../../lib/printExport';
+import { A4_PX, downloadExportFiles, exportSection, ExportFile, ExportFormat } from '../../lib/printExport';
 import { PrintableStandee, PrintablePoster } from './PrintAllSheet';
 import { AdminPageHeader, AdminSectionTitle } from './AdminPageHeader';
 
@@ -176,7 +176,7 @@ export const EscortCardsGenerator: React.FC<EscortCardsGeneratorProps> = ({ gues
         if (!element) throw new Error(`Export section not mounted: ${key}`);
         files.push({
           name: `${SECTION_FILE_NAMES[key]}.${exportFormat}`,
-          blob: await exportSection(element, exportFormat),
+          blob: await exportSection(element, exportFormat, key === 'poster' ? 'page' : 'cards'),
         });
       }
       await downloadExportFiles(files, `escort-cards_${new Date().toISOString().slice(0, 10)}.zip`);
@@ -430,18 +430,21 @@ export const EscortCardsGenerator: React.FC<EscortCardsGeneratorProps> = ({ gues
           className="print:hidden"
           style={{ position: 'fixed', left: '-100000px', top: 0, width: `${EXPORT_WIDTH_PX}px`, pointerEvents: 'none' }}
         >
-          {exportStageSections.map((key) => (
-            <div
-              key={key}
-              data-export-section={key}
-              className="grid grid-cols-2 gap-4 bg-white p-6"
-            >
-              {key === 'poster' && <PrintablePoster settings={settings} wide />}
-              {key === 'standees' && tables.map((tbl) => <PrintableStandee key={`qr-${tbl.id}`} table={tbl} />)}
-              {key === 'tents' && filteredRows.map(renderTent)}
-              {key === 'badges' && filteredRows.map(renderBadge)}
-            </div>
-          ))}
+          {exportStageSections.map((key) =>
+            key === 'poster' ? (
+              // The poster is exactly one A4 page.
+              <div key={key} data-export-section={key} style={{ width: A4_PX.width, height: A4_PX.height }}>
+                <PrintablePoster settings={settings} fullPage />
+              </div>
+            ) : (
+              // Each direct child is one card; the PDF export packs them onto pages whole.
+              <div key={key} data-export-section={key} className="grid grid-cols-2 gap-4 bg-white p-6">
+                {key === 'standees' && tables.map((tbl) => <PrintableStandee key={`qr-${tbl.id}`} table={tbl} />)}
+                {key === 'tents' && filteredRows.map(renderTent)}
+                {key === 'badges' && filteredRows.map(renderBadge)}
+              </div>
+            )
+          )}
         </div>
       )}
     </div>

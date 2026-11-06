@@ -15,8 +15,12 @@ const findTableQrUrl = () =>
     `${window.location.origin}/find-my-table`
   )}&color=4A3F35&bgcolor=FFFDF9`;
 
-/** Find-My-Table welcome poster (moved here from the check-in page). */
-export const PrintablePoster = ({ settings, wide }: { settings?: EventSettings | null; wide?: boolean }) => {
+/**
+ * Find-My-Table welcome poster (moved here from the check-in page).
+ * `fullPage` renders it at its printed size, filling the parent (an A4 page in
+ * the export), instead of the small preview card.
+ */
+export const PrintablePoster = ({ settings, fullPage }: { settings?: EventSettings | null; fullPage?: boolean }) => {
   const t = useT();
   const tf = useTf();
   const babyName = settings?.babyName || '';
@@ -24,22 +28,43 @@ export const PrintablePoster = ({ settings, wide }: { settings?: EventSettings |
   const venue = settings?.venueName || '';
   const date = settings?.date || '';
 
+  // Tailwind needs literal class names, so both size sets are spelled out.
+  const c = fullPage
+    ? {
+        root: 'w-full h-full p-12 gap-6',
+        pill: 'px-6 py-2 text-lg',
+        heading: 'text-5xl',
+        sub: 'text-2xl',
+        qr: 'w-[120mm] h-[120mm] p-4 border-4',
+        scan: 'text-3xl',
+        date: 'text-lg',
+      }
+    : {
+        root: 'border-2 border-dashed border-[#CBAE94] p-4 print:p-12 h-80 sm:h-72 gap-2 print:gap-6 md:col-span-2',
+        pill: 'px-3 py-0.5 print:px-6 print:py-2 text-[10px] print:text-lg',
+        heading: 'text-xl print:text-5xl',
+        sub: 'text-[11px] print:text-2xl',
+        qr: 'w-32 h-32 print:w-[120mm] print:h-[120mm] p-1.5 print:p-4 border-2 print:border-4',
+        scan: 'text-sm print:text-3xl',
+        date: 'text-[10px] print:text-lg',
+      };
+
   return (
-    <div className={`print-keep-color print-full-page break-inside-avoid border-2 border-dashed border-[#CBAE94] bg-[#FAF6F0] p-4 print:p-12 h-80 sm:h-72 flex flex-col items-center justify-center text-center gap-2 print:gap-6 ${wide ? 'col-span-2' : 'md:col-span-2'}`}>
-      <span className="inline-block px-3 py-0.5 print:px-6 print:py-2 rounded-full bg-[#EFE6DC] text-[#8B735B] text-[10px] print:text-lg font-mono font-bold uppercase tracking-wider">
+    <div className={`print-keep-color print-full-page break-inside-avoid bg-[#FAF6F0] flex flex-col items-center justify-center text-center ${c.root}`}>
+      <span className={`inline-block rounded-full bg-[#EFE6DC] text-[#8B735B] font-mono font-bold uppercase tracking-wider ${c.pill}`}>
         {t.posterWelcome}
       </span>
-      <h3 className="font-newsreader text-xl print:text-5xl font-bold text-[#4A3F35] leading-tight">
+      <h3 className={`font-newsreader font-bold text-[#4A3F35] leading-tight ${c.heading}`}>
         {babyName ? tf('printPosterHeading', { name: babyName }) : 'Baby Shower'}
       </h3>
       {(parents || venue) && (
-        <p className="text-[11px] print:text-2xl font-bold text-[#8B735B]">{[parents, venue].filter(Boolean).join(' • ')}</p>
+        <p className={`font-bold text-[#8B735B] ${c.sub}`}>{[parents, venue].filter(Boolean).join(' • ')}</p>
       )}
-      <div className="w-32 h-32 print:w-[120mm] print:h-[120mm] bg-white p-1.5 print:p-4 border-2 print:border-4 border-[#CBAE94] flex items-center justify-center">
+      <div className={`bg-white border-[#CBAE94] flex items-center justify-center ${c.qr}`}>
         <img src={findTableQrUrl()} alt={t.posterScanTitle} className="w-full h-full object-contain" />
       </div>
-      <p className="text-sm print:text-3xl font-bold text-[#4A3F35] leading-tight">{t.posterScanTitle}</p>
-      {date && <p className="text-[10px] print:text-lg font-mono text-[#8B735B]">{date} • {t.dayOfTitle}</p>}
+      <p className={`font-bold text-[#4A3F35] leading-tight ${c.scan}`}>{t.posterScanTitle}</p>
+      {date && <p className={`font-mono text-[#8B735B] ${c.date}`}>{date} • {t.dayOfTitle}</p>}
     </div>
   );
 };
