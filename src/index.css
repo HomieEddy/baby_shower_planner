@@ -668,6 +668,43 @@ select option {
     break-after: page !important;
   }
 
+  /* The app remaps its hard-coded palette to theme variables (and to dark
+     surfaces in dark mode). On paper, cards always use their own design colors. */
+  :root .print-keep-color[class*="bg-[#FAF6F0]"]:not([class*="hover:bg-[#FAF6F0]"]),
+  :root .print-keep-color [class*="bg-[#FAF6F0]"]:not([class*="hover:bg-[#FAF6F0]"]) {
+    background-color: #FAF6F0 !important;
+  }
+  :root .print-keep-color[class*="bg-[#EFE6DC]"]:not([class*="hover:bg-[#EFE6DC]"]),
+  :root .print-keep-color [class*="bg-[#EFE6DC]"]:not([class*="hover:bg-[#EFE6DC]"]) {
+    background-color: #EFE6DC !important;
+  }
+  :root .print-keep-color[class*="bg-[#FFFDF9]"]:not([class*="hover:bg-[#FFFDF9]"]),
+  :root .print-keep-color [class*="bg-[#FFFDF9]"]:not([class*="hover:bg-[#FFFDF9]"]) {
+    background-color: #FFFDF9 !important;
+  }
+  :root .print-keep-color[class~="bg-white"],
+  :root .print-keep-color [class~="bg-white"] {
+    background-color: #ffffff !important;
+  }
+  :root .print-keep-color [class*="text-[#4A3F35]"]:not([class*="hover:text-[#4A3F35]"]) {
+    color: #4A3F35 !important;
+  }
+  :root .print-keep-color [class*="text-[#8B735B]"]:not([class*="hover:text-[#8B735B]"]) {
+    color: #8B735B !important;
+  }
+  :root .print-keep-color [class*="text-[#5D5449]"]:not([class*="hover:text-[#5D5449]"]) {
+    color: #5D5449 !important;
+  }
+
+  /* Find-My-Table poster fills a whole page on its own. */
+  .print-pack > .print-full-page {
+    grid-column: 1 / -1 !important;
+    height: 286mm !important;
+    break-after: page;
+    page-break-after: always;
+    border: none !important;
+  }
+
   /* Print-all sheet: pack every piece edge to edge, two per row, so the night's
      stationery fits on as few pages as possible and is cut out by hand. */
   .print-all-sheet {

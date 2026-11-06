@@ -25,21 +25,21 @@ export const PrintablePoster = ({ settings }: { settings?: EventSettings | null 
   const date = settings?.date || '';
 
   return (
-    <div className="print-keep-color break-inside-avoid border-2 border-dashed border-[#CBAE94] bg-[#FAF6F0] p-4 h-80 sm:h-72 flex flex-col items-center justify-center text-center gap-2">
-      <span className="inline-block px-3 py-0.5 rounded-full bg-[#EFE6DC] text-[#8B735B] text-[10px] font-mono font-bold uppercase tracking-wider">
+    <div className="print-keep-color print-full-page break-inside-avoid border-2 border-dashed border-[#CBAE94] bg-[#FAF6F0] p-4 print:p-12 h-80 sm:h-72 flex flex-col items-center justify-center text-center gap-2 print:gap-6 md:col-span-2">
+      <span className="inline-block px-3 py-0.5 print:px-6 print:py-2 rounded-full bg-[#EFE6DC] text-[#8B735B] text-[10px] print:text-lg font-mono font-bold uppercase tracking-wider">
         {t.posterWelcome}
       </span>
-      <h3 className="font-newsreader text-xl font-bold text-[#4A3F35] leading-tight">
+      <h3 className="font-newsreader text-xl print:text-5xl font-bold text-[#4A3F35] leading-tight">
         {babyName ? tf('printPosterHeading', { name: babyName }) : 'Baby Shower'}
       </h3>
       {(parents || venue) && (
-        <p className="text-[11px] font-bold text-[#8B735B]">{[parents, venue].filter(Boolean).join(' • ')}</p>
+        <p className="text-[11px] print:text-2xl font-bold text-[#8B735B]">{[parents, venue].filter(Boolean).join(' • ')}</p>
       )}
-      <div className="w-32 h-32 bg-white p-1.5 border-2 border-[#CBAE94] flex items-center justify-center">
+      <div className="w-32 h-32 print:w-[120mm] print:h-[120mm] bg-white p-1.5 print:p-4 border-2 print:border-4 border-[#CBAE94] flex items-center justify-center">
         <img src={findTableQrUrl()} alt={t.posterScanTitle} className="w-full h-full object-contain" />
       </div>
-      <p className="text-sm font-bold text-[#4A3F35] leading-tight">{t.posterScanTitle}</p>
-      {date && <p className="text-[10px] font-mono text-[#8B735B]">{date} • {t.dayOfTitle}</p>}
+      <p className="text-sm print:text-3xl font-bold text-[#4A3F35] leading-tight">{t.posterScanTitle}</p>
+      {date && <p className="text-[10px] print:text-lg font-mono text-[#8B735B]">{date} • {t.dayOfTitle}</p>}
     </div>
   );
 };
