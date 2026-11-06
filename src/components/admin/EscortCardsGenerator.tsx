@@ -1,6 +1,7 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
+import { flushSync } from 'react-dom';
 import { Guest, EventSettings, FloorMapData } from '../../types';
-import { Printer, Scissors, Tag } from 'lucide-react';
+import { Download, Printer, Scissors, Tag } from 'lucide-react';
 import { useT, useTf } from '../shared/i18n';
 import { usePrint } from '../shared/hooks';
 import { useToast } from '../shared/ToastContext';
@@ -8,6 +9,7 @@ import { fitFontPx } from '../../lib/cardText';
 import { Select, TextInput } from '../shared/ui';
 import { getAttendeeLocations } from '../../lib/tableAssignment';
 import { getPartyMembers, isAttending } from '../../lib/guestAttendees';
+import { A4_PX, downloadExportFiles, exportSection, ExportFile, ExportFormat } from '../../lib/printExport';
 import { PrintableStandee, PrintablePoster } from './PrintAllSheet';
 import { AdminPageHeader, AdminSectionTitle } from './AdminPageHeader';
 
@@ -27,6 +29,19 @@ interface CardRow {
 const UNASSIGNED = '__unassigned__';
 
 type PrintSection = 'poster' | 'standees' | 'tents' | 'badges';
+
+const PRINT_SECTIONS: PrintSection[] = ['poster', 'standees', 'tents', 'badges'];
+
+// File names for exports: one file per section.
+const SECTION_FILE_NAMES: Record<PrintSection, string> = {
+  poster: 'find-my-table-poster',
+  standees: 'table-qr-standees',
+  tents: 'folded-tent-cards',
+  badges: 'name-badges',
+};
+
+// Export captures are rendered at this fixed width, independent of the viewport.
+const EXPORT_WIDTH_PX = 800;
 
 export const EscortCardsGenerator: React.FC<EscortCardsGeneratorProps> = ({ guests, settings, onSaveSettings }) => {
     const t = useT();
@@ -48,6 +63,11 @@ export const EscortCardsGenerator: React.FC<EscortCardsGeneratorProps> = ({ gues
       return next;
     });
   const [selectedTableFilter, setSelectedTableFilter] = useState<string>('ALL');
+  const [exportFormat, setExportFormat] = useState<ExportFormat>('pdf');
+  const [exporting, setExporting] = useState(false);
+  // While exporting, every enabled section is mounted off-screen so it can be captured.
+  const [exportStageSections, setExportStageSections] = useState<PrintSection[] | null>(null);
+  const exportStageRef = useRef<HTMLDivElement>(null);
 
   // The header saved in settings wins; otherwise fall back to the baby-name default.
   const defaultHeader = settings?.babyName
@@ -133,11 +153,41 @@ export const EscortCardsGenerator: React.FC<EscortCardsGeneratorProps> = ({ gues
   });
 
   const tables = floorMap?.tables ?? [];
-  const itemCount =
-    (sections.poster ? 1 : 0) +
-    (sections.standees ? tables.length : 0) +
-    (sections.tents ? filteredRows.length : 0) +
-    (sections.badges ? filteredRows.length : 0);
+  const itemCounts: Record<PrintSection, number> = {
+    poster: 1,
+    standees: tables.length,
+    tents: filteredRows.length,
+    badges: filteredRows.length,
+  };
+  const itemCount = PRINT_SECTIONS.reduce((sum, s) => sum + (sections[s] ? itemCounts[s] : 0), 0);
+  // Each enabled, non-empty section becomes one exported file.
+  const exportSectionKeys = PRINT_SECTIONS.filter((s) => sections[s] && itemCounts[s] > 0);
+
+  const handleExport = async () => {
+    if (exporting || exportSectionKeys.length === 0) return;
+    setExporting(true);
+    // Mount the sections synchronously so their elements exist before capture.
+    flushSync(() => setExportStageSections(exportSectionKeys));
+    try {
+      toast.info(t.exportPreparingToast);
+      const files: ExportFile[] = [];
+      for (const key of exportSectionKeys) {
+        const element = exportStageRef.current?.querySelector<HTMLElement>(`[data-export-section="${key}"]`);
+        if (!element) throw new Error(`Export section not mounted: ${key}`);
+        files.push({
+          name: `${SECTION_FILE_NAMES[key]}.${exportFormat}`,
+          blob: await exportSection(element, exportFormat, key === 'poster' ? 'page' : 'cards'),
+        });
+      }
+      await downloadExportFiles(files, `escort-cards_${new Date().toISOString().slice(0, 10)}.zip`);
+      toast.success(t.exportDoneToast);
+    } catch {
+      toast.error(t.exportFailedToast);
+    } finally {
+      setExportStageSections(null);
+      setExporting(false);
+    }
+  };
 
   const renderTent = (row: CardRow) => {
     const guest = row.guest;
@@ -246,15 +296,28 @@ export const EscortCardsGenerator: React.FC<EscortCardsGeneratorProps> = ({ gues
         title={t.escortTitle}
         subtitle={t.escortSubtitle}
         actions={
-          <button
-            type="button"
-            onClick={() => print(t.printAllToast)}
-            disabled={itemCount === 0}
-            className="btn-accent text-xs sm:text-sm py-2.5 px-4 gap-2 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
-          >
-            <Printer className="w-4 h-4" />
-            <span>{tf('printAllBtn', { count: itemCount })}</span>
-          </button>
+          <div className="flex flex-wrap gap-2">
+            <button
+              type="button"
+              onClick={handleExport}
+              disabled={exporting || exportSectionKeys.length === 0}
+              className="btn-outline-accent text-xs sm:text-sm py-2.5 px-4 gap-2 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              <Download className="w-4 h-4" />
+              <span>
+                {exporting ? t.exportingLabel : tf('exportSectionsBtn', { count: exportSectionKeys.length })}
+              </span>
+            </button>
+            <button
+              type="button"
+              onClick={() => print(t.printAllToast)}
+              disabled={itemCount === 0}
+              className="btn-accent text-xs sm:text-sm py-2.5 px-4 gap-2 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+            >
+              <Printer className="w-4 h-4" />
+              <span>{tf('printAllBtn', { count: itemCount })}</span>
+            </button>
+          </div>
         }
       />
 
@@ -284,7 +347,20 @@ export const EscortCardsGenerator: React.FC<EscortCardsGeneratorProps> = ({ gues
           </div>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+          <div>
+            <label className="label-mono block mb-1">{t.exportFormatLabel}</label>
+            <Select
+              variant="soft"
+              value={exportFormat}
+              onChange={(e) => setExportFormat(e.target.value as ExportFormat)}
+            >
+              <option value="pdf">{t.exportFormatPdf}</option>
+              <option value="jpg">{t.exportFormatJpg}</option>
+              <option value="png">{t.exportFormatPng}</option>
+            </Select>
+          </div>
+
           <div>
             <label className="label-mono block mb-1">{t.filterByTableLabel}</label>
             <Select
@@ -321,6 +397,8 @@ export const EscortCardsGenerator: React.FC<EscortCardsGeneratorProps> = ({ gues
             </div>
           </div>
         </div>
+
+        <p className="text-xs text-[#5D5449]">{t.exportHint}</p>
       </div>
 
       {/* One print job: poster, standees, tent cards and badges packed edge to edge */}
@@ -343,6 +421,32 @@ export const EscortCardsGenerator: React.FC<EscortCardsGeneratorProps> = ({ gues
           </div>
         )}
       </div>
+
+      {/* Off-screen copy of each section, mounted only while exporting. */}
+      {exportStageSections && (
+        <div
+          ref={exportStageRef}
+          aria-hidden="true"
+          className="print:hidden"
+          style={{ position: 'fixed', left: '-100000px', top: 0, width: `${EXPORT_WIDTH_PX}px`, pointerEvents: 'none' }}
+        >
+          {exportStageSections.map((key) =>
+            key === 'poster' ? (
+              // The poster is exactly one A4 page.
+              <div key={key} data-export-section={key} style={{ width: A4_PX.width, height: A4_PX.height }}>
+                <PrintablePoster settings={settings} fullPage />
+              </div>
+            ) : (
+              // Each direct child is one card; the PDF export packs them onto pages whole.
+              <div key={key} data-export-section={key} className="grid grid-cols-2 gap-4 bg-white p-6">
+                {key === 'standees' && tables.map((tbl) => <PrintableStandee key={`qr-${tbl.id}`} table={tbl} />)}
+                {key === 'tents' && filteredRows.map(renderTent)}
+                {key === 'badges' && filteredRows.map(renderBadge)}
+              </div>
+            )
+          )}
+        </div>
+      )}
     </div>
   );
 };

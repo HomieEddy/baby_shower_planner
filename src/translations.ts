@@ -1299,6 +1299,18 @@ export interface Translations {
   printSectionStandees: string;
   printSectionStandees_one: string;
   printSectionStandees_other: string;
+  exportFormatLabel: string;
+  exportFormatPdf: string;
+  exportFormatJpg: string;
+  exportFormatPng: string;
+  exportSectionsBtn: string;
+  exportSectionsBtn_one: string;
+  exportSectionsBtn_other: string;
+  exportingLabel: string;
+  exportHint: string;
+  exportPreparingToast: string;
+  exportDoneToast: string;
+  exportFailedToast: string;
   printPosterHeading: string;
   escortHeaderWithBaby: string;
   escortHeaderDefault: string;
@@ -2672,6 +2684,18 @@ export const translations: Record<Language, Translations> = {
     printSectionStandees: "Table QR standees ({{count}})",
     printSectionStandees_one: "Table QR standee ({{count}})",
     printSectionStandees_other: "Table QR standees ({{count}})",
+    exportFormatLabel: "Export format",
+    exportFormatPdf: "PDF",
+    exportFormatJpg: "HD JPG",
+    exportFormatPng: "HD PNG",
+    exportSectionsBtn: "Export {{count}} files",
+    exportSectionsBtn_one: "Export {{count}} file",
+    exportSectionsBtn_other: "Export {{count}} files",
+    exportingLabel: "Exporting…",
+    exportHint: "Each section is its own file. Several sections download together as one zip.",
+    exportPreparingToast: "Preparing your files…",
+    exportDoneToast: "Export ready",
+    exportFailedToast: "Export failed. Check your connection and try again.",
     printPosterHeading: "Bébé {{name}}'s Baby Shower",
     escortHeaderWithBaby: "Celebrating Baby {{name}}",
     escortHeaderDefault: "Welcome to Our Baby Shower",
@@ -4044,6 +4068,18 @@ export const translations: Record<Language, Translations> = {
     printSectionStandees: "Chevalets QR de table ({{count}})",
     printSectionStandees_one: "Chevalet QR de table ({{count}})",
     printSectionStandees_other: "Chevalets QR de table ({{count}})",
+    exportFormatLabel: "Format d'export",
+    exportFormatPdf: "PDF",
+    exportFormatJpg: "JPG HD",
+    exportFormatPng: "PNG HD",
+    exportSectionsBtn: "Exporter {{count}} fichiers",
+    exportSectionsBtn_one: "Exporter {{count}} fichier",
+    exportSectionsBtn_other: "Exporter {{count}} fichiers",
+    exportingLabel: "Export en cours…",
+    exportHint: "Chaque section est un fichier distinct. Plusieurs sections se téléchargent ensemble dans un zip.",
+    exportPreparingToast: "Préparation de vos fichiers…",
+    exportDoneToast: "Export prêt",
+    exportFailedToast: "L'export a échoué. Vérifiez votre connexion et réessayez.",
     printPosterHeading: "Baby Shower de Bébé {{name}}",
     escortHeaderWithBaby: "Célébration de bébé {{name}}",
     escortHeaderDefault: "Bienvenue à notre baby shower",
