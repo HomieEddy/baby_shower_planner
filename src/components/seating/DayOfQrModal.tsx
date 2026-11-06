@@ -104,7 +104,7 @@ export const DayOfQrModal: React.FC<DayOfQrModalProps> = ({
         </div>
       }>
       {/* Printable Poster Area */}
-      <div ref={printRef} className="p-8 text-center space-y-6 print:p-12 print:m-0">
+      <div ref={printRef} className="print-keep-color p-8 text-center space-y-6 print:p-12 print:m-0">
               <motion.div className="space-y-1" variants={fadeUp} initial="hidden" animate="show">
                 <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-[#EFE6DC] text-[#8B735B] text-xs font-mono font-bold uppercase tracking-wider">
                   <Sparkles className="w-3.5 h-3.5" /> {t.posterWelcome}

@@ -6,12 +6,10 @@ import { getPartyMembers, isMemberCheckedIn } from '../../lib/guestAttendees';
 import { getGuestPartySize } from '../../lib/tableAssignment';
 import { useToast } from '../shared/ToastContext';
 import { useActionConfirm } from '../shared/ConfirmDialog';
-import { CheckCircle2, RotateCcw, Users, UserCheck, UserX, ChevronDown, ChevronRight, QrCode } from 'lucide-react';
+import { CheckCircle2, RotateCcw, Users, UserCheck, UserX, ChevronDown, ChevronRight } from 'lucide-react';
 import { useT, useTf, useApiErrorMessage } from '../shared/i18n';
 import { useAppStore } from '../../stores/appStore';
 import { formatClockTime } from '../../lib/dateUtils';
-import { useSettings } from '../../lib/settingsQuery';
-import { DayOfQrModal } from '../seating/DayOfQrModal';
 import { decodeApiError } from '../../lib/errors';
 import { SearchInput } from '../shared/ui';
 import { MetricCard } from '../shared/MetricCard';
@@ -25,7 +23,6 @@ export const GuestCheckIn = () => {
   const tf = useTf();
   const apiError = useApiErrorMessage();
   const language = useAppStore((s) => s.language);
-  const settings = useSettings();
   const { toast } = useToast();
   const confirmAction = useActionConfirm();
   const [guests, setGuests] = useState<Guest[]>([]);
@@ -34,7 +31,6 @@ export const GuestCheckIn = () => {
   const [stats, setStats] = useState({ total: 0, checkedIn: 0, expected: 0 });
   const [loading, setLoading] = useState(true);
   const [busy, setBusy] = useState<string | null>(null);
-  const [qrOpen, setQrOpen] = useState(false);
 
   const fetchData = useCallback(async (isActive: () => boolean = () => true) => {
     const [gRes, sRes] = await Promise.all([
@@ -110,16 +106,6 @@ export const GuestCheckIn = () => {
         eyebrow={t.checkinHeaderEyebrow}
         title={t.tabCheckIn}
         subtitle={t.checkinHeaderSubtitle}
-        actions={
-          <button
-            type="button"
-            onClick={() => setQrOpen(true)}
-            className="btn-accent text-xs sm:text-sm py-2.5 px-4 gap-2 cursor-pointer"
-          >
-            <QrCode className="w-4 h-4" />
-            <span>{t.printFindTableQrBtn}</span>
-          </button>
-        }
       />
 
       {/* Stats bar — individuals: expected vs checked in */}
@@ -291,12 +277,6 @@ export const GuestCheckIn = () => {
         onPageChange={pager.setPage}
       />
 
-      <DayOfQrModal
-        isOpen={qrOpen}
-        onClose={() => setQrOpen(false)}
-        language={language}
-        settings={settings}
-      />
     </motion.div>
   );
 };

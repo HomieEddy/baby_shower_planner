@@ -1263,6 +1263,17 @@ export interface Translations {
   escortItemsCount_one: string;
   escortItemsCount_other: string;
   escortPaperLayout: string;
+  printAllBtn: string;
+  printAllBtn_one: string;
+  printAllBtn_other: string;
+  printAllToast: string;
+  printAllLayout: string;
+  printSectionsLabel: string;
+  printSectionPoster: string;
+  printSectionStandees: string;
+  printSectionStandees_one: string;
+  printSectionStandees_other: string;
+  printPosterHeading: string;
   escortHeaderWithBaby: string;
   escortHeaderDefault: string;
   escortVoteTitle: string;
@@ -2601,6 +2612,17 @@ export const translations: Record<Language, Translations> = {
     escortItemsCount_one: "{{count}} item",
     escortItemsCount_other: "{{count}} items",
     escortPaperLayout: "2-Column Grid (Standard A4 / Letter)",
+    printAllBtn: "Print all ({{count}} items)",
+    printAllBtn_one: "Print all ({{count}} item)",
+    printAllBtn_other: "Print all ({{count}} items)",
+    printAllToast: "Preparing one print job with everything for the night…",
+    printAllLayout: "Everything on one job, narrow margins, cut along the dashed lines",
+    printSectionsLabel: "What to print",
+    printSectionPoster: "Find-My-Table poster",
+    printSectionStandees: "Table QR standees ({{count}})",
+    printSectionStandees_one: "Table QR standee ({{count}})",
+    printSectionStandees_other: "Table QR standees ({{count}})",
+    printPosterHeading: "Bébé {{name}}'s Baby Shower",
     escortHeaderWithBaby: "Celebrating Baby {{name}}",
     escortHeaderDefault: "Welcome to Our Baby Shower",
     escortVoteTitle: "Guess the Baby's Name!",
@@ -3936,6 +3958,17 @@ export const translations: Record<Language, Translations> = {
     escortItemsCount_one: "{{count}} élément",
     escortItemsCount_other: "{{count}} éléments",
     escortPaperLayout: "Grille 2 colonnes (A4 / Letter standard)",
+    printAllBtn: "Tout imprimer ({{count}} éléments)",
+    printAllBtn_one: "Tout imprimer ({{count}} élément)",
+    printAllBtn_other: "Tout imprimer ({{count}} éléments)",
+    printAllToast: "Préparation d'une seule impression avec tout pour la soirée…",
+    printAllLayout: "Tout en une impression, marges étroites, découpez le long des pointillés",
+    printSectionsLabel: "Quoi imprimer",
+    printSectionPoster: "Affiche « Trouver ma table »",
+    printSectionStandees: "Chevalets QR de table ({{count}})",
+    printSectionStandees_one: "Chevalet QR de table ({{count}})",
+    printSectionStandees_other: "Chevalets QR de table ({{count}})",
+    printPosterHeading: "Baby Shower de Bébé {{name}}",
     escortHeaderWithBaby: "Célébration de bébé {{name}}",
     escortHeaderDefault: "Bienvenue à notre baby shower",
     escortVoteTitle: "Devinez le prénom de bébé !",
