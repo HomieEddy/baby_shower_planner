@@ -37,9 +37,16 @@ export const EscortCardsGenerator: React.FC<EscortCardsGeneratorProps> = ({ gues
     poster: true,
     standees: true,
     tents: true,
-    badges: true,
+    badges: false,
   });
-  const toggleSection = (s: PrintSection) => setSections((prev) => ({ ...prev, [s]: !prev[s] }));
+  // Tent cards and name badges are alternatives: turning one on turns the other off.
+  const toggleSection = (s: PrintSection) =>
+    setSections((prev) => {
+      const next = { ...prev, [s]: !prev[s] };
+      if (next[s] && s === 'tents') next.badges = false;
+      if (next[s] && s === 'badges') next.tents = false;
+      return next;
+    });
   const [selectedTableFilter, setSelectedTableFilter] = useState<string>('ALL');
 
   // The header saved in settings wins; otherwise fall back to the baby-name default.
