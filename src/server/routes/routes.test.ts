@@ -162,6 +162,7 @@ describe('admin routes are gated', () => {
     ['POST', '/api/floorplan'],
     ['POST', '/api/floorplan/share-email'],
     ['POST', '/api/alerts'],
+    ['POST', '/api/alerts/test'],
     ['DELETE', '/api/alerts/abc'],
     ['POST', '/api/wipe-data'],
     ['POST', '/api/rehearsal/start'],
@@ -228,5 +229,16 @@ describe('path params and bodies', () => {
     const res = await call('POST', '/api/settings', { babyName: 'Lou', bogus: 1 });
     expect(res.statusCode).toBe(400);
     expect(res.body.message).toBe('Unknown setting: bogus');
+  });
+});
+
+describe('alert test send validation', () => {
+  it('rejects a malformed test address before anything is sent', async () => {
+    const email = await call('POST', '/api/alerts/test', { channel: 'email', to: 'not-an-email', title: 'T', message: 'M' });
+    expect(email.statusCode).toBe(400);
+    const phone = await call('POST', '/api/alerts/test', { channel: 'text', to: 'abc', title: 'T', message: 'M' });
+    expect(phone.statusCode).toBe(400);
+    const channel = await call('POST', '/api/alerts/test', { channel: 'carrier-pigeon', to: 'x', title: 'T', message: 'M' });
+    expect(channel.statusCode).toBe(400);
   });
 });

@@ -174,6 +174,8 @@ export const SettingsSchema = z.object({
   hostPhone: z.string().optional(),
   reminderChannels: z.object({ email: z.boolean(), sms: z.boolean() }).optional(),
   reminderAdvance: z.enum(['1h', '6h', '1d', '2d', '1w']).optional(),
+  alertTestEmail: z.string().optional(),
+  alertTestPhone: z.string().optional(),
   language: LanguageEnum.optional(),
 });
 export type EventSettings = z.infer<typeof SettingsSchema>;
@@ -184,7 +186,8 @@ export const AlertSchema = z.object({
   message: z.string(),
   active: z.boolean(),
   notified_guests_count: z.number(),
-  target_audience: z.enum(['ALL', 'PENDING', 'ATTENDING']).optional(),
+  target_audience: z.enum(['ALL', 'PENDING', 'ATTENDING', 'SELECTED']).optional(),
+  channel: z.enum(['email', 'text', 'both']).optional(),
   created_at: z.string(),
 });
 export type AlertType = z.infer<typeof AlertSchema>['type'];

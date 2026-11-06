@@ -147,6 +147,33 @@ export interface Translations {
   broadcastDesc: string;
   broadcastDispatchedTitle: string;
   broadcastTitle: string;
+  alertSectionMessage: string;
+  alertSectionChannel: string;
+  alertChannelLabel: string;
+  targetSelectedGuests: string;
+  alertRecipientsLabel: string;
+  alertReachSummary: string;
+  alertSkippedNote: string;
+  alertNoRecipients: string;
+  guestSearchPh: string;
+  selectAllVisibleBtn: string;
+  clearSelectionBtn: string;
+  selectedCountLabel: string;
+  noContactForChannel: string;
+  alertConfirmSend: string;
+  testAlertTitle: string;
+  testAlertDesc: string;
+  testEmailLabel: string;
+  testPhoneLabel: string;
+  saveTestContactsBtn: string;
+  testContactsSavedToast: string;
+  sendTestEmailBtn: string;
+  sendTestSmsBtn: string;
+  testSentToast: string;
+  testNeedsBody: string;
+  testFailedToast: string;
+  INVALID_PHONE: string;
+  TEST_SEND_FAILED: string;
   btnExportImage: string;
   btnFindMyTable: string;
   btnFullscreenEditor: string;
@@ -199,7 +226,6 @@ export interface Translations {
   checkingLabel: string;
   clearAllBtn: string;
   clearFilterBtn: string;
-  clearSelectionBtn: string;
   closeModal: string;
   colActions: string;
   colCode: string;
@@ -1496,6 +1522,30 @@ export const translations: Record<Language, Translations> = {
     broadcastDesc: "Send emergency updates (Date change, Venue change, or Cancellation) directly to all invited guests.",
     broadcastDispatchedTitle: "Broadcast Dispatched!",
     broadcastTitle: "Broadcast Urgent Alert to Guests",
+    alertSectionMessage: "1 · Message",
+    alertSectionChannel: "2 · Channel & recipients",
+    alertChannelLabel: "Send by",
+    targetSelectedGuests: "Selected guests",
+    alertRecipientsLabel: "Recipients",
+    alertReachSummary: "This reaches {{count}} guests: {{email}} by email, {{sms}} by SMS.",
+    alertSkippedNote: "{{count}} guests are skipped because they have no contact for this channel.",
+    alertNoRecipients: "No guest matches this audience and channel yet.",
+    guestSearchPh: "Search guests…",
+    selectAllVisibleBtn: "Select all shown",
+    selectedCountLabel: "{{count}} selected",
+    noContactForChannel: "No contact for this channel",
+    alertConfirmSend: "Send this alert to {{count}} guests?",
+    testAlertTitle: "Test this alert",
+    testAlertDesc: "Send the draft above to one address or number to check the wording and delivery. Test contacts are saved for next time.",
+    testEmailLabel: "Test email",
+    testPhoneLabel: "Test phone",
+    saveTestContactsBtn: "Save test contacts",
+    testContactsSavedToast: "Test contacts saved",
+    sendTestEmailBtn: "Send test email",
+    sendTestSmsBtn: "Send test SMS",
+    testSentToast: "Test sent to {{to}}",
+    testNeedsBody: "Add a title and a message before sending a test.",
+    testFailedToast: "The test could not be sent. Check the address and provider setup.",
     btnExportImage: "Export Map Image",
     btnFindMyTable: "Find My Table",
     btnFullscreenEditor: "Open Full-Screen Editor",
@@ -2530,7 +2580,7 @@ export const translations: Record<Language, Translations> = {
     deleteGbEntryMsg: "Remove \"{{name}}\"'s message permanently? This cannot be undone.",
     deleteGbEntryTitle: "Delete Guestbook Entry?",
     deletePhotoConfirmMsg: "Are you sure you want to delete this photo from the memory library?",
-    dispatchAlertBtn: "Dispatch Alert & Email Guests",
+    dispatchAlertBtn: "Send Alert",
     dispatchingAlertBtn: "Dispatching Broadcast...",
     downloadSelectedZip: "Download Selected ZIP ({{count}})",
     filterAllOption: "All",
@@ -2671,6 +2721,8 @@ export const translations: Record<Language, Translations> = {
     CONTACT_UPDATE_FAILED: "Could not update contact details",
     NAME_REQUIRED: "Name is required",
     INVALID_EMAIL: "Invalid email address",
+    INVALID_PHONE: "Invalid phone number",
+    TEST_SEND_FAILED: "The test message could not be sent",
     PARTY_TOO_LARGE: "Party size cannot exceed 20",
     RATE_LIMITED: "Too many requests. Try again later.",
     GUEST_DECLINED: "This guest declined the invitation.",
@@ -2842,6 +2894,30 @@ export const translations: Record<Language, Translations> = {
     broadcastDesc: "Envoyez des mises à jour urgentes (changement de date, de lieu ou annulation) directement à tous les invités.",
     broadcastDispatchedTitle: "Diffusion effectuée !",
     broadcastTitle: "Diffuser une alerte urgente aux invités",
+    alertSectionMessage: "1 · Message",
+    alertSectionChannel: "2 · Canal et destinataires",
+    alertChannelLabel: "Envoyer par",
+    targetSelectedGuests: "Invités choisis",
+    alertRecipientsLabel: "Destinataires",
+    alertReachSummary: "Cela rejoindra {{count}} invités : {{email}} par courriel, {{sms}} par SMS.",
+    alertSkippedNote: "{{count}} invités sont exclus faute de coordonnées pour ce canal.",
+    alertNoRecipients: "Aucun invité ne correspond à ce public et à ce canal pour l'instant.",
+    guestSearchPh: "Rechercher un invité…",
+    selectAllVisibleBtn: "Tout sélectionner",
+    selectedCountLabel: "{{count}} sélectionné(s)",
+    noContactForChannel: "Pas de coordonnées pour ce canal",
+    alertConfirmSend: "Envoyer cette alerte à {{count}} invités ?",
+    testAlertTitle: "Tester cette alerte",
+    testAlertDesc: "Envoyez le brouillon ci-dessus à une seule adresse ou un seul numéro pour vérifier le texte et la livraison. Les coordonnées de test sont conservées.",
+    testEmailLabel: "Courriel de test",
+    testPhoneLabel: "Téléphone de test",
+    saveTestContactsBtn: "Enregistrer les coordonnées",
+    testContactsSavedToast: "Coordonnées de test enregistrées",
+    sendTestEmailBtn: "Envoyer un courriel test",
+    sendTestSmsBtn: "Envoyer un SMS test",
+    testSentToast: "Test envoyé à {{to}}",
+    testNeedsBody: "Ajoutez un titre et un message avant d'envoyer un test.",
+    testFailedToast: "Le test n'a pas pu être envoyé. Vérifiez l'adresse et la configuration du fournisseur.",
     btnExportImage: "Exporter l'image du plan",
     btnFindMyTable: "Trouver ma table",
     btnFullscreenEditor: "Ouvrir l'éditeur plein écran",
@@ -3876,7 +3952,7 @@ export const translations: Record<Language, Translations> = {
     deleteGbEntryMsg: "Supprimer définitivement le message de « {{name}} » ? Cette action est irréversible.",
     deleteGbEntryTitle: "Supprimer le message du livre d'or ?",
     deletePhotoConfirmMsg: "Voulez-vous vraiment supprimer cette photo de la bibliothèque ?",
-    dispatchAlertBtn: "Diffuser l'alerte et prévenir les invités",
+    dispatchAlertBtn: "Envoyer l'alerte",
     dispatchingAlertBtn: "Diffusion en cours...",
     downloadSelectedZip: "Télécharger la sélection ZIP ({{count}})",
     filterAllOption: "Tous",
@@ -4017,6 +4093,8 @@ export const translations: Record<Language, Translations> = {
     CONTACT_UPDATE_FAILED: "Impossible de mettre à jour les coordonnées",
     NAME_REQUIRED: "Le nom est requis",
     INVALID_EMAIL: "Adresse e-mail invalide",
+    INVALID_PHONE: "Numéro de téléphone invalide",
+    TEST_SEND_FAILED: "Le message test n'a pas pu être envoyé",
     PARTY_TOO_LARGE: "La taille du groupe ne peut pas dépasser 20",
     RATE_LIMITED: "Trop de requêtes. Réessayez plus tard.",
     GUEST_DECLINED: "Cet invité a refusé l'invitation.",

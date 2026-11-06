@@ -41,7 +41,7 @@ export {
 } from './guestbook';
 export { getGuestContentLock, getSettings, updateSettings } from './settings';
 export type { GuestContentLock } from './settings';
-export { createAlert, deleteAlert, getAlerts } from './alerts';
+export { createAlert, deleteAlert, getAlerts, sendTestAlert } from './alerts';
 export { getFloorMap, shareFloorPlanEmail, updateFloorMap } from './floorMap';
 export { addPhotosBatch, deletePhoto, getAllPhotos, getGuestPhotoUsage, setPhotoVisibility } from './photos';
 export { addGift, deleteGift, getGiftById, getGifts, toggleGiftThankYou } from './gifts';
