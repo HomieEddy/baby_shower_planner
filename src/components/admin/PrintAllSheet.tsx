@@ -16,7 +16,7 @@ const findTableQrUrl = () =>
   )}&color=4A3F35&bgcolor=FFFDF9`;
 
 /** Find-My-Table welcome poster (moved here from the check-in page). */
-export const PrintablePoster = ({ settings }: { settings?: EventSettings | null }) => {
+export const PrintablePoster = ({ settings, wide }: { settings?: EventSettings | null; wide?: boolean }) => {
   const t = useT();
   const tf = useTf();
   const babyName = settings?.babyName || '';
@@ -25,7 +25,7 @@ export const PrintablePoster = ({ settings }: { settings?: EventSettings | null 
   const date = settings?.date || '';
 
   return (
-    <div className="print-keep-color print-full-page break-inside-avoid border-2 border-dashed border-[#CBAE94] bg-[#FAF6F0] p-4 print:p-12 h-80 sm:h-72 flex flex-col items-center justify-center text-center gap-2 print:gap-6 md:col-span-2">
+    <div className={`print-keep-color print-full-page break-inside-avoid border-2 border-dashed border-[#CBAE94] bg-[#FAF6F0] p-4 print:p-12 h-80 sm:h-72 flex flex-col items-center justify-center text-center gap-2 print:gap-6 ${wide ? 'col-span-2' : 'md:col-span-2'}`}>
       <span className="inline-block px-3 py-0.5 print:px-6 print:py-2 rounded-full bg-[#EFE6DC] text-[#8B735B] text-[10px] print:text-lg font-mono font-bold uppercase tracking-wider">
         {t.posterWelcome}
       </span>
