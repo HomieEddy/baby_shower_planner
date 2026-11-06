@@ -407,6 +407,9 @@ export interface Translations {
   fpUnseatedToast: string;
   fpSeatMovedToast: string;
   fpSeatSwappedToast: string;
+  fpMovingHint: string;
+  fpSeatingPartyHint: string;
+  fpCancelSelectionBtn: string;
   fpCapacityUsage: string;
   fpFitsSeats: string;
   fpNeedSeats: string;
@@ -1743,6 +1746,9 @@ export const translations: Record<Language, Translations> = {
     fpUnseatedToast: "Unseated {{guest}}",
     fpSeatMovedToast: "{{guest}} moved to seat {{seat}}",
     fpSeatSwappedToast: "{{guest}} and {{other}} swapped seats",
+    fpMovingHint: "Moving {{name}}: tap a chair at the same table to switch seats, or another table to move the whole party.",
+    fpSeatingPartyHint: "Seating {{name}}: tap a green table to seat the whole party.",
+    fpCancelSelectionBtn: "Cancel (Esc)",
     fpCapacityUsage: "{{occupied}} / {{capacity}} Seats ({{free}} Free)",
     fpFitsSeats: "Fits ({{count}} Seats)",
     fpNeedSeats: "Need {{count}} Seats",
@@ -3075,6 +3081,9 @@ export const translations: Record<Language, Translations> = {
     fpUnseatedToast: "{{guest}} retiré(e) de la table",
     fpSeatMovedToast: "{{guest}} déplacé(e) à la place {{seat}}",
     fpSeatSwappedToast: "{{guest}} et {{other}} ont échangé leurs places",
+    fpMovingHint: "Déplacement de {{name}} : touchez une chaise de la même table pour changer de place, ou une autre table pour déplacer tout le groupe.",
+    fpSeatingPartyHint: "Placement de {{name}} : touchez une table verte pour placer tout le groupe.",
+    fpCancelSelectionBtn: "Annuler (Échap)",
     fpCapacityUsage: "{{occupied}} / {{capacity}} places ({{free}} libres)",
     fpFitsSeats: "Compatible ({{count}} places)",
     fpNeedSeats: "Besoin de {{count}} places",

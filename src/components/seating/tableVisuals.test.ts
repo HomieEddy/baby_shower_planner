@@ -72,6 +72,21 @@ describe('seatVisual', () => {
     });
   });
 
+  it("rings the focused party's chairs, below the picked chair", () => {
+    expect(
+      seatVisual({ occupied: true, isDropTarget: false, isPicked: false, pickMode: false, isHighlighted: true })
+    ).toEqual({ fill: '#B45309', stroke: '#F59E0B', radius: 10 });
+    expect(
+      seatVisual({ occupied: true, isDropTarget: false, isPicked: true, pickMode: false, isHighlighted: true }).fill
+    ).toBe('#FDE68A');
+  });
+
+  it('highlights a hovered empty chair softly', () => {
+    expect(
+      seatVisual({ occupied: false, isDropTarget: false, isPicked: false, pickMode: true, isHighlighted: true }).fill
+    ).toBe('#FEF3C7');
+  });
+
   it('highlights a live drop target above everything, and grows it', () => {
     expect(seatVisual({ occupied: true, isDropTarget: true, isPicked: true, pickMode: true })).toEqual({
       fill: '#A7F3D0',
