@@ -405,6 +405,8 @@ export interface Translations {
   fpTableAddedToast: string;
   fpUndidToast: string;
   fpUnseatedToast: string;
+  fpSeatMovedToast: string;
+  fpSeatSwappedToast: string;
   fpCapacityUsage: string;
   fpFitsSeats: string;
   fpNeedSeats: string;
@@ -1046,6 +1048,9 @@ export interface Translations {
   noDraftGuestsMsg: string;
   attendingNamesLabel: string;
   seatedAtSeatLabel: string;
+  changeSeatLabel: string;
+  seatOptionEmptyLabel: string;
+  seatOptionSwapLabel: string;
   unseatAttendeeBtn: string;
   dragAttendeeHint: string;
   allAttendeesSeatedMsg: string;
@@ -1736,6 +1741,8 @@ export const translations: Record<Language, Translations> = {
     fpTableAddedToast: "Added {{name}}",
     fpUndidToast: "↩ Undid seating change",
     fpUnseatedToast: "Unseated {{guest}}",
+    fpSeatMovedToast: "{{guest}} moved to seat {{seat}}",
+    fpSeatSwappedToast: "{{guest}} and {{other}} swapped seats",
     fpCapacityUsage: "{{occupied}} / {{capacity}} Seats ({{free}} Free)",
     fpFitsSeats: "Fits ({{count}} Seats)",
     fpNeedSeats: "Need {{count}} Seats",
@@ -2383,6 +2390,9 @@ export const translations: Record<Language, Translations> = {
     noDraftGuestsMsg: "No guests assigned to this table in draft.",
     attendingNamesLabel: "Attending Names:",
     seatedAtSeatLabel: "Seat {{seat}}",
+    changeSeatLabel: "Change seat",
+    seatOptionEmptyLabel: "Seat {{seat}} (empty)",
+    seatOptionSwapLabel: "Seat {{seat}} (swap with {{name}})",
     unseatAttendeeBtn: "Unseat",
     dragAttendeeHint: "Drag a name onto a chair — or tap a name, then tap a chair.",
     allAttendeesSeatedMsg: "All seated",
@@ -3063,6 +3073,8 @@ export const translations: Record<Language, Translations> = {
     fpTableAddedToast: "{{name}} ajoutée",
     fpUndidToast: "↩ Changement de placement annulé",
     fpUnseatedToast: "{{guest}} retiré(e) de la table",
+    fpSeatMovedToast: "{{guest}} déplacé(e) à la place {{seat}}",
+    fpSeatSwappedToast: "{{guest}} et {{other}} ont échangé leurs places",
     fpCapacityUsage: "{{occupied}} / {{capacity}} places ({{free}} libres)",
     fpFitsSeats: "Compatible ({{count}} places)",
     fpNeedSeats: "Besoin de {{count}} places",
@@ -3710,6 +3722,9 @@ export const translations: Record<Language, Translations> = {
     noDraftGuestsMsg: "Aucun invité assigné à cette table dans le brouillon.",
     attendingNamesLabel: "Noms des participants :",
     seatedAtSeatLabel: "Place {{seat}}",
+    changeSeatLabel: "Changer de place",
+    seatOptionEmptyLabel: "Place {{seat}} (libre)",
+    seatOptionSwapLabel: "Place {{seat}} (échanger avec {{name}})",
     unseatAttendeeBtn: "Retirer de la place",
     dragAttendeeHint: "Glissez un nom sur une chaise — ou touchez un nom, puis une chaise.",
     allAttendeesSeatedMsg: "Tous places",

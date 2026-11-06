@@ -188,6 +188,7 @@ export const FloorPlanEditor = ({
     handleDraftDeleteSelected,
     handleSeatAttendee,
     handleUnseatAttendee,
+    handleMoveSeat,
     handleAutoSeatParty,
     handleUnassignParty,
     handleSaveChanges,
@@ -1055,6 +1056,7 @@ export const FloorPlanEditor = ({
                           const guest = draftGuests.find((g) => g.id === seat.guestId);
                           if (!guest) return null;
                           const name = getPartyMembers(guest)[seat.attendeeIndex] ?? guest.name;
+                          const seatRow = getTableSeats(draftSelectedTable, draftGuests);
 
                           return (
                             <div
@@ -1067,6 +1069,37 @@ export const FloorPlanEditor = ({
                                   {tf('seatedAtSeatLabel', { seat: String(idx + 1) })} · {guest.name}
                                 </span>
                               </div>
+                              <select
+                                aria-label={t.changeSeatLabel}
+                                title={t.changeSeatLabel}
+                                value={idx}
+                                onChange={(e) => handleMoveSeat(draftSelectedTable.id, idx, Number(e.target.value))}
+                                className="shrink-0 max-w-[9rem] px-2 py-1 rounded-lg border border-[#CBAE94] text-xs font-bold text-[#5D5449] bg-white"
+                              >
+                                {seatRow.map((occupant, i) => {
+                                  if (i === idx) {
+                                    return (
+                                      <option key={i} value={i}>
+                                        {tf('seatedAtSeatLabel', { seat: String(i + 1) })}
+                                      </option>
+                                    );
+                                  }
+                                  const owner = occupant ? draftGuests.find((g) => g.id === occupant.guestId) : undefined;
+                                  if (!occupant) {
+                                    return (
+                                      <option key={i} value={i}>
+                                        {tf('seatOptionEmptyLabel', { seat: String(i + 1) })}
+                                      </option>
+                                    );
+                                  }
+                                  const occupantName = owner ? getPartyMembers(owner)[occupant.attendeeIndex] ?? owner.name : '';
+                                  return (
+                                    <option key={i} value={i}>
+                                      {tf('seatOptionSwapLabel', { seat: String(i + 1), name: occupantName })}
+                                    </option>
+                                  );
+                                })}
+                              </select>
                               <button
                                 type="button"
                                 onClick={() => handleUnseatAttendee(draftSelectedTable.id, idx)}

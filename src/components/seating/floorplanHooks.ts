@@ -4,11 +4,14 @@ import { applyRoomClamp, clampElementToRoom, clampPointToRoom } from './floorPla
 import {
   getAvailableSeats,
   getGuestPartySize,
+  getTableSeats,
+  moveSeat,
   seatAttendee,
   seatParty,
   unseatAttendee,
   unassignParty,
 } from '../../lib/tableAssignment';
+import { getPartyMembers } from '../../lib/guestAttendees';
 import { useTf } from '../shared/i18n';
 import { applySeatOutcome, createSeatingDraft, editMap, markSaved, type SeatingDraft } from './seatingDraft';
 
@@ -335,6 +338,31 @@ export function useFloorPlanEditor({ floorMap, guests, notify, onSave, onCancel 
     if (guest) notify(tf('fpUnseatedToast', { guest: guest.name }));
   };
 
+  // Move one attendee to another chair at the same table (swap if occupied).
+  // Never changes tables, so the party stays together.
+  const handleMoveSeat = (tableId: string, fromSeatIndex: number, toSeatIndex: number): void => {
+    const table = draftFloorMap.tables.find((tbl) => tbl.id === tableId);
+    if (!table || fromSeatIndex === toSeatIndex) return;
+    const seats = getTableSeats(table, draftGuests);
+    const mover = seats[fromSeatIndex];
+    const occupant = seats[toSeatIndex];
+    const moverGuest = mover ? draftGuests.find((g) => g.id === mover.guestId) : undefined;
+    if (!mover || !moverGuest) return;
+
+    const nameOf = (seat: NonNullable<typeof mover>) => {
+      const owner = draftGuests.find((g) => g.id === seat.guestId);
+      return owner ? getPartyMembers(owner)[seat.attendeeIndex] ?? owner.name : '';
+    };
+    const moverName = nameOf(mover);
+    const outcome = moveSeat(draftFloorMap, draftGuests, tableId, fromSeatIndex, toSeatIndex);
+    applyOutcome(outcome);
+    if (occupant) {
+      notify(tf('fpSeatSwappedToast', { guest: moverName, other: nameOf(occupant), seat: String(toSeatIndex + 1) }));
+    } else {
+      notify(tf('fpSeatMovedToast', { guest: moverName, seat: String(toSeatIndex + 1) }));
+    }
+  };
+
   // Seat the whole party at one table. Refused (and reported) when the party
   // does not fit together or already sits at another table.
   const handleAutoSeatParty = (guestId: string, tableId: string): boolean => {
@@ -420,6 +448,7 @@ export function useFloorPlanEditor({ floorMap, guests, notify, onSave, onCancel 
     handleDraftDeleteSelected,
     handleSeatAttendee,
     handleUnseatAttendee,
+    handleMoveSeat,
     handleAutoSeatParty,
     handleUnassignParty,
     handleSaveChanges,
