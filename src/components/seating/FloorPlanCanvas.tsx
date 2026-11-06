@@ -115,6 +115,10 @@ export interface FloorPlanSelection {
   attendee: SeatOccupant | null;
   /** Party picked for seating (highlights every table that can take it). */
   party: Guest | null;
+  /** Party whose chairs are ringed (the picked member's or the picked party's). */
+  focusGuestId?: string | null;
+  /** Chair hovered in a side list, ringed so the row and the chair read as one. */
+  hoverSeat?: { tableId: string; seatIndex: number } | null;
 }
 
 // Selection ring fade, in Konva's own tween (Konva nodes aren't DOM, so motion/react can't drive them).
@@ -381,6 +385,9 @@ export const FloorPlanCanvas = ({
                         occupant.guestId === selection.attendee.guestId &&
                         occupant.attendeeIndex === selection.attendee.attendeeIndex,
                       pickMode: !!selection.attendee,
+                      isHighlighted:
+                        (!!occupant && !!selection.focusGuestId && occupant.guestId === selection.focusGuestId) ||
+                        (selection.hoverSeat?.tableId === table.id && selection.hoverSeat.seatIndex === idx),
                       palette: canvasPalette,
                     });
 
@@ -485,8 +492,12 @@ export const FloorPlanCanvas = ({
             );
           })}
 
+          {/* Handles sit outside the chair ring (padding) so they never cover a
+              chair, and hide while a member is picked so every chair is a target. */}
           <Transformer
             ref={transformerRef}
+            padding={12}
+            visible={!selection.attendee}
             boundBoxFunc={(oldBox, newBox) => (newBox.width < 40 || newBox.height < 30 ? oldBox : newBox)}
             onTransformEnd={callbacks.onTransformEnd}
           />

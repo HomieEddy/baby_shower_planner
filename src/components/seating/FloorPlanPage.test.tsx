@@ -164,6 +164,44 @@ describe('seating page: the full-screen editor keeps its draft pair in step', ()
     expect(seatsOf(floorMapPosts()[0].body.tables[0])).toHaveLength(2);
   });
 
+  it('links a picked member across both lists, moves their chair, and Esc lets go', async () => {
+    await setup();
+    await openEditor();
+
+    const partyRow = () =>
+      screen.getByRole('button', { name: (name) => name.startsWith('Alice') && name.includes('/') });
+    fireEvent.click(screen.getAllByRole('button', { name: new RegExp(t.byGuest) })[0]);
+    fireEvent.click(partyRow());
+    fireEvent.click(screen.getByRole('button', { name: new RegExp(t.seatPartyHere) }));
+    await waitFor(() => expect(partyRow()).toHaveTextContent('2/2'));
+
+    // Picking Bob's name explains what a tap will do and selects his table.
+    fireEvent.click(screen.getByRole('button', { name: 'Bob' }));
+    expect(screen.getByRole('status')).toHaveTextContent('Bob');
+
+    // The table list shows the same person highlighted.
+    fireEvent.click(screen.getAllByRole('button', { name: new RegExp(t.byTable) })[0]);
+    expect(screen.getByRole('button', { name: /Bob/, pressed: true })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: /Alice/, pressed: false })).toBeInTheDocument();
+
+    // Move Bob (second chair) to the last chair at the same table.
+    const selects = screen.getAllByRole('combobox', { name: t.changeSeatLabel });
+    expect(selects[1]).toHaveValue('1');
+    fireEvent.change(selects[1], { target: { value: '3' } });
+
+    fireEvent.keyDown(window, { key: 'Escape' });
+    await waitFor(() => expect(screen.queryByRole('status')).not.toBeInTheDocument());
+
+    fireEvent.click(screen.getByRole('button', { name: new RegExp(t.btnSaveChanges) }));
+    await waitFor(() => expect(floorMapPosts()).toHaveLength(1));
+    expect(floorMapPosts()[0].body.tables[0].seats).toEqual([
+      { guestId: 'g1', attendeeIndex: 0 },
+      null,
+      null,
+      { guestId: 'g1', attendeeIndex: 1 },
+    ]);
+  });
+
   it('adds a table to the draft and saves it with the map', async () => {
     await setup();
     await openEditor();

@@ -14,6 +14,7 @@ import {
   seatParty,
   unseatAttendee,
   unassignParty,
+  moveSeat,
   trimPartySeats,
   removePartyAttendee,
   getSeatingStats,
@@ -221,6 +222,66 @@ describe('unseatAttendee / unassignParty', () => {
     const t2 = table({ id: 't2', seats: [null, { guestId: 'g1', attendeeIndex: 1 }, null, null] });
     const out = unassignParty(map({ tables: [t1, t2] }), [g], 'g1');
     expect(out.map.tables.every((t) => getTableOccupiedSeats(t, out.guests) === 0)).toBe(true);
+  });
+});
+
+describe('moveSeat', () => {
+  const bob = guest({ id: 'g2', name: 'Dan', attendee_names: ['Dan'], attending_party_size: 1, max_party_size: 1 });
+
+  it('moves an attendee into an empty chair at the same table and frees the old one', () => {
+    const t1 = table({ seats: [{ guestId: 'g1', attendeeIndex: 0 }, { guestId: 'g1', attendeeIndex: 1 }, null, null] });
+    const out = moveSeat(map({ tables: [t1] }), [guest()], 't1', 1, 3);
+    expect(out.map.tables[0].seats).toEqual([
+      { guestId: 'g1', attendeeIndex: 0 },
+      null,
+      null,
+      { guestId: 'g1', attendeeIndex: 1 },
+    ]);
+    expect(out.guests[0].table_id).toBe('t1');
+  });
+
+  it('swaps two occupants when the target chair is taken', () => {
+    const t1 = table({ seats: [{ guestId: 'g1', attendeeIndex: 0 }, null, { guestId: 'g2', attendeeIndex: 0 }, null] });
+    const out = moveSeat(map({ tables: [t1] }), [guest(), bob], 't1', 0, 2);
+    expect(out.map.tables[0].seats).toEqual([
+      { guestId: 'g2', attendeeIndex: 0 },
+      null,
+      { guestId: 'g1', attendeeIndex: 0 },
+      null,
+    ]);
+    expect(out.map.tables[0].assignedGuestIds).toEqual(['g2', 'g1']);
+  });
+
+  it('never moves a guest to another table', () => {
+    const t1 = table({ seats: [{ guestId: 'g1', attendeeIndex: 0 }, null, null, null] });
+    const t2 = table({ id: 't2', seats: [null, null, null, null] });
+    const out = moveSeat(map({ tables: [t1, t2] }), [guest()], 't1', 0, 1);
+    expect(getTableOccupiedSeats(out.map.tables[1], out.guests)).toBe(0);
+    expect(out.map.tables[0].seats?.[1]).toEqual({ guestId: 'g1', attendeeIndex: 0 });
+  });
+
+  it('keeps the party together, and every attendee index, after a move', () => {
+    const t1 = table({ seats: [{ guestId: 'g1', attendeeIndex: 0 }, { guestId: 'g1', attendeeIndex: 1 }, null, null] });
+    const out = moveSeat(map({ tables: [t1] }), [guest()], 't1', 0, 2);
+    expect(getTableOccupiedSeats(out.map.tables[0], out.guests)).toBe(2);
+    expect(getAttendeeSeatLocation('g1', 0, out.map, out.guests)?.seatIndex).toBe(2);
+    expect(getAttendeeSeatLocation('g1', 1, out.map, out.guests)?.seatIndex).toBe(1);
+  });
+
+  it('expands a legacy table into explicit seats before moving', () => {
+    const t1 = table({ assignedGuestIds: ['g1'] });
+    const out = moveSeat(map({ tables: [t1] }), [guest()], 't1', 0, 3);
+    expect(out.map.tables[0].seats?.[3]).toEqual({ guestId: 'g1', attendeeIndex: 0 });
+    expect(out.map.tables[0].seats?.[0]).toBeNull();
+  });
+
+  it('changes nothing for an empty source, the same chair, or an out-of-range chair', () => {
+    const t1 = table({ seats: [{ guestId: 'g1', attendeeIndex: 0 }, null, null, null] });
+    const m = map({ tables: [t1] });
+    expect(moveSeat(m, [guest()], 't1', 1, 2).map).toBe(m);
+    expect(moveSeat(m, [guest()], 't1', 0, 0).map).toBe(m);
+    expect(moveSeat(m, [guest()], 't1', 0, 9).map).toBe(m);
+    expect(moveSeat(m, [guest()], 'missing', 0, 1).map).toBe(m);
   });
 });
 

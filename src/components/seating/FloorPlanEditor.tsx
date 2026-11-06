@@ -1,4 +1,4 @@
-﻿import { lazy, Suspense, useState, useMemo, type DragEvent } from 'react';
+﻿import { lazy, Suspense, useEffect, useRef, useState, useMemo, type DragEvent } from 'react';
 import {
   Maximize2,
   X,
@@ -32,6 +32,7 @@ import {
   getTableOccupiedSeats,
   getTableSeats,
   getAttendeeLocations,
+  getAttendeeSeatLocation,
   getGuestSeatedCount,
   canSeatParty,
 } from '../../lib/tableAssignment';
@@ -52,6 +53,7 @@ interface AttendeeKey {
 interface PaletteItem extends AttendeeKey {
   name: string;
   partyName: string;
+  tableId: string | null;
   tableName: string | null;
   seatIndex: number | null;
 }
@@ -188,6 +190,7 @@ export const FloorPlanEditor = ({
     handleDraftDeleteSelected,
     handleSeatAttendee,
     handleUnseatAttendee,
+    handleMoveSeat,
     handleAutoSeatParty,
     handleUnassignParty,
     handleSaveChanges,
@@ -240,6 +243,71 @@ export const FloorPlanEditor = ({
   // Palette â†’ canvas interaction state (the canvas owns the drop target).
   const [draggingAttendee, setDraggingAttendee] = useState<AttendeeKey | null>(null);
   const [selectedAttendee, setSelectedAttendee] = useState<AttendeeKey | null>(null);
+  // Chair under the pointer in a side list, ringed on the canvas.
+  const [hoveredSeat, setHoveredSeat] = useState<{ tableId: string; seatIndex: number } | null>(null);
+
+  // One focus links the canvas and both side lists: the picked member's party,
+  // else the party picked for seating. Its chairs are ringed on the canvas and
+  // its rows / card are highlighted in the lists.
+  const focusGuestId = selectedAttendee?.guestId ?? selectedGuestForSeating?.id ?? null;
+
+  const isSameAttendee = (a: AttendeeKey | null, b: AttendeeKey | null) =>
+    !!a && !!b && a.guestId === b.guestId && a.attendeeIndex === b.attendeeIndex;
+
+  // Picking a member (from a chair, a table row or a name chip) also selects
+  // the table they sit at, so the table panel shows their row.
+  const pickAttendee = (key: AttendeeKey | null) => {
+    setSelectedAttendee(key ? { guestId: key.guestId, attendeeIndex: key.attendeeIndex } : null);
+    if (!key) return;
+    const loc = getAttendeeSeatLocation(key.guestId, key.attendeeIndex, draftFloorMap, draftGuests);
+    if (loc) {
+      setSelectedId(loc.table.id);
+      setSelectedType('table');
+    }
+  };
+
+  const togglePickAttendee = (key: AttendeeKey) => pickAttendee(isSameAttendee(selectedAttendee, key) ? null : key);
+
+  const clearFocus = () => {
+    setSelectedAttendee(null);
+    setSelectedGuestForSeating(null);
+  };
+
+  // A chair at the member's own table changes their seat (swap if taken);
+  // anywhere else seats the whole party at that table.
+  const seatOrMove = (guestId: string, attendeeIndex: number, tableId: string, seatIndex: number | null) => {
+    const loc = getAttendeeSeatLocation(guestId, attendeeIndex, draftFloorMap, draftGuests);
+    if (loc && loc.table.id === tableId) {
+      if (seatIndex !== null && seatIndex !== loc.seatIndex) handleMoveSeat(tableId, loc.seatIndex, seatIndex);
+      return;
+    }
+    handleSeatAttendee(guestId, attendeeIndex, tableId, seatIndex);
+  };
+
+  // Esc backs out one step: first a pick, then the table selection.
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key !== 'Escape') return;
+      if (selectedAttendee || selectedGuestForSeating) {
+        setSelectedAttendee(null);
+        setSelectedGuestForSeating(null);
+      } else if (selectedId) {
+        setSelectedId(null);
+        setSelectedType(null);
+      }
+    };
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, [selectedAttendee, selectedGuestForSeating, selectedId, setSelectedGuestForSeating, setSelectedId, setSelectedType]);
+
+  // Bring the focused row or card into view in the side panel. Desktop only:
+  // on a phone the panel sits below the canvas and scrolling would hide it.
+  const sidebarRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    if (typeof window === 'undefined' || !window.matchMedia?.('(min-width: 1024px)').matches) return;
+    const el = sidebarRef.current?.querySelector<HTMLElement>('[data-focus="true"]');
+    el?.scrollIntoView?.({ block: 'nearest', behavior: 'smooth' });
+  }, [selectedAttendee, focusGuestId, selectedId, seatingWorkflowTab]);
 
   // Every attending person, in party order, with their current chair (if any).
   const palette = useMemo<PaletteItem[]>(() => {
@@ -254,6 +322,7 @@ export const FloorPlanEditor = ({
           attendeeIndex,
           name,
           partyName: g.name,
+          tableId: loc?.tableId ?? null,
           tableName: loc?.tableName ?? null,
           seatIndex: loc?.seatIndex ?? null,
         });
@@ -278,11 +347,22 @@ export const FloorPlanEditor = ({
     e.dataTransfer.setData('text/plain', `${key.guestId}:${key.attendeeIndex}`);
   };
 
-  const handlePaletteItemClick = (key: AttendeeKey) => {
-    setSelectedAttendee((prev) =>
-      prev && prev.guestId === key.guestId && prev.attendeeIndex === key.attendeeIndex ? null : key
-    );
-  };
+  const handlePaletteItemClick = (key: AttendeeKey) => togglePickAttendee(key);
+
+  const totalConfirmedSeats = useMemo(
+    () => draftGuests.filter(isAttending).reduce((sum, g) => sum + getGuestPartySize(g), 0),
+    [draftGuests]
+  );
+
+  // The banner above the canvas says what a tap will do while something is picked.
+  const pickedItem = selectedAttendee ? palette.find((i) => isSameAttendee(i, selectedAttendee)) ?? null : null;
+  const focusHint = pickedItem
+    ? pickedItem.tableId
+      ? tf('fpMovingHint', { name: pickedItem.name })
+      : tf('fpSeatingPartyHint', { name: pickedItem.partyName })
+    : selectedGuestForSeating
+      ? tf('fpSeatingPartyHint', { name: selectedGuestForSeating.name })
+      : null;
 
   return (
     <div className="fixed inset-0 z-50 bg-[#FAF6F0] flex flex-col w-screen h-screen overflow-hidden animate-fadeIn">
@@ -321,7 +401,7 @@ export const FloorPlanEditor = ({
           <div className="text-center">
             <span className="text-xs font-mono font-bold uppercase text-[#8B735B]">{t.draftSeatedLabel}</span>
             <p className="text-xs font-bold text-[#4A3F35]">
-              {draftFloorMap.tables.reduce((s, t) => s + getTableOccupiedSeats(t, draftGuests), 0)} Confirmed
+              {draftFloorMap.tables.reduce((s, t) => s + getTableOccupiedSeats(t, draftGuests), 0)} / {totalConfirmedSeats}
             </p>
           </div>
         </div>
@@ -729,27 +809,31 @@ export const FloorPlanEditor = ({
                   <Ruler className="w-3.5 h-3.5" />
                 </button>
               )}
-              {viewMode === '2d' && (
-                <button
-                  type="button"
-                  onClick={() => setShowAxes((v) => !v)}
-                  aria-pressed={showAxes}
-                  title={t.axesToggleLabel}
-                  className={`p-1.5 rounded-lg border transition-colors ${
-                    showAxes
-                      ? 'bg-[#8B735B] text-white border-[#8B735B]'
-                      : 'bg-white text-[#8B735B] border-[#CBAE94] hover:bg-[#EFE6DC]'
-                  }`}
-                >
-                  <Ruler className="w-3.5 h-3.5" />
-                </button>
-              )}
               <ViewModeToggle value={viewMode} onChange={setViewMode} />
               <span className="hidden md:inline text-xs font-mono text-[#5D5449]">
                 {t.liveDraftStageLabel}
               </span>
             </div>
           </div>
+
+          {/* Canvas area. The hint floats over it so the canvas never shifts
+              under the pointer when a pick starts or ends. */}
+          <div className="relative flex-1 min-h-0 flex flex-col">
+          {focusHint && (
+            <div
+              role="status"
+              className="absolute top-2 left-2 right-2 z-10 pointer-events-none px-3 py-2 rounded-xl bg-amber-50/95 border border-amber-300 shadow-md text-xs font-bold text-amber-900 flex items-center justify-between gap-2"
+            >
+              <span className="min-w-0">{focusHint}</span>
+              <button
+                type="button"
+                onClick={clearFocus}
+                className="pointer-events-auto shrink-0 px-2 py-1 rounded-lg bg-white border border-amber-300 hover:bg-amber-100 transition-colors"
+              >
+                {t.fpCancelSelectionBtn}
+              </button>
+            </div>
+          )}
 
           {viewMode === '3d' ? (
             <Suspense
@@ -770,13 +854,14 @@ export const FloorPlanEditor = ({
                   onLandmarkHover={(lm, x, y) => handleLandmarkHover(lm, x, y)}
                   onTableClick={(table) => {
                     if (selectedAttendee) {
-                      handleSeatAttendee(selectedAttendee.guestId, selectedAttendee.attendeeIndex, table.id, null);
+                      seatOrMove(selectedAttendee.guestId, selectedAttendee.attendeeIndex, table.id, null);
                       setSelectedAttendee(null);
                     } else if (selectedGuestForSeating) {
                       handleAutoSeatParty(selectedGuestForSeating.id, table.id);
                     } else {
                       setSelectedId(table.id);
                       setSelectedType('table');
+                      setSeatingWorkflowTab('table');
                     }
                   }}
                   onLeave={() => setHoverTooltip(null)}
@@ -793,11 +878,24 @@ export const FloorPlanEditor = ({
               stageRef={modalStageRef}
               transformerRef={modalTransformerRef}
               dragging={draggingAttendee}
-              selection={{ id: selectedId, attendee: selectedAttendee, party: selectedGuestForSeating }}
+              selection={{
+                id: selectedId,
+                attendee: selectedAttendee,
+                party: selectedGuestForSeating,
+                focusGuestId,
+                hoverSeat: hoveredSeat,
+              }}
               callbacks={{
-                onSelect: (id, type) => { setSelectedId(id); setSelectedType(type); },
-                onPickAttendee: setSelectedAttendee,
-                onSeatAttendee: handleSeatAttendee,
+                onSelect: (id, type) => {
+                  setSelectedId(id);
+                  setSelectedType(type);
+                  // Clicking empty floor drops a pick too; clicking a table
+                  // opens its seat list.
+                  if (id === null) setSelectedAttendee(null);
+                  if (type === 'table') setSeatingWorkflowTab('table');
+                },
+                onPickAttendee: pickAttendee,
+                onSeatAttendee: seatOrMove,
                 onAutoSeatParty: handleAutoSeatParty,
                 onTableDragEnd: handleDraftTableDragEnd,
                 onLandmarkDragEnd: handleDraftLandmarkDragEnd,
@@ -809,10 +907,11 @@ export const FloorPlanEditor = ({
               }}
             />
           )}
+          </div>
         </div>
 
         {/* Right Inspector Column (col-3) */}
-        <div className="lg:col-span-3 lg:overflow-y-auto space-y-4 pr-1 order-3">
+        <div ref={sidebarRef} className="lg:col-span-3 lg:overflow-y-auto space-y-4 pr-1 order-3">
           {/* Venue Feature Inspector (rename / re-type a selected landmark) */}
           {selectedType === 'landmark' && draftSelectedLandmark && (
             <div className="bg-[#FFFDF9] rounded-3xl p-4 shadow-md border-2 border-[#CBAE94] space-y-4">
@@ -1055,21 +1154,73 @@ export const FloorPlanEditor = ({
                           const guest = draftGuests.find((g) => g.id === seat.guestId);
                           if (!guest) return null;
                           const name = getPartyMembers(guest)[seat.attendeeIndex] ?? guest.name;
+                          const seatRow = getTableSeats(draftSelectedTable, draftGuests);
+                          const isPicked = isSameAttendee(selectedAttendee, seat);
+                          const isFocusParty = focusGuestId === seat.guestId;
 
                           return (
                             <div
                               key={`${seat.guestId}-${seat.attendeeIndex}`}
-                              className="p-2 rounded-xl bg-[#EFE6DC]/50 border border-[#CBAE94]/40 text-xs flex items-center justify-between gap-2"
+                              data-focus={isPicked || (!selectedAttendee && isFocusParty) ? 'true' : undefined}
+                              onMouseEnter={() => setHoveredSeat({ tableId: draftSelectedTable.id, seatIndex: idx })}
+                              onMouseLeave={() => setHoveredSeat(null)}
+                              className={`p-2 rounded-xl border text-xs flex items-center justify-between gap-2 transition-colors ${
+                                isPicked
+                                  ? 'bg-amber-100 border-amber-400'
+                                  : isFocusParty
+                                    ? 'bg-amber-50 border-amber-300'
+                                    : 'bg-[#EFE6DC]/50 border-[#CBAE94]/40 hover:border-[#8B735B]'
+                              }`}
                             >
-                              <div className="min-w-0">
+                              <button
+                                type="button"
+                                aria-pressed={isPicked}
+                                onClick={() => togglePickAttendee(seat)}
+                                className="min-w-0 flex-1 text-left"
+                              >
                                 <p className="font-bold text-[#4A3F35] truncate">{name}</p>
                                 <span className="text-xs text-[#8B735B] font-medium">
                                   {tf('seatedAtSeatLabel', { seat: String(idx + 1) })} · {guest.name}
                                 </span>
-                              </div>
+                              </button>
+                              <select
+                                aria-label={t.changeSeatLabel}
+                                title={t.changeSeatLabel}
+                                value={idx}
+                                onChange={(e) => handleMoveSeat(draftSelectedTable.id, idx, Number(e.target.value))}
+                                className="shrink-0 max-w-[9rem] px-2 py-1 rounded-lg border border-[#CBAE94] text-xs font-bold text-[#5D5449] bg-white"
+                              >
+                                {seatRow.map((occupant, i) => {
+                                  if (i === idx) {
+                                    return (
+                                      <option key={i} value={i}>
+                                        {tf('seatedAtSeatLabel', { seat: String(i + 1) })}
+                                      </option>
+                                    );
+                                  }
+                                  const owner = occupant ? draftGuests.find((g) => g.id === occupant.guestId) : undefined;
+                                  if (!occupant) {
+                                    return (
+                                      <option key={i} value={i}>
+                                        {tf('seatOptionEmptyLabel', { seat: String(i + 1) })}
+                                      </option>
+                                    );
+                                  }
+                                  const occupantName = owner ? getPartyMembers(owner)[occupant.attendeeIndex] ?? owner.name : '';
+                                  return (
+                                    <option key={i} value={i}>
+                                      {tf('seatOptionSwapLabel', { seat: String(i + 1), name: occupantName })}
+                                    </option>
+                                  );
+                                })}
+                              </select>
                               <button
                                 type="button"
-                                onClick={() => handleUnseatAttendee(draftSelectedTable.id, idx)}
+                                onClick={() => {
+                                  setHoveredSeat(null);
+                                  if (isFocusParty) setSelectedAttendee(null);
+                                  handleUnseatAttendee(draftSelectedTable.id, idx);
+                                }}
                                 className="text-red-500 hover:text-red-700 p-1 rounded-lg hover:bg-red-50 shrink-0"
                                 title={t.unassignParty}
                               >
@@ -1183,17 +1334,27 @@ export const FloorPlanEditor = ({
                     if (!guest) return null;
                     const seated = items.filter((i) => i.tableName !== null).length;
                     const isSelected = selectedGuestForSeating?.id === guestId;
+                    const isFocus = focusGuestId === guestId;
 
                     return (
                       <div
                         key={guestId}
+                        data-focus={isFocus ? 'true' : undefined}
                         className={`p-2 rounded-2xl border text-xs transition-all ${
-                          isSelected ? 'border-[#8B735B] bg-[#EFE6DC]' : 'border-[#CBAE94]/60 bg-white'
+                          isSelected
+                            ? 'border-[#8B735B] bg-[#EFE6DC]'
+                            : isFocus
+                              ? 'border-amber-300 bg-amber-50'
+                              : 'border-[#CBAE94]/60 bg-white'
                         }`}
                       >
                         <button
                           type="button"
-                          onClick={() => setSelectedGuestForSeating(guest)}
+                          aria-pressed={isSelected}
+                          onClick={() => {
+                            setSelectedAttendee(null);
+                            setSelectedGuestForSeating(isSelected ? null : guest);
+                          }}
                           className="w-full flex items-center justify-between font-bold text-left text-[#4A3F35]"
                         >
                           <span className="truncate">{guest.name}</span>
@@ -1215,6 +1376,13 @@ export const FloorPlanEditor = ({
                                 onDragStart={(e) => handleDragStart(e, item)}
                                 onDragEnd={() => setDraggingAttendee(null)}
                                 onClick={() => handlePaletteItemClick(item)}
+                                onMouseEnter={() =>
+                                  item.tableId !== null && item.seatIndex !== null
+                                    ? setHoveredSeat({ tableId: item.tableId, seatIndex: item.seatIndex })
+                                    : undefined
+                                }
+                                onMouseLeave={() => setHoveredSeat(null)}
+                                aria-pressed={isPicked}
                                 className={`px-2 py-1 rounded-lg border text-xs font-bold cursor-grab active:cursor-grabbing transition-all ${
                                   isPicked
                                     ? 'bg-amber-200 border-amber-400 text-amber-900'

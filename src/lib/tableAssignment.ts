@@ -415,6 +415,30 @@ export function unseatAttendee(
   return unassignParty(map, guests, occupant.guestId);
 }
 
+// Move one seated attendee to another chair at the SAME table. An empty target
+// takes the occupant (their old chair frees up); an occupied target swaps the
+// two occupants. Only this table's chairs change, so the party stays together
+// and Guest.table_id is untouched. Refused (nothing changes) for an empty or
+// out-of-range source, and for a move onto the same chair.
+export function moveSeat(
+  map: FloorMapData,
+  guests: Guest[],
+  tableId: string,
+  fromSeatIndex: number,
+  toSeatIndex: number
+): SeatingOutcome {
+  const unchanged = { map, guests, placed: 0, unplaced: 0 };
+  const seats = seatsByTableId(map.tables, guests);
+  const tableSeats = seats.get(tableId);
+  if (!tableSeats || fromSeatIndex === toSeatIndex) return unchanged;
+  const inRange = (i: number) => Number.isInteger(i) && i >= 0 && i < tableSeats.length;
+  if (!inRange(fromSeatIndex) || !inRange(toSeatIndex)) return unchanged;
+  if (!tableSeats[fromSeatIndex]) return unchanged;
+
+  [tableSeats[fromSeatIndex], tableSeats[toSeatIndex]] = [tableSeats[toSeatIndex], tableSeats[fromSeatIndex]];
+  return { ...commit(map, guests, seats), placed: 0, unplaced: 0 };
+}
+
 export function unassignParty(
   map: FloorMapData,
   guests: Guest[],
