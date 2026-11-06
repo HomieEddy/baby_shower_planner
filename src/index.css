@@ -668,10 +668,31 @@ select option {
     break-after: page !important;
   }
 
-  /* Sheet margin optimization */
+  /* Print-all sheet: pack every piece edge to edge, two per row, so the night's
+     stationery fits on as few pages as possible and is cut out by hand. */
+  .print-all-sheet {
+    padding: 0 !important;
+    border: none !important;
+    box-shadow: none !important;
+  }
+
+  .print-pack {
+    display: grid !important;
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+    gap: 0 !important;
+  }
+
+  .print-pack > * {
+    margin: 0 !important;
+    height: 66mm !important;
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
+
+  /* Sheet margin optimization: narrow margins, as close to the edge as printers allow */
   @page {
     size: auto;
-    margin: 15mm;
+    margin: 5mm;
   }
 }
 

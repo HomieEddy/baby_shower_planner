@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { Guest, EventSettings, FloorMapData } from '../../types';
-import { Printer, Scissors, Tag, QrCode } from 'lucide-react';
+import { Printer, Scissors, Tag } from 'lucide-react';
 import { useT, useTf } from '../shared/i18n';
 import { usePrint } from '../shared/hooks';
 import { useToast } from '../shared/ToastContext';
@@ -8,7 +8,7 @@ import { fitFontPx } from '../../lib/cardText';
 import { Select, TextInput } from '../shared/ui';
 import { getAttendeeLocations } from '../../lib/tableAssignment';
 import { getPartyMembers, isAttending } from '../../lib/guestAttendees';
-import { TableScanQrModal } from './TableScanQrModal';
+import { PrintableStandee, PrintablePoster } from './PrintAllSheet';
 import { AdminPageHeader, AdminSectionTitle } from './AdminPageHeader';
 
 interface EscortCardsGeneratorProps {
@@ -26,12 +26,20 @@ interface CardRow {
 
 const UNASSIGNED = '__unassigned__';
 
+type PrintSection = 'poster' | 'standees' | 'tents' | 'badges';
+
 export const EscortCardsGenerator: React.FC<EscortCardsGeneratorProps> = ({ guests, settings, onSaveSettings }) => {
     const t = useT();
     const tf = useTf();
   const print = usePrint();
   const { toast } = useToast();
-  const [cardType, setCardType] = useState<'tent' | 'nametag'>('tent');
+  const [sections, setSections] = useState<Record<PrintSection, boolean>>({
+    poster: true,
+    standees: true,
+    tents: true,
+    badges: true,
+  });
+  const toggleSection = (s: PrintSection) => setSections((prev) => ({ ...prev, [s]: !prev[s] }));
   const [selectedTableFilter, setSelectedTableFilter] = useState<string>('ALL');
 
   // The header saved in settings wins; otherwise fall back to the baby-name default.
@@ -67,7 +75,6 @@ export const EscortCardsGenerator: React.FC<EscortCardsGeneratorProps> = ({ gues
     }
   };
   const [floorMap, setFloorMap] = useState<FloorMapData | null>(null);
-  const [showQrModal, setShowQrModal] = useState(false);
 
   // Seats live on the floor map; fetch it so split parties get one card per person.
   useEffect(() => {
@@ -118,126 +125,19 @@ export const EscortCardsGenerator: React.FC<EscortCardsGeneratorProps> = ({ gues
     return (r.tableName || UNASSIGNED) === selectedTableFilter;
   });
 
-  return (
-    <div className="space-y-6">
-      {/* Header Banner & Controls */}
-      <AdminPageHeader
-        className="print:hidden"
-        icon={Tag}
-        eyebrow={t.stationeryTitle}
-        title={t.escortTitle}
-        subtitle={t.escortSubtitle}
-        actions={
-          <button
-            type="button"
-            onClick={() => print(t.escortPrintToast)}
-            className="btn-accent text-xs sm:text-sm py-2.5 px-4 gap-2 cursor-pointer"
-          >
-            <Printer className="w-4 h-4" />
-            <span>{tf('escortPrintBtn', { count: filteredRows.length })}</span>
-          </button>
-        }
-      />
+  const tables = floorMap?.tables ?? [];
+  const itemCount =
+    (sections.poster ? 1 : 0) +
+    (sections.standees ? tables.length : 0) +
+    (sections.tents ? filteredRows.length : 0) +
+    (sections.badges ? filteredRows.length : 0);
 
-      <div className="card-soft p-6 sm:p-8 space-y-4 print:hidden">
-
-        {/* Main table QR — one standee per table, opens the guest chooser */}
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 rounded-2xl bg-[#EFE6DC]/30 border border-[#CBAE94]/50 p-4">
-          <div className="flex items-center gap-3 min-w-0">
-            <div className="w-10 h-10 rounded-2xl bg-white border border-[#CBAE94] flex items-center justify-center shrink-0">
-              <QrCode className="w-5 h-5 text-[#8B735B]" />
-            </div>
-            <div className="min-w-0">
-              <p className="text-sm font-semibold text-[#4A3F35]">{t.tableQrPrintTitle}</p>
-              <p className="text-xs text-[#5D5449]">{t.tableQrPrintSubtitle}</p>
-            </div>
-          </div>
-          <button
-            type="button"
-            onClick={() => setShowQrModal(true)}
-            className="btn-outline-accent py-2.5 px-4 text-xs gap-2 cursor-pointer shrink-0"
-          >
-            <QrCode className="w-4 h-4" />
-            <span>{t.tableQrPrintTitle}</span>
-          </button>
-        </div>
-
-        {/* Customization Options */}
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-          <div>
-            <label className="label-mono block mb-1">{t.stationeryFormatLabel}</label>
-            <Select
-              variant="soft"
-              value={cardType}
-              onChange={(e) => setCardType(e.target.value as 'tent' | 'nametag')}
-            >
-              <option value="tent">{t.foldedTentCardsBtn}</option>
-              <option value="nametag">{t.nameBadgesBtn}</option>
-            </Select>
-          </div>
-
-          <div>
-            <label className="label-mono block mb-1">{t.filterByTableLabel}</label>
-            <Select
-              variant="soft"
-              value={selectedTableFilter}
-              onChange={(e) => setSelectedTableFilter(e.target.value)}
-            >
-              <option value="ALL">{tf('allTablesOption', { count: rows.length })}</option>
-              {uniqueTables.map((tbl) => (
-                <option key={tbl} value={tbl}>
-                  {tbl === UNASSIGNED ? t.unassignedWord : `${t.tableFilterLabel} ${tbl}`}
-                </option>
-              ))}
-            </Select>
-          </div>
-
-          <div>
-            <label className="label-mono block mb-1">{t.customHeaderLabel}</label>
-            <div className="flex gap-2">
-              <TextInput
-                variant="soft"
-                type="text"
-                value={headerDraft}
-                onChange={(e) => setHeaderDraft(e.target.value)}
-              />
-              <button
-                type="button"
-                onClick={handleSaveHeader}
-                disabled={!headerDirty || savingHeader || !onSaveSettings}
-                className="btn-outline-accent py-2 px-3 text-xs shrink-0 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                {t.saveChangesBtn}
-              </button>
-            </div>
-          </div>
-
-        </div>
-      </div>
-
-      {/* Cards Display Grid (Optimized for both screen & paper printing) */}
-      <div className="card-soft p-5 sm:p-6 space-y-4">
-        <AdminSectionTitle
-          className="print:hidden"
-          icon={Printer}
-          title={`${t.printPreviewLabel} (${tf('escortItemsCount', { count: filteredRows.length })})`}
-          subtitle={`${t.paperLayoutLabel}: ${t.escortPaperLayout}`}
-        />
-
-        {filteredRows.length === 0 ? (
-          <div className="text-center py-12 text-[#5D5449]">
-                {t.noAttendingGuestsMsg}
-          </div>
-        ) : (
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 print:grid-cols-2 print:gap-4 print:p-0">
-            {filteredRows.map((row) => {
-              const guest = row.guest;
-              const tableNum = row.tableName || t.unassignedWord;
-
-              if (cardType === 'tent') {
+  const renderTent = (row: CardRow) => {
+    const guest = row.guest;
+    const tableNum = row.tableName || t.unassignedWord;
                 return (
                   <div
-                    key={row.key}
+                    key={`tent-${row.key}`}
                     className="print-keep-color border-2 border-dashed border-[#CBAE94] rounded-none bg-[#FAF6F0] h-80 sm:h-72 relative shadow-xs overflow-hidden print:shadow-none print:border-solid print:border-slate-300 break-inside-avoid"
                   >
                     {/* Top Fold (Folded Back / Front Header) - occupies the top half, centered */}
@@ -291,11 +191,15 @@ export const EscortCardsGenerator: React.FC<EscortCardsGeneratorProps> = ({ gues
                     </div>
                   </div>
                 );
-              } else {
+  };
+
+  const renderBadge = (row: CardRow) => {
+    const guest = row.guest;
+    const tableNum = row.tableName || t.unassignedWord;
                 return (
                   /* Wearable Name Badge */
                   <div
-                    key={row.key}
+                    key={`badge-${row.key}`}
                     className="print-keep-color border-2 border-[#4A3F35] rounded-none p-5 bg-white flex flex-col justify-between h-48 relative shadow-sm overflow-hidden print:shadow-none print:border-slate-800 break-inside-avoid"
                   >
                     <div className="text-center border-b border-[#CBAE94]/40 pb-2 min-w-0">
@@ -316,17 +220,122 @@ export const EscortCardsGenerator: React.FC<EscortCardsGeneratorProps> = ({ gues
                     </div>
                   </div>
                 );
-              }
-            })}
+  };
+
+  const sectionOptions: { key: PrintSection; label: string }[] = [
+    { key: 'poster', label: t.printSectionPoster },
+    { key: 'standees', label: tf('printSectionStandees', { count: tables.length }) },
+    { key: 'tents', label: `${t.foldedTentCardsBtn} (${filteredRows.length})` },
+    { key: 'badges', label: `${t.nameBadgesBtn} (${filteredRows.length})` },
+  ];
+
+  return (
+    <div className="space-y-6">
+      {/* Header Banner & the single "print everything" action */}
+      <AdminPageHeader
+        className="print:hidden"
+        icon={Tag}
+        eyebrow={t.stationeryTitle}
+        title={t.escortTitle}
+        subtitle={t.escortSubtitle}
+        actions={
+          <button
+            type="button"
+            onClick={() => print(t.printAllToast)}
+            disabled={itemCount === 0}
+            className="btn-accent text-xs sm:text-sm py-2.5 px-4 gap-2 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+          >
+            <Printer className="w-4 h-4" />
+            <span>{tf('printAllBtn', { count: itemCount })}</span>
+          </button>
+        }
+      />
+
+      <div className="card-soft p-6 sm:p-8 space-y-4 print:hidden">
+        {/* What goes into the single print job */}
+        <div>
+          <label className="label-mono block mb-2">{t.printSectionsLabel}</label>
+          <div className="flex flex-wrap gap-2">
+            {sectionOptions.map((opt) => (
+              <label
+                key={opt.key}
+                className={`inline-flex items-center gap-2 px-3 py-2 rounded-xl border text-xs font-bold cursor-pointer transition-colors ${
+                  sections[opt.key]
+                    ? 'bg-[#8B735B] text-white border-[#8B735B]'
+                    : 'bg-white text-[#4A3F35] border-[#CBAE94]/60 hover:bg-[#EFE6DC]'
+                }`}
+              >
+                <input
+                  type="checkbox"
+                  className="sr-only"
+                  checked={sections[opt.key]}
+                  onChange={() => toggleSection(opt.key)}
+                />
+                {opt.label}
+              </label>
+            ))}
+          </div>
+        </div>
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div>
+            <label className="label-mono block mb-1">{t.filterByTableLabel}</label>
+            <Select
+              variant="soft"
+              value={selectedTableFilter}
+              onChange={(e) => setSelectedTableFilter(e.target.value)}
+            >
+              <option value="ALL">{tf('allTablesOption', { count: rows.length })}</option>
+              {uniqueTables.map((tbl) => (
+                <option key={tbl} value={tbl}>
+                  {tbl === UNASSIGNED ? t.unassignedWord : `${t.tableFilterLabel} ${tbl}`}
+                </option>
+              ))}
+            </Select>
+          </div>
+
+          <div>
+            <label className="label-mono block mb-1">{t.customHeaderLabel}</label>
+            <div className="flex gap-2">
+              <TextInput
+                variant="soft"
+                type="text"
+                value={headerDraft}
+                onChange={(e) => setHeaderDraft(e.target.value)}
+              />
+              <button
+                type="button"
+                onClick={handleSaveHeader}
+                disabled={!headerDirty || savingHeader || !onSaveSettings}
+                className="btn-outline-accent py-2 px-3 text-xs shrink-0 cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                {t.saveChangesBtn}
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* One print job: poster, standees, tent cards and badges packed edge to edge */}
+      <div className="card-soft p-5 sm:p-6 space-y-4 print-all-sheet">
+        <AdminSectionTitle
+          className="print:hidden"
+          icon={Printer}
+          title={`${t.printPreviewLabel} (${tf('escortItemsCount', { count: itemCount })})`}
+          subtitle={`${t.paperLayoutLabel}: ${t.printAllLayout}`}
+        />
+
+        {itemCount === 0 ? (
+          <div className="text-center py-12 text-[#5D5449]">{t.noAttendingGuestsMsg}</div>
+        ) : (
+          <div className="print-pack grid grid-cols-1 md:grid-cols-2 gap-4">
+            {sections.poster && <PrintablePoster settings={settings} />}
+            {sections.standees && tables.map((tbl) => <PrintableStandee key={`qr-${tbl.id}`} table={tbl} />)}
+            {sections.tents && filteredRows.map(renderTent)}
+            {sections.badges && filteredRows.map(renderBadge)}
           </div>
         )}
       </div>
-
-      <TableScanQrModal
-        open={showQrModal}
-        onClose={() => setShowQrModal(false)}
-        tables={floorMap?.tables ?? []}
-      />
     </div>
   );
 };
