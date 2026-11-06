@@ -116,6 +116,15 @@ export const AgendaReorderSchema = z.array(z.object({
   position: z.number().int().min(0),
 }));
 
+// Test-alert recipients saved by the host. Format is checked at send time for
+// the phone (it may be a partial number while typing), but the email must parse.
+export const AlertTestSettingsSchema = Settings.pick({
+  alertTestEmail: true,
+  alertTestPhone: true,
+}).extend({
+  alertTestEmail: z.string().email('Invalid email address').optional().or(z.literal('')),
+});
+
 export const ReminderSettingsSchema = Settings.pick({
   hostEmail: true,
   hostPhone: true,

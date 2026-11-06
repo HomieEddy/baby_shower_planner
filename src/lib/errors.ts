@@ -16,6 +16,7 @@ export const ERROR_REGISTRY = {
   CONTACT_UPDATE_FAILED: { status: 400, message: 'Could not update contact details' },
   NAME_REQUIRED: { status: 400, message: 'Name is required' },
   INVALID_EMAIL: { status: 400, message: 'Invalid email address' },
+  INVALID_PHONE: { status: 400, message: 'Invalid phone number' },
   PARTY_TOO_LARGE: { status: 400, message: 'Party size cannot exceed 20' },
   RATE_LIMITED: { status: 429, message: 'Too many requests. Try again later.' },
 
@@ -33,6 +34,7 @@ export const ERROR_REGISTRY = {
   NO_PHONE: { status: 400, message: 'No phone number on file' },
   SEND_FAILED: { status: 500, message: 'Could not send the message' },
   INVALID_CHANNEL: { status: 400, message: 'Invalid delivery channel' },
+  TEST_SEND_FAILED: { status: 502, message: 'The test message could not be sent' },
   MESSAGE_REQUIRED: { status: 400, message: 'Thank-you message is required' },
 
   // Seating

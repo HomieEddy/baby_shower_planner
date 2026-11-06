@@ -3,7 +3,7 @@
 import { sendError, sendJson } from '../http';
 import type { RouteCtx } from '../http';
 import { handleRoutes, type Route } from '../route';
-import { ReminderSettingsSchema } from '../../lib/validation';
+import { AlertTestSettingsSchema, ReminderSettingsSchema } from '../../lib/validation';
 import { SettingsSchema } from '../../lib/domain';
 import type { EventSettings } from '../../types';
 import { getSettings, updateSettings } from '../../db/service';
@@ -18,6 +18,8 @@ const ROUTES: Route[] = [
       if (!adminOnly()) {
         delete (settings as Partial<EventSettings>).hostEmail;
         delete (settings as Partial<EventSettings>).hostPhone;
+        delete (settings as Partial<EventSettings>).alertTestEmail;
+        delete (settings as Partial<EventSettings>).alertTestPhone;
       }
       return sendJson(res, 200, { settings });
     },
@@ -40,7 +42,11 @@ const ROUTES: Route[] = [
       if (!reminder.success) {
         return sendError(res, 'INVALID_PAYLOAD', reminder.error.issues[0]?.message);
       }
-      const settings = await updateSettings({ ...body, ...reminder.data });
+      const alertTest = AlertTestSettingsSchema.partial().safeParse(body);
+      if (!alertTest.success) {
+        return sendError(res, 'INVALID_EMAIL', alertTest.error.issues[0]?.message);
+      }
+      const settings = await updateSettings({ ...body, ...reminder.data, ...alertTest.data });
       return sendJson(res, 200, { success: true, settings });
     },
   },

@@ -1,45 +1,78 @@
-// Event alerts: read, create (with fan-out to recipients), delete.
+// Event alerts: read, create (with fan-out to recipients), delete, and a
+// one-off test send to a single address or number.
 
-import type { EventAlert, AlertType } from '../types';
+import type { EventAlert, AlertType, Language } from '../types';
 import { fromRecord, pb } from './client';
 import { getAllGuests } from './guests';
 import { getSettingsOrDefaults } from './settings';
-import { composeAlert } from '../lib/compose';
-import { isAttending } from '../lib/guestAttendees';
-import { notifyGuest } from './notify';
+import { composeAlert, type MessageContent } from '../lib/compose';
+import { notifyChannels } from './notify';
 import { requireProvider } from './providers';
+import { alertRecipients, channelsFor, type AlertAudience, type AlertChannel } from '../lib/alertRecipients';
 
 export async function getAlerts(): Promise<EventAlert[]> {
   const records = await pb.collection('alerts').getFullList({ sort: '-created_at' });
   return records.map(r => fromRecord<EventAlert>(r));
 }
 
-export async function createAlert(payload: { type: AlertType; title: string; message: string; target_audience?: 'ALL' | 'PENDING' | 'ATTENDING' }): Promise<{ alert: EventAlert; notified_count: number }> {
-  requireProvider(['email', 'text']);
+export interface CreateAlertPayload {
+  type: AlertType;
+  title: string;
+  message: string;
+  target_audience?: AlertAudience;
+  channel?: AlertChannel;
+  guest_ids?: string[];
+}
+
+export async function createAlert(payload: CreateAlertPayload): Promise<{ alert: EventAlert; notified_count: number }> {
+  const channel: AlertChannel = payload.channel ?? 'both';
+  const audience: AlertAudience = payload.target_audience ?? 'ALL';
+  requireProvider(channelsFor(channel));
   const r = await pb.collection('alerts').create({
     type: payload.type, title: payload.title, message: payload.message,
-    active: true, target_audience: payload.target_audience || 'ALL',
+    active: true, target_audience: audience, channel,
     notified_guests_count: 0, created_at: new Date().toISOString(),
   });
   const guests = await getAllGuests();
-  const target = payload.target_audience || 'ALL';
-  const recipientGuests = guests.filter(g => {
-    // Cancellations must reach everyone — declined guests might still show up.
-    if (payload.type === 'CANCELLATION') return true;
-    if (g.rsvp_status === 'Declined') return false;
-    if (target === 'PENDING') return g.rsvp_status === 'Pending';
-    if (target === 'ATTENDING') return isAttending(g);
-    return true;
-  });
+  const recipients = alertRecipients(guests, payload.type, audience, payload.guest_ids ?? [], channel);
   const settings = await getSettingsOrDefaults();
+  const channels = channelsFor(channel);
   let notified = 0;
-  for (const g of recipientGuests) {
-    // Link-only guests resolve to no channels inside notifyGuest.
-    const { sent } = await notifyGuest(g, composeAlert(g, settings, payload.title, payload.message, g.language_pref));
+  for (const g of recipients) {
+    const { sent } = await notifyChannels(g, composeAlert(g, settings, payload.title, payload.message, g.language_pref), channels);
     if (sent.length > 0) notified++;
   }
   await pb.collection('alerts').update(r.id, { notified_guests_count: notified });
   return { alert: fromRecord<EventAlert>({ ...r, notified_guests_count: notified }), notified_count: notified };
+}
+
+export interface TestAlertPayload {
+  channel: 'email' | 'text';
+  to: string;
+  title: string;
+  message: string;
+  language?: Language;
+}
+
+// Sends one draft to a single address or number so the host can check the
+// wording and delivery. No RSVP link: there is no real guest behind it.
+export async function sendTestAlert(payload: TestAlertPayload): Promise<boolean> {
+  requireProvider([payload.channel]);
+  const language = payload.language ?? 'FR';
+  const content: MessageContent = {
+    kind: 'alert',
+    language,
+    subject: `[TEST] 📢 ${payload.title}`,
+    heading: payload.title,
+    rows: [],
+    paragraphs: [payload.message],
+  };
+  if (payload.channel === 'email') {
+    const { sendEmail } = await import('../lib/email');
+    return sendEmail(payload.to, content);
+  }
+  const { sendSms } = await import('../lib/sms');
+  return sendSms(payload.to, { ...content, subject: `[TEST] ${payload.title}` });
 }
 
 export async function deleteAlert(id: string): Promise<EventAlert[]> {
