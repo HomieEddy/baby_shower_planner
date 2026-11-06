@@ -22,7 +22,6 @@ interface CardRow {
   key: string;
   name: string;
   tableName: string | null;
-  seatNumber: number | null;
 }
 
 const UNASSIGNED = '__unassigned__';
@@ -97,17 +96,24 @@ export const EscortCardsGenerator: React.FC<EscortCardsGeneratorProps> = ({ gues
           key: `${g.id}:${i}`,
           name,
           tableName: loc?.tableName ?? null,
-          seatNumber: loc ? loc.seatIndex + 1 : null,
         };
       });
     });
+
+  // Sort by table (numeric-aware, unassigned last) so cards for one table are cut together.
+  const sortedRows = [...rows].sort((a, b) => {
+    if (!a.tableName !== !b.tableName) return a.tableName ? -1 : 1;
+    const byTable = (a.tableName ?? '').localeCompare(b.tableName ?? '', undefined, { numeric: true, sensitivity: 'base' });
+    if (byTable !== 0) return byTable;
+    return a.name.localeCompare(b.name, undefined, { sensitivity: 'base' });
+  });
 
   // Extract unique tables
   const uniqueTables = Array.from(
     new Set(rows.map((r) => r.tableName || UNASSIGNED))
   ).sort();
 
-  const filteredRows = rows.filter((r) => {
+  const filteredRows = sortedRows.filter((r) => {
     if (selectedTableFilter === 'ALL') return true;
     return (r.tableName || UNASSIGNED) === selectedTableFilter;
   });
@@ -227,9 +233,6 @@ export const EscortCardsGenerator: React.FC<EscortCardsGeneratorProps> = ({ gues
             {filteredRows.map((row) => {
               const guest = row.guest;
               const tableNum = row.tableName || t.unassignedWord;
-              const seatLine = row.seatNumber
-                ? tf('seatedAtSeatLabel', { seat: String(row.seatNumber) })
-                : '';
 
               if (cardType === 'tent') {
                 return (
@@ -275,19 +278,13 @@ export const EscortCardsGenerator: React.FC<EscortCardsGeneratorProps> = ({ gues
                         <h3 className="font-newsreader font-bold text-[#4A3F35] leading-tight break-words line-clamp-2" style={{ fontSize: `${fitFontPx(row.name, { maxPx: 24, minPx: 14, widthPx: 200 })}px` }}>
                           {row.name}
                         </h3>
-                        <p className="text-xs font-mono font-bold text-[#8B735B] truncate">
-                          {seatLine}
-                        </p>
                         <p className="text-xs font-semibold text-[#4A3F35]">
                           {t.uploadCodeLabel}: <span className="font-mono whitespace-nowrap">{guest.code}</span>
                         </p>
                       </div>
 
                       <div className="flex flex-col items-center justify-center text-right shrink-0">
-                        <span className="text-xs font-mono text-[#8B735B] uppercase font-bold">
-                          {t.seatedAtLabel}
-                        </span>
-                        <div className="px-3 py-1 rounded-xl bg-[#EFE6DC] border border-[#CBAE94] text-[#4A3F35] font-bold text-sm font-mono mt-0.5">
+                        <div className="px-3 py-1 rounded-xl bg-[#EFE6DC] border border-[#CBAE94] text-[#4A3F35] font-bold text-sm font-mono">
                           {tableNum}
                         </div>
                       </div>
@@ -314,7 +311,7 @@ export const EscortCardsGenerator: React.FC<EscortCardsGeneratorProps> = ({ gues
                     </div>
 
                     <div className="flex items-center justify-between border-t border-[#CBAE94]/40 pt-2 text-xs font-mono">
-                      <span className="font-bold text-[#8B735B]">{tableNum}{seatLine ? ` · ${seatLine}` : ''}</span>
+                      <span className="font-bold text-[#8B735B]">{tableNum}</span>
                       <span className="font-bold text-[#4A3F35]">{t.uploadCodeLabel} {guest.code}</span>
                     </div>
                   </div>
