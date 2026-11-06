@@ -561,15 +561,22 @@ select option {
 
 /* Print Media Query Styles for Table QR Cards & Standees */
 @media print {
-  /* Ink saving: backgrounds are NOT printed by default (browser economy mode).
-     Only cards whose design needs color opt in via .print-keep-color, and the
-     standee card keeps its own look. Everything else prints on white paper. */
-  .printable-qr-card,
-  .printable-qr-card *,
-  .print-keep-color,
-  .print-keep-color * {
+  /* Cards print in full color. */
+  * {
     -webkit-print-color-adjust: exact !important;
     print-color-adjust: exact !important;
+  }
+
+  /* Ink saving: everything around the cards (page, app shell, modal panels,
+     wrappers) prints on plain white paper. Cards opt out via .print-keep-color
+     (or .printable-qr-card) and keep their own design colors. */
+  body *:not(.print-keep-color):not(.print-keep-color *):not(.printable-qr-card):not(.printable-qr-card *) {
+    background-color: transparent !important;
+    background-image: none !important;
+  }
+
+  body::before {
+    display: none !important;
   }
 
   /* Dark mode must never reach paper: neutralise the theme variables that the

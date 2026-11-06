@@ -296,7 +296,7 @@ export const EscortCardsGenerator: React.FC<EscortCardsGeneratorProps> = ({ gues
                   /* Wearable Name Badge */
                   <div
                     key={row.key}
-                    className="border-2 border-[#4A3F35] rounded-none p-5 bg-white flex flex-col justify-between h-48 relative shadow-sm overflow-hidden print:shadow-none print:border-slate-800 break-inside-avoid"
+                    className="print-keep-color border-2 border-[#4A3F35] rounded-none p-5 bg-white flex flex-col justify-between h-48 relative shadow-sm overflow-hidden print:shadow-none print:border-slate-800 break-inside-avoid"
                   >
                     <div className="text-center border-b border-[#CBAE94]/40 pb-2 min-w-0">
                       <span className="text-xs font-mono font-bold text-[#8B735B] uppercase tracking-wider block break-words line-clamp-2" style={{ fontSize: `${headerPx}px` }}>
