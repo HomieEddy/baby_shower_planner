@@ -5,7 +5,8 @@ import {
   buildUniversalInviteMessage,
   composeDayOf,
   composeInvitation,
-  DAY_OF_COPY,
+  DAY_OF_TITLE,
+  dayOfMessage,
   renderEmailHtml,
   renderSms,
   renderText,
@@ -146,12 +147,19 @@ describe('renderSms', () => {
   });
 });
 
+const EVENT: Partial<EventSettings> = {
+  parentsNames: 'Anne et Paul',
+  date: '2027-06-12',
+  time: '14:00',
+  venueName: 'Salle des fêtes',
+  venueAddress: '12 rue des Lilas, Montréal',
+};
+
 describe('day-of reminder', () => {
   it.each(['EN', 'FR'] as const)('puts each guest code inside the text and fits one GSM-7 segment (%s)', (language) => {
-    const copy = DAY_OF_COPY[language];
-    const body = smsBody(composeDayOf(guest({ code: '2468' }), copy.title, copy.message, language));
+    const body = smsBody(composeDayOf(guest({ code: '2468' }), DAY_OF_TITLE[language], dayOfMessage(EVENT, language), language));
     expect(isGsm7(body)).toBe(true);
-    expect(body.length).toBeLessThanOrEqual(160);
+    expect(body.length).toBeLessThanOrEqual(459); // three concatenated GSM-7 segments
     expect(body).toContain('2468');
     expect(body).not.toContain('{{code}}');
     expect(body).not.toContain('Code:');
@@ -162,10 +170,17 @@ describe('day-of reminder', () => {
     expect(body).toContain('Code: 2468');
   });
 
-  it.each(['EN', 'FR'] as const)('sends no RSVP link, since guests scan the entrance QR (%s)', (language) => {
-    const copy = DAY_OF_COPY[language];
-    const body = smsBody(composeDayOf(guest(), copy.title, copy.message, language));
-    expect(body).not.toMatch(/https?:\/\//);
-    expect(body).not.toContain('RSVP');
+  it.each(['EN', 'FR'] as const)('links to the venue map, not the RSVP page (%s)', (language) => {
+    const body = smsBody(composeDayOf(guest(), DAY_OF_TITLE[language], dayOfMessage(EVENT, language), language));
+    expect(body).toMatch(/https:\/\/maps\.google\.com\/\?q=Salle\+des\+fetes/);
+    expect(body).not.toContain('/rsvp/');
+    expect(body).not.toContain('find-my-table');
+  });
+
+  it('folds a non-GSM venue so the SMS stays on GSM-7', () => {
+    const body = smsBody(composeDayOf(guest(), 'Hi', dayOfMessage(EVENT, 'FR'), 'FR'));
+    expect(isGsm7(body)).toBe(true);
+    expect(body).toContain('Salle des fetes');
+    expect(body).toContain('événement'); // é is GSM-7 and stays
   });
 });

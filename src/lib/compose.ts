@@ -4,8 +4,9 @@
 // are adapters over this — they never re-derive event fields.
 
 import { Guest, EventSettings, AgendaTask, Language } from '../types';
-import { formatTaskDue } from './dateUtils';
-import { findMyTableUrl, registerUrl, rsvpUrl } from './links';
+import { formatDateLong, formatTaskDue } from './dateUtils';
+import { findMyTableUrl, mapsUrl, registerUrl, rsvpUrl } from './links';
+import { foldToGsm } from './gsm7';
 import {
   eventContext,
   invitationTemplateValues,
@@ -217,36 +218,66 @@ export function composeAlert(guest: Guest, settings: Partial<EventSettings>, tit
   };
 }
 
-// Day-of reminder copy. Plain GSM-7 text (no emoji, no uppercase accents, no
-// curly quotes) so the whole SMS stays on one 160-char segment. `{{code}}` is
-// replaced with each guest's own reservation code at send time. No RSVP link:
-// guests scan the entrance QR.
+// Day-of reminder. The host's text is built from event settings (date, time,
+// venue, map link, sign-off) and keeps a `{{code}}` token. The composer swaps
+// in each guest's own reservation code at send time. No RSVP link: guests scan
+// the entrance QR code.
 export const DAY_OF_CODE_TOKEN = '{{code}}';
-export const DAY_OF_COPY: Record<Language, { title: string; message: string }> = {
-  EN: {
-    title: 'Today is the big day!',
-    message: "We can't wait to see you! Scan the QR code at the entrance, then enter your code {{code}} to find your seat on the floor map.",
-  },
-  FR: {
-    title: "C'est aujourd'hui le grand jour !",
-    message: "Sur place, à l'entrée, scannez le code QR puis saisissez votre code {{code}} pour trouver votre place sur le plan.",
-  },
+export const DAY_OF_TITLE: Record<Language, string> = {
+  EN: 'Today is the big day!',
+  FR: "C'est aujourd'hui le grand jour !",
 };
 
+const DAY_OF_LINES = {
+  EN: {
+    heads: "Heads up, this message is for today's event!",
+    when: 'When', where: 'Where', map: 'Map',
+    at: 'at',
+    entrance: 'At the entrance, scan the giant QR code and enter your code {{code}} to find your seat on the floor map.',
+    bye: "Can't wait to see you later today!",
+    regards: 'Regards from',
+  },
+  FR: {
+    heads: "Ce message concerne l'événement d'aujourd'hui !",
+    when: 'Quand', where: 'Où', map: 'Plan',
+    at: 'à',
+    entrance: 'Sur place, à l\'entrée, scannez le gros QR code et saisissez votre code {{code}} pour trouver votre place sur le plan.',
+    bye: 'Au plaisir de vous voir ce soir !',
+    regards: 'Regards de',
+  },
+} as const;
+
+// The day-of text for the host to review, with `{{code}}` left for each guest.
+export function dayOfMessage(settings: Partial<EventSettings>, language: Language): string {
+  const L = DAY_OF_LINES[language];
+  const ctx = eventContext(settings, language);
+  const sep = language === 'FR' ? ' : ' : ': ';
+  const dateLine = [formatDateLong(ctx.date, language), ctx.time && `${L.at} ${ctx.time}`].filter(Boolean).join(' ');
+  return [
+    L.heads,
+    dateLine && `${L.when}${sep}${dateLine}`,
+    ctx.venue && `${L.where}${sep}${ctx.venue}`,
+    ctx.venue && `${L.map}${sep}${mapsUrl(ctx.venue)}`,
+    L.entrance,
+    L.bye,
+    ctx.parentsNames && `${L.regards} ${ctx.parentsNames}`,
+  ].filter(Boolean).join('\n');
+}
+
 // Per-guest day-of message: the host's title and text, with the guest's own
-// code in place of `{{code}}`. If the text has no placeholder, the code is
-// added as a trailing "Code:" line instead.
+// code in place of `{{code}}`, folded to GSM-7 so it stays on cheap SMS
+// segments. If the text has no placeholder, the code is added as a "Code:" line.
 export function composeDayOf(guest: Guest, title: string, message: string, language?: Language): MessageContent {
   const lang = language ?? guest.language_pref ?? 'FR';
   const hasToken = message.includes(DAY_OF_CODE_TOKEN);
   return {
     kind: 'alert',
     language: lang,
-    subject: `📢 ${title}`,
-    heading: title,
+    subject: `📢 ${foldToGsm(title)}`,
+    heading: foldToGsm(title),
     rows: [],
     code: hasToken ? undefined : guest.code,
-    paragraphs: [message.split(DAY_OF_CODE_TOKEN).join(guest.code ?? '')],
+    paragraphs: [foldToGsm(message.split(DAY_OF_CODE_TOKEN).join(guest.code ?? ''))],
   };
 }
 
