@@ -5,6 +5,7 @@ import {
   buildUniversalInviteMessage,
   composeDayOf,
   composeInvitation,
+  DAY_OF_COPY,
   renderEmailHtml,
   renderSms,
   renderText,
@@ -146,15 +147,24 @@ describe('renderSms', () => {
 });
 
 describe('day-of reminder', () => {
-  it.each(['EN', 'FR'] as const)('fits one GSM-7 SMS segment with the code (%s)', (language) => {
-    const body = smsBody(composeDayOf(guest({ code: '2468' }), language));
+  it.each(['EN', 'FR'] as const)('puts each guest code inside the text and fits one GSM-7 segment (%s)', (language) => {
+    const copy = DAY_OF_COPY[language];
+    const body = smsBody(composeDayOf(guest({ code: '2468' }), copy.title, copy.message, language));
     expect(isGsm7(body)).toBe(true);
     expect(body.length).toBeLessThanOrEqual(160);
+    expect(body).toContain('2468');
+    expect(body).not.toContain('{{code}}');
+    expect(body).not.toContain('Code:');
+  });
+
+  it('appends the code as a line when the host text has no placeholder', () => {
+    const body = smsBody(composeDayOf(guest({ code: '2468' }), 'Hi', 'See you soon', 'EN'));
     expect(body).toContain('Code: 2468');
   });
 
   it.each(['EN', 'FR'] as const)('sends no RSVP link, since guests scan the entrance QR (%s)', (language) => {
-    const body = smsBody(composeDayOf(guest(), language));
+    const copy = DAY_OF_COPY[language];
+    const body = smsBody(composeDayOf(guest(), copy.title, copy.message, language));
     expect(body).not.toMatch(/https?:\/\//);
     expect(body).not.toContain('RSVP');
   });
