@@ -13,10 +13,8 @@ let twilioClient: any = null;
 const GSM7_LIMIT = 640;
 const UCS2_LIMIT = 268;
 
-const GSM7_BASIC = "@£$¥èéùìòÇ\nØø\rÅåΔ_ΦΓΛΩΠΨΣΘΞÆæßÉ !\"#¤%&'()*+,-./0123456789:;<=>?¡ABCDEFGHIJKLMNOPQRSTUVWXYZÄÖÑÜ§¿abcdefghijklmnopqrstuvwxyzäöñüà";
-const GSM7_EXTENSION = '^{}\\[~]|€';
-export const isGsm7 = (text: string): boolean =>
-  [...text].every((ch) => GSM7_BASIC.includes(ch) || GSM7_EXTENSION.includes(ch));
+export { isGsm7 } from './gsm7';
+import { isGsm7 } from './gsm7';
 
 export function smsBody(content: MessageContent): string {
   const gsm = renderSms(content, GSM7_LIMIT);

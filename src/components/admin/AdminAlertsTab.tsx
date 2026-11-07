@@ -18,7 +18,7 @@ import {
   type AlertAudience,
   type AlertChannel,
 } from '../../lib/alertRecipients';
-import { DAY_OF_COPY } from '../../lib/compose';
+import { DAY_OF_TITLE, dayOfMessage } from '../../lib/compose';
 import { TextInput, TextArea } from '../shared/ui';
 import { Segmented, type SegmentedOption } from '../shared/Segmented';
 import { IconButton } from '../shared/IconButton';
@@ -69,7 +69,7 @@ export const AdminAlertsTab: React.FC<AdminAlertsTabProps> = ({ language, t, gue
           message: tf('alertReminderMsg', { baby: babyLabel, date: formatDateLong(dv, language) }),
         };
       case 'DAY_OF':
-        return { audience: 'ATTENDING', title: DAY_OF_COPY[language].title, message: DAY_OF_COPY[language].message };
+        return { audience: 'ATTENDING', title: DAY_OF_TITLE[language], message: dayOfMessage(settings ?? {}, language) };
       case 'DATE_CHANGE':
         return { audience: 'ALL', title: t.alertDateChangeTitle, message: tf('alertDateChangeMsg', { date: formatDateLong(dv, language) }) };
       case 'VENUE_CHANGE':
