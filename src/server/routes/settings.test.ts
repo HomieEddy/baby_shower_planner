@@ -57,6 +57,14 @@ describe('POST /api/settings', () => {
     expect(h.updateSettings).not.toHaveBeenCalled();
   });
 
+  it('accepts the saved test-alert contacts', async () => {
+    const res = await post({ alertTestEmail: 'host@example.com', alertTestPhone: '+33612345678' });
+    expect(res.statusCode).toBe(200);
+    expect(h.updateSettings).toHaveBeenCalledWith(
+      expect.objectContaining({ alertTestEmail: 'host@example.com', alertTestPhone: '+33612345678' }),
+    );
+  });
+
   it('still validates the reminder fields it owns', async () => {
     const res = await post({ hostEmail: 'not-an-email' });
     expect(res.statusCode).toBe(400);
