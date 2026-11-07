@@ -710,13 +710,19 @@ select option {
   }
 
   /* Table QR standees: two per portrait A4 sheet, one pair per page. The pair
-     is the printable height (286mm of the 287mm left after the 5mm page margins). */
+     is 274mm tall so it fits the printable height even when the browser uses
+     its default ~10mm margins instead of our 5mm. Each pair starts a new page. */
   .print-pack > .print-standee-pair {
     grid-column: 1 / -1 !important;
-    height: 286mm !important;
+    height: 274mm !important;
     margin: 0 !important;
     break-inside: avoid;
     page-break-inside: avoid;
+  }
+
+  .print-pack > .print-standee-pair:not(:first-child) {
+    break-before: page;
+    page-break-before: always;
   }
 
   .print-pack > .print-standee-pair:not(:last-child) {
