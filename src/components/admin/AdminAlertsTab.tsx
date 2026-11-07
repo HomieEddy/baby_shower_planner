@@ -32,6 +32,7 @@ import { useCapabilities, noProviders, channelLabel } from '../../lib/capabiliti
 import { AdminPageHeader, AdminSectionTitle } from './AdminPageHeader';
 import { AlertGuestPicker } from './AlertGuestPicker';
 import { AlertTestPanel } from './AlertTestPanel';
+import { SmsSplitPreview } from './SmsSplitPreview';
 
 interface AdminAlertsTabProps {
   language: Language;
@@ -225,6 +226,9 @@ export const AdminAlertsTab: React.FC<AdminAlertsTabProps> = ({ language, t, gue
             <label className="label-mono block mb-1" htmlFor="alert-message">{t.alertMessageLabel2}</label>
             <TextArea id="alert-message" rows={4} required value={alertMessage} onChange={(e) => setAlertMessage(e.target.value)}
               placeholder={t.alertMessagePh} className="resize-none" />
+            {activeChannel !== 'email' && (
+              <SmsSplitPreview t={t} tf={tf} language={language} alertType={alertType} title={alertTitle} message={alertMessage} />
+            )}
           </div>
 
           <div className="pt-4 border-t border-[#CBAE94]/30 space-y-5">

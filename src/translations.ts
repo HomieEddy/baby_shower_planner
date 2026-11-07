@@ -194,6 +194,12 @@ export interface Translations {
   cancellationTemplateDesc: string;
   dayOfTemplate: string;
   dayOfTemplateDesc: string;
+  smsPreviewTitle: string;
+  smsPreviewSingle: string;
+  smsPreviewMulti: string;
+  smsPreviewSplit: string;
+  smsPreviewPart: string;
+  smsPreviewNote: string;
   capacityLabel: string;
   capacityUsageLabel: string;
   captionExamplePlaceholder: string;
@@ -1602,6 +1608,12 @@ export const translations: Record<Language, Translations> = {
     cancellationTemplateDesc: "Cancellation notice",
     dayOfTemplate: "Day-of Reminder",
     dayOfTemplateDesc: "Today: code and entrance QR",
+    smsPreviewTitle: "Text message preview",
+    smsPreviewSingle: "Fits in one text (up to 160 characters).",
+    smsPreviewMulti: "Too long for one text: each guest gets {{count}} texts, split where marked below.",
+    smsPreviewSplit: "Text {{index}} starts here",
+    smsPreviewPart: "Text {{index}} of {{count}} · {{length}}/{{limit}} characters",
+    smsPreviewNote: "Shown with a sample code and link; each guest gets their own. Accents outside the SMS alphabet are simplified (ê becomes e) and emoji are removed.",
     capacityLabel: "Capacity",
     capacityUsageLabel: "Capacity Usage",
     captionExamplePlaceholder: "e.g., Cutting the honey cake at Table 2!",
@@ -3010,6 +3022,12 @@ export const translations: Record<Language, Translations> = {
     cancellationTemplateDesc: "Avis d'annulation",
     dayOfTemplate: "Rappel le jour J",
     dayOfTemplateDesc: "Aujourd'hui : code et QR à l'entrée",
+    smsPreviewTitle: "Aperçu du texto",
+    smsPreviewSingle: "Tient en un seul texto (160 caractères max).",
+    smsPreviewMulti: "Trop long pour un seul texto : chaque invité recevra {{count}} textos, coupés aux endroits indiqués ci-dessous.",
+    smsPreviewSplit: "Début du texto {{index}}",
+    smsPreviewPart: "Texto {{index}} sur {{count}} · {{length}}/{{limit}} caractères",
+    smsPreviewNote: "Aperçu avec un code et un lien d'exemple ; chaque invité reçoit les siens. Les accents hors alphabet SMS sont simplifiés (ê devient e) et les emoji retirés.",
     capacityLabel: "Capacité",
     capacityUsageLabel: "Utilisation de la capacité",
     captionExamplePlaceholder: "ex : Découpe du gâteau à la table 2 !",
