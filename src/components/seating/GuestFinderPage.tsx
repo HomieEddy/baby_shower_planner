@@ -86,6 +86,7 @@ export const GuestFinderPage: React.FC = () => {
   const [searchPick, setSearchPick] = useState<FinderSelection | null>(null);
   const [dismissedId, setDismissedId] = useState<string | null>(null);
   const [busy, setBusy] = useState<string | null>(null); // member name or 'all'
+  const [checkinCode, setCheckinCode] = useState(''); // typed code for a party found by name
   const [venueOpen, setVenueOpen] = useState(false); // full-screen venue modal
 
   const { data, isLoading } = useQuery({
@@ -93,17 +94,23 @@ export const GuestFinderPage: React.FC = () => {
     queryFn: () => fetchFinderData(initialToken),
   });
 
-  // Code lookup runs server-side: only the matching party is ever returned
-  // (the full roster is not exposed on this page).
-  const searchCode = searchQuery.trim();
+  // The box takes either a 4-digit reservation code or a name. Both lookups
+  // run server-side: only matching parties are ever returned (the full roster
+  // is not exposed on this page).
+  const searchTerm = searchQuery.trim();
+  const searchCode = isValidCode(searchTerm) ? searchTerm : '';
+  const searchName = !searchCode && !/^\d*$/.test(searchTerm) && searchTerm.length >= 2 ? searchTerm : '';
   const { data: searchGuests, isFetching: searching } = useQuery({
-    queryKey: ['finder-search', searchCode],
+    queryKey: ['finder-search', searchCode, searchName],
     queryFn: async (): Promise<Guest[]> => {
-      const res = await fetch(`/api/floorplan/roster?code=${encodeURIComponent(searchCode)}`);
+      const params = searchCode
+        ? `code=${encodeURIComponent(searchCode)}`
+        : `name=${encodeURIComponent(searchName)}`;
+      const res = await fetch(`/api/floorplan/roster?${params}`);
       const data = await res.json();
       return data.guests ?? [];
     },
-    enabled: isValidCode(searchCode),
+    enabled: !!searchCode || !!searchName,
   });
 
   const floorMap = data?.floorMap ?? null;
@@ -160,6 +167,7 @@ export const GuestFinderPage: React.FC = () => {
     });
     setDismissedId(null);
     setSearchQuery('');
+    setCheckinCode('');
   };
 
   // ─── Check-in ─────────────────────────────────────────────────
@@ -171,16 +179,19 @@ export const GuestFinderPage: React.FC = () => {
     ? members.filter((m) => isMemberCheckedIn(selected.guest, m)).length
     : 0;
   const allChecked = selected && members.length > 0 && checkedCount === members.length;
+  // A party found by name arrives without its code, so the guest types it.
+  const needsCode = !!selected && !initialToken && !selected.guest.code;
+  const codeReady = !needsCode || isValidCode(checkinCode);
 
   // The party is one unit: any identified member checks in (or undoes) everyone.
   const act = async (undo = false) => {
-    if (!selected) return;
+    if (!selected || !codeReady) return;
     if (!(await confirmAction(undo ? t.undoCheckinBtn : t.checkinAllBtn))) return;
     setBusy('all');
     try {
       const body = initialToken
         ? { token: initialToken, all: true, undo }
-        : { code: selected.guest.code, name: identifiedName, all: true, undo };
+        : { code: selected.guest.code || checkinCode, name: identifiedName, all: true, undo };
       const res = await fetch('/api/check-in/self', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -247,14 +258,12 @@ export const GuestFinderPage: React.FC = () => {
             <Search className="w-5 h-5 text-[#8B735B] absolute left-4 top-1/2 -translate-y-1/2 pointer-events-none" aria-hidden />
             <input
               type="text"
-              inputMode="numeric"
-              maxLength={4}
               autoComplete="off"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder={t.checkinSearchPh}
-              aria-label={t.checkinSearchPh}
-              className="guest-input pl-12 font-mono font-bold tracking-[0.3em] placeholder:tracking-normal placeholder:font-sans placeholder:font-normal"
+              placeholder={t.finderSearchPh}
+              aria-label={t.finderSearchPh}
+              className="guest-input pl-12 font-bold placeholder:font-normal"
             />
 
             {/* Animated dropdown results */}
@@ -267,7 +276,12 @@ export const GuestFinderPage: React.FC = () => {
                   transition={{ duration: 0.18 }}
                   className="absolute z-20 left-0 right-0 mt-2 bg-white rounded-xl border border-[#CBAE94] shadow-lg overflow-hidden text-left"
                 >
-                  {searching ? (
+                  {!searchCode && !searchName ? (
+                    <div className="p-4 flex items-center gap-2 text-xs text-[#5D5449]">
+                      <Info className="w-4 h-4 shrink-0 text-[#8B735B]" />
+                      {t.finderSearchHint}
+                    </div>
+                  ) : searching ? (
                     <div className="p-4 flex items-center gap-2 text-xs text-[#5D5449]">
                       <Info className="w-4 h-4 shrink-0 text-[#8B735B]" />
                       {t.finderSearching}
@@ -347,7 +361,9 @@ export const GuestFinderPage: React.FC = () => {
                       {tf('finderWelcome', { name: selected.displayName })}
                     </h2>
                     <p className="text-xs text-[#5D5449] font-bold font-mono mt-0.5">
-                      {tf('finderCodeParty', { code: selected.guest.code, count: String(getGuestPartySize(selected.guest)) })}
+                      {selected.guest.code
+                        ? tf('finderCodeParty', { code: selected.guest.code, count: String(getGuestPartySize(selected.guest)) })
+                        : tf('finderPartyCount', { count: String(getGuestPartySize(selected.guest)) })}
                     </p>
                   </div>
                 </motion.div>
@@ -356,6 +372,7 @@ export const GuestFinderPage: React.FC = () => {
                   onClick={() => {
                     setDismissedId(selected.id);
                     setSearchPick(null);
+                    setCheckinCode('');
                   }}
                   className="min-h-[44px] text-xs font-bold text-[#4A3F35] border border-[#CBAE94] px-4 rounded-full transition-transform hover:-translate-y-0.5 active:scale-95 shrink-0"
                 >
@@ -420,6 +437,25 @@ export const GuestFinderPage: React.FC = () => {
                   })}
                 </ul>
 
+                {needsCode && !allChecked && (
+                  <div className="space-y-2">
+                    <label className="block text-xs font-bold text-[#4A3F35]" htmlFor="finder-checkin-code">
+                      {t.finderCodeToCheckIn}
+                    </label>
+                    <input
+                      id="finder-checkin-code"
+                      type="text"
+                      inputMode="numeric"
+                      maxLength={4}
+                      autoComplete="off"
+                      value={checkinCode}
+                      onChange={(e) => setCheckinCode(e.target.value.replace(/[^0-9]/g, ''))}
+                      placeholder={t.checkinSearchPh}
+                      className="guest-input font-mono font-bold tracking-[0.3em] placeholder:tracking-normal placeholder:font-sans placeholder:font-normal"
+                    />
+                  </div>
+                )}
+
                 {allChecked ? (
                   <motion.div
                     initial={{ opacity: 0, y: 10 }}
@@ -441,7 +477,7 @@ export const GuestFinderPage: React.FC = () => {
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: 0.15 }}
                     onClick={() => void act(false)}
-                    disabled={busy === 'all'}
+                    disabled={busy === 'all' || !codeReady}
                     className="btn-accent w-full py-3.5 min-h-[52px] text-sm font-bold gap-2 disabled:opacity-50"
                   >
                     <UserCheck className="w-4 h-4" />
@@ -453,7 +489,7 @@ export const GuestFinderPage: React.FC = () => {
                   <div className="flex justify-end">
                     <button
                       onClick={() => void act(true)}
-                      disabled={busy === 'all'}
+                      disabled={busy === 'all' || !codeReady}
                       className="min-h-[44px] flex items-center gap-1.5 text-xs font-bold text-[#5D5449] hover:text-[#4A3F35] disabled:opacity-40 transition-colors"
                     >
                       <RotateCcw className="w-3 h-3" />

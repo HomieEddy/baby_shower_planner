@@ -397,6 +397,10 @@ export interface Translations {
   finderMapLive: string;
   finderNearEntrance: string;
   finderNoMatch: string;
+  finderSearchPh: string;
+  finderSearchHint: string;
+  finderCodeToCheckIn: string;
+  finderPartyCount: string;
   finderOpenSeatingMsg: string;
   finderOpenSeatingTitle: string;
   finderPartyLead: string;
@@ -1811,7 +1815,11 @@ export const translations: Record<Language, Translations> = {
     finderMap3dHint: "Orbit the map to find your glowing table & green seat",
     finderMapLive: "Live map",
     finderNearEntrance: "Located near the Main Entrance & Photo Backdrop area",
-    finderNoMatch: "No matching party found. Check the 4-digit code on your invitation.",
+    finderNoMatch: "No matching party found. Check your name or the 4-digit code on your invitation.",
+    finderSearchPh: "Your name or 4-digit code",
+    finderSearchHint: "Type your 4-digit reservation code, or at least 2 letters of your name.",
+    finderCodeToCheckIn: "Enter your 4-digit reservation code to check in",
+    finderPartyCount: "Party of {{count}}",
     finderOpenSeatingMsg: "Your name is confirmed on the guest list! Please feel free to choose any available seat in the main dining pavilion.",
     finderOpenSeatingTitle: "Open Seating / Unassigned Table",
     finderPartyLead: "Party Lead",
@@ -3225,7 +3233,11 @@ export const translations: Record<Language, Translations> = {
     finderMap3dHint: "Faites pivoter la vue 3D pour trouver votre table lumineuse & votre place verte",
     finderMapLive: "Carte en direct",
     finderNearEntrance: "Situé près de l'entrée principale et du décor photo",
-    finderNoMatch: "Aucun groupe trouvé. Vérifiez le code à 4 chiffres sur votre invitation.",
+    finderNoMatch: "Aucun groupe trouvé. Vérifiez votre nom ou le code à 4 chiffres sur votre invitation.",
+    finderSearchPh: "Votre nom ou code à 4 chiffres",
+    finderSearchHint: "Tapez votre code de réservation à 4 chiffres, ou au moins 2 lettres de votre nom.",
+    finderCodeToCheckIn: "Entrez votre code de réservation à 4 chiffres pour vous enregistrer",
+    finderPartyCount: "Groupe de {{count}}",
     finderOpenSeatingMsg: "Votre nom est confirmé sur la liste des invités ! Choisissez librement une place dans le pavillon principal.",
     finderOpenSeatingTitle: "Placement libre / table non attribuée",
     finderPartyLead: "Responsable du groupe",

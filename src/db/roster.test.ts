@@ -117,6 +117,28 @@ describe('getSeatingRoster', () => {
     expect((await getSeatingRoster(undefined, 'abcd')).guests).toEqual([]);
   });
 
+  it('finds attending parties by any member name, without the reservation code', async () => {
+    const byPrimary = await getSeatingRoster(undefined, undefined, 'alice');
+    expect(byPrimary.guests.map((g) => g.id)).toEqual(['g1']);
+    expect(byPrimary.guests[0].code).toBe('');
+    expect(byPrimary.guests[0].email).toBe('');
+
+    // Party member Bob is found through the party, not only the lead.
+    expect((await getSeatingRoster(undefined, undefined, 'BOB')).guests.map((g) => g.id)).toEqual(['g1']);
+  });
+
+  it('ignores accents and case, and skips declined guests', async () => {
+    h.fake.stores.guests.push(guestRecord({ id: 'g4', name: 'Hélène', code: '4444', attendee_names: ['Hélène'], attendee_details: undefined }));
+    expect((await getSeatingRoster(undefined, undefined, 'helene')).guests.map((g) => g.id)).toEqual(['g4']);
+    // Carol is declined in the fixture, so a name search must not list her.
+    expect((await getSeatingRoster(undefined, undefined, 'carol')).guests).toEqual([]);
+  });
+
+  it('answers nothing for a name shorter than the minimum', async () => {
+    expect((await getSeatingRoster(undefined, undefined, 'a')).guests).toEqual([]);
+    expect((await getSeatingRoster(undefined, undefined, '   ')).guests).toEqual([]);
+  });
+
   it('resolves a magic token to that guest only, and null when unknown', async () => {
     const found = await getSeatingRoster('tok-alice');
     expect(found.guest?.id).toBe('g1');
