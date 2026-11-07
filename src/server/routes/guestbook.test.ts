@@ -6,6 +6,9 @@ const h = vi.hoisted(() => ({
   guestLock: vi.fn(async (): Promise<{ opensAt?: string; closesAt?: string } | null> => null),
   getGuestbookEntry: vi.fn(),
   updateGuestbookEntry: vi.fn(),
+  addGuestbookEntry: vi.fn(),
+  countGuestbookEntriesForTable: vi.fn(async () => 0),
+  getTableAccessByCode: vi.fn(),
 }));
 
 vi.mock('../http', async () => {
@@ -28,8 +31,10 @@ vi.mock('../http', async () => {
 });
 
 vi.mock('../../db/service', () => ({
-  addGuestbookEntry: vi.fn(),
-  countGuestbookEntriesForTable: vi.fn(),
+  addGuestbookEntry: h.addGuestbookEntry,
+  countGuestbookEntriesForTable: h.countGuestbookEntriesForTable,
+  getTableAccessByCode: h.getTableAccessByCode,
+  isApproved: () => true,
   deleteGuestbookEntry: vi.fn(),
   getAllGuestbookEntries: vi.fn(),
   getGuestbookEntriesByCode: vi.fn(),
@@ -105,5 +110,59 @@ describe('PATCH /api/guestbook/mine/:id', () => {
     expect(res.statusCode).toBe(400);
     expect(res.body.error).toBe('INVALID_PHOTO_URL');
     expect(h.updateGuestbookEntry).not.toHaveBeenCalled();
+  });
+});
+
+const post = (body: unknown) => {
+  const res: { statusCode?: number; body?: any } = {};
+  const ctx = {
+    req: { method: 'POST', body } as any,
+    res: res as any,
+    url: new URL('http://localhost/api/guestbook'),
+    ip: '127.0.0.1',
+    adminOnly: () => false,
+    requireAdmin: () => {},
+    guestLock: h.guestLock,
+  } as any;
+  return handleGuestbookRoutes(ctx).then(() => res);
+};
+
+describe('POST /api/guestbook from a table QR code', () => {
+  const wish = { reservation_code: '1234', guest_name: 'Nadia', message: 'Congrats!' };
+  const alice = { id: 'g1', code: '1234', name: 'Alice' };
+
+  beforeEach(() => {
+    h.addGuestbookEntry.mockReset();
+    h.getTableAccessByCode.mockReset();
+  });
+
+  it('refuses a party seated at another table', async () => {
+    h.getTableAccessByCode.mockResolvedValueOnce({
+      guest: alice,
+      access: { ok: false, reason: 'WRONG_TABLE', assignedTable: { id: 'A', name: 'Table 1' } },
+    });
+    await expect(post({ ...wish, table_id: 'B', table_name: 'Table 2' })).rejects.toMatchObject({
+      code: 'WRONG_TABLE',
+      extra: { assignedTable: { id: 'A', name: 'Table 1' } },
+    });
+    expect(h.addGuestbookEntry).not.toHaveBeenCalled();
+  });
+
+  it('refuses a party that has not checked in', async () => {
+    h.getTableAccessByCode.mockResolvedValueOnce({ guest: alice, access: { ok: false, reason: 'NOT_CHECKED_IN' } });
+    await expect(post({ ...wish, table_id: 'A' })).rejects.toMatchObject({ code: 'NOT_CHECKED_IN' });
+    expect(h.addGuestbookEntry).not.toHaveBeenCalled();
+  });
+
+  it('files the wish under the real table name, not the one the client sent', async () => {
+    h.getTableAccessByCode.mockResolvedValueOnce({
+      guest: alice,
+      access: { ok: true, table: { id: 'A', name: 'Table 1' } },
+    });
+    h.addGuestbookEntry.mockResolvedValueOnce({ id: 'w1' });
+    const res = await post({ ...wish, table_id: 'A', table_name: 'Some other table' });
+    expect(res.statusCode).toBe(200);
+    expect(h.countGuestbookEntriesForTable).toHaveBeenCalledWith('Table 1');
+    expect(h.addGuestbookEntry).toHaveBeenCalledWith(expect.objectContaining({ table_name: 'Table 1', table_id: 'A' }));
   });
 });

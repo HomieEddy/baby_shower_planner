@@ -11,10 +11,10 @@ import {
   addPhotosBatch,
   deletePhoto,
   getAllPhotos,
-  getGuestByCode,
   getGuestPhotoUsage,
   setPhotoVisibility,
 } from '../../db/service';
+import { resolveContentAuthor } from '../tableAccessGuard';
 
 // Per-guest photo quota (keyed by reservation code).
 const MAX_PHOTOS_PER_GUEST = 12;
@@ -68,7 +68,7 @@ const ROUTES: Route[] = [
     lock: true,
     body: true,
     handler: async ({ body }, { res }) => {
-      const { uploader_name, caption, table_name, table_id, reservation_code, photos } = body;
+      const { uploader_name, caption, table_id, reservation_code, photos } = body;
       const list = Array.isArray(photos) ? photos : [];
       if (list.length === 0) return sendError(res, 'INVALID_PAYLOAD', 'photos array is required');
       for (const p of list) {
@@ -85,8 +85,14 @@ const ROUTES: Route[] = [
         removeBatchFiles();
         return sendError(res, 'INVALID_CODE', 'A valid 4-digit reservation code is required');
       }
-      const guest = await getGuestByCode(code);
-      if (!guest) {
+      let author;
+      try {
+        author = await resolveContentAuthor(code, table_id);
+      } catch (err) {
+        removeBatchFiles();
+        throw err;
+      }
+      if (!author) {
         removeBatchFiles();
         return sendError(res, 'INVALID_CODE', 'Reservation code not found');
       }
@@ -125,7 +131,7 @@ const ROUTES: Route[] = [
         return {
           url: p.url, filename: p.filename || 'photo.jpg',
           caption: caption || '', uploader_name: uploader_name || 'Guest',
-          table_name: table_name || 'Table Visitor', table_id: table_id || '',
+          table_name: author.table?.name || 'Table Visitor', table_id: author.table?.id || '',
           reservation_code: code,
           file_size: fs.statSync(getUploadFilePath(String(p.url))).size,
         };

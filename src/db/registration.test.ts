@@ -32,7 +32,7 @@ vi.mock('./client', async () => {
 
 vi.mock('./settings', () => ({ getSettings: async () => ({ date: '', language: 'EN' }), getSettingsOrDefaults: async () => ({ date: '', language: 'EN' }) }));
 
-import { registerGuest, isApproved, getUniversalInviteMessage, getGuestByToken, addGuest, removeGuestAttendee, updateGuest } from './guests';
+import { registerGuest, isApproved, getUniversalInviteMessage, getGuestByToken, addGuest, removeGuestAttendee, updateGuest, setApproval } from './guests';
 import { createInvite, submitRsvp } from './rsvp';
 import { buildUniversalInviteMessage } from '../lib/compose';
 
@@ -297,5 +297,50 @@ describe('createInvite', () => {
     const dup = await createInvite('tok-a', { name: 'Carol Two', contact: 'c@x.com' });
     expect(dup.ok && dup.already_invited).toBe(true);
     expect(h.fake.stores.invites.length).toBe(1);
+  });
+});
+
+describe('check-in stays true to the RSVP', () => {
+  const seedChecked = (over: Record<string, unknown> = {}) => {
+    h.fake.stores.guests.push({
+      id: 'g1', name: 'Alice', magic_token: 'tok-a', attendee_names: ['Alice', 'Bob', 'Cara'],
+      attendee_details: [{ name: 'Alice' }, { name: 'Bob' }, { name: 'Cara' }],
+      attending_party_size: 3, max_party_size: 3, rsvp_status: 'Attending', token_used: false,
+      checked_in: true, checked_in_names: ['Bob', 'Cara'], checked_in_at: '2026-01-01T10:00:00Z',
+      ...over,
+    });
+  };
+
+  it('drops the check-in when the guest declines through the RSVP page', async () => {
+    seedChecked();
+    const g = await submitRsvp('tok-a', { rsvp_status: 'Declined', dietary_restrictions: '' });
+    expect(g.checked_in).toBe(false);
+    expect(g.checked_in_names).toEqual([]);
+  });
+
+  it('keeps only the remaining members checked in when the party shrinks', async () => {
+    seedChecked();
+    const g = await submitRsvp('tok-a', { rsvp_status: 'Attending', attendee_names: ['Alice', 'Bob'], dietary_restrictions: '' });
+    expect(g.checked_in_names).toEqual(['Bob']);
+  });
+
+  it('drops the check-in on a status-only decline from the host', async () => {
+    seedChecked();
+    const g = await updateGuest('g1', { rsvp_status: 'Declined' });
+    expect(g.checked_in).toBe(false);
+    expect(g.checked_in_names).toEqual([]);
+  });
+
+  it('drops the check-in when the host rejects a sign-up', async () => {
+    seedChecked({ approval_status: 'pending', delivery_channel: 'none' });
+    const g = await setApproval('g1', 'rejected');
+    expect(g.checked_in).toBe(false);
+  });
+});
+
+describe('createInvite approval gate', () => {
+  it('refuses share links from a sign-up the host has not approved', async () => {
+    h.fake.stores.guests.push({ id: 'g9', magic_token: 'tok-p', name: 'Pat', language_pref: 'EN', approval_status: 'pending' });
+    expect(await createInvite('tok-p', { name: 'Carol' })).toEqual({ ok: false, error: 'PENDING_APPROVAL' });
   });
 });

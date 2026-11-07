@@ -2,9 +2,10 @@ import React, { useState } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { motion, AnimatePresence, type Variants } from 'motion/react';
 import { useQuery } from '@tanstack/react-query';
-import { BookOpen, Camera, KeyRound, AlertCircle, ArrowLeft, Sparkles } from 'lucide-react';
+import { BookOpen, Camera, KeyRound, AlertCircle, ArrowLeft, Sparkles, UserCheck, MapPin, Info } from 'lucide-react';
 import { TableElement } from '../../types';
-import { useT } from '../shared/i18n';
+import { useT, useTf } from '../shared/i18n';
+import { Modal } from '../shared/Modal';
 import { isValidCode } from '../../lib/validation';
 import { decodeApiError } from '../../lib/errors';
 import { GuestPageHeader } from '../shared/GuestPageHeader';
@@ -15,7 +16,17 @@ import {
 } from '../../lib/tableScanSession';
 
 type Choice = 'guestbook' | 'photos';
-type Status = 'idle' | 'invalid' | 'resolving' | 'notFound' | 'rateLimited';
+type Status = 'idle' | 'invalid' | 'resolving' | 'notFound' | 'rateLimited' | 'denied';
+
+// Why the table portal refused a reservation (server codes from
+// /api/guest/table-access). Each one gets a guiding modal.
+type DenialReason = 'NOT_CHECKED_IN' | 'WRONG_TABLE' | 'TABLE_NOT_ASSIGNED' | 'NOT_ATTENDING' | 'TABLE_NOT_FOUND';
+const DENIAL_REASONS: readonly string[] = ['NOT_CHECKED_IN', 'WRONG_TABLE', 'TABLE_NOT_ASSIGNED', 'NOT_ATTENDING', 'TABLE_NOT_FOUND'];
+interface Denial {
+  reason: DenialReason;
+  code: string;
+  tableName?: string;
+}
 
 // Spring pops for the choice cards + a staggered reveal.
 const listVariants: Variants = {
@@ -32,6 +43,7 @@ const spring = { type: 'spring' as const, stiffness: 240, damping: 22 };
 
 export const TableScanPage: React.FC = () => {
   const t = useT();
+  const tf = useTf();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const tableId = searchParams.get('table') || '';
@@ -42,6 +54,7 @@ export const TableScanPage: React.FC = () => {
   const [code, setCode] = useState('');
   const [status, setStatus] = useState<Status>('idle');
   const [attempt, setAttempt] = useState(0);
+  const [denial, setDenial] = useState<Denial | null>(null);
 
   const { data: tables = [] } = useQuery({
     queryKey: ['floorplan-tables'],
@@ -65,13 +78,80 @@ export const TableScanPage: React.FC = () => {
     navigate(`${destination[kind]}?${params.toString()}`);
   };
 
-  const handleCardClick = (key: Choice) => {
+  // Every entry (typed or remembered code) is checked against this table:
+  // the party must be checked in and seated here. A remembered code is
+  // re-checked too, since the guest may have scanned a different table.
+  const checkAccess = async (value: string): Promise<'ok' | Exclude<Status, 'idle' | 'resolving'>> => {
+    try {
+      const params = new URLSearchParams({ code: value });
+      if (tableId) params.set('table', tableId);
+      const res = await fetch(`/api/guest/table-access?${params.toString()}`);
+      const data = await res.json().catch(() => ({}));
+      if (res.ok) return 'ok';
+      const { code: errCode } = decodeApiError(data, res.status);
+      if (DENIAL_REASONS.includes(errCode)) {
+        const assigned = (data as { assignedTable?: { name?: unknown } }).assignedTable;
+        setDenial({
+          reason: errCode as DenialReason,
+          code: value,
+          tableName: typeof assigned?.name === 'string' ? assigned.name : undefined,
+        });
+        return 'denied';
+      }
+      return errCode === 'RATE_LIMITED' ? 'rateLimited' : errCode === 'NOT_FOUND' ? 'notFound' : 'invalid';
+    } catch {
+      return 'notFound';
+    }
+  };
+
+  const handleCardClick = async (key: Choice) => {
     setStatus('idle');
-    if (savedCode) {
+    if (!savedCode) {
+      setChoice(key);
+      return;
+    }
+    setStatus('resolving');
+    const result = await checkAccess(savedCode);
+    if (result === 'ok') {
+      setStatus('idle');
       openDestination(key, savedCode);
       return;
     }
+    if (result === 'denied') {
+      setStatus('denied');
+      return;
+    }
+    // The remembered code stopped working (e.g. the reservation was removed):
+    // forget it and ask for the code again.
+    clearTableScanCode();
+    setSavedCode('');
     setChoice(key);
+    setStatus(result);
+    setAttempt((n) => n + 1);
+  };
+
+  const forgetCode = () => {
+    clearTableScanCode();
+    setSavedCode('');
+    setCode('');
+    setStatus('idle');
+  };
+
+  const closeDenial = () => {
+    setDenial(null);
+    setStatus('idle');
+  };
+
+  const switchCode = () => {
+    setDenial(null);
+    forgetCode();
+  };
+
+  const goFromDenial = (path: string) => {
+    const params = new URLSearchParams({ code: denial?.code ?? '' });
+    if (tableId) params.set('table', tableId);
+    setDenial(null);
+    navigate(`${path}?${params.toString()}`);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -83,24 +163,30 @@ export const TableScanPage: React.FC = () => {
       setAttempt((n) => n + 1);
       return;
     }
-    try {
-      setStatus('resolving');
-      const res = await fetch(`/api/guest/resolve?code=${encodeURIComponent(value)}`);
-      const data = await res.json();
-      if (res.ok && data.magic_token) {
-        saveTableScanCode(value);
-        setSavedCode(value);
-        openDestination(choice, value);
-        return;
-      }
-      const { code: errCode } = decodeApiError(data, res.status);
-      setStatus(errCode === 'RATE_LIMITED' ? 'rateLimited' : errCode === 'NOT_FOUND' ? 'notFound' : 'invalid');
-      setAttempt((n) => n + 1);
-    } catch {
-      setStatus('notFound');
-      setAttempt((n) => n + 1);
+    setStatus('resolving');
+    const result = await checkAccess(value);
+    if (result === 'ok') {
+      saveTableScanCode(value);
+      setSavedCode(value);
+      openDestination(choice, value);
+      return;
     }
+    setStatus(result);
+    if (result !== 'denied') setAttempt((n) => n + 1);
   };
+
+  const denialCopy: Record<DenialReason, { icon: typeof Info; title: string; body: string }> = {
+    NOT_CHECKED_IN: { icon: UserCheck, title: t.scanDeniedCheckInTitle, body: t.scanDeniedCheckInBody },
+    WRONG_TABLE: {
+      icon: MapPin,
+      title: t.scanDeniedWrongTableTitle,
+      body: tf('scanDeniedWrongTableBody', { table: denial?.tableName ?? '' }),
+    },
+    TABLE_NOT_ASSIGNED: { icon: Info, title: t.scanDeniedNoTableTitle, body: t.scanDeniedNoTableBody },
+    NOT_ATTENDING: { icon: Info, title: t.scanDeniedNotAttendingTitle, body: t.scanDeniedNotAttendingBody },
+    TABLE_NOT_FOUND: { icon: Info, title: t.scanDeniedTableGoneTitle, body: t.scanDeniedTableGoneBody },
+  };
+  const denialView = denial ? denialCopy[denial.reason] : null;
 
   return (
     <div className="min-h-[calc(100vh-8rem)] py-8 sm:py-14 px-4 flex items-center justify-center">
@@ -146,6 +232,7 @@ export const TableScanPage: React.FC = () => {
                     whileTap={{ scale: 0.95 }}
                     transition={spring}
                     onClick={() => handleCardClick(key)}
+                    disabled={status === 'resolving'}
                     className="p-5 sm:p-6 rounded-2xl border border-[#CBAE94]/70 bg-white hover:bg-[#EFE6DC]/40 hover:border-[#CBAE94] transition-colors text-center space-y-2.5 cursor-pointer"
                   >
                     <motion.div
@@ -251,12 +338,7 @@ export const TableScanPage: React.FC = () => {
             {savedCode && (
               <button
                 type="button"
-                onClick={() => {
-                  clearTableScanCode();
-                  setSavedCode('');
-                  setCode('');
-                  setStatus('idle');
-                }}
+                onClick={forgetCode}
                 className="text-[11px] font-bold text-[#8B735B]/80 hover:text-[#4A3F35] underline underline-offset-2 transition-colors"
               >
                 {t.scanNotYouBtn}
@@ -265,6 +347,48 @@ export const TableScanPage: React.FC = () => {
           </div>
         )}
       </motion.div>
+
+      <Modal
+        open={!!denial}
+        onClose={closeDenial}
+        closeOnBackdrop
+        maxWidth="sm"
+        ariaLabel={denialView?.title}
+      >
+        {denial && denialView && (
+          <div role="alertdialog" aria-labelledby="scan-denied-title" className="text-center space-y-4 py-2">
+            <div className="w-12 h-12 mx-auto rounded-2xl bg-[#EFE6DC] flex items-center justify-center">
+              <denialView.icon className="w-6 h-6 text-[#8B735B]" aria-hidden />
+            </div>
+            <h2 id="scan-denied-title" className="font-gaegu text-2xl font-bold text-[#4A3F35] leading-tight">
+              {denialView.title}
+            </h2>
+            <p className="text-sm text-[#5D5449] leading-relaxed">{denialView.body}</p>
+            <div className="flex flex-col gap-2 pt-1">
+              {denial.reason === 'NOT_CHECKED_IN' && (
+                <button type="button" onClick={() => goFromDenial('/check-in')} className="btn-accent w-full py-3 text-sm font-bold">
+                  {t.scanDeniedCheckInBtn}
+                </button>
+              )}
+              {denial.reason === 'WRONG_TABLE' && (
+                <button type="button" onClick={() => goFromDenial('/find-my-table')} className="btn-accent w-full py-3 text-sm font-bold">
+                  {t.scanDeniedFindTableBtn}
+                </button>
+              )}
+              <button type="button" onClick={closeDenial} className="btn-outline-accent w-full py-2.5 text-xs font-bold">
+                {t.scanDeniedCloseBtn}
+              </button>
+              <button
+                type="button"
+                onClick={switchCode}
+                className="text-[11px] font-bold text-[#8B735B]/80 hover:text-[#4A3F35] underline underline-offset-2 transition-colors"
+              >
+                {t.scanDeniedOtherCodeBtn}
+              </button>
+            </div>
+          </div>
+        )}
+      </Modal>
     </div>
   );
 };

@@ -11,10 +11,10 @@ import {
   getAllGuestbookEntries,
   getGuestbookEntriesByCode,
   getGuestbookEntry,
-  getGuestByCode,
   setGuestbookEntryVisibility,
   updateGuestbookEntry,
 } from '../../db/service';
+import { resolveContentAuthor } from '../tableAccessGuard';
 
 // Wishes a single table may collect (enforced on create).
 const MAX_WISHES_PER_TABLE = 10;
@@ -42,10 +42,10 @@ const ROUTES: Route[] = [
     handler: async ({ body }, { res }) => {
       const code = typeof body.reservation_code === 'string' ? body.reservation_code.trim() : '';
       if (!isValidCode(code)) return sendError(res, 'INVALID_CODE', 'A valid 4-digit reservation code is required');
-      const guest = await getGuestByCode(code);
-      if (!guest) return sendError(res, 'INVALID_CODE', 'Reservation code not found');
+      const author = await resolveContentAuthor(code, body.table_id);
+      if (!author) return sendError(res, 'INVALID_CODE', 'Reservation code not found');
 
-      const tableName = typeof body.table_name === 'string' ? body.table_name.trim() : '';
+      const tableName = author.table?.name ?? '';
       if (tableName && (await countGuestbookEntriesForTable(tableName)) >= MAX_WISHES_PER_TABLE) {
         return sendError(res, 'GUESTBOOK_TABLE_FULL', 'This table has reached its wish limit');
       }
@@ -64,7 +64,7 @@ const ROUTES: Route[] = [
         ...data,
         reservation_code: code,
         table_name: tableName,
-        table_id: typeof body.table_id === 'string' ? body.table_id.trim() : '',
+        table_id: author.table?.id ?? '',
       });
       return sendJson(res, 200, { success: true, entry });
     },

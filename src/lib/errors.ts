@@ -25,6 +25,13 @@ export const ERROR_REGISTRY = {
   NOT_IN_PARTY: { status: 400, message: 'Name is not part of this party.' },
   ONLY_LEAD: { status: 403, message: 'Only the party lead can do that' },
 
+  // Table portal (QR code at each table)
+  NOT_ATTENDING: { status: 403, message: 'This reservation has no confirmed RSVP.' },
+  NOT_CHECKED_IN: { status: 403, message: 'Please check in at the entrance first.' },
+  TABLE_NOT_ASSIGNED: { status: 403, message: 'This party has not been given a table yet.' },
+  WRONG_TABLE: { status: 403, message: 'This party is seated at another table.' },
+  TABLE_NOT_FOUND: { status: 404, message: 'This table no longer exists.' },
+
   // Guests (admin)
   ATTENDEE_NOT_FOUND: { status: 404, message: 'Attendee not found in this party.' },
 

@@ -710,6 +710,21 @@ export interface Translations {
   scanChooseAgainBtn: string;
   scanBackToOptionsBtn: string;
   scanNotYouBtn: string;
+  scanDeniedCheckInTitle: string;
+  scanDeniedCheckInBody: string;
+  scanDeniedCheckInBtn: string;
+  scanDeniedWrongTableTitle: string;
+  scanDeniedWrongTableBody: string;
+  scanDeniedFindTableBtn: string;
+  scanDeniedNoTableTitle: string;
+  scanDeniedNoTableBody: string;
+  scanDeniedNotAttendingTitle: string;
+  scanDeniedNotAttendingBody: string;
+  scanDeniedTableGoneTitle: string;
+  scanDeniedTableGoneBody: string;
+  scanDeniedOtherCodeBtn: string;
+  scanDeniedCloseBtn: string;
+  finderBackToTableBtn: string;
   presetEnglish: string;
   presetFrench: string;
   prevSlideBtn: string;
@@ -1368,6 +1383,11 @@ export interface Translations {
   GUEST_DECLINED: string;
   NOT_IN_PARTY: string;
   ONLY_LEAD: string;
+  NOT_ATTENDING: string;
+  NOT_CHECKED_IN: string;
+  TABLE_NOT_ASSIGNED: string;
+  WRONG_TABLE: string;
+  TABLE_NOT_FOUND: string;
   ATTENDEE_NOT_FOUND: string;
   GUEST_NOT_FOUND: string;
   NO_EMAIL: string;
@@ -2099,6 +2119,21 @@ export const translations: Record<Language, Translations> = {
     scanChooseAgainBtn: "Choose something else",
     scanBackToOptionsBtn: "Back to options",
     scanNotYouBtn: "Not you? Use a different code",
+    scanDeniedCheckInTitle: "Please check in first",
+    scanDeniedCheckInBody: "Your party hasn't checked in yet. Check in on the welcome page, then come back to your table to leave a wish or share photos.",
+    scanDeniedCheckInBtn: "Go to check-in",
+    scanDeniedWrongTableTitle: "This isn't your table",
+    scanDeniedWrongTableBody: "Your party is seated at {{table}}. Please scan the code on your own table.",
+    scanDeniedFindTableBtn: "Find my table",
+    scanDeniedNoTableTitle: "No table yet",
+    scanDeniedNoTableBody: "Your party doesn't have a table yet. Please see the host, who will find you a seat.",
+    scanDeniedNotAttendingTitle: "We couldn't confirm your RSVP",
+    scanDeniedNotAttendingBody: "This reservation doesn't have a confirmed yes. Please see the host at the entrance.",
+    scanDeniedTableGoneTitle: "This table code is out of date",
+    scanDeniedTableGoneBody: "This table is no longer on the seating plan. Please see the host.",
+    scanDeniedOtherCodeBtn: "Use a different code",
+    scanDeniedCloseBtn: "Close",
+    finderBackToTableBtn: "Back to my table",
     presetEnglish: "English (EN)",
     presetFrench: "Français (FR)",
     prevSlideBtn: "Previous Slide",
@@ -2756,6 +2791,11 @@ export const translations: Record<Language, Translations> = {
     GUEST_DECLINED: "This guest declined the invitation.",
     NOT_IN_PARTY: "Name is not part of this party.",
     ONLY_LEAD: "Only the party lead can do that",
+    NOT_ATTENDING: "This reservation has no confirmed RSVP. Please see the host.",
+    NOT_CHECKED_IN: "Please check in at the entrance first.",
+    TABLE_NOT_ASSIGNED: "Your party doesn't have a table yet. Please see the host.",
+    WRONG_TABLE: "Your party is seated at another table.",
+    TABLE_NOT_FOUND: "This table is no longer on the seating plan.",
     ATTENDEE_NOT_FOUND: "Attendee not found in this party.",
     GUEST_NOT_FOUND: "Guest not found",
     NO_EMAIL: "No email address on file",
@@ -3485,6 +3525,21 @@ export const translations: Record<Language, Translations> = {
     scanChooseAgainBtn: "Choisir autre chose",
     scanBackToOptionsBtn: "Retour aux options",
     scanNotYouBtn: "Ce n'est pas vous ? Utilisez un autre code",
+    scanDeniedCheckInTitle: "Veuillez d'abord vous enregistrer",
+    scanDeniedCheckInBody: "Votre groupe ne s'est pas encore enregistré. Enregistrez-vous sur la page d'accueil, puis revenez à votre table pour laisser un vœu ou partager des photos.",
+    scanDeniedCheckInBtn: "Aller à l'enregistrement",
+    scanDeniedWrongTableTitle: "Ce n'est pas votre table",
+    scanDeniedWrongTableBody: "Votre groupe est placé à {{table}}. Veuillez scanner le code de votre propre table.",
+    scanDeniedFindTableBtn: "Trouver ma table",
+    scanDeniedNoTableTitle: "Pas encore de table",
+    scanDeniedNoTableBody: "Votre groupe n'a pas encore de table. Veuillez voir l'hôte, qui vous trouvera une place.",
+    scanDeniedNotAttendingTitle: "Nous n'avons pas pu confirmer votre réponse",
+    scanDeniedNotAttendingBody: "Cette réservation n'a pas de réponse positive confirmée. Veuillez voir l'hôte à l'entrée.",
+    scanDeniedTableGoneTitle: "Ce code de table n'est plus à jour",
+    scanDeniedTableGoneBody: "Cette table ne figure plus sur le plan de salle. Veuillez voir l'hôte.",
+    scanDeniedOtherCodeBtn: "Utiliser un autre code",
+    scanDeniedCloseBtn: "Fermer",
+    finderBackToTableBtn: "Retour à ma table",
     presetEnglish: "English (EN)",
     presetFrench: "Français (FR)",
     prevSlideBtn: "Diapositive précédente",
@@ -4142,6 +4197,11 @@ export const translations: Record<Language, Translations> = {
     GUEST_DECLINED: "Cet invité a refusé l'invitation.",
     NOT_IN_PARTY: "Ce nom ne fait pas partie de ce groupe.",
     ONLY_LEAD: "Seul le responsable du groupe peut le faire",
+    NOT_ATTENDING: "Cette réservation n'a pas de réponse confirmée. Veuillez voir l'hôte.",
+    NOT_CHECKED_IN: "Veuillez d'abord vous enregistrer à l'entrée.",
+    TABLE_NOT_ASSIGNED: "Votre groupe n'a pas encore de table. Veuillez voir l'hôte.",
+    WRONG_TABLE: "Votre groupe est placé à une autre table.",
+    TABLE_NOT_FOUND: "Cette table ne figure plus sur le plan de salle.",
     ATTENDEE_NOT_FOUND: "Personne introuvable dans ce groupe.",
     GUEST_NOT_FOUND: "Invité introuvable",
     NO_EMAIL: "Aucune adresse e-mail enregistrée",
