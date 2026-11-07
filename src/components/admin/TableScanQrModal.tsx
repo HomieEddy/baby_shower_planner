@@ -19,7 +19,7 @@ const QrStandeeCard = ({ table, last }: { table: TableElement; last?: boolean })
         last ? '' : 'page-break-after'
       }`}
     >
-      <span className="inline-block px-3 py-1 rounded-full bg-amber-200 text-amber-900 text-xs font-bold uppercase tracking-wider">
+      <span className="inline-block max-w-full px-3 py-1 rounded-full bg-amber-200 text-amber-900 text-xs font-bold uppercase tracking-wider text-center leading-snug break-words [overflow-wrap:anywhere]">
         {table.name} • {t.tableQrPhotoDrop}
       </span>
 
