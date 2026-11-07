@@ -18,6 +18,7 @@ import {
   type AlertAudience,
   type AlertChannel,
 } from '../../lib/alertRecipients';
+import { DAY_OF_COPY } from '../../lib/compose';
 import { TextInput, TextArea } from '../shared/ui';
 import { Segmented, type SegmentedOption } from '../shared/Segmented';
 import { IconButton } from '../shared/IconButton';
@@ -67,6 +68,8 @@ export const AdminAlertsTab: React.FC<AdminAlertsTabProps> = ({ language, t, gue
           title: pn ? tf('alertReminderTitle', { parents: pn }) : t.alertReminderTitleGeneric,
           message: tf('alertReminderMsg', { baby: babyLabel, date: formatDateLong(dv, language) }),
         };
+      case 'DAY_OF':
+        return { audience: 'ATTENDING', title: DAY_OF_COPY[language].title, message: DAY_OF_COPY[language].message };
       case 'DATE_CHANGE':
         return { audience: 'ALL', title: t.alertDateChangeTitle, message: tf('alertDateChangeMsg', { date: formatDateLong(dv, language) }) };
       case 'VENUE_CHANGE':
@@ -113,6 +116,7 @@ export const AdminAlertsTab: React.FC<AdminAlertsTabProps> = ({ language, t, gue
 
   const TEMPLATES: { type: AlertType; label: string; desc: string }[] = [
     { type: 'REMINDER', label: t.rsvpReminderTemplate, desc: t.rsvpReminderTemplateDesc },
+    { type: 'DAY_OF', label: t.dayOfTemplate, desc: t.dayOfTemplateDesc },
     { type: 'VENUE_CHANGE', label: t.venueChangeTemplate, desc: t.venueChangeTemplateDesc },
     { type: 'DATE_CHANGE', label: t.dateChangeTemplate, desc: t.dateChangeTemplateDesc },
     { type: 'CANCELLATION', label: t.cancellationTemplate, desc: t.cancellationTemplateDesc },
@@ -191,7 +195,7 @@ export const AdminAlertsTab: React.FC<AdminAlertsTabProps> = ({ language, t, gue
       <motion.div variants={adminCardVariants} className="card-soft p-5 sm:p-6 space-y-6">
         <div className="space-y-2">
           <span className="label-mono block">{t.alertSectionMessage}</span>
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2">
+          <div className="grid grid-cols-2 sm:grid-cols-3 xl:grid-cols-6 gap-2">
             {TEMPLATES.map((tpl) => (
               <button
                 key={tpl.type}

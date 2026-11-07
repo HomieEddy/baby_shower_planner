@@ -181,7 +181,7 @@ export const SettingsSchema = z.object({
 export type EventSettings = z.infer<typeof SettingsSchema>;
 
 export const AlertSchema = z.object({
-  type: z.enum(['DATE_CHANGE', 'VENUE_CHANGE', 'CANCELLATION', 'CUSTOM', 'REMINDER']),
+  type: z.enum(['DATE_CHANGE', 'VENUE_CHANGE', 'CANCELLATION', 'CUSTOM', 'REMINDER', 'DAY_OF']),
   title: z.string(),
   message: z.string(),
   active: z.boolean(),
