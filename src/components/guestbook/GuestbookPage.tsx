@@ -22,6 +22,7 @@ import { useToast } from '../shared/ToastContext';
 import { useActionConfirm, useConfirm } from '../shared/ConfirmDialog';
 import { EmptyState } from '../shared/EmptyState';
 import { BackButton } from '../shared/BackButton';
+import { scanMenuPath } from '../../lib/tableScanSession';
 import { GuestPageHeader } from '../shared/GuestPageHeader';
 import { LockedNotice } from '../shared/LockedNotice';
 import { readGuestLock } from '../../lib/guestLock';
@@ -411,7 +412,10 @@ export const GuestbookPage = () => {
       transition={{ duration: 0.35, ease: 'easeOut' }}
       className="max-w-2xl mx-auto space-y-6"
     >
-      <BackButton />
+      <BackButton
+        to={lockedIdentity ? scanMenuPath(initialTableId) : '/'}
+        label={lockedIdentity ? t.scanBackToOptionsBtn : undefined}
+      />
 
       <GuestPageHeader
         icon={BookOpen}
