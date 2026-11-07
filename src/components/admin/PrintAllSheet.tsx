@@ -71,15 +71,15 @@ export const PrintablePoster = ({ settings, fullPage }: { settings?: EventSettin
 
 /**
  * Table QR standee: guests scan it to drop photos for their table. It is one
- * half of a portrait A4 sheet (200 x 143 mm, the printable width and half the
- * printable height), so two standees fill one page. Sizes are in mm so the
+ * half of a portrait A4 sheet (200 x 137 mm: the printable width, and half of a page height that
+ * still fits with the browser default ~10 mm margins), so two fill one page. Sizes are in mm so the
  * print and the PDF/image export look the same.
  */
 export const PrintableStandee = ({ table }: { table: TableElement }) => {
   const t = useT();
   const tf = useTf();
   return (
-    <div className="print-keep-color break-inside-avoid border-2 border-dashed border-[#8B735B] bg-[#FAF6F0] w-full h-[143mm] px-[10mm] py-[6mm] flex flex-col items-center justify-center text-center gap-[4mm]">
+    <div className="print-keep-color break-inside-avoid border-2 border-dashed border-[#8B735B] bg-[#FAF6F0] w-full h-[137mm] px-[10mm] py-[6mm] flex flex-col items-center justify-center text-center gap-[4mm]">
       <span className="inline-block max-w-full px-[4mm] py-[1mm] rounded-full bg-amber-200 text-amber-900 text-[3.2mm] font-bold uppercase tracking-wider text-center leading-snug break-words [overflow-wrap:anywhere]">
         {table.name} • {t.tableQrPhotoDrop}
       </span>
