@@ -69,20 +69,37 @@ export const PrintablePoster = ({ settings, fullPage }: { settings?: EventSettin
   );
 };
 
-/** Table QR standee: guests scan it to drop photos for their table. */
+/**
+ * Table QR standee: guests scan it to drop photos for their table. It is one
+ * half of a portrait A4 sheet (200 x 143 mm, the printable width and half the
+ * printable height), so two standees fill one page. Sizes are in mm so the
+ * print and the PDF/image export look the same.
+ */
 export const PrintableStandee = ({ table }: { table: TableElement }) => {
   const t = useT();
   const tf = useTf();
   return (
-    <div className="print-keep-color break-inside-avoid border-2 border-dashed border-[#8B735B] bg-[#FAF6F0] p-4 print:p-2 h-80 sm:h-72 flex flex-col items-center justify-center text-center gap-2 print:gap-1">
-      <span className="inline-block max-w-full px-3 py-0.5 rounded-full bg-amber-200 text-amber-900 text-[10px] font-bold uppercase tracking-wider text-center leading-snug break-words [overflow-wrap:anywhere]">
+    <div className="print-keep-color break-inside-avoid border-2 border-dashed border-[#8B735B] bg-[#FAF6F0] w-full h-[143mm] px-[10mm] py-[6mm] flex flex-col items-center justify-center text-center gap-[4mm]">
+      <span className="inline-block max-w-full px-[4mm] py-[1mm] rounded-full bg-amber-200 text-amber-900 text-[3.2mm] font-bold uppercase tracking-wider text-center leading-snug break-words [overflow-wrap:anywhere]">
         {table.name} • {t.tableQrPhotoDrop}
       </span>
-      <h4 className="font-gaegu text-2xl print:text-lg font-bold text-[#4A3F35] leading-tight">{t.tableQrShareTitle}</h4>
-      <div className="w-32 h-32 print:w-24 print:h-24 bg-white p-1.5 print:p-1 border-2 border-[#CBAE94] flex items-center justify-center">
+      <h4 className="font-gaegu text-[10mm] font-bold text-[#4A3F35] leading-tight">{t.tableQrShareTitle}</h4>
+      <div className="w-[60mm] h-[60mm] bg-white p-[3mm] border-2 border-[#CBAE94] flex items-center justify-center">
         <img src={tableQrUrl(table.id)} alt={tf('tableQrAlt', { name: table.name })} className="w-full h-full object-contain" />
       </div>
-      <p className="text-[11px] print:text-[10px] font-medium text-[#8B735B] leading-snug max-w-xs">{t.tableQrScanDesc}</p>
+      <p className="text-[3.6mm] font-medium text-[#8B735B] leading-snug max-w-[150mm]">{t.tableQrScanDesc}</p>
     </div>
   );
 };
+
+/**
+ * Two table QR standees stacked on one portrait A4 sheet, one per half. The
+ * pair is one page in print and one page in the PDF export.
+ */
+export const PrintableStandeePair = ({ tables }: { tables: TableElement[] }) => (
+  <div className="print-standee-pair md:col-span-2 flex flex-col">
+    {tables.map((tbl) => (
+      <PrintableStandee key={tbl.id} table={tbl} />
+    ))}
+  </div>
+);

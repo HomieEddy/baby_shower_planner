@@ -709,6 +709,21 @@ select option {
     border: none !important;
   }
 
+  /* Table QR standees: two per portrait A4 sheet, one pair per page. The pair
+     is the printable height (286mm of the 287mm left after the 5mm page margins). */
+  .print-pack > .print-standee-pair {
+    grid-column: 1 / -1 !important;
+    height: 286mm !important;
+    margin: 0 !important;
+    break-inside: avoid;
+    page-break-inside: avoid;
+  }
+
+  .print-pack > .print-standee-pair:not(:last-child) {
+    break-after: page;
+    page-break-after: always;
+  }
+
   /* Print-all sheet: pack every piece edge to edge, two per row, so the night's
      stationery fits on as few pages as possible and is cut out by hand. */
   .print-all-sheet {
