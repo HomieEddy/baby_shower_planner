@@ -5,7 +5,7 @@ vi.mock('twilio', () => ({
   default: () => ({ messages: { create: createMock } }),
 }));
 
-import { sendSms, toE164, isGsm7, smsBody } from './sms';
+import { sendSms, toE164, isGsm7, smsBody, smsParts } from './sms';
 import type { MessageContent } from './compose';
 
 const base: MessageContent = {
@@ -62,29 +62,29 @@ describe('isGsm7 / smsBody', () => {
     expect(isGsm7('🌸 Baby Shower')).toBe(false);
   });
 
-  it('keeps the RSVP link intact when the body is too long', () => {
-    const long: MessageContent = {
-      ...base,
-      paragraphs: ['x'.repeat(900)],
-    };
-    const body = smsBody(long);
-    expect(body.length).toBeLessThanOrEqual(640);
-    expect(body).toContain('RSVP: https://example.com/rsvp/tok-123');
-    expect(body).toContain('Code: 2468');
-    expect(body).toContain('...');
+  it('never cuts a long message: it splits it into texts of up to 160 characters', () => {
+    const long: MessageContent = { ...base, paragraphs: [Array(120).fill('word').join(' ')] };
+    const parts = smsParts(long);
+    expect(parts.length).toBeGreaterThan(1);
+    for (const part of parts) expect(part.length).toBeLessThanOrEqual(160);
+    const joined = parts.join('\n');
+    expect(joined).not.toContain('...');
+    expect(joined).toContain('RSVP: https://example.com/rsvp/tok-123');
+    expect(joined).toContain('Code: 2468');
+    expect(joined.split(/\s+/).filter((w) => w === 'word')).toHaveLength(120);
   });
 
-  it('uses the shorter UCS-2 budget for French text with non-GSM characters', () => {
+  it('folds French text to GSM-7 instead of switching to UCS-2', () => {
     const fr: MessageContent = {
       ...base,
       language: 'FR',
-      heading: 'Baby shower de Eddy « & » Nana',
-      paragraphs: ['ê'.repeat(600)],
+      heading: '🌸 Baby shower de Eddy « & » Nana 🌸',
+      paragraphs: ['Rendez-vous à la salle des fêtes, côté forêt.'],
     };
     const body = smsBody(fr);
-    expect(body.length).toBeLessThanOrEqual(268);
-    expect(body).toContain('RSVP: https://example.com/rsvp/tok-123');
-    expect(body).toContain('Code: 2468');
+    expect(isGsm7(body)).toBe(true);
+    expect(body).toContain('Baby shower de Eddy & Nana');
+    expect(body).toContain('Rendez-vous à la salle des fetes, coté foret.');
   });
 });
 
@@ -97,6 +97,24 @@ describe('sendSms', () => {
     expect(args.to).toBe('+15145551234');
     expect(args.from).toBe('+14375550100');
     expect(args.body).toContain('https://example.com/rsvp/tok-123');
+  });
+
+  it('sends a long message as several texts, in order', async () => {
+    createMock.mockResolvedValue({ sid: 'SM1' });
+    vi.spyOn(console, 'log').mockImplementation(() => {});
+    const long: MessageContent = { ...base, paragraphs: [Array(120).fill('word').join(' ')] };
+    const parts = smsParts(long);
+    expect(await sendSms('+15145551234', long)).toBe(true);
+    expect(createMock).toHaveBeenCalledTimes(parts.length);
+    expect(createMock.mock.calls.map((c) => c[0].body)).toEqual(parts);
+  });
+
+  it('stops after a failed part so later parts never arrive alone', async () => {
+    createMock.mockResolvedValueOnce({ sid: 'SM1' }).mockRejectedValueOnce(Object.assign(new Error('boom'), { code: 500 }));
+    vi.spyOn(console, 'error').mockImplementation(() => {});
+    const long: MessageContent = { ...base, paragraphs: [Array(120).fill('word').join(' ')] };
+    expect(await sendSms('+15145551234', long)).toBe(false);
+    expect(createMock).toHaveBeenCalledTimes(2);
   });
 
   it('refuses an unusable number without calling Twilio', async () => {

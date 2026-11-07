@@ -3,23 +3,17 @@
 // the config guard.
 
 import { Guest } from '../types';
-import { MessageContent, renderSms } from './compose';
+import { MessageContent } from './compose';
+import { smsParts, smsText } from './smsParts';
 
 let twilioClient: any = null;
 
-// GSM-7 segments hold 160 chars (153 when concatenated); we cap at 4 segments.
-// Any character outside GSM-7 (French ê, ô, «, emoji...) switches the whole
-// message to UCS-2, which holds 70 chars per segment (67 concatenated).
-const GSM7_LIMIT = 640;
-const UCS2_LIMIT = 268;
-
+// Every SMS is folded to GSM-7 (a single ê or emoji would switch the whole
+// text to UCS-2 and more than double its cost) and split into standalone
+// texts of up to 160 characters, sent in order. Nothing is cut off.
 export { isGsm7 } from './gsm7';
-import { isGsm7 } from './gsm7';
-
-export function smsBody(content: MessageContent): string {
-  const gsm = renderSms(content, GSM7_LIMIT);
-  return isGsm7(gsm) ? gsm : renderSms(content, UCS2_LIMIT);
-}
+export { smsParts };
+export const smsBody = smsText;
 
 // Twilio needs E.164 (+15145551234). Guests type numbers freely, so we accept
 // the common forms and assume North American (+1) for 10-digit numbers.
@@ -80,19 +74,24 @@ export async function sendSms(to: string | undefined, content: MessageContent): 
   }
   const client = await getClient();
   if (!client) return false;
-  try {
-    await client.messages.create({
-      body: smsBody(content),
-      from: process.env.TWILIO_PHONE_NUMBER as string,
-      to: recipient,
-    });
-    console.log(`[TWILIO] SMS sent to ${recipient}`);
-    return true;
-  } catch (err: any) {
-    const hint = TWILIO_HINTS[err?.code];
-    console.error(`[TWILIO] Failed to send to ${recipient}${hint ? ` (${hint})` : ''}:`, err);
-    return false;
+  const parts = smsParts(content);
+  // Sent one after another so the texts arrive in reading order. A failure
+  // stops the rest, so a guest never gets a later part without the first.
+  for (const [i, body] of parts.entries()) {
+    try {
+      await client.messages.create({
+        body,
+        from: process.env.TWILIO_PHONE_NUMBER as string,
+        to: recipient,
+      });
+    } catch (err: any) {
+      const hint = TWILIO_HINTS[err?.code];
+      console.error(`[TWILIO] Failed to send part ${i + 1}/${parts.length} to ${recipient}${hint ? ` (${hint})` : ''}:`, err);
+      return false;
+    }
   }
+  console.log(`[TWILIO] SMS sent to ${recipient} (${parts.length} text${parts.length === 1 ? '' : 's'})`);
+  return parts.length > 0;
 }
 
 export const sendGuestSms = (guest: Guest, content: MessageContent): Promise<boolean> =>
