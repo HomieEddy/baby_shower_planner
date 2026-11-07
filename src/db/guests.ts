@@ -153,7 +153,11 @@ export async function registerGuest(payload: RegisterGuestPayload, refId?: strin
 // Host decision on a self-registration. Approving delivers the magic link on
 // the guest's chosen channel (best effort); rejecting keeps the record.
 export async function setApproval(id: string, decision: 'approved' | 'rejected'): Promise<Guest> {
-  const updated = await pb.collection('guests').update(id, { approval_status: decision });
+  // A rejected sign-up keeps no chair and no check-in (it can't attend).
+  const updated = await pb.collection('guests').update(id, decision === 'rejected'
+    ? { approval_status: decision, table_id: '', checked_in: false, checked_in_names: [], checked_in_at: null }
+    : { approval_status: decision });
+  if (decision === 'rejected') await removeGuestFromFloorMaps(id, 0);
   const guest = fromRecord<Guest>(updated);
   if (decision === 'approved' && guest.delivery_channel && guest.delivery_channel !== 'none') {
     // Best effort: the approval is already persisted, so a delivery failure must
@@ -178,7 +182,21 @@ export async function updateGuest(id: string, updates: Partial<Guest>): Promise<
   // stored arrays, attendance count, check-in and floor seats consistent with
   // the (possibly changed) group size.
   if (!Array.isArray(updates.attendee_names)) {
-    const updated = await pb.collection('guests').update(id, updates);
+    // A status-only edit away from Attending must still free the party's
+    // chairs (a seat for a non-attending guest fails the next floor-plan save)
+    // and, on a decline, drop its check-in.
+    const leaving = updates.rsvp_status !== undefined && updates.rsvp_status !== 'Attending';
+    const patch: Partial<Guest> = leaving
+      ? {
+          ...updates,
+          table_id: '',
+          ...(updates.rsvp_status === 'Declined'
+            ? { checked_in: false, checked_in_names: [], checked_in_at: null as unknown as string }
+            : {}),
+        }
+      : updates;
+    const updated = await pb.collection('guests').update(id, patch);
+    if (leaving) await removeGuestFromFloorMaps(id, 0);
     return fromRecord<Guest>(updated);
   }
 

@@ -62,3 +62,4 @@ export { sendInvitations, sendReminders } from './notify';
 export { providerAvailability, requireProvider } from './providers';
 export { getSeatingRoster } from './roster';
 export { getRehearsalStatus, isRehearsalActive, startRehearsal, stopRehearsal } from './rehearsal';
+export { getTableAccessByCode } from './tableAccess';

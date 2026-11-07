@@ -31,7 +31,7 @@ import { compressImage } from '../../lib/imageCompressor';
 import { GuestbookEntrySchema } from '../../lib/validation';
 import { isValidCode } from '../../lib/validation';
 import { useAppStore } from '../../stores/appStore';
-import { useT } from '../shared/i18n';
+import { useT, useApiErrorMessage } from '../shared/i18n';
 import { usePrint, useFloorMapTables } from '../shared/hooks';
 import { decodeApiError } from '../../lib/errors';
 import { GuestbookForm, GuestbookSuccess } from './GuestbookForm';
@@ -40,6 +40,7 @@ import { GuestbookEntryCard } from './GuestbookEntryCard';
 export const GuestbookPage = () => {
   const language = useAppStore((s) => s.language);
   const t = useT();
+  const apiError = useApiErrorMessage();
   const { toast } = useToast();
   const confirmAction = useActionConfirm();
   const confirm = useConfirm();
@@ -202,7 +203,9 @@ export const GuestbookPage = () => {
       } else {
         const payload = await res.json().catch(() => ({}));
         const { code: errCode } = decodeApiError(payload, res.status);
-        toast.error(errCode === 'GUESTBOOK_TABLE_FULL' ? t.gbTableFullMsg : t.gbPostFailedToast);
+        // Table-portal refusals (not checked in, wrong table...) and approval
+        // states carry their own guidance; anything else is a generic failure.
+        toast.error(errCode === 'GUESTBOOK_TABLE_FULL' ? t.gbTableFullMsg : apiError(errCode, t.gbPostFailedToast));
       }
     } catch (err) {
       console.error('Guestbook submit error:', err);

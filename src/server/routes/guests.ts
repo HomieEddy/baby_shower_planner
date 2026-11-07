@@ -12,12 +12,14 @@ import {
   getAllGuests,
   getGuestByCode,
   getGuestById,
+  getTableAccessByCode,
   getUniversalInviteMessage,
   inviteMessageFor,
   removeGuestAttendee,
   setApproval,
   updateGuest,
 } from '../../db/service';
+import { assertTableAccess } from '../tableAccessGuard';
 
 const ROUTES: Route[] = [
   // Resolve a 4-digit reservation code to the guest's magic token (guest
@@ -33,6 +35,25 @@ const ROUTES: Route[] = [
       const guest = await getGuestByCode(code);
       if (!guest) return sendError(res, 'NOT_FOUND', 'Reservation code not found');
       return sendJson(res, 200, { magic_token: guest.magic_token });
+    },
+  },
+
+  // Table portal gate: may this reservation use the table it just scanned?
+  // Denied with NOT_ATTENDING / NOT_CHECKED_IN / TABLE_NOT_ASSIGNED /
+  // WRONG_TABLE (+ assignedTable) / TABLE_NOT_FOUND so the page can guide the
+  // guest. Shares the code-guessing budget with /api/guest/resolve.
+  {
+    method: 'GET',
+    path: '/api/guest/table-access',
+    handler: async ({ query }, { res, ip }) => {
+      const code = (query.get('code') || '').trim();
+      if (!isValidCode(code)) return sendError(res, 'INVALID_CODE', 'Reservation code must be 4 digits');
+      const attempt = rateLimit(`code-resolve:${ip}`, 10, 60_000);
+      if (!attempt.allowed) return sendError(res, 'RATE_LIMITED');
+      const found = await getTableAccessByCode(code, query.get('table') || '');
+      if (!found) return sendError(res, 'NOT_FOUND', 'Reservation code not found');
+      const table = assertTableAccess(found.access);
+      return sendJson(res, 200, { ok: true, table: table ? { id: table.id, name: table.name } : null });
     },
   },
 

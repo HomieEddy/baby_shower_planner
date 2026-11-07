@@ -63,11 +63,20 @@ export async function submitRsvp(token: string, payload: SubmitRsvpPayload): Pro
     // Keep the legacy party-level field mirroring the lead's restriction.
     updates.dietary_restrictions = (attendee_details[0]?.dietary || payload.dietary_restrictions || '').trim();
     keepAttendees = attendee_details.length;
+    // Members dropped from the party can't stay checked in.
+    updates.checked_in_names = (guest.checked_in_names || []).filter((n) =>
+      attendee_details.some((d) => d.name.toLowerCase() === n.trim().toLowerCase())
+    );
   } else {
     updates.attendee_names = [];
     updates.attendee_details = [];
     updates.attending_party_size = 0;
     updates.table_id = null;
+    // A guest who declines is no longer at the event: drop any check-in so the
+    // day-of numbers stay true.
+    updates.checked_in = false;
+    updates.checked_in_names = [];
+    updates.checked_in_at = null;
   }
   const updated = await pb.collection('guests').update(guest.id, updates);
   // Declined keeps 0; a shrunk attending party keeps only its remaining chairs.
@@ -112,7 +121,7 @@ export async function updateGuestContact(token: string, payload: GuestContactPay
 
 export type GuestInviteResult =
   | { ok: true; invite: GuestInviteView; already_invited: boolean }
-  | { ok: false; error: 'INVALID_TOKEN' | 'NAME_REQUIRED' };
+  | { ok: false; error: 'INVALID_TOKEN' | 'NAME_REQUIRED' | 'PENDING_APPROVAL' | 'REGISTRATION_REJECTED' };
 
 async function inviteView(record: Record<string, unknown>, language: Language): Promise<GuestInviteView> {
   const invite = fromRecord<GuestInvite>(record);
@@ -134,6 +143,11 @@ async function inviteView(record: Record<string, unknown>, language: Language): 
 export async function createInvite(token: string, payload: { name: string; contact?: string; note?: string }): Promise<GuestInviteResult> {
   const inviter = await getGuestByToken(token);
   if (!inviter) return { ok: false, error: 'INVALID_TOKEN' };
+  // Only an approved guest can bring others in; an unapproved sign-up could
+  // otherwise fan out share links before the host has seen it.
+  if (!isApproved(inviter)) {
+    return { ok: false, error: inviter.approval_status === 'rejected' ? 'REGISTRATION_REJECTED' : 'PENDING_APPROVAL' };
+  }
   const name = (payload.name || '').trim();
   if (!name) return { ok: false, error: 'NAME_REQUIRED' };
 

@@ -121,3 +121,15 @@ describe('getCheckInStats', () => {
     expect(stats).toMatchObject({ total: 3, expected: 4, checkedIn: 2 });
   });
 });
+
+describe('selfCheckIn eligibility', () => {
+  it('sends a party without a yes RSVP to the host', async () => {
+    h.fake.stores.guests.push(party({ rsvp_status: 'Pending' }));
+    expect(await selfCheckIn({ token: 'tok-alice', all: true })).toEqual({ ok: false, error: 'NOT_ATTENDING' });
+  });
+
+  it('refuses a sign-up still awaiting host approval', async () => {
+    h.fake.stores.guests.push(party({ approval_status: 'pending' }));
+    await expect(selfCheckIn({ token: 'tok-alice', all: true })).rejects.toMatchObject({ code: 'PENDING_APPROVAL' });
+  });
+});

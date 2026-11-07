@@ -21,6 +21,8 @@ import { decodeApiError } from '../../lib/errors';
 import { isValidCode } from '../../lib/validation';
 import { VenueModal } from './VenueModal';
 import { GuestPageHeader } from '../shared/GuestPageHeader';
+import { BackButton } from '../shared/BackButton';
+import { scanMenuPath } from '../../lib/tableScanSession';
 
 // A searchable person: the primary guest or one of their party attendees.
 export interface AttendeeHit {
@@ -75,8 +77,12 @@ export const GuestFinderPage: React.FC = () => {
   const queryClient = useQueryClient();
   const [searchParams] = useSearchParams();
   const initialToken = searchParams.get('guest') || undefined;
+  // Sent here from a table QR code that refused entry: prefill the code and
+  // offer the way back to that table once checked in.
+  const prefillCode = searchParams.get('code') || '';
+  const returnTableId = searchParams.get('table') || '';
 
-  const [searchQuery, setSearchQuery] = useState('');
+  const [searchQuery, setSearchQuery] = useState(isValidCode(prefillCode) ? prefillCode : '');
   const [searchPick, setSearchPick] = useState<FinderSelection | null>(null);
   const [dismissedId, setDismissedId] = useState<string | null>(null);
   const [busy, setBusy] = useState<string | null>(null); // member name or 'all'
@@ -217,6 +223,9 @@ export const GuestFinderPage: React.FC = () => {
   return (
     <div className="py-8 sm:py-14 px-4">
       <div className="max-w-2xl mx-auto space-y-6 relative">
+        {returnTableId && (
+          <BackButton to={scanMenuPath(returnTableId)} label={t.finderBackToTableBtn} />
+        )}
         {/* Hero — staggered entrance */}
         <motion.div
           variants={container}
