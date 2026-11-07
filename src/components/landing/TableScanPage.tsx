@@ -1,13 +1,18 @@
 import React, { useState } from 'react';
-import { useNavigate, useSearchParams } from 'react-router-dom';
+import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { motion, AnimatePresence, type Variants } from 'motion/react';
 import { useQuery } from '@tanstack/react-query';
 import { BookOpen, Camera, KeyRound, AlertCircle, ArrowLeft, Sparkles } from 'lucide-react';
 import { TableElement } from '../../types';
-import { useT, useTf } from '../shared/i18n';
+import { useT } from '../shared/i18n';
 import { isValidCode } from '../../lib/validation';
 import { decodeApiError } from '../../lib/errors';
 import { GuestPageHeader } from '../shared/GuestPageHeader';
+import {
+  clearTableScanCode,
+  readTableScanCode,
+  saveTableScanCode,
+} from '../../lib/tableScanSession';
 
 type Choice = 'guestbook' | 'photos';
 type Status = 'idle' | 'invalid' | 'resolving' | 'notFound' | 'rateLimited';
@@ -27,11 +32,12 @@ const spring = { type: 'spring' as const, stiffness: 240, damping: 22 };
 
 export const TableScanPage: React.FC = () => {
   const t = useT();
-  const tf = useTf();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const tableId = searchParams.get('table') || '';
 
+  // A code verified earlier in this tab skips the entry step on return.
+  const [savedCode, setSavedCode] = useState<string>(readTableScanCode);
   const [choice, setChoice] = useState<Choice | null>(null);
   const [code, setCode] = useState('');
   const [status, setStatus] = useState<Status>('idle');
@@ -52,6 +58,22 @@ export const TableScanPage: React.FC = () => {
     photos: '/upload-photos',
   };
 
+  // Push (not replace) so the browser back button returns to this menu.
+  const openDestination = (kind: Choice, value: string) => {
+    const params = new URLSearchParams({ code: value });
+    if (tableId) params.set('table', tableId);
+    navigate(`${destination[kind]}?${params.toString()}`);
+  };
+
+  const handleCardClick = (key: Choice) => {
+    setStatus('idle');
+    if (savedCode) {
+      openDestination(key, savedCode);
+      return;
+    }
+    setChoice(key);
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!choice) return;
@@ -66,9 +88,9 @@ export const TableScanPage: React.FC = () => {
       const res = await fetch(`/api/guest/resolve?code=${encodeURIComponent(value)}`);
       const data = await res.json();
       if (res.ok && data.magic_token) {
-        const params = new URLSearchParams({ code: value });
-        if (tableId) params.set('table', tableId);
-        navigate(`${destination[choice]}?${params.toString()}`, { replace: true });
+        saveTableScanCode(value);
+        setSavedCode(value);
+        openDestination(choice, value);
         return;
       }
       const { code: errCode } = decodeApiError(data, res.status);
@@ -96,7 +118,8 @@ export const TableScanPage: React.FC = () => {
               transition={{ delay: 0.15, ...spring }}
               className="inline-block mt-1 px-3 py-1 rounded-full bg-[#EFE6DC] text-[#8B735B] text-xs font-mono font-bold uppercase tracking-wider"
             >
-              {tf('scanAtTable', { table: table.name })}
+              {/* Table names already read "Table N" by default, so show them as-is. */}
+              {table.name}
             </motion.span>
           )}
         </GuestPageHeader>
@@ -122,7 +145,7 @@ export const TableScanPage: React.FC = () => {
                     whileHover={{ y: -8, scale: 1.03, rotate: key === 'guestbook' ? -1.5 : 1.5 }}
                     whileTap={{ scale: 0.95 }}
                     transition={spring}
-                    onClick={() => { setChoice(key); setStatus('idle'); }}
+                    onClick={() => handleCardClick(key)}
                     className="p-5 sm:p-6 rounded-2xl border border-[#CBAE94]/70 bg-white hover:bg-[#EFE6DC]/40 hover:border-[#CBAE94] transition-colors text-center space-y-2.5 cursor-pointer"
                   >
                     <motion.div
@@ -215,6 +238,32 @@ export const TableScanPage: React.FC = () => {
             </motion.form>
           )}
         </AnimatePresence>
+
+        {!choice && (
+          <div className="flex flex-col items-center gap-3 pt-1">
+            <Link
+              to="/"
+              className="inline-flex items-center gap-1.5 text-xs font-bold text-[#8B735B] hover:text-[#4A3F35] transition-colors"
+            >
+              <ArrowLeft className="w-3.5 h-3.5" />
+              {t.backHomeBtn}
+            </Link>
+            {savedCode && (
+              <button
+                type="button"
+                onClick={() => {
+                  clearTableScanCode();
+                  setSavedCode('');
+                  setCode('');
+                  setStatus('idle');
+                }}
+                className="text-[11px] font-bold text-[#8B735B]/80 hover:text-[#4A3F35] underline underline-offset-2 transition-colors"
+              >
+                {t.scanNotYouBtn}
+              </button>
+            )}
+          </div>
+        )}
       </motion.div>
     </div>
   );

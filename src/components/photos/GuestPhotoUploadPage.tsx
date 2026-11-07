@@ -21,6 +21,7 @@ import { compressImage, formatFileSize } from '../../lib/imageCompressor';
 import { useToast } from '../shared/ToastContext';
 import { useActionConfirm } from '../shared/ConfirmDialog';
 import { BackButton } from '../shared/BackButton';
+import { scanMenuPath } from '../../lib/tableScanSession';
 import { GuestPageHeader } from '../shared/GuestPageHeader';
 import { LockedNotice } from '../shared/LockedNotice';
 import { uploadPhotoBase64 } from '../../lib/fileUtils';
@@ -325,7 +326,10 @@ export const GuestPhotoUploadPage = () => {
   return (
     <div className="py-6 sm:py-10 px-4 sm:px-6 lg:px-8 font-sans">
       <div className="max-w-2xl mx-auto space-y-6">
-        <BackButton />
+        <BackButton
+          to={lockedIdentity ? scanMenuPath(initialTableId) : '/'}
+          label={lockedIdentity ? t.scanBackToOptionsBtn : undefined}
+        />
 
         <GuestPageHeader
           icon={Camera}

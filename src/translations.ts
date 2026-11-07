@@ -708,6 +708,8 @@ export interface Translations {
   scanEnterCodeHint: string;
   scanRateLimited: string;
   scanChooseAgainBtn: string;
+  scanBackToOptionsBtn: string;
+  scanNotYouBtn: string;
   presetEnglish: string;
   presetFrench: string;
   prevSlideBtn: string;
@@ -2095,6 +2097,8 @@ export const translations: Record<Language, Translations> = {
     scanEnterCodeHint: "It's on your name badge or escort card.",
     scanRateLimited: "Too many attempts. Please try again in a minute.",
     scanChooseAgainBtn: "Choose something else",
+    scanBackToOptionsBtn: "Back to options",
+    scanNotYouBtn: "Not you? Use a different code",
     presetEnglish: "English (EN)",
     presetFrench: "Français (FR)",
     prevSlideBtn: "Previous Slide",
@@ -3479,6 +3483,8 @@ export const translations: Record<Language, Translations> = {
     scanEnterCodeHint: "Il se trouve sur votre badge ou votre carte de table.",
     scanRateLimited: "Trop de tentatives. Veuillez réessayer dans une minute.",
     scanChooseAgainBtn: "Choisir autre chose",
+    scanBackToOptionsBtn: "Retour aux options",
+    scanNotYouBtn: "Ce n'est pas vous ? Utilisez un autre code",
     presetEnglish: "English (EN)",
     presetFrench: "Français (FR)",
     prevSlideBtn: "Diapositive précédente",
