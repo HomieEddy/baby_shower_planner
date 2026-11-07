@@ -3,7 +3,7 @@
 import type { Guest } from '../types';
 import { fromRecord, pb } from './client';
 import { isValidCode } from '../lib/validation';
-import { isAttending } from '../lib/guestAttendees';
+import { getPartyMembers, isAttending } from '../lib/guestAttendees';
 import { getGuestPartySize } from '../lib/tableAssignment';
 
 // Public endpoint data for the seating page: full Guest shape with
@@ -39,7 +39,26 @@ export function scrubForGuestLookup(g: Guest): Guest {
   };
 }
 
-export async function getSeatingRoster(guestToken?: string, code?: string): Promise<{ seats: Guest[]; guests: Guest[]; guest: Guest | null }> {
+// Name search result: the party is identified by name, so the reservation
+// code is withheld here. The guest must type their code before checking in,
+// which keeps a name alone from being enough to check someone in.
+export function scrubForNameSearch(g: Guest): Guest {
+  return { ...scrubForGuestLookup(g), code: '' };
+}
+
+// Case- and accent-insensitive form used for name matching.
+export function normalizeName(s: string): string {
+  return s.normalize('NFD').replace(/[̀-ͯ]/g, '').trim().toLowerCase();
+}
+
+export const NAME_SEARCH_MIN = 2;
+export const NAME_SEARCH_MAX_RESULTS = 10;
+
+export async function getSeatingRoster(
+  guestToken?: string,
+  code?: string,
+  name?: string,
+): Promise<{ seats: Guest[]; guests: Guest[]; guest: Guest | null }> {
   const records = await pb.collection('guests').getFullList();
 
   // Anonymized seat math: the venue map needs each attending party's size and
@@ -72,6 +91,21 @@ export async function getSeatingRoster(guestToken?: string, code?: string): Prom
     guests = records
       .filter((r: any) => r.code === code)
       .map((r: any) => scrubForGuestLookup(fromRecord<Guest>(r)));
+  }
+
+  // Name lookup: attending parties with a member whose name contains the query.
+  // Declined guests are not listed, and results are capped so a short query
+  // cannot be used to dump the guest list.
+  if (name) {
+    const needle = normalizeName(name);
+    if (needle.length >= NAME_SEARCH_MIN) {
+      guests = records
+        .map((r: any) => fromRecord<Guest>(r))
+        .filter((g) => isAttending(g))
+        .filter((g) => getPartyMembers(g).some((m) => normalizeName(m).includes(needle)))
+        .slice(0, NAME_SEARCH_MAX_RESULTS)
+        .map(scrubForNameSearch);
+    }
   }
 
   let guest: Guest | null = null;

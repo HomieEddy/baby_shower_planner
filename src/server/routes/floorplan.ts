@@ -35,7 +35,8 @@ const ROUTES: Route[] = [
     handler: async ({ query }, { res }) => {
       const guestToken = query.get('guest') || undefined;
       const code = query.get('code') || undefined;
-      return sendJson(res, 200, await getSeatingRoster(guestToken, code));
+      const name = query.get('name') || undefined;
+      return sendJson(res, 200, await getSeatingRoster(guestToken, code, name));
     },
   },
 
