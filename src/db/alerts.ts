@@ -5,7 +5,7 @@ import type { EventAlert, AlertType, Language } from '../types';
 import { fromRecord, pb } from './client';
 import { getAllGuests } from './guests';
 import { getSettingsOrDefaults } from './settings';
-import { composeAlert, type MessageContent } from '../lib/compose';
+import { composeAlert, composeDayOf, type MessageContent } from '../lib/compose';
 import { notifyChannels } from './notify';
 import { requireProvider } from './providers';
 import { alertRecipients, channelsFor, type AlertAudience, type AlertChannel } from '../lib/alertRecipients';
@@ -39,7 +39,11 @@ export async function createAlert(payload: CreateAlertPayload): Promise<{ alert:
   const channels = channelsFor(channel);
   let notified = 0;
   for (const g of recipients) {
-    const { sent } = await notifyChannels(g, composeAlert(g, settings, payload.title, payload.message, g.language_pref), channels);
+    // Day-of reminders carry the code and entrance instructions, no RSVP link.
+    const content = payload.type === 'DAY_OF'
+      ? composeDayOf(g)
+      : composeAlert(g, settings, payload.title, payload.message, g.language_pref);
+    const { sent } = await notifyChannels(g, content, channels);
     if (sent.length > 0) notified++;
   }
   await pb.collection('alerts').update(r.id, { notified_guests_count: notified });

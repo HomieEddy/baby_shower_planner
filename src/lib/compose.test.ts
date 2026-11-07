@@ -3,12 +3,14 @@ import type { EventSettings, Guest } from '../types';
 import {
   buildInviteMessage,
   buildUniversalInviteMessage,
+  composeDayOf,
   composeInvitation,
   renderEmailHtml,
   renderSms,
   renderText,
 } from './compose';
 import { renderInvitationTemplate } from './invitationTemplate';
+import { isGsm7, smsBody } from './sms';
 
 const guest = (over: Partial<Guest> = {}): Guest => ({
   id: 'g1',
@@ -140,5 +142,20 @@ describe('renderSms', () => {
     const sms = renderSms(composeInvitation(guest({ language_pref: 'FR' }), settings()));
     expect(sms).toContain('Baby Shower de Eddy & Nana');
     expect(sms).toContain('RSVP: ');
+  });
+});
+
+describe('day-of reminder', () => {
+  it.each(['EN', 'FR'] as const)('fits one GSM-7 SMS segment with the code (%s)', (language) => {
+    const body = smsBody(composeDayOf(guest({ code: '2468' }), language));
+    expect(isGsm7(body)).toBe(true);
+    expect(body.length).toBeLessThanOrEqual(160);
+    expect(body).toContain('Code: 2468');
+  });
+
+  it.each(['EN', 'FR'] as const)('sends no RSVP link, since guests scan the entrance QR (%s)', (language) => {
+    const body = smsBody(composeDayOf(guest(), language));
+    expect(body).not.toMatch(/https?:\/\//);
+    expect(body).not.toContain('RSVP');
   });
 });

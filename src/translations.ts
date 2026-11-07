@@ -192,6 +192,8 @@ export interface Translations {
   printLabel: string;
   cancellationTemplate: string;
   cancellationTemplateDesc: string;
+  dayOfTemplate: string;
+  dayOfTemplateDesc: string;
   capacityLabel: string;
   capacityUsageLabel: string;
   captionExamplePlaceholder: string;
@@ -1598,6 +1600,8 @@ export const translations: Record<Language, Translations> = {
     printLabel: "Print",
     cancellationTemplate: "Event Cancelled",
     cancellationTemplateDesc: "Cancellation notice",
+    dayOfTemplate: "Day-of Reminder",
+    dayOfTemplateDesc: "Today: code and entrance QR",
     capacityLabel: "Capacity",
     capacityUsageLabel: "Capacity Usage",
     captionExamplePlaceholder: "e.g., Cutting the honey cake at Table 2!",
@@ -3004,6 +3008,8 @@ export const translations: Record<Language, Translations> = {
     printLabel: "Imprimer",
     cancellationTemplate: "Événement annulé",
     cancellationTemplateDesc: "Avis d'annulation",
+    dayOfTemplate: "Rappel le jour J",
+    dayOfTemplateDesc: "Aujourd'hui : code et QR à l'entrée",
     capacityLabel: "Capacité",
     capacityUsageLabel: "Utilisation de la capacité",
     captionExamplePlaceholder: "ex : Découpe du gâteau à la table 2 !",

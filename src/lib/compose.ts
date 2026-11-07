@@ -217,6 +217,34 @@ export function composeAlert(guest: Guest, settings: Partial<EventSettings>, tit
   };
 }
 
+// Day-of reminder copy. Plain GSM-7 text (no emoji, no uppercase accents, no
+// curly quotes) so the whole SMS stays on one 160-char segment with the code.
+// The code is appended by renderSms; no RSVP link, guests scan the entrance QR.
+export const DAY_OF_COPY: Record<Language, { title: string; message: string }> = {
+  EN: {
+    title: 'Today is the big day!',
+    message: "We can't wait to see you! Scan the QR code at the entrance, then enter your code to find your seat on the floor map.",
+  },
+  FR: {
+    title: "C'est aujourd'hui le grand jour !",
+    message: "Sur place, à l'entrée, scannez le code QR puis saisissez votre code pour trouver votre place sur le plan.",
+  },
+};
+
+export function composeDayOf(guest: Guest, language?: Language): MessageContent {
+  const lang = language ?? guest.language_pref ?? 'FR';
+  const copy = DAY_OF_COPY[lang];
+  return {
+    kind: 'alert',
+    language: lang,
+    subject: `📢 ${copy.title}`,
+    heading: copy.title,
+    rows: [],
+    code: guest.code,
+    paragraphs: [copy.message],
+  };
+}
+
 export function composeFloorPlan(guest: Guest, settings: Partial<EventSettings>, tableName: string, customMessage: string, language?: Language): MessageContent {
   const lang = language ?? guest.language_pref ?? 'FR';
   const tableLine = tableName
