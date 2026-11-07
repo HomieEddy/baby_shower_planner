@@ -1,6 +1,6 @@
 import React, { useEffect, useRef, useState } from 'react';
 import { flushSync } from 'react-dom';
-import { Guest, EventSettings, FloorMapData } from '../../types';
+import { Guest, EventSettings, FloorMapData, TableElement } from '../../types';
 import { Download, Printer, Scissors, Tag } from 'lucide-react';
 import { useT, useTf } from '../shared/i18n';
 import { usePrint } from '../shared/hooks';
@@ -10,7 +10,7 @@ import { Select, TextInput } from '../shared/ui';
 import { getAttendeeLocations } from '../../lib/tableAssignment';
 import { getPartyMembers, isAttending } from '../../lib/guestAttendees';
 import { A4_PX, downloadExportFiles, exportSection, ExportFile, ExportFormat } from '../../lib/printExport';
-import { PrintableStandee, PrintablePoster } from './PrintAllSheet';
+import { PrintableStandeePair, PrintablePoster } from './PrintAllSheet';
 import { AdminPageHeader, AdminSectionTitle } from './AdminPageHeader';
 
 interface EscortCardsGeneratorProps {
@@ -42,6 +42,8 @@ const SECTION_FILE_NAMES: Record<PrintSection, string> = {
 
 // Export captures are rendered at this fixed width, independent of the viewport.
 const EXPORT_WIDTH_PX = 800;
+// A4 printable width (200 mm) at 96 css px per inch: one standee pair is this wide.
+const STANDEE_PAIR_WIDTH_PX = 756;
 
 export const EscortCardsGenerator: React.FC<EscortCardsGeneratorProps> = ({ guests, settings, onSaveSettings }) => {
     const t = useT();
@@ -279,6 +281,10 @@ export const EscortCardsGenerator: React.FC<EscortCardsGeneratorProps> = ({ gues
                 );
   };
 
+  // Table QR standees go two per portrait A4 sheet, so they are grouped in pairs.
+  const standeePairs: TableElement[][] = [];
+  for (let i = 0; i < tables.length; i += 2) standeePairs.push(tables.slice(i, i + 2));
+
   const sectionOptions: { key: PrintSection; label: string }[] = [
     { key: 'poster', label: t.printSectionPoster },
     { key: 'standees', label: tf('printSectionStandees', { count: tables.length }) },
@@ -415,7 +421,7 @@ export const EscortCardsGenerator: React.FC<EscortCardsGeneratorProps> = ({ gues
         ) : (
           <div className="print-pack grid grid-cols-1 md:grid-cols-2 gap-4">
             {sections.poster && <PrintablePoster settings={settings} />}
-            {sections.standees && tables.map((tbl) => <PrintableStandee key={`qr-${tbl.id}`} table={tbl} />)}
+            {sections.standees && standeePairs.map((pair) => <PrintableStandeePair key={`qr-${pair[0].id}`} tables={pair} />)}
             {sections.tents && filteredRows.map(renderTent)}
             {sections.badges && filteredRows.map(renderBadge)}
           </div>
@@ -436,10 +442,16 @@ export const EscortCardsGenerator: React.FC<EscortCardsGeneratorProps> = ({ gues
               <div key={key} data-export-section={key} style={{ width: A4_PX.width, height: A4_PX.height }}>
                 <PrintablePoster settings={settings} fullPage />
               </div>
+            ) : key === 'standees' ? (
+              // Each direct child is one A4 sheet (two standees); the PDF export puts each on its own page.
+              <div key={key} data-export-section={key} className="flex flex-col bg-white" style={{ width: `${STANDEE_PAIR_WIDTH_PX}px` }}>
+                {standeePairs.map((pair) => (
+                  <PrintableStandeePair key={`qr-${pair[0].id}`} tables={pair} />
+                ))}
+              </div>
             ) : (
               // Each direct child is one card; the PDF export packs them onto pages whole.
               <div key={key} data-export-section={key} className="grid grid-cols-2 gap-4 bg-white p-6">
-                {key === 'standees' && tables.map((tbl) => <PrintableStandee key={`qr-${tbl.id}`} table={tbl} />)}
                 {key === 'tents' && filteredRows.map(renderTent)}
                 {key === 'badges' && filteredRows.map(renderBadge)}
               </div>
